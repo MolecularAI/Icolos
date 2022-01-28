@@ -20,9 +20,9 @@ class Test_Solvate(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_TOPOL_FILE, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
             self.topol = f.read()
-        with open(PATHS_EXAMPLEDATA.GROMACS_STRUCTURE_FILE, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
             self.structure = f.read()
 
     def test_solvate(self):

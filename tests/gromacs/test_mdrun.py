@@ -21,7 +21,7 @@ class Test_MDrun(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_TPR_FILE, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr = f.read()
 
     def test_mdrun(self):

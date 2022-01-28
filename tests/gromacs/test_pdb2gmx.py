@@ -2,7 +2,7 @@ from icolos.core.containers.generic import GenericData
 import unittest
 import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
-from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
+from tests.tests_paths import PATHS_1UYD, PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.core.workflow_steps.gromacs.pdb2gmx import StepGMXPdb2gmx
 
@@ -20,7 +20,7 @@ class Test_Pdb2gmx(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_PDB_FILE, "r") as f:
+        with open(PATHS_1UYD.PDB_PATH, "r") as f:
             self.structure = f.read()
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE, "r") as f:
             self.holo_structure = f.read()

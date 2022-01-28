@@ -20,13 +20,15 @@ class Test_Cluster(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_XTC), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC), "rb") as f:
             self.xtc = f.read()
 
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_TPR_TRJCONV), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
             self.tpr = f.read()
 
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_STRUCTURE_FILE), "r") as f:
+        with open(
+            attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
+        ) as f:
             self.structure = f.read()
 
     def test_cluster(self):

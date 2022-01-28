@@ -24,13 +24,13 @@ class Test_MMPBSA(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
             self.structure = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_TOP, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
             self.topol = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_TPR, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr_file = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_XTC, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc_file = f.read()
 
         with open(PATHS_EXAMPLEDATA.MMPBSA_POSRE, "rb") as f:

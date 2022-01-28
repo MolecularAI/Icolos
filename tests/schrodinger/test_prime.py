@@ -7,6 +7,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepPrimeEnum, TokenGuar
 from icolos.utils.enums.program_parameters import PrimeEnum
 
 from tests.tests_paths import (
+    PATHS_1UYD,
     PATHS_EXAMPLEDATA,
     get_mol_as_Compound,
     get_ligands_as_compounds_with_conformers,
@@ -27,13 +28,13 @@ class Test_Prime(unittest.TestCase):
             os.makedirs(cls._test_dir)
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.PRIME_POSEVIEWER), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.FEP_PLUS_DOCKING_PV), "rb") as f:
             self._poseviewer = f.read()
         self._molecule = get_mol_as_Compound(
-            attach_root_path(PATHS_EXAMPLEDATA.PRIME_DOCKED_LIGAND_SDF)
+            attach_root_path(PATHS_1UYD.NATIVE_LIGAND_SDF)
         )
         self._conformers = get_ligands_as_compounds_with_conformers(
-            attach_root_path(PATHS_EXAMPLEDATA.LIGANDS_1UYD)
+            attach_root_path(PATHS_1UYD.LIGANDS)
         )
 
     @classmethod
@@ -70,7 +71,7 @@ class Test_Prime(unittest.TestCase):
                     },
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
-                    _SPE.RECEPTOR: attach_root_path(PATHS_EXAMPLEDATA.RECEPTOR_1UYD)
+                    _SPE.RECEPTOR: attach_root_path(PATHS_1UYD.PDB_PATH)
                 },
             },
         }
@@ -125,7 +126,7 @@ class Test_Prime(unittest.TestCase):
                     },
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
-                    _SPE.RECEPTOR: attach_root_path(PATHS_EXAMPLEDATA.RECEPTOR_1UYD)
+                    _SPE.RECEPTOR: attach_root_path(PATHS_1UYD.PDB_PATH)
                 },
             },
         }

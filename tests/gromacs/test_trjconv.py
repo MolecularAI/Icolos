@@ -20,10 +20,10 @@ class Test_Trjconv(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_XTC, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc = f.read()
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_TPR_TRJCONV, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr = f.read()
 
     def test_trjconv(self):

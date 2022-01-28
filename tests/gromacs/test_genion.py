@@ -20,9 +20,9 @@ class Test_Genion(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_TOPOL_FILE), "r") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP), "r") as f:
             self.topol = f.read()
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_TPR_FILE), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
             self.tpr = f.read()
 
     def test_genion_run(self):
