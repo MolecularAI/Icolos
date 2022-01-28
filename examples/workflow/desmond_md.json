@@ -1,0 +1,72 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "desmond md",
+            "description": "Desmond simulation.",
+            "environment": {
+                "export": [
+                ]
+            },
+            "global_variables": {
+				"output_dir": "{entrypoint_dir}/tests/junk/desmond"
+            }
+        },
+        "steps": [{
+                "step_id": "desmond_md",
+                "type": "desmond",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-1-js-aws"
+                    },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-HOST": "localhost"
+                        }
+                    },
+                    "additional": {
+						"setup_msj_fields": {
+
+						},
+						"msj_fields": {
+
+						},
+						"cfg_fields": {
+							"time": 0.01
+						}
+                    }
+                },
+                "input": {
+                    "generic": [{
+                            "source": "{entrypoint_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
+                            "extension": "pdb"
+                        }
+                    ]
+                },
+                "writeout": [
+                    {
+                        "generic": {
+                            "key": "cms"
+                        },
+                        "destination": {
+                            "resource": "{output_dir}",
+                            "type": "file",
+                            "format": "txt",
+							"mode": "automatic"
+                        }
+                    },{
+                        "generic": {
+                            "key": "dir"
+                        },
+                        "destination": {
+                            "resource": "{output_dir}",
+                            "type": "file",
+                            "format": "txt",
+							"mode": "dir"
+                        }
+                    }
+                ]
+            } 
+        ]
+    }
+}

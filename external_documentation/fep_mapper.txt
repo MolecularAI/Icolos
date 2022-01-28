@@ -1,0 +1,102 @@
+# Version 2020-4
+
+Command line: $SCHRODINGER/run -FROM scisol fep_mapper.py -full-help
+usage: fep_mapper.py [-h] [-v] [-full-help] [-o BASENAME] [-s BASENAME] [-x FILENAME] [-r RECEPTOR] [-e N]
+                     [-rha RECEPTOR_HOTATOMS_ASL] [-ligand-hotatoms-rule-complex LIGAND_HOTATOMS_RULE_COMPLEX]
+                     [-ligand-hotatoms-rule-solvent LIGAND_HOTATOMS_RULE_SOLVENT] [-t TOPOLOGY] [-b BIAS] [-add-bias ADD_BIAS]
+                     [-C CUTOFF] [-simi-cutoff SIMI_CUTOFF] [-num-procs NUM_PROCS] [-align-core-only] [-rule RULE] [-simiscore]
+                     [-force-optimize] [-connect-disconnected-nodes] [-generate-neutral-intermediates] [-clear-predicted-ddg]
+                     [-m ATOM_MAPPING] [-strict-matching] [-extend-mapping]
+                     [-mapping-scheme {position,position_and_bonding,protein_by_residue}] [-debug] [-mp METALLOPROTEIN] [-ats]
+                     [-ats-min-barrier-height ATS_MIN_BARRIER_HEIGHT] [-ats-max-bond-dist ATS_MAX_BOND_DIST]
+                     [-ats-max-core-reduction ATS_MAX_CORE_REDUCTION]
+                     [structure_or_graph]
+
+Popular examples:
+
+- Generate optimized-topology graph:
+
+    $SCHRODINGER/run -FROM scisol fep_mapper.py foo.mae -o foo
+
+- Generate optimized-topology graph with custom core:
+
+    $SCHRODINGER/run -FROM scisol fep_mapper.py foo.mae -o foo -m "CC(=O)NCC(=O)NC"
+
+- Generate star-topology graph with custom core:
+
+    $SCHRODINGER/run -FROM scisol fep_mapper.py foo.mae -o foo -m "CC(=O)NCC(=O)NC" -t star
+
+positional arguments:
+  structure_or_graph    Structure file in Pose Viewer format (_pv.mae) or graph (.fmp) file. If .fmp file is given, the graph
+                        optimization is only performed with -force-optimize option.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, -version          show program's version number and exit
+  -full-help            List all available options.
+  -o BASENAME, -output BASENAME
+                        output files' base name. Files to be written: <basename>.edge, <basename>.fmp.
+  -s BASENAME, -siminp BASENAME
+                        simulation input files' base name. When this option is specified, a number of input files for FEP simulations
+                        will be written out.
+  -x FILENAME, -extend FILENAME
+                        extend the graph as saved in file FILENAME.
+  -r RECEPTOR, --receptor RECEPTOR
+                        -receptor is DEPRECATED: Please specify -environment
+  -e N, -environment N  specify the initial N structures as the common environment structures. This option is needed when you want to
+                        write out structure input files for relative binding free energy calculations.
+  -rha RECEPTOR_HOTATOMS_ASL, -receptor-hotatoms-asl RECEPTOR_HOTATOMS_ASL
+                        ASL expression to specify receptor hot atoms. Ligand hot atoms are reset to default unless '-ligand-hotatoms-
+                        rule-complex' and '-ligand-hotatoms-rule-solvent' are specified
+  -ligand-hotatoms-rule-complex LIGAND_HOTATOMS_RULE_COMPLEX
+                        REST rule for ligand in complex leg. Must be used with -receptor-hotatoms-asl option.
+  -ligand-hotatoms-rule-solvent LIGAND_HOTATOMS_RULE_SOLVENT
+                        REST rule for ligand in solvent leg. Must be used with -receptor-hotatoms-asl option.
+  -t TOPOLOGY, -topology TOPOLOGY
+                        Graph topology type, available options: ['full', 'normal', 'star', 'windmill']. Default is 'normal'
+  -b BIAS, -bias BIAS   A 'bias' value will result in a graph with biased nodes (hubs), which correspond to structures with nonzero
+                        values of the CT-level property 'i_fepmapper_bias'.
+  -add-bias ADD_BIAS    Tag the given ligand as bias.
+  -C CUTOFF, -cutoff CUTOFF
+                        Specifies the maximum number of unmapped atoms between the two structures in the edge. If the number of
+                        unmapped atoms is greater than CUTOFF, the similarity score of the edge is zero. Note that higher similarity-
+                        score cutoffs correspond to smaller values of this option. Default: No cutoff. Also see -simi-cutoff
+  -simi-cutoff SIMI_CUTOFF
+                        Specifies the minimum similarity score. Edges with lower similarity scoreswill be deleted. Default: 0 (no
+                        cutoff)
+  -num-procs NUM_PROCS  Number of processes used for graph optimization. Default is to use 1 CPU core
+  -align-core-only      do not adjust the non-core atoms when aligning the core atoms.
+  -rule RULE            specify custom rules for similarity-score calculation. Default value is:
+                        'Mcs,Charge,SoftBond,MinimumNumberOfAtom,SnapCoreRmsd,BidirectionSnapCore'.
+  -simiscore            print out detailed account of similarity scores for all pairs.
+  -force-optimize       If a graph file is given, it will be re(optimize) if this option is provided
+  -connect-disconnected-nodes
+                        Only optimize non-edge nodes. This option only works if fmp file is given
+  -generate-neutral-intermediates
+                        Add neutral ligand between core hopping and charged ligand. This option is currentlyonly availabe for star
+                        graph
+  -clear-predicted-ddg, -ignore-ddg
+                        Clear existing predicted ddG values.
+  -m ATOM_MAPPING, -atom-mapping ATOM_MAPPING
+                        Specify custom core with SMARTS pattern(s). Multiple SMARTS patterns should be separated with space, e.g.,
+                        `-m "CCN CCO"`. Note: Each molecule should ideally match only one SMARTS. If a molecule matches more than 1
+                        SMARTS, the longest match will be chosen, and this match should be unique, otherwise matching fails due to
+                        ambiguity. This option can be used with -extend-mapping.
+  -strict-matching      If set, unsuccessful core smarts matching on a molecule will eliminate all edges from this molecule. If not
+                        set, all atoms will be used for matching in case of unsuccessful core smarts matching.
+  -extend-mapping       If given, the match will be allowed as an extension of the SMARTS pattern; if false, the match should be just
+                        the SMARTS partern (will warn when a unique match cannot be found
+  -mapping-scheme {position,position_and_bonding,protein_by_residue}
+                        Mechanism for mapping atoms between structures: position: simple position-based mapping;
+                        position_and_bonding: approximate position and bonding based mapping; protein_by_residue: residue mapping for
+                        selectivity FEP. Default = position_and_bonding
+  -debug
+  -mp METALLOPROTEIN, -metalloprotein METALLOPROTEIN
+                        write out siminp files for metalloprotein workflow.
+  -ats                  perform automated torsional scaling
+  -ats-min-barrier-height ATS_MIN_BARRIER_HEIGHT
+                        min barrier height for flagging torsions to scale (default: 8.0)
+  -ats-max-bond-dist ATS_MAX_BOND_DIST
+                        max bond dist from mutations for flagging torsions to scale (default: 3)
+  -ats-max-core-reduction ATS_MAX_CORE_REDUCTION
+                        max permitted number of atoms removed from core due to ats (default: 10)

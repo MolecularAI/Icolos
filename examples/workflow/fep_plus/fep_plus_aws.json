@@ -1,0 +1,171 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "Docking/FEP+ combined workflow",
+            "description": "Test setup for FEP+ integration being run in the cloud (AWS).",
+            "environment": {
+                "export": [
+                ]
+            },
+            "global_variables": {
+                "smiles": "4-[4-(4-chlorophenyl)-2-methyl-1,3-thiazol-5-yl]benzenesulfonamide:Cc1nc(-c2ccc(Cl)cc2)c(-c2ccc(S(N)(=O)=O)cc2)s1;N-methyl-N-(4-methylphenyl)-4-(4-methylsulfonylphenyl)-6-(trifluoromethyl)pyrimidin-2-amine:Cc1ccc(N(C)c2nc(-c3ccc(S(C)(=O)=O)cc3)cc(C(F)(F)F)n2)cc1"
+            }
+        },
+        "steps": [{
+                "step_id": "initialization_smile",
+                "type": "initialization",
+                "input": {
+                    "compounds": [{
+                            "source": "{smiles}",
+                            "source_type": "string"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Ligprep",
+                "type": "ligprep",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2020-4",
+                    "parallelization": {
+                        "cores": 2,
+                        "max_length_sublists": 1
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": ["-epik"],
+                        "parameters": {
+                            "-ph": 7.0,
+                            "-pht": 2.0,
+                            "-s": 10,
+							"-bff": 14,
+							"-HOST": "localhost"
+                        }
+                    },
+                    "additional": {
+                        "filter_file": {
+                            "Total_charge": "!= 0"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "initialization_smile",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            },
+            {
+                "step_id": "Glide",
+                "type": "glide",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-1-js-aws",
+                    "parallelization": {
+                        "cores": 4,
+                        "max_length_sublists": 1
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-HOST": "cpu-only"
+                        }
+                    },
+                    "additional": {
+                        "configuration": {
+                            "AMIDE_MODE": "trans",
+                            "EXPANDED_SAMPLING": "True",
+                            "GRIDFILE": ["{entrypoint_dir}/../IcolosData_junk/molecules/1CX2/1cx2_GridGen.zip"],
+                            "NENHANCED_SAMPLING": "1",
+                            "POSE_OUTTYPE": "poseviewer",
+                            "POSES_PER_LIG": "1",
+                            "POSTDOCK_NPOSE": "25",
+                            "POSTDOCKSTRAIN": "True",
+                            "PRECISION": "SP",
+                            "REWARD_INTRA_HBONDS": "True"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "Ligprep",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            },{
+                "step_id": "FEP_plus_setup",
+                "type": "fep_plus_setup",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-2-js-aws"
+                },
+                "settings": {
+
+                },
+                "input": {
+                    "compounds": [{
+                        "source": "Glide",
+                        "source_type": "step",
+                        "target_field": "compounds"
+                        
+                    }]
+                }
+            },{
+                "step_id": "FEP_plus_exec",
+                "type": "fep_plus_exec",
+                "execution": {
+                   "prefix_execution": "module load schrodinger/2021-2-js-aws && $SCHRODINGER/jsc download-start"
+                },
+                "token_guard": {
+                    "prefix_execution": "module load schrodinger/2021-2-js-aws",
+                    "binary_location": "ssh <location> /opt/schrodinger/suite/installations/default",
+                    "token_pools": {
+                        "FEP_GPGPU": 16
+                    },
+                    "wait_interval_seconds": 30,
+                    "wait_limit_seconds": 0
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-JOBNAME": "test",
+                            "-HOST": "fep-compute"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                        "source": "Glide",
+                        "source_type": "step",
+                        "target_field": "compounds"
+                    }],
+                    "generic": [{
+                        "source": "FEP_plus_setup",
+                        "extension": "fmp"
+                    }]
+                },
+                "writeout": [{
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["dG", "docking_score"]
+                        },
+                        "destination": {
+                            "resource": "{entrypoint_dir}/tests/junk/fe_plus_resultsv",
+                            "type": "file",
+                            "format": "CSV"
+                        }
+                }]
+            }
+            
+        ]
+    }
+}

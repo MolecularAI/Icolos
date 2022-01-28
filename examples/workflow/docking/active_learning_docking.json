@@ -1,0 +1,68 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "Active_learning_docking",
+            "description": "Bayesian optimisation scheme with Glide docking oracle.",
+            "environment": {
+                "export": [
+
+                ]
+            },
+            "global_variables": {
+            }
+        },
+        "steps": [{
+                "step_id": "active_learning",
+                "type": "active_learning",
+				"settings": {
+					"additional": {
+						"running_mode": "active_learning",
+						"virtual_lib": "<path>/lib.sdf",
+						"validation_lib": "<path>/val.sdf",
+						"activity_threshold": -7,
+						"n_rounds": 10,
+						"init_samples": 256,
+						"batch_size" : 128,
+						"criteria": "r_i_docking_score",
+						"oracle_config": {
+							"step_id": "Glide_oracle",
+							"type": "glide",
+							"execution": {
+								"prefix_execution": "module load schrodinger/2021-2-js-aws",
+								"parallelization": {
+									"cores": 32,
+									"max_length_sublists": 4
+								},
+								"failure_policy": {
+									"n_tries": 3
+								}
+							},
+							"settings": {
+								"arguments": {
+									"flags": [],
+									"parameters": {
+										"-HOST": "cpu-only"
+									}
+								},
+								"additional": {
+									"configuration": {
+										"AMIDE_MODE": "trans",
+										"EXPANDED_SAMPLING": "True",
+										"GRIDFILE": ["<grid>.zip"],
+										"NENHANCED_SAMPLING": "1",
+										"POSE_OUTTYPE": "ligandlib_sd",
+										"POSES_PER_LIG": "1",
+										"POSTDOCK_NPOSE": "25",
+										"POSTDOCKSTRAIN": "True",
+										"PRECISION": "SP",
+										"REWARD_INTRA_HBONDS": "True"
+									}
+								}
+							}
+						}
+					}
+				}
+			}            
+        ]
+    }
+}

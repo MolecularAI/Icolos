@@ -1,0 +1,24 @@
+name: icolosprod
+channels:
+  - psi4
+  - conda-forge
+  - defaults
+  - rdkit
+dependencies:
+  - biopython>=1.79
+  - ipython
+  - pip
+  - python>=3.9
+  - scikit-learn>=1.0.1
+  - modal>=0.4
+  - psi4>=1.4
+  - pdbfixer
+  - pydantic>=1.8
+  - pyvis
+  - requests
+  - openbabel>=3
+  - rdkit>=2021.09.2
+  - pip:
+    - black
+    - regex
+    - peptidebuilder>=1.1

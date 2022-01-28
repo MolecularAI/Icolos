@@ -1,0 +1,74 @@
+# Please cite: Niinivehmas et al. (2015) J. Compt. Aided. Mol. Design. 29(10), 989-1006.
+
+# Input and output settings:
+1-Pdb file (pfil):: {pdb_file}
+2-Radius library (rlib):: rad.lib
+3-Angle library (alib):: angles.lib
+4-Charge library file (chlib):: charges.lib
+
+# Cavity location:
+5-Center (s) (cent):: 24.42 21.79 18.26
+6-Radius center algorithm (radc):: 0.00
+7-Basic multipoint (bmp):: null
+
+# Pocket filling:
+8-Filler radius (frad):: 0.85
+
+9-Box radius (brad):: 24.0
+10-Box center (bcen):: null
+11-Multibox (mbox):: Y
+
+#_# Identification settings: #_#
+12-Not empty (nem):: HOH FAD NAP WAT NDP NAI NAD FDA
+13-Force lining (flin):: null
+14-Ignore lining (ilin):: null
+
+#_# Pocket tweaks: #_#
+15-Add oxygen at HEM Fe / dual mode (OFed):: Y Y
+16-Charge radius (chrad):: 0.00
+17-Lowest significant charge (+/-) (lowch):: 0.16
+18-Use waters as polar groups (watpol):: 2
+# - Exclusion settings:
+19-Delete farther than (del):: 4.5
+20-ligand distance limit (ldlim):: X-0 2.0 
+21-False connection angles (fcang):: 180 90
+22-False connection group size (fcgrp):: 200
+23-Exclusion zone (ezon):: null
+24-Angle exclusion (aex):: null
+25-plane-exclusion (pex):: null
+26-Force plane exclusion center (fpec):: null
+
+# - Inclusion settings:
+27-Global keep anyway radius (gkar):: 0.00
+28-Keep anyway radius (kar):: 7.00
+29-AA limit (aalim):: 0
+30-Specific limits (slim):: null
+
+# - Other settings:
+31-Secondary (sec):: N
+32-Cofactor fill (cofil):: N
+
+#_# Rather advanced pocket tweaks. #_#
+33-Packing method (pack):: bcc
+34-Creep radius (creep):: null
+35-Full lining (fulli):: Y
+36-Adjacent lining (adjli):: N
+37-multibounds (mbo):: Y
+38-Max distance of charged atoms (chdist):: 1.6
+39-Agonist-distance (agdist):: 2.5
+
+#_# Various constants. #_#
+40-Angle tolerance (atol):: 30
+41-Resolution Tolerance (retol):: 0.2
+42-Adjacent distance (adjdist):: 3
+43-Boundary increment (boinc):: 1.3
+44-lining id angle (lidang):: 35
+
+# Misc & experimental
+45-Radius for charged atoms (chatrad):: 0.5
+46-Exclusion distance for charged atoms and their residues (radexdres):: 0.6
+47-H-bond distance (hbdist):: 1.7
+48-donor addition (donads):: 1.0
+49-h-bond max distance (hobomax):: 4.2
+
+ 

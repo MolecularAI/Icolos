@@ -1,0 +1,159 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "NIBR",
+            "description": "NIBR (local) workflow with returning results in REINVENT JSON format - no use of cloud computing such as AWS.",
+            "environment": {
+                "export": [{
+                        "key": "XTBHOME",
+                        "value": "/projects/cc/mai/binaries/xtb-6.4.0"
+                    }, {
+                        "key": "XTBPATH",
+                        "value": "${XTBHOME}/share/xtb"
+                    }, {
+                        "key": "PATH",
+                        "value": "${PATH}:${XTBHOME}/bin"
+                    }, {
+                        "key": "PKG_CONFIG_PATH",
+                        "value": "${PKG_CONFIG_PATH}:${XTBHOME}/lib64/pkgconfig"
+                    }, {
+                        "key": "PARA_ARCH",
+                        "value": "MPI"
+                    }, {
+                        "key": "PARNODES",
+                        "value": "6"
+                    }
+
+                ]
+            },
+            "global_variables": {
+              "smiles": "aspirin:O=C(C)Oc1ccccc1C(=O)O"
+            }
+        },
+        "steps": [{
+                "step_id": "Ligprep",
+                "type": "ligprep",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2020-4",
+                    "parallelization": {
+                        "cores": 2,
+                        "max_length_sublists": 1
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": ["-epik"],
+                        "parameters": {
+                            "-ph": 7.0,
+                            "-pht": 2.0,
+                            "-s": 10,
+                            "-bff": 14
+                        }
+                    },
+                    "additional": {
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "{smiles}",
+                            "source_type": "string"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Glide",
+                "type": "glide",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-1-js-aws",
+                    "parallelization": {
+                        "cores": 4,
+                        "max_length_sublists": 1
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-HOST": "cpu-only"
+                        }
+                    },
+                    "additional": {
+                        "configuration": {
+                            "AMIDE_MODE": "trans",
+                            "EXPANDED_SAMPLING": "True",
+                            "GRIDFILE": ["{entrypoint_dir}/../IcolosData/Glide/1UYD_grid_constraints.zip"],
+                            "NENHANCED_SAMPLING": "1",
+                            "POSE_OUTTYPE": "ligandlib_sd",
+                            "POSES_PER_LIG": "3",
+                            "POSTDOCK_NPOSE": "25",
+                            "POSTDOCKSTRAIN": "True",
+                            "PRECISION": "SP",
+                            "REWARD_INTRA_HBONDS": "True"
+                        },
+                        "maestro_in_file": {
+                            "path": "{entrypoint_dir}/../IcolosData/Glide/example.in"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "Ligprep",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Shaep",
+                "type": "shaep",
+                "execution": {
+                    "binary_location": "/projects/cc/mai/binaries"
+                },
+                "input": {
+                    "generic": [{
+                            "source": "{entrypoint_dir}/../IcolosData/panther/1uyd_negative_image.mol2",
+                            "extension": "mol2"
+                        }],
+                    "compounds": [{
+                            "source": "Glide",
+                            "target_field": "compounds",
+                            "source_type": "step"
+                        }
+                    ]
+                },
+                "writeout": [{
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["shape_similarity", "esp_similarity", "docking_score"]
+                        },
+                        "destination": {
+                            "resource": "{entrypoint_dir}/tests/junk/nibr_reinvent/nibr_reinvent_all.csv",
+                            "type": "file",
+                            "format": "CSV"
+                        }
+                    }, {
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["shape_similarity", "esp_similarity", "docking_score"],
+                            "aggregation": {
+                                "mode": "best_per_compound",
+                                "key": "shape_similarity",
+                                "highest_is_best": true
+                            }
+                        },
+                        "destination": {
+                            "resource": "{entrypoint_dir}/tests/junk/nibr_reinvent/nibr_reinvent.json",
+                            "type": "file",
+                            "format": "JSON"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

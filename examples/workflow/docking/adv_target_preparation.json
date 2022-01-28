@@ -1,0 +1,44 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "AutoDock Vina target preparation",
+            "description": "Runs target preparation for AutoDock Vina and generates a PDBQT receptor file.",
+            "environment": {
+                "export": [{
+                        "key": "OE_LICENSE",
+                        "value": "/opt/scp/software/oelicense/1.0/oe_license.seq1"
+                    }
+
+                ]
+            },
+            "global_variables": {
+                "receptor_input_apo_path": "{entrypoint_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
+                "reference_ligand_path": "{entrypoint_dir}/../IcolosData/molecules/1UYD/PU8_native_ligand.pdb",
+                "receptor_output_path": "{entrypoint_dir}/tests/junk/1UYD_fixed.pdbqt"
+            }
+        },
+        "steps": [{
+                "step_id": "ADV_target_preparation",
+                "type": "vina_target_preparation",
+                "execution": {
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                        }
+                    },
+                    "additional": {
+                        "pH": 7.4,
+                        "input_receptor_pdb": "{receptor_input_apo_path}",
+                        "output_receptor_pdbqt": "{receptor_output_path}",
+                        "extract_box": {
+                            "reference_ligand_path": "{reference_ligand_path}",
+                            "reference_ligand_format": "PDB"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

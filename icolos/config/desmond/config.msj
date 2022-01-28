@@ -1,0 +1,23 @@
+task {
+  task = "desmond:auto"
+}
+
+build_geometry {
+  add_counterion = {
+     ion = Cl
+     number = neutralize_system
+  }
+  box = {
+     shape = orthorhombic
+     size = [10.0 10.0 10.0 ]
+     size_type = buffer
+  }
+  override_forcefield = S-OPLS
+  rezero_system = false
+  solvent = TIP3P
+}
+
+assign_forcefield {
+  forcefield = S-OPLS
+  water = TIP3P
+}

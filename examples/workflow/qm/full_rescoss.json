@@ -1,0 +1,464 @@
+{
+    "workflow": {
+        "header": {
+            "id": "rescoss",
+            "description": "Full ReSCoSS configuration (version 1.0).",
+            "environment": {
+                "export": [{
+                        "key": "XTBHOME",
+                        "value": "/projects/cc/mai/binaries/xtb-6.4.0"
+                    }, {
+                        "key": "XTBPATH",
+                        "value": "${XTBHOME}/share/xtb"
+                    }, {
+                        "key": "PATH",
+                        "value": "${PATH}:${XTBHOME}/bin"
+                    }, {
+                        "key": "PKG_CONFIG_PATH",
+                        "value": "${PKG_CONFIG_PATH}:${XTBHOME}/lib64/pkgconfig"
+                    }, {
+                        "key": "PARA_ARCH",
+                        "value": "MPI"
+                    }, {
+                        "key": "PARNODES",
+                        "value": "6"
+                    }
+                ]
+            },
+            "global_variables": {
+            }
+        },
+        "steps": [{
+                "step_id": "initialization",
+                "type": "initialization",
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "{entrypoint_dir}/../IcolosData/molecules/aspirin.sdf",
+                            "source_type": "file",
+                            "format": "SDF"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "omega_confgen",
+                "type": "omega",
+                "execution": {
+                    "prefix_execution": "module load omega"
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-maxconfs": 200,
+                            "-rms": 0.8,
+                            "-canonOrder": "false"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "initialization",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "conf_macromodel",
+                "type": "macromodel",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2019-4"
+                },
+                "token_guard": {
+                    "prefix_execution": "module load schrodinger/2019-4",
+                    "token_pools": {
+                        "MMOD_MACROMODEL": 2
+                    },
+                    "wait_interval_seconds": 30,
+                    "wait_limit_seconds": 0
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": ["-WAIT"],
+                        "parameters": {
+                            "-NJOBS": 1
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "initialization",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "RMSfiltering1",
+                "type": "rmsfilter",
+                "settings": {
+                  "arguments": {
+                    "flags": [],
+                    "parameters": {}
+                  },
+                  "additional": {
+                    "method": "alignmol",
+                    "threshold": 1
+                  }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "omega_confgen",
+                            "source_type": "step"
+                        },
+                        {
+                            "source": "conf_macromodel",
+                            "source_type": "step"
+                        }
+                    ],
+                    "merge": {
+                        "compounds": true,
+                        "merge_compounds_by": "name",
+                        "enumerations": true,
+                        "merge_enumerations_by": "id"
+                    }
+                }
+            }, {
+                "step_id": "conf_optXTB",
+                "type": "xtb",
+                "execution": {
+                    "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
+                    "parallelization": {
+                        "cores": 10
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "--opt": "vtight",
+                            "--gbsa": "h2o"
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "RMSfiltering1",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "RMSfiltering2",
+                "type": "rmsfilter",
+                "settings": {
+                  "arguments": {
+                    "flags": [],
+                    "parameters": {}
+                  },
+                  "additional": {
+                    "method": "alignmol",
+                    "threshold": 1
+                  }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "conf_optXTB",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "turbomole",
+                "type": "turbomole",
+                "execution": {
+                    "prefix_execution": "module load turbomole/73",
+                    "failure_policy": {
+                        "n_tries": 5
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                        }
+                    },
+                    "additional": {
+                      "tm_config_dir": "/projects/cc/mai/material/Icolos/turbomole_config",
+                      "tm_config_basename": "b97-3c-ri-d3-def2-mtzvp-int-nosym-charge",
+                      "tm_config_cosmo": "/projects/cc/mai/material/Icolos/turbomole_config/cosmoprep_eps80.tm",
+                      "execution_mode": "ridft"
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "RMSfiltering2",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "cosmo",
+                "type": "cosmo",
+                "execution": {
+                    "prefix_execution": "module load COSMOtherm/20.0.0"
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "turbomole",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "boltzmann_weighting",
+                "type": "boltzmann_weighting",
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "properties": [
+                                {
+                                    "input": "G_h2o",
+                                    "output": "boltzfactor_wat"
+                                },
+                                {
+                                    "input": "G_meoh",
+                                    "output": "boltzfactor_meoh"
+                                },
+                                {
+                                    "input": "G_octanol",
+                                    "output": "boltzfactor_octanol"
+                                },
+                                {
+                                    "input": "G_dmso",
+                                    "output": "boltzfactor_dmso"
+                                },
+                                {
+                                    "input": "G_cychex",
+                                    "output": "boltzfactor_cychex"
+                                },
+                                {
+                                    "input": "G_chcl3",
+                                    "output": "boltzfactor_chcl3"
+                                },
+                                {
+                                    "input": "G_acn",
+                                    "output": "boltzfactor_acn"
+                                },
+                                {
+                                    "input": "G_thf",
+                                    "output": "boltzfactor_thf"
+                                }
+                            ],
+                            "weight": {
+                                "input": ["area", "HB_acc", "volume", "HB_don", "sigma2", "Gsolv_meoh", "dipole"],
+                                "output_prefix": "bf_weighted",
+                                "properties": ["boltzfactor_dmso", "boltzfactor_wat",
+                                               "boltzfactor_meoh", "boltzfactor_cychex"]
+                            }
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "cosmo",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            },
+            {
+                "step_id": "clustering",
+                "type": "clustering",
+                "settings":
+                {
+                    "arguments":
+                    {
+                        "flags": [],
+                        "parameters":
+                        {
+                            "n_clusters": 3,
+                            "max_iter": 300
+                        }
+                    },
+                    "additional":
+                    {
+                        "top_n_per_solvent": 3,
+                        "features": ["area", "dipole", "HB_acc", "HB_don"],
+                        "free_energy_solvent_tags": ["G_h2o", "G_meoh", "G_octanol",
+                                                     "G_dmso", "G_cychex", "G_acn",
+                                                     "G_thf"]
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "boltzmann_weighting",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "turbomole_opt",
+                "type": "turbomole",
+                "execution": {
+                    "prefix_execution": "module load turbomole/73",
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                          "-c": 150,
+                          "-gcart": 3
+                        }
+                    },
+                    "additional": {
+                      "tm_config_dir": "/projects/cc/mai/material/Icolos/turbomole_config",
+                      "tm_config_basename": "b97-3c-ri-d3-def2-mtzvp-int-charge",
+                      "tm_config_cosmo": "/projects/cc/mai/material/Icolos/turbomole_config/cosmoprep_eps80.tm",
+                      "execution_mode": "jobex"
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "clustering",
+                            "source_type": "step"
+                        }
+                    ]
+                },
+                "writeout": [{
+                    "compounds": {
+                        "category": "extra_data",
+                        "key": "cosmo_file"
+                    },
+                    "destination": {
+                        "resource": "{entrypoint_dir}/tests/junk/[compound_name]/[conformer_id].cosmo",
+                        "type": "file",
+                        "format": "TXT"
+                    }
+                }, {
+                    "compounds": {
+                        "category": "extra_data",
+                        "key": "coord_file"
+                    },
+                    "destination": {
+                        "resource": "{entrypoint_dir}/tests/junk/[compound_name]/[conformer_id].coord",
+                        "type": "file",
+                        "format": "TXT"
+                    }
+                }]
+            }, {
+                "step_id": "cosmo_opt",
+                "type": "cosmo",
+                "execution": {
+                    "prefix_execution": "module load COSMOtherm/20.0.0"
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "turbomole_opt",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            },
+            {
+                "step_id": "boltzmann_weighting_opt",
+                "type": "boltzmann_weighting",
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "properties": [
+                                {
+                                    "input": "G_h2o",
+                                    "output": "boltzfactor_wat"
+                                },
+                                {
+                                    "input": "G_meoh",
+                                    "output": "boltzfactor_meoh"
+                                },
+                                {
+                                    "input": "G_octanol",
+                                    "output": "boltzfactor_octanol"
+                                },
+                                {
+                                    "input": "G_dmso",
+                                    "output": "boltzfactor_dmso"
+                                },
+                                {
+                                    "input": "G_cychex",
+                                    "output": "boltzfactor_cychex"
+                                },
+                                {
+                                    "input": "G_chcl3",
+                                    "output": "boltzfactor_chcl3"
+                                },
+                                {
+                                    "input": "G_acn",
+                                    "output": "boltzfactor_acn"
+                                },
+                                {
+                                    "input": "G_thf",
+                                    "output": "boltzfactor_thf"
+                                }
+                            ],
+                            "weight": {
+                                "input": ["area", "HB_acc", "volume", "HB_don", "sigma2", "Gsolv_meoh", "dipole"],
+                                "output_prefix": "bf_weighted",
+                                "properties": ["boltzfactor_dmso", "boltzfactor_wat",
+                                               "boltzfactor_meoh", "boltzfactor_cychex"]
+                            }
+                        }
+                    }
+                },
+                "input": {
+                    "compounds": [
+                        {
+                            "source": "cosmo_opt",
+                            "source_type": "step"
+                        }
+                    ]
+                },
+                "writeout": [
+                  {
+                    "compounds": {
+                      "category": "conformers"
+                    },
+                    "destination": {
+                      "resource": "{entrypoint_dir}/tests/junk/full_rescoss_reweighting_output_opt.sdf",
+                      "type": "file",
+                      "format": "SDF"
+                    }
+                  }
+                ]
+            }
+        ]
+    }
+}

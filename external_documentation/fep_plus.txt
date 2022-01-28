@@ -1,0 +1,109 @@
+# Version 2020-4
+
+usage:
+* Run a new job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> <pv-or-fmp-file>
+
+* Run a new job with custom workflow:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> -m <custom-workflow.msj> <pv-or-fmp-file>
+
+* Restart a previously interrupted job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> -RESTART -checkpoint <multisim-checkpoint-file>
+
+* Extend production simulations for certain edges:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> -extend <edge-file> -checkpoint <multisim-checkpoint-file>
+  An example for the format of an edge-file:
+     36da5ad:397128e
+     33dd5ad:347118e
+     33fe5ad:3171f8e
+  Each line specifies an edge with the two node's IDs. Each node ID is a hex
+  number of at least 7 digits. The two IDs are separated by a ':' (or '-' or
+  '_').
+
+* Prepare input files for multisim. Do NOT run job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> <pv-or-fmp-file> -prepare
+
+* Run a protein residue mutation job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> <mae-file> -protein <mutation-file> -solvent_asl <SOLVENT-ASL>
+  <mutation-file> follows the same format as used by $SCHRODINGER/run residue_scanning_backend.py -muts_file
+
+* Run a protein stability job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> <mae-file> -protein <mutation-file>
+
+* Add mutations to a complete protein fep job:
+    $SCHRODINGER/fep_plus  <out-fmp-file> -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> -protein <mutation-file> -expand_protein <mae-file>
+
+* Run a metalloprotein FEP job:
+    $SCHRODINGER/fep_plus -HOST <master-host> -SUBHOST <subhost> -JOBNAME <jobname> <pv-or-fmp-file> -mp <property-name>
+
+positional arguments:
+  inp_file              A fmp or a pv structure file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m <FILE.msj>         Use custom workflow instead of the auto-generated one.
+  -ff {OPLS_2005|OPLS3e}
+                        Specify the forcefield to use. Default: OPLS3e.
+  -seed <integer>       Specify seed of pseudorandom number generator for initial atom velocities. Default: 2014
+  -ppj PPJ              Specify number of processors per job. Default: 4.
+  -checkpoint <multisim-checkpiont-file>
+                        Specify the multisim checkpoint file.
+  -prepare              Do not run job. Only prepare multisim input files.
+  -JOBNAME <string>     Specify the job name.
+  -buffer <real>        Specify a larger buffer size (in Angstroms). Defaults: 5 in complex leg; 5 in solvent leg of protein-residue-mutation FEP;
+                        10 in solubility FEP; 10 in solvent leg of other types of FEP. The custom value will be used only if it's greater than the
+                        corresponding default values.
+  -maxjob <integer>     Maximum number of simultaneous subjobs. Default: 0 (unlimited)
+  -lambda-windows <integer>, -lambda_windows <integer>
+                        Number of lambda windows for the default protocol. Default: 12
+  -ensemble {muVT|NPT|NVT}
+                        Specify the ensemble class. Default: muVT.
+  -time <real>          Specify the production-simulation time (in ps). For extension, this option specifies the additional simulation time (in
+                        ps). Default: 5000.0. Min value: 500.0.
+  -protein <mutation>   Generate and run protein residue mutation if a mutation_file is given here and a solvent_asl is also provided; Generate and
+                        run protein stability when a mutation_file is given here and no solvent_asl is provided
+  -mp [<property_name>]
+                        Generate and run metalloprotein workflow.
+  -solvent-asl SOLVENT_ASL, -solvent_asl SOLVENT_ASL
+                        Specify ASL to put in solvent leg for protein residue mutation
+  -vacuum               Include vacuum simulations. Only supported for small molecule FEP.
+  -extend <edge-file>   Extend production simulations of specified edges.
+  -atom-mapping <string>, -atom_mapping <string>
+                        Atom mapping specification for leadoptmap.py. For small molecule FEP, specify SMARTS string to customize core assignment;
+                        for protein residue mutation FEP, 'sidechain' is the only argument allowing the side chain atoms to be mapped as well while
+                        by default the side chains are not mapped. This option will be ignored if fmp file is provided as input.
+  -modify-dihe, -modify_dihe
+                        Modify retained dihedral angle interactions for customized core.
+  -no-h-mass, -no_h_mass
+                        Turn off hydrogen mass repartitioning (on by default).
+  -membrane             Indicates the model system is a membrane protein system, such as the GPCR.
+  -charged-lambda-windows <integer>, -charged_lambda_windows <integer>
+                        Number of lambda windows for the charge protocol. Default: 24
+  -core-hopping-lambda-windows <integer>, -core_hopping_lambda_windows <integer>
+                        Number of lambda windows for the core-hopping protocol. Default: 16
+  -residue-structure <mae-file>, -residue_structure <mae-file>
+                        Noncanonical amino acids for protein mutation.
+  -expand-protein EXPAND_PROTEIN, -expand_protein EXPAND_PROTEIN
+                        Pass the structure file for protein fep to re-run with additional mutations.
+  -water <string>       Specify the water model used in the simulations. Valid values: SPC, TIP3P, TIP4P, TIP4PEW, TIP4PD, TIP5P. Default: SPC
+  -custom-charge-mode <string>, -custom_charge_mode <string>
+                        Set the custom charge calculation mode when using the OPLS3e forcefield.Default is to 'assign' custom charges based on the
+                        input geometries.Set to 'clear' to clear custom charges without assigning them.Set to 'keep' to keep existing custom charge
+                        parameters.
+  -skip-leg [<property_name>]
+                        Specify the legs to skip (complex/solvent/vacuum). Pass in multiple times to skip multiple legs
+
+Job Control Options:
+  -HOST <hostname>      Run job remotely on the indicated host entry.
+  -WAIT                 Do not return a prompt until the job completes.
+  -LOCAL                Do not use a temporary directory for job files. Keep files in the current directory.
+  -D, -DEBUG            Show details of Job Control operation.
+  -TMPDIR TMPDIR        The name of the directory used to store files temporarily during a job.
+  -SAVE                 Return zip archive of job directory at job completion.
+  -OPLSDIR OPLSDIR      Specifies directory for custom forcefield parameters.
+
+Standard Options:
+  -SUBHOST <hostname> or -SUBHOST <hostname:nproc> or -SUBHOST "hostname1:nproc1 ... hostnameN:nprocN"
+                        Run the subjobs on the specified hosts. The driver is run on the host specified with -HOST.
+  -RETRIES RETRIES      If a subjob fails for any reason, it will be retried RETRIES times.
+  -RESTART              Restart a previously failed job, utilizing any already completed subjobs.

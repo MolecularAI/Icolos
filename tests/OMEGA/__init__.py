@@ -1,0 +1,1 @@
+from tests.OMEGA.test_OMEGA_confgen import Test_OMEGA_confgen

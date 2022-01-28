@@ -1,0 +1,91 @@
+{
+    "workflow": {
+        "header": {
+            "id": "input_file_types_example",
+            "description": "This configuration illustrates the use of different input file types.",
+            "logging": {
+              "logfile": "tests/junk/input_file_types.log"
+            },
+            "environment": {
+                "export": [{
+                        "key": "XTBHOME",
+                        "value": "/opt/scp/services/reinvent/Icolos/binaries/xtb-6.3.2"
+                    }, {
+                        "key": "XTBPATH",
+                        "value": "${XTBHOME}/share/xtb"
+                    }, {
+                        "key": "PATH",
+                        "value": "${PATH}:${XTBHOME}/bin"
+                    }, {
+                        "key": "PKG_CONFIG_PATH",
+                        "value": "${PKG_CONFIG_PATH}:${XTBHOME}/lib64/pkgconfig"
+                    }
+                ]
+            }
+        },
+        "steps": [{
+                "step_id": "01_initialization_from_SDF",
+                "type": "initialization",
+                "input": {
+                  "compounds": [
+                    {
+                      "source": "{entrypoint_dir}/../IcolosData/molecules/aspirin.sdf",
+                      "source_type": "file",
+                      "format": "SDF"
+                    }
+                  ]
+                }
+            },
+            {
+                "step_id": "01_initialization_SMI",
+                "type": "initialization",
+                "input": {
+                  "compounds": [
+                    {
+                      "source": "{entrypoint_dir}/../IcolosData/molecules/paracetamol.smi",
+                      "source_type": "file",
+                      "format": "SMI"
+                    }
+                  ]
+                }
+            },
+            {
+                "step_id": "01_initialization_CSV",
+                "type": "initialization",
+                "input": {
+                  "compounds": [
+                    {
+                      "source": "{entrypoint_dir}/../IcolosData/molecules/small_molecules.csv",
+                      "columns": {
+                        "smiles": "SMILES",
+                        "names": "name"
+                      },
+                      "source_type": "file",
+                      "format": "CSV"
+                    }
+                  ]
+                }
+            },
+            {
+                "step_id": "02_embed_SMI",
+                "type": "embedding",
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "method": "rdkit"
+                        }
+                    }
+                },
+                "input": {
+                  "compounds": [
+                    {
+                      "source": "01_initialization_SMI",
+                      "source_type": "step"
+                    }
+                  ]
+                }
+            }
+        ]
+    }
+}

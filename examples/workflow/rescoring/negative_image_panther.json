@@ -1,0 +1,58 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "panther_test_example",
+            "description": "Panther setup to generate negative image.",
+            "environment": {
+                "export": [{
+                        "key": "XTBHOME",
+                        "value": "/projects/cc/mai/binaries/xtb-6.4.0"
+                    }, {
+                        "key": "XTBPATH",
+                        "value": "${XTBHOME}/share/xtb"
+                    }, {
+                        "key": "PATH",
+                        "value": "${PATH}:${XTBHOME}/bin"
+                    }, {
+                        "key": "PKG_CONFIG_PATH",
+                        "value": "${PKG_CONFIG_PATH}:${XTBHOME}/lib64/pkgconfig"
+                    }, {
+                        "key": "PARA_ARCH",
+                        "value": "MPI"
+                    }, {
+                        "key": "PARNODES",
+                        "value": "6"
+                    }
+                ]
+            },
+            "global_variables": {
+            }
+        },
+        "steps": [{
+                "step_id": "negative_image_generation",
+                "type": "panther",
+                "settings": {
+                    "additional": {
+                        "panther_location": "/projects/cc/mai/binaries/panther",
+                        "panther_config_file": "{entrypoint_dir}/../IcolosData/panther/default_panther.in",
+                        "fields": {
+                            "1-Pdb file": "{entrypoint_dir}/../IcolosData/panther/1UYD_holo_residue_X.pdb"
+                        }
+                    }
+                },
+                "writeout": [
+                  {
+                    "generic": {
+                      "key": "mol2"
+                    },
+                    "destination": {
+                      "resource": "{entrypoint_dir}/tests/junk/panther/1uyd_panther_negative_image.mol2",
+                      "type": "file",
+                      "format": "txt"
+                    }
+                  }
+                ]
+            } 
+        ]
+    }
+}

@@ -1,0 +1,180 @@
+$SCHRODINGER/prime_mmgbsa [<options>] <struct_file>
+
+    Any option can be placed in an input file for ease of use.  The input
+    structure should be specified on a line using "STRUCT_FILE <input mae file>".
+    All other options should be placed one-per-line with the preceding dash
+    removed.  For example, the following two calculations are equivalent:
+
+    > prime_mmgbsa file_pv.mae -job_type ENERGY -lcons SMARTS.C
+
+    or
+
+    > prime_mmgbsa input.inp
+
+    where the contents of input.inp are:
+
+        STRUCT_FILE file_pv.mae
+        JOB_TYPE    ENERGY
+        LCONS       SMARTS.C
+
+    Note that HOST, SUBHOST and NICE flags must be set via the commandline.
+
+    All atoms in the ligand will have the i_psp_Prime_MMGBSA_Ligand property
+    set to 1, so that asl expressions can then be used for specifying parts of
+            the structure relative to the ligand.  For example,
+        "fillres within 5 (atom.i_psp_Prime_MMGBSA_Ligand 1)"
+    selects all residues within 5 Angstroms of the ligand.
+
+    SMARTS expressions can be included in all asl expressions.  The command
+    -lcons SMARTS.C will apply constraints to all aliphatic carbons in the ligand.
+
+    run $SCHRODINGER/prime_mmgbsa -h for a complete listing of all options.
+
+
+positional arguments:
+  struct_file           For most situations, this should be a Maestro file
+                        with the receptor as the first entry, followed by the
+                        ligand poses (e.g. a Glide pose viewer file). If the
+                        -ligand option is specified, then the input should
+                        instead be a Maestro file with each entry containing a
+                        protein-ligand complex.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -report_prime_log REPORT_PRIME_LOG
+                        (yes/no) Return an output file with the extension
+                        .Prime.log with the Prime logfiles of all component
+                        jobs. By default this in included if less than 100
+                        ligands are used
+  -csv_output CSV_OUTPUT
+                        (yes/no) Return a csv format output file -out.csv with
+                        the calculated energies.
+  -report_top REPORT_TOP
+                        Report the specified number of top-scoring ligands in
+                        the log file. All ligands are reported in the CSV and
+                        structure output files.
+  -v                    show program's version number and exit
+  -jobname JOBNAME, -JOBNAME JOBNAME, -j JOBNAME
+                        Set the base name of outputs
+  -restart_file RESTART_FILES
+                        Output of a partially completed subjob (this keyword
+                        can be can be used multiple times if there are
+                        multiple completed subjobs)
+  -RESTART              Guess names of restart files for -restart_file option
+
+Input:
+  -ligand LIGAND_ASL    Specify the ligand with an asl expression (required
+                        for trajectory processing). If this option is present
+                        then the input should be a maestro input file with
+                        each entry containing both the ligand and the
+                        receptor. The asl expression provided here will be
+                        used to determine which part of the complex structure
+                        is the ligand.
+
+Output:
+  -out_type {PV,COMPLEX,LIGAND,FLEXIBLE,COMPLETE}
+                        The type of Maestro file to output. Choices are PV,
+                        COMPLEX, LIGAND, FLEXIBLE and COMPLETE . LIGAND
+                        produces a ligand-only file. PV will produce a
+                        combination of the input receptor and the optimized
+                        ligand positions. COMPLEX will return the optimized
+                        ligand and receptor conformations. FLEXIBLE outputs
+                        the optimized conformations of the flexible portions.
+                        Please note that this is not a full protein structure
+                        and cannot be used for any subsequent calculations. Of
+                        these, only COMPLEX will return the full optimized
+                        receptor conformation. PV files are default if
+                        inputting a PV file, COMPLEX files are the default if
+                        inputting a series of complexes. COMPLETE includes the
+                        optimized free receptor and ligand structures to the a
+                        complex output file
+
+Molecular Mechanics (PRIME):
+  -receptor_region RSEL_ASL, -rsel RSEL_ASL
+                        Designate a region of the receptor as flexible using
+                        an asl expression. Expressions can refer to atoms in
+                        the ligand or the receptor and the selected region is
+                        the union of all the regions for each ligand-receptor
+                        pair in the input PV file. By default the entire
+                        receptor is frozen.
+  -rflexdist FLEXDIST, -flexdist FLEXDIST
+                        Treat all residues within this distance of the ligand
+                        as flexible. By default the entire receptor is frozen.
+                        (overwrites -receptor_region flag)
+  -rflexgroup {residue,side,polarh}
+                        Select a portion of the region defined with rflexdist
+                        flag to be flexible. residue: Choose the entire
+                        residue. side: Choose the sidechain of each residue.
+                        polarh: Choose the polar hydrogens on each residue.
+  -target_flexibility   Run a two-stage MMGBSA calculation where the second
+                        stage runs with the subset of flexible protein
+                        residues identified by the first
+  -target_flexibility_cutoff TARGET_FLEXIBILITY_CUTOFF
+                        Cutoff for determining movement for target flexibility
+                        in Angstroms
+  -ligand_region LSEL_ASL, -lsel LSEL_ASL
+                        Choose a section of the ligand to be treated as
+                        flexible. By default the entire ligand is flexible.
+  -job_type {ENERGY,REAL_MIN,SIDE_PRED,SIDE_COMBI,SITE_OPT,PGL}
+                        Prime jobtype to use to sample flexible regions.
+                        Setting this option multiple times will result in
+                        multiple sampling algorithms being used. Options are:
+                        REAL_MIN (default): Local minimization. ENERGY: No
+                        sampling, just calculate a single-point energy.
+                        SIDE_PRED: Optimize sidechains using Prime sidechain
+                        prediction. SIDE_COMBI: Optimize sidechain using
+                        Combinatorial Sidechain Prediction. (Limited to <5
+                        sidechains). SITE_OPT: Run a binding-site optimization
+                        consiting of prime sidechain predictions and
+                        minimziations designed specifically for predicting
+                        induced fit effects. PGL: Run a Prime PGL Binding-Site
+                        Optimization on all flexible regions. See the manual
+                        for more details on this protocol.
+  -rigid_body           Minimize the ligand as a rigid body
+  -num_output_struct NUM_OUTPUT_STRUCT
+                        The maximum number of poses to return per compound.
+                        This will only be relevant if mulitple job types are
+                        selected or job types that return multiple outputs are
+                        used.
+  -lcons LCONS          Select a portion of the ligand to harmonically
+                        constrain with an ASL expression. By default no
+                        constraints are used.
+  -rcons RCONS          Select a portion of the receptor to harmonically
+                        constrainwith an ASL expression. By default no
+                        constraints are used.
+  -str_cons STR_CONS    Strength of Receptor and Ligand Constraints in
+                        kcals/mol/A^2. The default value is 1.0 kcal/mol/A^2
+  -fbw_cons FBW_CONS    Width of flat bottom potential for constraints in A.
+                        The default value is 0.0A
+  -prime_opt PRIME_OPTIONS
+                        Pass any keyword value pair to the Prime Refinement
+                        stage in the form <keyword>=<value>. See the "Refining
+                        Protein Structures" chapter in the Prime User Manual
+                        for a description of available options. If you would
+                        like to change the force field from it's default value
+                        ( OPLS3e if the proper license is present ) use
+                        -prime_opt OPLS_VERSION=OPLS_2005
+  -use_ligand_charges   Use the partial charges in the input ligand file.
+  -frozen               Do not treat any part of the ligand or receptor as
+                        flexible. This overwrites the -ligand_region and
+                        -receptor_region flags.
+  -membrane             Use Prime implicit membrane model (must be set up in
+                        receptor file through Maestro)
+
+Watermap:
+  -watermap WATERMAP_FN, -WATERMAP WATERMAP_FN
+                        Score ligands against this watermap. Input should be a
+                        ct file containing the watermap generated with the
+                        current version of the Schrodinger suite.
+
+Job Control Options:
+  -HOST <hostname>      Run job remotely on the indicated host entry.
+  -WAIT                 Do not return a prompt until the job completes.
+  -D, -DEBUG            Show details of Job Control operation.
+  -NOJOBID              Run the job directly, without Job Control layer.
+
+Standard Options:
+  -NJOBS NJOBS          Divide the overall job into NJOBS subjobs.
+  -RETRIES RETRIES      If a subjob fails for any reason, it will be retried
+                        RETRIES times. (Default: 3)
+  -NOLAUNCH             Set up subjob inputs, but don't run the jobs.
