@@ -8,4 +8,4 @@ from tests.pmx.test_setup_workpath import *
 from tests.pmx.test_assemble_systems import *
 
 # from tests.pmx.test_run_simulations import *
-# from tests.pmx.test_abfe import *
+from tests.pmx.test_abfe import *

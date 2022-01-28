@@ -3,7 +3,7 @@ from icolos.core.containers.generic import GenericData
 from typing import AnyStr, List
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from pydantic import BaseModel
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.program_parameters import GromacsEnum
 import os
@@ -11,7 +11,6 @@ from icolos.utils.general.files_paths import attach_root_path
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
-_SBE = StepBaseEnum
 
 
 class StepGMXmmpbsa(StepGromacsBase, BaseModel):

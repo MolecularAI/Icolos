@@ -20,7 +20,7 @@
   "PMX": {
     "PMX": "<FILL_PATH>/envs/pmx/bin/pmx",
 	"PMX_PYTHON": "<FILL_PATH>/envs/pmx/bin/python",
-	"CLI_ENTRYPOINT": "<FILL_PATH>/pmx_az/src/pmx/scripts/mai_utils",
+	"CLI_ENTRYPOINT": "<FILL_PATH>/pmx/src/pmx/scripts/icolos_entrypoints",
 	"GMXLIB": "<FILL_PATH>/px_az/src/pmx/data/mutff"
   },
   "DSSP": "/opt/scp/software/DSSP/4.0.0-GCCcore-8.2.0/bin",

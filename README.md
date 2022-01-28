@@ -29,6 +29,17 @@ After cloning, first install the `icolosprod` `conda` environment:
 conda create -f environment_min.yml
 ```
 
+### `ESPsim` installation
+The following will install the `ESPsim` package into the environment - this is only required if ligand-based matching using this package is desired.
+
+```
+cd ..
+git clone https://github.com/hesther/espsim.git
+cd espsim
+conda activate icolosprod
+pip install -e .
+```
+
 ## Execution
 Once a `JSON` is specified, the workflow can be executed like so:
 

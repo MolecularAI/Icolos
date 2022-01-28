@@ -39,9 +39,9 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
             prepared_args.append(value)
         return prepared_args
 
-    def _execute_command(self, edges: List[Edge], q: Dict):
-        assert isinstance(edges, list)
-        edge = edges[0]
+    def _execute_command(self, jobs: List[Edge]):
+        assert isinstance(jobs, list)
+        edge = jobs[0]
         lig1 = edge.get_source_node_name()
         lig2 = edge.get_destination_node_name()
         # write them to the right dir as a pdb from the outset
@@ -68,7 +68,6 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
             check=True,
             location=self.work_dir,
         )
-        q[edge.get_edge_id()] = result.returncode
 
     def execute(self):
         # check the workflow has been configured correctly to use a shared work_dir

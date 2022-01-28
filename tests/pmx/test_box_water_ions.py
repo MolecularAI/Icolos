@@ -28,10 +28,10 @@ class Test_PMXBoxWaterIons(unittest.TestCase):
     def setUp(self):
         # initialise the map object for the two test ligands
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
         p_map = PerturbationMap(compounds=self.compounds)
-        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG_SINGLE_EDGE)
+        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
         self.p_map = p_map
 
     # def tearDown(self):
@@ -43,7 +43,6 @@ class Test_PMXBoxWaterIons(unittest.TestCase):
             _SBE.STEP_TYPE: _SBE.STEP_PMX_BOX_WATER_IONS,
             _SBE.EXEC: {
                 _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
-                _SBE.EXEC_BINARYLOCATION: MAIN_CONFIG["PMX"]["CLI_ENTRYPOINT"],
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 8,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
@@ -60,11 +59,11 @@ class Test_PMXBoxWaterIons(unittest.TestCase):
         step._workflow_object.workflow_data.perturbation_map = self.p_map
         step.execute()
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/water/tpr.tpr")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/water/tpr.tpr")
         )
-        self.assertGreater(stat_inf.st_size, 212100)
+        self.assertGreater(stat_inf.st_size, 167000)
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/protein/tpr.tpr")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/protein/tpr.tpr")
         )
-        self.assertGreater(stat_inf.st_size, 3505650)
+        self.assertGreater(stat_inf.st_size, 1317800)

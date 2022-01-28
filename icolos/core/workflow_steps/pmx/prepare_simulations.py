@@ -1,20 +1,24 @@
 from typing import Dict, List
+from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
-from icolos.utils.enums.program_parameters import PMXAtomMappingEnum, PMXEnum
+from icolos.utils.enums.program_parameters import (
+    GromacsEnum,
+    StepPMXEnum,
+)
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
+import os
 
-_PE = PMXEnum()
-_PAE = PMXAtomMappingEnum()
+_PSE = StepPMXEnum()
+_SGE = StepGromacsEnum()
+_GE = GromacsEnum()
 
 
 class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
     """
     Prepare the tpr file for either equilibration or production simulations
-
-    Calls pmx util entrypoint prepare_simulations.py with
-    list of edges and the workdir path
     """
 
     def __init__(self, **data):
@@ -24,28 +28,77 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
 
     def execute(self):
 
-        edges = self.get_edges()
+        edges = [e.get_edge_id() for e in self.get_edges()]
         self.execution.parallelization.max_length_sublists = 1
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="pmx_prepare_sims"
+            run_func=self.prepare_simulation, step_id="pmx prepare_simulations"
         )
 
-    def _execute_command(self, edges: List, q: Dict):
-        arguments = {
-            "-edges": '"' + " ".join([e.get_edge_id() for e in edges]) + '"',
-            "-workPath": self.work_dir,
-            "-sim_type": self.settings.additional["sim_type"],
-            "-replicas": self.get_workflow_object().workflow_data.perturbation_map.replicas,
-        }
-        result = self._backend_executor.execute(
-            command=_PE.PREPARE_SIMULATIONS,
-            arguments=self.get_arguments(defaults=arguments),
-            check=True,
-            location=self.work_dir,
-        )
+    def prepare_simulation(self, jobs: List[Edge], bLig=True, bProt=True):
+        mdp_path = os.path.join(self.work_dir, "input/mdp")
 
-        q[edges[0].get_edge_id()] = result.returncode
+        sim_type = self.settings.additional[_PSE.SIM_TYPE]
+
+        for edge in jobs:
+
+            ligTopPath = self._get_specific_path(
+                workPath=self.work_dir, edge=edge, wp="water"
+            )
+            protTopPath = self._get_specific_path(
+                workPath=self.work_dir, edge=edge, wp="protein"
+            )
+
+            for state in self.states:
+                for r in range(1, self.get_perturbation_map().replicas + 1):
+
+                    # ligand
+                    if bLig == True:
+                        wp = "water"
+                        simpath = self._get_specific_path(
+                            workPath=self.work_dir,
+                            edge=edge,
+                            wp=wp,
+                            state=state,
+                            r=r,
+                            sim=sim_type,
+                        )
+                        empath = self._get_specific_path(
+                            workPath=self.work_dir,
+                            edge=edge,
+                            wp=wp,
+                            state=state,
+                            r=r,
+                            sim="em",
+                        )
+                        toppath = ligTopPath
+                        self._prepare_single_tpr(
+                            simpath, toppath, state, sim_type, empath
+                        )
+
+                    # protein
+                    if bProt == True:
+                        wp = "protein"
+                        simpath = self._get_specific_path(
+                            workPath=self.work_dir,
+                            edge=edge,
+                            wp=wp,
+                            state=state,
+                            r=r,
+                            sim=sim_type,
+                        )
+                        empath = self._get_specific_path(
+                            workPath=self.work_dir,
+                            edge=edge,
+                            wp=wp,
+                            state=state,
+                            r=r,
+                            sim="em",
+                        )
+                        toppath = protTopPath
+                        self._prepare_single_tpr(
+                            simpath, toppath, state, sim_type, empath
+                        )

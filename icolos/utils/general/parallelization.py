@@ -120,7 +120,6 @@ class SubtaskContainer(BaseModel):
 
 class Parallelizer(BaseModel):
     func: Callable
-    collect_rtn_codes: bool = False
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -136,14 +135,14 @@ class Parallelizer(BaseModel):
         #  {'one': 3, 'two': 'cc', 'three': 0.1}]
         list_exec = self.rearrange_input(kwargs)
 
-        # run in parallel; wait for all subjobs to finish before proceeding
-        # Optional mechanism for collecting return code from subprocessees
-        if self.collect_rtn_codes:
-            manager = multiprocessing.Manager()
-            q = manager.dict()
-            for subprocess_args in list_exec:
-                subprocess_args["q"] = q
-        # rtn_codes = []
+        # # run in parallel; wait for all subjobs to finish before proceeding
+        # # Optional mechanism for collecting return code from subprocessees
+        # if self.collect_rtn_codes:
+        #     manager = multiprocessing.Manager()
+        #     q = manager.dict()
+        #     for subprocess_args in list_exec:
+        #         subprocess_args["q"] = q
+        # # rtn_codes = []
         processes = []
         for subprocess_args in list_exec:
             p = multiprocessing.Process(target=self.func, kwargs=subprocess_args)
@@ -155,5 +154,5 @@ class Parallelizer(BaseModel):
         for p in processes:
             p.join()
 
-        if self.collect_rtn_codes:
-            return q.values()
+        # if self.collect_rtn_codes:
+        #     return q.values()

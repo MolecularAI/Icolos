@@ -165,6 +165,7 @@ class StepBaseEnum(str, Enum):
     INPUT_MERGE_BY_SMILE = "smile"
 
     FILE_TYPE_PDB = "pdb"
+    FILETYPE_TXT = "txt"
     FILE_SIZE_THRESHOLD = 2e9
 
     # CSV settings

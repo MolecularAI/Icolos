@@ -1,5 +1,3 @@
-from enum import Flag
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from icolos.utils.execute_external.gromacs import GromacsExecutor
@@ -8,8 +6,6 @@ from icolos.core.workflow_steps.step import _LE
 import os
 
 _GE = GromacsEnum()
-_SGE = StepGromacsEnum()
-_SBE = StepBaseEnum
 
 
 class StepGMXTrjcat(StepGromacsBase, BaseModel):

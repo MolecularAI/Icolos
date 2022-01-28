@@ -29,12 +29,12 @@ class Test_PMXAssembleSystems(unittest.TestCase):
 
     def setUp(self):
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
         p_map = PerturbationMap(compounds=self.compounds)
-        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG_SINGLE_EDGE)
+        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
         self.p_map = p_map
-        with open(PATHS_EXAMPLEDATA.FEP_PLUS_OTHER_PROTEIN, "r") as f:
+        with open(PATHS_EXAMPLEDATA.PMX_TNKS_PROTEIN, "r") as f:
             data = f.read()
         self.protein = GenericData(file_name="protein.pdb", file_data=data)
 
@@ -72,6 +72,11 @@ class Test_PMXAssembleSystems(unittest.TestCase):
         step_assembleSystems.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/hybridStrTop/ffmerged.itp")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/protein/init.pdb")
         )
-        self.assertEqual(stat_inf.st_size, 1695)
+        self.assertGreater(stat_inf.st_size, 141300)
+
+        stat_inf = os.stat(
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/water/init.pdb")
+        )
+        self.assertGreater(stat_inf.st_size, 2800)

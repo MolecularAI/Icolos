@@ -1,33 +1,35 @@
 from typing import Dict, List
+from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 import os
-from icolos.utils.enums.program_parameters import PMXAtomMappingEnum, PMXEnum
+from icolos.utils.enums.program_parameters import (
+    GromacsEnum,
+    StepPMXEnum,
+)
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 
-_PE = PMXEnum()
-_PAE = PMXAtomMappingEnum()
+_PSE = StepPMXEnum()
+_GE = GromacsEnum()
 
 
 class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
     """
-    Take the prepard structure files and prepare the system,
+    Take the prepared structure files and prepare the system,
     runs editconf, solvate, genion and grompp for each system
     to be simulated
     """
 
-    # Note all paths are relative to the workdir
     def __init__(self, **data):
         super().__init__(**data)
 
         self._initialize_backend(executor=PMXExecutor)
 
     def execute(self):
-        # run the wrapper script in pmx to prepare the systems
 
-        edges = self.get_edges()
+        edges = [e.get_edge_id() for e in self.get_edges()]
 
         self.execution.parallelization.max_length_sublists = 1
         self._subtask_container = SubtaskContainer(
@@ -35,24 +37,163 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="BoxWaterIons"
+            run_func=self.boxWaterIons, step_id="pmx boxWaterIons"
         )
 
-    def _execute_command(self, edges: List, q: Dict):
+    def boxWaterIons(self, jobs: List[str]):
+        mdp_path = os.path.join(self.work_dir, "input/mdp")
 
-        arguments = {
-            "-edges": '"' + " ".join([e.get_edge_id() for e in edges]) + '"',
-            "-ligandPath": os.path.join(self.work_dir, _PAE.LIGAND_DIR),
-            "-workPath": self.work_dir,
-        }
+        for edge in jobs:
+            outLigPath = self._get_specific_path(
+                workPath=self.work_dir, edge=edge, wp="water"
+            )
+            outProtPath = self._get_specific_path(
+                workPath=self.work_dir, edge=edge, wp="protein"
+            )
 
-        result = self._backend_executor.execute(
-            command=_PE.BOX_WATER_IONS,
-            arguments=self.get_arguments(defaults=arguments),
-            check=True,
-            location=self.work_dir,
-        )
+            # box ligand
+            inStr = "{0}/init.pdb".format(outLigPath)
+            outStr = "{0}/box.pdb".format(outLigPath)
+            editconf_args = [
+                "-f",
+                inStr,
+                "-o",
+                outStr,
+                "-bt",
+                self.boxshape,
+                "-d",
+                self.boxd,
+            ]
+            self._gromacs_executor.execute(
+                command=_GE.EDITCONF, arguments=editconf_args, check=True
+            )
+            # box protein
+            inStr = "{0}/init.pdb".format(outProtPath)
+            outStr = "{0}/box.pdb".format(outProtPath)
+            editconf_args = [
+                "-f",
+                inStr,
+                "-o",
+                outStr,
+                "-bt",
+                self.boxshape,
+                "-d",
+                self.boxd,
+            ]
+            self._gromacs_executor.execute(
+                command=_GE.EDITCONF, arguments=editconf_args, check=True
+            )
+            # water ligand
+            inStr = "{0}/box.pdb".format(outLigPath)
+            outStr = "{0}/water.pdb".format(outLigPath)
+            top = "{0}/topol.top".format(outLigPath)
+            solvate_args = ["-cp", inStr, "-cs", "spc216.gro", "-p", top, "-o", outStr]
+            self._gromacs_executor.execute(command=_GE.SOLVATE, arguments=solvate_args)
+            # water protein
+            inStr = "{0}/box.pdb".format(outProtPath)
+            outStr = "{0}/water.pdb".format(outProtPath)
+            top = "{0}/topol.top".format(outProtPath)
+            solvate_args = ["-cp", inStr, "-cs", "spc216.gro", "-p", top, "-o", outStr]
+            self._gromacs_executor.execute(command=_GE.SOLVATE, arguments=solvate_args)
 
-        self._logger.log("End of BoxWaterIons output", _LE.DEBUG)
-        # collect returncodes from subprocess
-        q[edges[0].get_edge_id()] = result.returncode
+            # ions ligand
+            inStr = "{0}/water.pdb".format(outLigPath)
+            outStr = "{0}/ions.pdb".format(outLigPath)
+            mdp = "{0}/em_l0.mdp".format(mdp_path)
+            tpr = "{0}/tpr.tpr".format(outLigPath)
+            top = "{0}/topol.top".format(outLigPath)
+            mdout = "{0}/mdout.mdp".format(outLigPath)
+            grompp_args = [
+                "-f",
+                mdp,
+                "-c",
+                inStr,
+                "-r",
+                inStr,
+                "-p",
+                top,
+                "-o",
+                tpr,
+                "-maxwarn",
+                4,
+                "-po",
+                mdout,
+            ]
+
+            self._gromacs_executor.execute(
+                command=_GE.GROMPP, arguments=grompp_args, check=True
+            )
+            genion_args = [
+                "-s",
+                tpr,
+                "-p",
+                top,
+                "-o",
+                outStr,
+                "-conc",
+                self.conc,
+                "-pname",
+                self.pname,
+                "-nname",
+                self.nname,
+                "-neutral",
+            ]
+            self._gromacs_executor.execute(
+                command=_GE.GENION,
+                arguments=genion_args,
+                check=True,
+                pipe_input="echo SOL",
+            )
+            # ions protein
+            inStr = "{0}/water.pdb".format(outProtPath)
+            outStr = "{0}/ions.pdb".format(outProtPath)
+            mdp = "{0}/em_l0.mdp".format(mdp_path)
+            tpr = "{0}/tpr.tpr".format(outProtPath)
+            top = "{0}/topol.top".format(outProtPath)
+            mdout = "{0}/mdout.mdp".format(outProtPath)
+            grompp_args = [
+                "-f",
+                mdp,
+                "-c",
+                inStr,
+                "-r",
+                inStr,
+                "-p",
+                top,
+                "-o",
+                tpr,
+                "-maxwarn",
+                4,
+                "-po",
+                mdout,
+            ]
+
+            self._gromacs_executor.execute(
+                command=_GE.GROMPP, arguments=grompp_args, check=True
+            )
+            genion_args = [
+                "-s",
+                tpr,
+                "-p",
+                top,
+                "-o",
+                outStr,
+                "-conc",
+                self.conc,
+                "-pname",
+                self.pname,
+                "-nname",
+                self.nname,
+                "-neutral",
+            ]
+            self._gromacs_executor.execute(
+                command=_GE.GENION,
+                arguments=genion_args,
+                check=True,
+                pipe_input="echo SOL",
+            )
+
+            # clean backed files
+            self._clean_backup_files(outLigPath)
+
+            self._clean_backup_files(outProtPath)

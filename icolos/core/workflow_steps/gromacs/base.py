@@ -1,6 +1,6 @@
 from icolos.core.containers.generic import GenericData
 from icolos.utils.enums.execution_enums import ExecutionResourceEnum
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from pydantic import BaseModel
 import os
 from typing import List
@@ -14,7 +14,6 @@ from icolos.utils.execute_external.batch_executor import BatchExecutor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 
 _SGE = StepGromacsEnum()
-_SBE = StepBaseEnum
 _GE = GromacsEnum()
 _ERE = ExecutionResourceEnum
 

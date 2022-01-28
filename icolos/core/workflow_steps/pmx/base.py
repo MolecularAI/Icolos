@@ -1,30 +1,104 @@
 from subprocess import CompletedProcess
+from typing import Dict, List
 from pydantic import BaseModel
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
-from icolos.utils.enums.program_parameters import GromacsEnum
+from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
-from icolos.utils.execute_external.pmx import PMXExecutor
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 import os
 from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
+import glob
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
+_SPE = StepPMXEnum()
 
 
 class StepPMXBase(StepBase, BaseModel):
 
     _antechamber_executor: Executor = None
+    _gromacs_executor: Executor = None
+    sim_types: List = None
+    states: List = None
+    therm_cycle_branches: List = None
+    ff: str = None
+    boxshape: str = None
+    boxd: float = None
+    water: str = None
+    conc: float = None
+    pname: str = None
+    nname: str = None
+    mdp_prefixes: Dict = None
 
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=PMXExecutor)
-        self._check_backend_availability()
         self._antechamber_executor = Executor(prefix_execution=_SGE.AMBERTOOLS_LOAD)
+        self._gromacs_executor = GromacsExecutor(
+            prefix_execution=self.execution.prefix_execution
+        )
+        self.sim_types = ["em", "eq", "transitions"]
+        self.states = ["stateA", "stateB"]
+        self.therm_cycle_branches = ["water", "protein"]
+
+        # simulation setup, these should not change
+        self.ff = "amber99sb-star-ildn-mut.ff"
+        self.boxshape = self.get_setting(_SPE.BOXSHAPE, "dodecahedron")
+        self.boxd = self.get_setting(_SPE.BOXD, 1.5)
+        self.water = self.get_setting(_SPE.WATER, "tip3p")
+        self.conc = self.get_setting(_SPE.CONC, 0.15)
+        self.pname = self.get_setting(_SPE.PNAME, "NaJ")
+        self.nname = self.get_setting(_SPE.NNAME, "ClJ")
+        self.mdp_prefixes = {"em": "em", "eq": "eq", "transitions": "ti"}
+
+    def get_setting(self, key: str, default: str):
+        """
+        Query settings.additional with the key, if not set use the default
+        """
+        return (
+            self.settings.additional[key]
+            if key in self.settings.additional.keys()
+            else default
+        )
+
+    def _get_specific_path(
+        self,
+        workPath=None,
+        edge=None,
+        bHybridStrTop=False,
+        wp=None,
+        state=None,
+        r=None,
+        sim=None,
+    ):
+        if edge == None:
+            return workPath
+        edgepath = "{0}/{1}".format(workPath, edge)
+
+        if bHybridStrTop == True:
+            hybridStrPath = "{0}/hybridStrTop".format(edgepath)
+            return hybridStrPath
+
+        if wp == None:
+            return edgepath
+        wppath = "{0}/{1}".format(edgepath, wp)
+
+        if state == None:
+            return wppath
+        statepath = "{0}/{1}".format(wppath, state)
+
+        if r == None:
+            return statepath
+        runpath = "{0}/run{1}".format(statepath, r)
+
+        if sim == None:
+            return runpath
+        simpath = "{0}/{1}".format(runpath, sim)
+        return simpath
 
     def _parametrise_protein(
         self,
@@ -50,6 +124,52 @@ class StepPMXBase(StepBase, BaseModel):
             check=True,
             location=os.path.join(self.work_dir, path),
         )
+
+    def _prepare_single_tpr(
+        self, simpath, toppath, state, sim_type, empath=None, frameNum=0
+    ) -> CompletedProcess:
+        mdp_path = os.path.join(self.work_dir, "input/mdp")
+        mdp_prefix = self.mdp_prefixes[sim_type]
+
+        top = "{0}/topol.top".format(toppath)
+        tpr = "{0}/tpr.tpr".format(simpath)
+        mdout = "{0}/mdout.mdp".format(simpath)
+        # mdp
+        if state == "stateA":
+            mdp = "{0}/{1}_l0.mdp".format(mdp_path, mdp_prefix)
+        else:
+            mdp = "{0}/{1}_l1.mdp".format(mdp_path, mdp_prefix)
+        # str
+        if sim_type == "em":
+            inStr = "{0}/ions.pdb".format(toppath)
+        elif sim_type == "eq":
+            inStr = "{0}/confout.gro".format(empath)
+        elif sim_type == "transitions":
+            inStr = "{0}/frame{1}.gro".format(simpath, frameNum)
+            tpr = "{0}/ti{1}.tpr".format(simpath, frameNum)
+
+        grompp_args = [
+            "-f",
+            mdp,
+            "-c",
+            inStr,
+            "-r",
+            inStr,
+            "-p",
+            top,
+            "-o",
+            tpr,
+            "-maxwarn",
+            4,
+            "-po",
+            mdout,
+        ]
+        result = self._gromacs_executor.execute(
+            command=_GE.GROMPP, arguments=grompp_args, check=True
+        )
+
+        self._clean_backup_files(simpath)
+        return result
 
     def _clean_pdb_structure(self, tmp_dir: str) -> None:
         files = [file for file in os.listdir(tmp_dir) if file.endswith("pdb")]
@@ -132,13 +252,15 @@ class StepPMXBase(StepBase, BaseModel):
                 os.path.join(tmp_dir, gro_file),
             )
 
-    def _execute_pmx_step_parallel(self, run_func, step_id: str):
+    def _execute_pmx_step_parallel(self, run_func, step_id: str, **kwargs):
         """
         Instantiates Icolos's parallelizer object,
         runs the step's execute method,
-        checks the reutrn codes i.e. will error if an edge fails
+        passes any kwargs straight to the run_func
+
+
         """
-        parallelizer = Parallelizer(func=run_func, collect_rtn_codes=True)
+        parallelizer = Parallelizer(func=run_func)
         n = 1
         while self._subtask_container.done() is False:
 
@@ -147,24 +269,20 @@ class StepPMXBase(StepBase, BaseModel):
             )  # return n lists of length max_sublist_length
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
-            edges = self._prepare_edges(next_batch)
-            # to avoid simultaneous processes logging to the same file, pass the
+            jobs = self._prepare_edges(next_batch)
             self._logger.log(
-                f"Executing {step_id} for batch {n}, containing {len(edges)} * {len(edges[0])} edges",
+                f"Executing {step_id} for batch {n}, containing {len(jobs)} * {len(jobs[0])} jobs",
                 _LE.INFO,
             )
 
-            rtn_codes = parallelizer.execute_parallel(
-                edges=edges,
-            )
-            assert len(rtn_codes) == len(next_batch)
-            for idx, sublist in enumerate(next_batch):
-                for task in sublist:  # one edge per sublist
-                    if rtn_codes[idx] == 0:
-                        task.set_status_success()
-                    else:
-                        task.set_status_failed()
+            parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
+            # TODO: find a reliable way to sort this, ideally by inspecting log files
+            for element in next_batch:
+                for subtask in element:
+                    subtask.set_status_success()
+
+            self._log_execution_progress()
             n += 1
 
     def get_arguments(self, defaults: dict = None) -> list:
@@ -233,19 +351,12 @@ class StepPMXBase(StepBase, BaseModel):
         )
         self.get_workflow_object().set_perturbation_map(perturbation_map)
 
-    def _get_line_idx(self, data, id_str) -> int:
-        # utility to extract the line index with a specific id string
-        line = [e for e in data if id_str in e]
-        assert len(line) == 1
-        line = line[0]
-        return data.index(line)
-
     def _prepare_edges(self, batch):
         edges = []
 
         for task in batch:
             task_edges = []
-            for element in task:  # for now, only a single element
+            for element in task:
                 task_edges.append(element.data)
             edges.append(task_edges)
         return edges
@@ -253,3 +364,8 @@ class StepPMXBase(StepBase, BaseModel):
     def _log_result(self, result: CompletedProcess):
         for line in result.stderr.split("\n"):
             self._logger_blank.log(line, _LE.DEBUG)
+
+    def _clean_backup_files(self, path):
+        toclean = glob.glob("{0}/*#".format(path))
+        for clean in toclean:
+            os.remove(clean)

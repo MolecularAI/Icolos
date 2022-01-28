@@ -1034,6 +1034,7 @@ class GromacsEnum:
     ACPYPE_BINARY = "acpype.py"
     MMPBSA = "gmx_MMPBSA"
     DO_DSSP = "gmx do_dssp"
+    SELECT = "gmx select"
     ACPYPE_PATH = "$ACPYPE"
     CLUSTER_TS = "Rscript $MDPLOT/MDplot/inst/bash/MDplot_bash.R clusters_ts"
     PRIMARY_COMPONENTS = ["Protein", "DNA", "RNA"]
@@ -1303,6 +1304,16 @@ class PMXEnum:
     # prohibit any attempt to set any values
     def __setattr__(self, key, value):
         raise ValueError("No changes allowed.")
+
+
+class StepPMXEnum:
+    SIM_TYPE = "sim_type"
+    BOXSHAPE = "boxshape"
+    BOXD = "boxd"
+    WATER = "water"
+    CONC = "conc"
+    PNAME = "pname"
+    NNAME = "nname"
 
 
 class PMXAtomMappingEnum:

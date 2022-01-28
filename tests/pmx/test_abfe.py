@@ -22,7 +22,7 @@ class Test_PMXabfe(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.PMX_ABFE_INPUT_COMPLEX, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE, "r") as f:
             data = f.read()
         self.protein = GenericData(file_name="complex.pdb", file_data=data)
 

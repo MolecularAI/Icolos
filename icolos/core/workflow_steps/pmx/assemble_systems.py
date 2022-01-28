@@ -34,20 +34,19 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="pmx_setup"
+            run_func=self._execute_command, step_id="pmx assemble_systems"
         )
 
-    def _execute_command(self, edges: List, q: Dict):
+    def _execute_command(self, jobs: List):
 
         args = {
-            "-edges": '"' + " ".join([e.get_edge_id() for e in edges]) + '"',
+            "-edges": '"' + " ".join([e.get_edge_id() for e in jobs]) + '"',
             "-ligand_path": os.path.join(self.work_dir, _PAE.LIGAND_DIR),
             "-workPath": self.work_dir,
         }
-        result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_PE.ASSEMBLE_SYSTEMS,
             arguments=self.get_arguments(defaults=args),
             check=True,
             location=self.work_dir,
         )
-        q[edges[0].get_edge_id()] = result.returncode

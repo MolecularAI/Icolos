@@ -63,7 +63,7 @@ class StepEspSim(StepBase, BaseModel):
 
         simShape, simEsp = EmbedAlignConstrainedScore(*args)
 
-        # now attach the mols as conformersattach the scores to the mol objects
+        # now attach the mols as conformers attach the scores to the mol objects
         trg_conf = Conformer(conformer=trg_mol)
         trg_conf.get_molecule().SetProp("shape_sim", str(simShape[0]))
         trg_conf.get_molecule().SetProp("esp_sim", str(simEsp[0]))

@@ -12,7 +12,7 @@ from icolos.utils.general.parallelization import SubtaskContainer
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 
-
+# These classes were inspired by the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
 class StepPMXSetup(StepPMXBase, BaseModel):
     """
     Create the directory tree structure.
@@ -92,7 +92,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         existing_itp_files = [
             f
             for f in os.listdir(os.path.join(self.work_dir, "input/protein"))
-            if f.endswith("itp") and f.startswith("Protein")
+            if f.endswith("itp") and "Protein" in f
         ]
         if (
             not existing_itp_files
@@ -166,14 +166,11 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                             simpath = f"{runpath}/{sim}".format(runpath, sim)
                             os.makedirs(simpath, exist_ok=True)
 
-    # TODO: sort out nomenclature here
-    def _parametrise_nodes(self, edges: Node, q: Dict):
-        # because we use the base-class infrastructure to parallelize, arg names are awkward
-        # in this case, we parallize over nodes, not edges!
-        if isinstance(edges, list):
-            node = edges[0]
+    def _parametrise_nodes(self, jobs):
+        if isinstance(jobs, list):
+            node = jobs[0]
         else:
-            node = edges
+            node = jobs
         lig_path = os.path.join(self.work_dir, "input", "ligands", node.get_node_hash())
         os.makedirs(lig_path, exist_ok=True)
         node.conformer.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
@@ -186,7 +183,3 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         # produces MOL.itp, need to separate the atomtypes directive out into ffMOL.itp for pmx
         # to generate the forcefield later
         self._separate_atomtypes(lig_path)
-
-        # if we get through to here, return exit status 0
-
-        q[node.get_node_id()] = 0

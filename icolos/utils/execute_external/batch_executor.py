@@ -38,18 +38,18 @@ class BatchExecutor(ExecutorBase):
         self.gres = gres
 
     def execute(
-        self, command: str, arguments: list, check=True, location=None, pipe_input=None
+        self,
+        command: str = None,
+        arguments: list = None,
+        check: bool = True,
+        location=None,
+        pipe_input=None,
+        tmpfile: str = None,
     ):
-
-        batch_script = self._construct_slurm_header()
-        command = self._prepare_command(command, arguments, pipe_input)
-        batch_script.append(command)
-        _, tmpfile = mkstemp(dir=location, suffix=".sh")
-        with open(tmpfile, "w") as f:
-            for line in batch_script:
-                f.write(line)
-                f.write("\n")
-
+        if tmpfile is None:
+            tmpfile = self.prepare_batch_script(
+                command, arguments, pipe_input, location
+            )
         sbatch_command = f"sbatch {tmpfile}"
         # execute the batch script
         result = super().execute(
@@ -65,6 +65,26 @@ class BatchExecutor(ExecutorBase):
                     f"Subprocess returned non-zero exit status:\n{sbatch_command}\n Status:\n{state}"
                 )
         return state
+
+    def prepare_batch_script(
+        self, command, arguments: List, pipe_input: str = None, location=None
+    ):
+        """
+        Write a batch script to the specified location
+        """
+        batch_script = self._construct_slurm_header()
+        command = self._prepare_command(command, arguments, pipe_input)
+        if isinstance(command, str):
+            command = [command]
+        for cmd in command:
+            batch_script.append(cmd)
+        _, tmpfile = mkstemp(dir=location, suffix=".sh")
+        with open(tmpfile, "w") as f:
+            for line in batch_script:
+                f.write(line)
+                f.write("\n")
+
+        return tmpfile
 
     def is_available(self):
         raise NotImplementedError(

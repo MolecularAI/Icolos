@@ -1,4 +1,4 @@
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from pydantic import BaseModel
@@ -7,7 +7,6 @@ from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
-_SBE = StepBaseEnum
 
 
 class StepGMXSolvate(StepGromacsBase, BaseModel):

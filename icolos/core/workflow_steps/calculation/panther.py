@@ -89,14 +89,13 @@ class StepPanther(StepCalculationBase, BaseModel):
         update_dict[_SPE.FIELD_KEY_COORDINATES] = coordinates
         return update_dict
 
-    def _calculate_ligand_centroid(self, file):
+    def _calculate_ligand_centroid(self, file: str) -> str:
         with open(file, "r") as f:
             file_lines = f.readlines()
         file_lines = [
             line for line in file_lines if "X   0" in line and len(line.split()) > 5
         ]
-
-        if file_lines == []:
+        if not file_lines:
             self._logger.log(
                 "No lines corresponding to the ligand found! Centroid will not be correct",
                 _LE.WARNING,

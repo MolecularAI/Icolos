@@ -5,6 +5,8 @@ from icolos.utils.enums.program_parameters import PMXEnum, PMXAtomMappingEnum
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
 
+from icolos.utils.execute_external.pmx import PMXExecutor
+
 _PE = PMXEnum()
 _PAE = PMXAtomMappingEnum()
 
@@ -14,6 +16,7 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
+        self._initialize_backend(PMXExecutor)
 
     def _execute_command(self, args):
         self._backend_executor.execute(

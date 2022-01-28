@@ -1,3 +1,4 @@
+from subprocess import CompletedProcess
 import time
 
 from icolos.core.containers.generic import GenericContainer, GenericData
@@ -10,6 +11,7 @@ from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
 from copy import deepcopy
 import os
+from icolos.core.containers.perturbation_map import PerturbationMap
 
 
 from icolos.core.step_utils.input_preparator import (
@@ -75,7 +77,7 @@ class StepExecutionParameters(BaseModel):
     )
     failure_policy: StepFailurePolicyParameters = StepFailurePolicyParameters()
     check_backend_availability: bool = False
-    job_control: StepExecutionResourceParameters = StepExecutionResourceParameters()
+    resources: StepExecutionResourceParameters = StepExecutionResourceParameters()
     resource: _ERE = _ERE.LOCAL
 
 
@@ -215,6 +217,9 @@ class StepBase(BaseModel):
     def get_workflow_object(self):
         return self._workflow_object
 
+    def get_perturbation_map(self) -> PerturbationMap:
+        return self._workflow_object.workflow_data.perturbation_map
+
     def get_step_id(self) -> str:
         return self.step_id
 
@@ -226,13 +231,13 @@ class StepBase(BaseModel):
             self._backend_executor = executor(
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
-                cores=self.execution.job_control.cores,
-                partition=self.execution.job_control.partition,
-                time=self.execution.job_control.time,
-                mem=self.execution.job_control.mem,
-                modules=self.execution.job_control.modules,
-                other_args=self.execution.job_control.other_args,
-                gres=self.execution.job_control.gres,
+                cores=self.execution.resources.cores,
+                partition=self.execution.resources.partition,
+                time=self.execution.resources.time,
+                mem=self.execution.resources.mem,
+                modules=self.execution.resources.modules,
+                other_args=self.execution.resources.other_args,
+                gres=self.execution.resources.gres,
             )
         else:
 
@@ -492,3 +497,10 @@ class StepBase(BaseModel):
             get_progress_bar_string(number_tasks_done, number_tasks_total, length=65),
             _LE.INFO,
         )
+
+    def _log_result(self, result: CompletedProcess):
+        """
+        logs stdout from completed process to file
+        """
+        for line in result.stdout.split("\n"):
+            self._logger_blank.log(line, _LE.DEBUG)
