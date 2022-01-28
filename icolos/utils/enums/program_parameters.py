@@ -1315,6 +1315,13 @@ class StepPMXEnum:
     PNAME = "pname"
     NNAME = "nname"
 
+    RUN_TYPE = "run_type"
+    SIM_TYPES = "sim_types"
+    EXEC_MODE = "exec_mode"
+
+    ABFE = "abfe"
+    RBFE = "rbfe"
+
 
 class PMXAtomMappingEnum:
 

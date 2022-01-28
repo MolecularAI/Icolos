@@ -1,3 +1,5 @@
+import shutil
+from typing import List
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 import os
@@ -8,12 +10,14 @@ from icolos.utils.enums.program_parameters import (
     GromacsEnum,
     PMXEnum,
     PMXAtomMappingEnum,
+    StepPMXEnum,
 )
+from icolos.utils.general.parallelization import SubtaskContainer
 
 _PE = PMXEnum()
-_PAE = PMXAtomMappingEnum()
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
+_PSE = StepPMXEnum()
 
 
 class StepPMXabfe(StepPMXBase, BaseModel):
@@ -27,123 +31,166 @@ class StepPMXabfe(StepPMXBase, BaseModel):
         self._check_backend_availability()
         self._gromacs_executor = GromacsExecutor(prefix_execution=_SGE.GROMACS_LOAD)
 
-    def _separate_protein_ligand(self):
-        # separate out protein and ligand lines from the written complex.pdb
+    # def _separate_protein_ligand(self):
+    #     # separate out protein and ligand lines from the written complex.pdb
 
-        with open(os.path.join(self.work_dir, "complex.pdb"), "r") as f:
-            lines = f.readlines()
-        protein_lines = []
-        ligand_lines = []
-        # TODO: tighten up the logic for identifying the ligand here
-        for line in lines:
-            if "ATOM" in line:
-                protein_lines.append(line)
-            elif "HETATM" in line and "HOH" not in line:
-                ligand_lines.append(line)
+    #     with open(os.path.join(self.work_dir, "complex.pdb"), "r") as f:
+    #         lines = f.readlines()
+    #     protein_lines = []
+    #     ligand_lines = []
+    #     # TODO: tighten up the logic for identifying the ligand here
+    #     for line in lines:
+    #         if "ATOM" in line:
+    #             protein_lines.append(line)
+    #         elif "HETATM" in line and "HOH" not in line:
+    #             ligand_lines.append(line)
 
-        with open(os.path.join(self.work_dir, "protein.pdb"), "w") as f:
-            f.writelines(protein_lines)
+    #     with open(os.path.join(self.work_dir, "protein.pdb"), "w") as f:
+    #         f.writelines(protein_lines)
 
-        with open(os.path.join(self.work_dir, "MOL.pdb"), "w") as f:
-            f.writelines(ligand_lines)
+    #     with open(os.path.join(self.work_dir, "MOL.pdb"), "w") as f:
+    #         f.writelines(ligand_lines)
 
-        os.remove(os.path.join(self.work_dir, "complex.pdb"))
+    #     os.remove(os.path.join(self.work_dir, "complex.pdb"))
 
     def execute(self):
         """
-        Required inputs:
-        + Protein.top, protein.gro
-        + ligand.itp, ligand.gro
-
-
-        Execution:
-            - Separete protein and ligand from complex
-            - run pdb2gmx on protein -> generate protein.top, ligand.grp
-            - run acpype on ligand -> generate ligand.itp, ligand.gro
-            - run pmx abfe to set up the system, done!
+        This step manages the setup of a pmx ABFE run for a set of compounds and a protein target.
+        Expects:
+            - docked compounds provided as an sdf file
+            - protein apo structure
+            - directory containing mdp files
         """
-        # use the same single dir setup as for the rest of the pmx pipeline
 
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
+        replicas = (
+            self.settings.additional["replicas"]
+            if "replicas" in self.settings.additional.keys()
+            else 3
+        )
+        # miror the dir structure for the input files used by the rbfe workflow
+        os.makedirs(os.path.join(self.work_dir, "input"), exist_ok=True)
+        for folder in ["ligands", "mdp", "protein"]:
+            os.makedirs(os.path.join(self.work_dir, "input", folder), exist_ok=True)
 
-        complex_file = self.data.generic.get_argument_by_extension(
+        mdp_dir = self.data.generic.get_argument_by_extension(
+            ext="mdp", rtn_file_object=True
+        )
+        # write mdp files to the input dir
+        mdp_dir.write(os.path.join(self.work_dir, "input/mdp"))
+
+        # create directory structure
+        for comp in self.get_compounds():
+            ident = comp.get_index_string()
+            os.makedirs(os.path.join(self.work_dir, ident), exist_ok=True)
+
+        # load in the provided apo structure
+        protein = self.data.generic.get_argument_by_extension(
             "pdb", rtn_file_object=True
         )
-        complex_file.write(os.path.join(self.work_dir, "complex.pdb"), join=False)
+        protein.write(
+            os.path.join(self.work_dir, "input/protein/protein.pdb"), join=False
+        )
+        # parametrise protein
+        self._parametrise_protein(
+            protein="protein.pdb", path="input/protein", output="protein.gro"
+        )
+        # self._clean_protein()
 
-        self._separate_protein_ligand()
-
-        # parametrise the ligand, generate the itp files, top and gro files for the ligand
-        self._parametrisation_pipeline(
-            self.work_dir, include_gro=True, include_top=True
+        self.execution.parallelization.max_length_sublists = 1
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
+        )
+        self._subtask_container.load_data(self.get_compounds())
+        self._execute_pmx_step_parallel(
+            run_func=self._parametrise_nodes, step_id="parametrize ligands"
         )
 
-        # parametrise protein
-        self._parametrise_protein(protein="protein.pdb", path="", output="protein.gro")
+        # now
+        self._subtask_container.load_data(self.get_compounds())
+        self._execute_pmx_step_parallel(
+            run_func=self._setup_abfe,
+            step_id="pxm abfe",
+            result_checker=self._find_nan_vals,
+        )
 
-        # run abfe
+        # now we make the rest of the dir structure
+        for comp in self.get_compounds():
+            ident = comp.get_index_string()
+            shutil.copyfile(
+                os.path.join(self.work_dir, "input/protein/posre.itp"),
+                os.path.join(self.work_dir, ident, "complex/posre.itp"),
+            )
+            for wp in self.therm_cycle_branches:
+                wppath = os.path.join(self.work_dir, ident, wp)
+                # copy the posre.itp file from input/protein to each
+
+                # stateA/stateB - coupled + decoupled states
+                for state in self.states:
+                    statepath = os.path.join(wppath, state)
+                    os.makedirs(statepath, exist_ok=True)
+
+                    # run1/run2/run3
+                    for r in range(1, replicas + 1):
+                        runpath = os.path.join(statepath, f"run{r}")
+                        os.makedirs(runpath, exist_ok=True)
+
+                        # em/eq_posre/eq/transitions
+                        # TODO: this differs from the equil used for RBFE - can we get away without the extra equilibration?
+                        for sim in self.settings.additional[_PSE.SIM_TYPES]:
+                            simpath = os.path.join(runpath, sim)
+                            os.makedirs(simpath, exist_ok=True)
+
+    def _setup_abfe(self, jobs):
+        """
+        Executes pmx abfe, moves the resulting built files to the right dir
+        """
+        if isinstance(jobs, list):
+            comp = jobs[0]
 
         args = {
-            "-pt": "topol.top",
-            "-lt": "MOL.itp",
-            "-pc": "protein.gro",
-            "-lc": "MOL_GMX.gro",
+            "-pt": os.path.join(self.work_dir, "input/protein/topol.top"),
+            "-lt": os.path.join(
+                self.work_dir,
+                "input/ligands",
+                comp.get_index_string(),
+                "MOL.acpype/MOL_GMX.itp",
+            ),
+            "-pc": os.path.join(self.work_dir, "input/protein/protein.gro"),
+            "-lc": os.path.join(
+                self.work_dir,
+                "input/ligands",
+                comp.get_index_string(),
+                "MOL.acpype/MOL_GMX.gro",
+            ),
+            "--build": "",
         }
         self._backend_executor.execute(
             command=_PE.ABFE,
             arguments=self.get_arguments(args),
-            location=self.work_dir,
+            location=os.path.join(self.work_dir, comp.get_index_string()),
             check=True,
         )
+        # note that this is stochastic, and sometimes it generates bad restraaints/nan values
+        # we will simply resubmit n times
 
+    def _find_nan_vals(self, next_batch: List[str]):
+        """
+        Looks throuh the dirs specified in jobs, reads restraints.info
+        """
+        # sublist length set to 1 for this step
+        batch_results = []
+        for subtask in next_batch:
+            subtask_results = []
+            for comp in subtask:
+                with open(
+                    os.path.join(
+                        self.work_dir, comp.get_index_string(), "restraints.info"
+                    ),
+                    "r",
+                ) as f:
+                    lines = f.readlines()
 
-help_string = """
-pmx abfe -h
-usage: pmx [-h] [-pt protop] [-lt ligtop] [-pc procrd] [-lc ligcrd] [--build]
-           [--doublebox] [--longest_axis] [--keep_intra] [--lig_ids  ]
-           [--pro_ids  ] [--restr_switch_on] [--seed int]
-
-This scripts helps to setup an absolute binding free energy calculation. As a
-minimal input, you need to provide a structure and topology file for both the
-protein (or host) and ligand (or guest) molecule. The topology is setup so to
-contain restraints as defined by Boresch et al. (2003) J Phys Chem B 107(35);
-these include one distance, two angles, and three dihedrals between ligand and
-protein. You can either provide explicitly the atoms to be included in the
-restraints, or let the script choose them automatically.
-
-optional arguments:
-  -h, --help         show this help message and exit
-  -pt protop         Input topology file for the protein. Default is
-                     "protein.top".
-  -lt ligtop         Input topology file for the ligand. It is expected that
-                     all params needed for the ligand are explicitly defined
-                     in this file. Default is "ligand.itp".
-  -pc procrd         Input structure file in PDB or GRO format for the
-                     protein. Default is "protein.gro".
-  -lc ligcrd         Input structure file in PDB or GRO format for the ligand.
-                     Default is "ligand.gro".
-  --build            Whether to build the system (editconf, solvate, genion)
-                     with a standard setup once the input files (top, gro) are
-                     ready.
-  --doublebox        Whether to use the double-system single-box setup. This
-                     is useful for charged ligands. Default is False.
-  --longest_axis     Whether to just place structures along the longest axis,
-                     rather then minimising the volume. This option is
-                     relevant only when using --doublebox. Default is False.
-  --keep_intra       Whether to keep the LJ intramolecular interactions when
-                     the ligand is decoupled. This option is relevant only
-                     when using --doublebox. Default is False.
-  --lig_ids          Three atom indices. If provided, these will be used for
-                     the protein-ligand restraints. Otherwise they are chosen
-                     automatically.
-  --pro_ids          Three atom indices. If provided, these will be used for
-                     the protein-ligand restraints. Otherwise they are chosen
-                     automatically.
-  --restr_switch_on  Whether to switch the restraints on or off, where "on"
-                     means no restraints in stateA, and "off" means no
-                     restraints in state B. Default is True (switch on).
-  --seed int         Random seed to use when picking atoms for the restraints.
-                     The automated restraints selection is stochastic, so if
-                     you want to have a reproducible behaviour, provide a
-                     random seed.
-"""
+                subtask_results.append(any(["nan" in l for l in lines]))
+            batch_results.append(subtask_results)
+        return batch_results

@@ -50,19 +50,26 @@ class BatchExecutor(ExecutorBase):
             tmpfile = self.prepare_batch_script(
                 command, arguments, pipe_input, location
             )
-        sbatch_command = f"sbatch {tmpfile}"
+        if self.is_available():
+            launch_command = f"sbatch {tmpfile}"
+        else:
+            launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
-            command=sbatch_command, arguments=[], location=location
+            command=launch_command, arguments=[], location=location, check=check
         )
-        job_id = result.stdout.split()[-1]
-        state = self._wait_for_job_completion(job_id=job_id)
+        # either monitor the job id, or resort to parsing the log file
+        if self.is_available():
+            job_id = result.stdout.split()[-1]
+            state = self._wait_for_job_completion(job_id=job_id)
+        else:
+            state = self._tail_log_file(location)
 
         # check the result from slurm
         if check == True:
             if state != _SE.COMPLETED:
                 raise subprocess.SubprocessError(
-                    f"Subprocess returned non-zero exit status:\n{sbatch_command}\n Status:\n{state}"
+                    f"Subprocess returned non-zero exit status:\n{launch_command}\n Status:\n{state}"
                 )
         return state
 
@@ -87,9 +94,11 @@ class BatchExecutor(ExecutorBase):
         return tmpfile
 
     def is_available(self):
-        raise NotImplementedError(
-            "Cannot reliably check, whether a random program executes properly - do not use."
-        )
+        command = "sbatch -h"
+        result = super().execute(command=command, arguments=[], check=False)
+        if any(["Usage: sbatch" in l for l in result.stdout.split("\n")]):
+            return True
+        return False
 
     def _prepare_command(
         self, command: str, arguments: List, pipe_input: str = None
@@ -98,7 +107,7 @@ class BatchExecutor(ExecutorBase):
 
         # allow for piped input to be passed to binaries
         if pipe_input is not None:
-            # pipe_input = self._parse_pipe_input(pipe_input)
+            # pipe_input = self._par/se_pipe_input(pipe_input)
             command = pipe_input + " | " + command
 
         # check, if command (binary) is to be found at a specific location (rather than in $PATH)
@@ -114,7 +123,7 @@ class BatchExecutor(ExecutorBase):
         complete_command = [complete_command.replace("'", "")]
         return " ".join(complete_command)
 
-    def _wait_for_job_completion(self, job_id):
+    def _wait_for_job_completion(self, job_id: str):
         completed = False
         state = None
         while completed is False:
@@ -127,6 +136,23 @@ class BatchExecutor(ExecutorBase):
             elif state == _SE.FAILED:
                 completed = True
 
+        return state
+
+    def _tail_log_file(self, location: str):
+        # TODO, this is not very robust at the moment!
+        completed = False
+        state = None
+        while not completed:
+            with open(os.path.join(location, "md.log"), "r") as f:
+                lines = f.readlines()
+            completed = any(["Finished mdrun" in l for l in lines])
+            state = _SE.COMPLETED
+            failed = any(["Fatal error:" in l for l in lines])
+            if failed:
+                state = _SE.FAILED
+                for line in lines[-40:]:
+                    print(line)
+                completed = True
         return state
 
     def _check_job_status(self, job_id):

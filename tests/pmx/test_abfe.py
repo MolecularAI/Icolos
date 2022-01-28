@@ -3,7 +3,13 @@ import os
 from icolos.core.containers.generic import GenericData
 from icolos.core.workflow_steps.pmx.abfe import StepPMXabfe
 from icolos.utils.enums.step_enums import StepBaseEnum
-from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
+from tests.tests_paths import (
+    PATHS_EXAMPLEDATA,
+    PATHS_1UYD,
+    export_unit_test_env_vars,
+    get_1UYD_ligands_as_Compounds,
+    get_ligands_as_compounds_with_conformers,
+)
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.core.composite_agents.workflow import WorkFlow
 import shutil
@@ -22,9 +28,12 @@ class Test_PMXabfe(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE, "r") as f:
+        with open(PATHS_EXAMPLEDATA.PMX_TNKS_PROTEIN, "r") as f:
             data = f.read()
         self.protein = GenericData(file_name="complex.pdb", file_data=data)
+        self.compounds = get_ligands_as_compounds_with_conformers(
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
+        )
 
     def test_pmx_abfe(self):
         step_conf = {
@@ -38,7 +47,7 @@ class Test_PMXabfe(unittest.TestCase):
                 },
             },
             _SBE.SETTINGS: {
-                _SBE.SETTINGS_ARGUMENTS: {_SBE.SETTINGS_ARGUMENTS_FLAGS: ["--build"]},
+                _SBE.SETTINGS_ARGUMENTS: {_SBE.SETTINGS_ARGUMENTS_FLAGS: []},
                 _SBE.SETTINGS_ADDITIONAL: {
                     # settings for protein parametrisation
                     "forcefield": "amber03",
@@ -49,14 +58,19 @@ class Test_PMXabfe(unittest.TestCase):
 
         step_pmx_abfe = StepPMXabfe(**step_conf)
         step_pmx_abfe.data.generic.add_file(self.protein)
+        step_pmx_abfe.data.generic.add_file(
+            GenericData(
+                "mdp", extension="mdp", file_data=PATHS_EXAMPLEDATA.PMX_MDP_FILES
+            )
+        )
+        step_pmx_abfe.data.compounds = self.compounds
 
         step_pmx_abfe.work_dir = self._test_dir
         step_pmx_abfe._workflow_object = WorkFlow()
         step_pmx_abfe.execute()
 
-        self.assertEqual(
-            os.path.isfile(os.path.join(self._test_dir, "complex/genion.tpr")), True
-        )
+        stat_inf = os.stat(os.path.join(self._test_dir, "0/complex/genion.tpr"))
+        self.assertGreater(stat_inf.st_size, 1322700)
 
-        stat_inf = os.stat(os.path.join(self._test_dir, "protein.gro"))
-        self.assertGreater(stat_inf.st_size, 70000)
+        stat_inf = os.stat(os.path.join(self._test_dir, "14/ligand/genion.tpr"))
+        self.assertGreater(stat_inf.st_size, 120000)

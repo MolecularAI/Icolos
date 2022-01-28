@@ -11,6 +11,7 @@ from icolos.utils.enums.program_parameters import (
     StepPMXEnum,
 )
 from icolos.utils.execute_external.batch_executor import BatchExecutor
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
@@ -28,11 +29,15 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
+        # Note: if youre running the job on, for example, a workstation, without slurm, this will simply execute the scripts directly (the slurm header is simply ignored in this case)
         self._initialize_backend(executor=BatchExecutor)
 
     def execute(self):
 
-        edges = [e.get_edge_id() for e in self.get_edges()]
+        if self.run_type == "rbfe":
+            edges = [e.get_edge_id() for e in self.get_edges()]
+        elif self.run_type == "abfe":
+            edges = [c.get_index_string() for c in self.get_compounds()]
         self.sim_type = self.settings.additional[_PSE.SIM_TYPE]
         # prepare and pool jobscripts, unroll replicas, states etc
         job_pool = self._prepare_job_pool(edges)
@@ -61,7 +66,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
     ):
 
         # EM
-        if self.sim_type in ("em", "eq"):
+        if self.sim_type in ("em", "eq", "npt", "nvt"):
             job_command = [
                 "gmx",
                 "mdrun",
@@ -76,6 +81,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 "-g",
                 mdlog,
             ]
+            for flag in self.settings.arguments.flags:
+                job_command.append(flag)
+            for key, value in self.settings.arguments.parameters.items():
+                job_command.append(key)
+                job_command.append(value)
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
@@ -96,7 +106,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     trr,
                     "-g",
                     mdlog,
+                    "-pme",
+                    "gpu",
                 ]
+                for flag in self.settings.arguments.flags:
+                    job_command.append(flag)
+                for key, value in self.settings.arguments.parameters.items():
+                    job_command.append(key)
+                    job_command.append(value)
                 job_command.append(single_command)
         return job_command
 
@@ -144,10 +161,15 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         return
 
     def _prepare_job_pool(self, edges: List[str]):
+        replicas = (
+            self.get_perturbation_map().replicas
+            if self.get_perturbation_map() is not None
+            else 1
+        )
         batch_script_paths = []
         for edge in edges:
             for state in self.states:
-                for r in range(1, self.get_perturbation_map().replicas + 1):
+                for r in range(1, replicas + 1):
                     for wp in self.therm_cycle_branches:
                         path = self._prepare_single_job(
                             edge=edge, wp=wp, state=state, r=r
@@ -167,4 +189,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             )
             self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
             location = "/".join(job.split("/")[:-1])
-            self._backend_executor.execute(tmpfile=job, location=location, check=True)
+            self._backend_executor.execute(tmpfile=job, location=location, check=False)
+
+    # def _inspect_log_files()

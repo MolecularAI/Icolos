@@ -1,7 +1,10 @@
+from inspect import Attribute
+from selectors import EpollSelector
 from subprocess import CompletedProcess
-from typing import Dict, List
+from typing import Callable, Dict, List
 from pydantic import BaseModel
-from icolos.core.containers.perturbation_map import PerturbationMap
+from icolos.core.containers.compound import Compound
+from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
@@ -25,6 +28,7 @@ class StepPMXBase(StepBase, BaseModel):
     sim_types: List = None
     states: List = None
     therm_cycle_branches: List = None
+    run_type: str = None
     ff: str = None
     boxshape: str = None
     boxd: float = None
@@ -43,9 +47,12 @@ class StepPMXBase(StepBase, BaseModel):
         )
         self.sim_types = ["em", "eq", "transitions"]
         self.states = ["stateA", "stateB"]
-        self.therm_cycle_branches = ["water", "protein"]
+        # for a normal pmx run this would be "water" and "protein"
+        # here we rename for compatibility across abfe/rbfe simulations
+        self.therm_cycle_branches = ["ligand", "complex"]
 
-        # simulation setup, these should not change
+        # simulation setup
+        self.run_type = self.get_setting(_SPE.RUN_TYPE, "rbfe")
         self.ff = "amber99sb-star-ildn-mut.ff"
         self.boxshape = self.get_setting(_SPE.BOXSHAPE, "dodecahedron")
         self.boxd = self.get_setting(_SPE.BOXD, 1.5)
@@ -53,7 +60,13 @@ class StepPMXBase(StepBase, BaseModel):
         self.conc = self.get_setting(_SPE.CONC, 0.15)
         self.pname = self.get_setting(_SPE.PNAME, "NaJ")
         self.nname = self.get_setting(_SPE.NNAME, "ClJ")
-        self.mdp_prefixes = {"em": "em", "eq": "eq", "transitions": "ti"}
+        self.mdp_prefixes = {
+            "em": "em",
+            "nvt": "nvt",
+            "npt": "npt",
+            "eq": "eq",
+            "transitions": "ti",
+        }
 
     def get_setting(self, key: str, default: str):
         """
@@ -75,6 +88,9 @@ class StepPMXBase(StepBase, BaseModel):
         r=None,
         sim=None,
     ):
+        """
+        Utility function for getting the right paths from a pmx-type directory structure.  Works for both rbfe and abfe runs
+        """
         if edge == None:
             return workPath
         edgepath = "{0}/{1}".format(workPath, edge)
@@ -131,7 +147,8 @@ class StepPMXBase(StepBase, BaseModel):
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
 
-        top = "{0}/topol.top".format(toppath)
+        # TODO: is this a liability? would we ever have more than a single topol file?
+        top = "{0}/*.top".format(toppath)
         tpr = "{0}/tpr.tpr".format(simpath)
         mdout = "{0}/mdout.mdp".format(simpath)
         # mdp
@@ -139,10 +156,14 @@ class StepPMXBase(StepBase, BaseModel):
             mdp = "{0}/{1}_l0.mdp".format(mdp_path, mdp_prefix)
         else:
             mdp = "{0}/{1}_l1.mdp".format(mdp_path, mdp_prefix)
+        # TODO: deal with nvt/npt for abfe
         # str
         if sim_type == "em":
-            inStr = "{0}/ions.pdb".format(toppath)
-        elif sim_type == "eq":
+            if self.run_type == "rbfe":
+                inStr = f"{toppath}/ions.pdb"
+            elif self.run_type == "abfe":
+                inStr = f"{toppath}/genion.gro"
+        elif sim_type in ("eq", "nvt", "npt"):
             inStr = "{0}/confout.gro".format(empath)
         elif sim_type == "transitions":
             inStr = "{0}/frame{1}.gro".format(simpath, frameNum)
@@ -252,7 +273,13 @@ class StepPMXBase(StepBase, BaseModel):
                 os.path.join(tmp_dir, gro_file),
             )
 
-    def _execute_pmx_step_parallel(self, run_func, step_id: str, **kwargs):
+    def _execute_pmx_step_parallel(
+        self,
+        run_func: Callable,
+        step_id: str,
+        result_checker: Callable = None,
+        **kwargs,
+    ):
         """
         Instantiates Icolos's parallelizer object,
         runs the step's execute method,
@@ -277,11 +304,25 @@ class StepPMXBase(StepBase, BaseModel):
 
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
-            # TODO: find a reliable way to sort this, ideally by inspecting log files
-            for element in next_batch:
-                for subtask in element:
-                    subtask.set_status_success()
+            # # TODO: find a reliable way to sort this, ideally by inspecting log files
 
+            if result_checker is not None:
+                batch_results = result_checker(jobs)
+
+                for task, result in zip(next_batch, batch_results):
+                    for subtask, sub_result in zip(task, result):
+                        if sub_result:
+                            subtask.set_status_failed()
+                            self._logger.log(
+                                f"Warning: job {subtask} failed!", _LE.WARNING
+                            )
+                        else:
+                            subtask.set_status_success()
+
+            else:
+                for element in next_batch:
+                    for subtask in element:
+                        subtask.set_status_success()
             self._log_execution_progress()
             n += 1
 
@@ -328,6 +369,39 @@ class StepPMXBase(StepBase, BaseModel):
         line = line[0]
         return data.index(line)
 
+    def _clean_protein(self):
+        existing_itp_files = [
+            f
+            for f in os.listdir(os.path.join(self.work_dir, "input/protein"))
+            if f.endswith("itp") and "Protein" in f
+        ]
+        if (
+            not existing_itp_files
+        ):  # no protein itp files, we have a single chain that needs extacting from the top file
+            with open(os.path.join(self.work_dir, "input/protein/topol.top"), "r") as f:
+                top_lines = f.readlines()
+
+            moltype_line = self._get_line_idx(top_lines, _GE.MOLECULETYPES)
+
+            end_itp_line = self._get_line_idx(top_lines, "; Include water topology")
+
+            moltype = top_lines[moltype_line + 2].split()[0]
+            cleaned_top = (
+                top_lines[:moltype_line]
+                + [f'#include "topol_{moltype}.itp']
+                + top_lines[end_itp_line:]
+            )
+
+            itp_lines = top_lines[moltype_line:end_itp_line]
+
+            with open(os.path.join(self.work_dir, "input/protein/topol.top"), "w") as f:
+                f.writelines(cleaned_top)
+
+            with open(
+                os.path.join(self.work_dir, f"input/protein/topol_{moltype}.itp"), "w"
+            ) as f:
+                f.writelines(itp_lines)
+
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
         # construct the perturbation map and load in the log file
         log_file = self.data.generic.get_argument_by_extension(
@@ -369,3 +443,53 @@ class StepPMXBase(StepBase, BaseModel):
         toclean = glob.glob("{0}/*#".format(path))
         for clean in toclean:
             os.remove(clean)
+
+    def _separate_atomtypes(self, lig_path: str) -> None:
+        with open(os.path.join(lig_path, "MOL.itp"), "r") as f:
+            itp_lines = f.readlines()
+
+        start_idx = self._get_line_idx(itp_lines, _GE.ATOMTYPES)
+        stop_index = self._get_line_idx(itp_lines, _GE.MOLECULETYPES)
+
+        atomtype_lines = itp_lines[start_idx:stop_index]
+        cleaned_itp_lines = itp_lines[stop_index:]
+        with open(os.path.join(lig_path, "MOL.itp"), "w") as f:
+            f.writelines(cleaned_itp_lines)
+
+        # process the atomtype lines to remove the bondtype
+        # col causes gmx to complain
+        cleaned_atomtype_lines = []
+        for line in atomtype_lines:
+            parts = line.split()
+            if len(parts) > 5:
+                cleaned_parts = [parts[0]] + parts[2:] + ["\n"]
+                cleaned_atomtype_lines.append(" ".join(cleaned_parts))
+        with open(os.path.join(lig_path, "ffMOL.itp"), "w") as f:
+            f.writelines(cleaned_atomtype_lines)
+
+    def _parametrise_nodes(self, jobs):
+        if isinstance(jobs, list):
+            node = jobs[0]
+        else:
+            node = jobs
+        if isinstance(node, Node):
+            node_id = node.get_node_hash()
+            conf = node.conformer
+        elif isinstance(node, Compound):
+            # in abfe we pass compounds here not edges
+            node_id = node.get_index_string()
+            conf = node.get_enumerations()[0].get_conformers()[0]
+        else:
+            raise NotImplementedError(f"Cannot parametrize object of type {type(node)}")
+        lig_path = os.path.join(self.work_dir, "input", "ligands", node_id)
+        os.makedirs(lig_path, exist_ok=True)
+        conf.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
+
+        # clean the written pdb, remove anything except hetatm/atom lines
+        self._clean_pdb_structure(lig_path)
+        # now run ACPYPE on the ligand to produce the topology file
+        self._parametrisation_pipeline(lig_path)
+
+        # produces MOL.itp, need to separate the atomtypes directive out into ffMOL.itp for pmx
+        # to generate the forcefield later
+        self._separate_atomtypes(lig_path)

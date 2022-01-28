@@ -14,3 +14,4 @@ tests/junk
 .directory
 *_cache
 *.ipynb_checkpoints
+output

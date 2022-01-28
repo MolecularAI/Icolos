@@ -54,7 +54,6 @@ class FlowControlBase(BaseModel):
         self._logger = StepLogger()
 
     def _initialize_step_from_dict(self, step_conf: dict):
-        # TODO: check if overlaps with the other "initialize_step_from_dict" method
         # Require a separate initialisation method to avoid circular import
         _STE = StepBaseEnum
 

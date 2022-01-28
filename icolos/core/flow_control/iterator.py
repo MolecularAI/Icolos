@@ -9,6 +9,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
 import os
+from glob import glob
 
 _IE = IteratorEnum
 _SBE = StepBaseEnum
@@ -19,6 +20,7 @@ class IterSettingsParameters(BaseModel):
     flags: List = []
     parameters: Dict = {}
     additional: Dict = {}
+    work_dir: Union[List, str] = []
 
 
 class IterParallelizer(BaseModel):
@@ -73,7 +75,9 @@ class StepIterator(FlowControlBase, BaseModel):
                 init_steps.append(initialized_step)
         return init_steps
 
-    def _modify_settings(self, settings, step_config, i: int):
+    def _modify_settings(
+        self, settings: BaseStepConfig, step_config: BaseStepConfig, i: int
+    ):
         base_conf = deepcopy(step_config)
         iter_settings = deepcopy(settings)
         if settings.flags:
@@ -94,9 +98,18 @@ class StepIterator(FlowControlBase, BaseModel):
             # however many lists of n items
             base_conf.settings.additional[key] = val[i]
 
+        # in pmx abfe, we iterate over workdirs
+        if isinstance(iter_settings.work_dir, str):
+            # a single top dir has been provided, extract the subdirs and walk over these
+            work_dirs = glob(f"{iter_settings.work_dir}/**/", recursive=True)
+            # TODO, automatically acquire the number of iters from this
+            base_conf.work_dir = os.path.join(iter_settings.work_dir, work_dirs[i])
+        elif isinstance(iter_settings.work_dir, list) and iter_settings.work_dir:
+            base_conf.work_dir = iter_settings.work_dir[i]
+
         return base_conf
 
-    def _initialize_single(self) -> List:
+    def _initialize_settings(self) -> List:
         """
         Iterate through all settings step-wise, changing all setting blocks simultaneously, returning n initialised steps for n
         """

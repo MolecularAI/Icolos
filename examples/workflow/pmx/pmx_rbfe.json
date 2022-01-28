@@ -210,11 +210,6 @@
 					"additional": {}
 				},
 				"input": {
-					"perturbation_map": [
-						{
-							"source": "04_assemble_systems"
-						}
-					]
 				}
 			},
 			{

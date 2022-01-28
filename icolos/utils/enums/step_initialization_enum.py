@@ -90,7 +90,7 @@ class StepInitializationEnum:
         _SBE.STEP_DATA_MANIPULATION: StepDataManipulation,
         _SBE.STEP_PMX_ASSEMBLE_SYSTEMS: StepPMXAssembleSystems,
         _SBE.STEP_PMX_ATOMMAPPING: StepPMXatomMapping,
-        _SBE.STEP_PMX_ABFE: StepPMXabfe,
+        _SBE.STEP_PMX_ABFE_SETUP: StepPMXabfe,
         _SBE.STEP_PMX_DOUBLEBOX: StepPMXdoublebox,
         _SBE.STEP_PMX_LIGANDHYBRID: StepPMXligandHybrid,
         _SBE.STEP_PMX_BOX_WATER_IONS: StepPMXBoxWaterIons,

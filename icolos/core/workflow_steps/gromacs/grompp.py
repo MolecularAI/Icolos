@@ -72,7 +72,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
     def execute(self):
         """
         Set up required mdp file and run gmx grompp
-        Note that any issues with your parametrisationor system building will normally cause grompp to panic
+        Note that any issues with your parametrisation or system building will normally cause grompp to panic
         """
         tmp_dir = self._make_tmpdir()
         self._write_input_files(tmp_dir)

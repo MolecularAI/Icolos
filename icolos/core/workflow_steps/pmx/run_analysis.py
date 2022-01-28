@@ -174,7 +174,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     def analysis_summary(self, edges):
         for edge in edges:
             for r in range(1, self.get_perturbation_map().replicas + 1):
-                for wp in ["water", "protein"]:
+                for wp in ["ligand", "complex"]:
                     analysispath = "{0}/analyse{1}".format(
                         self._get_specific_path(
                             workPath=self.work_dir, edge=edge, wp=wp
@@ -195,7 +195,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             for r in range(1, self.get_perturbation_map().replicas + 1):
 
                 # ligand
-                wp = "water"
+                wp = "ligand"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,
@@ -221,7 +221,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     analysispath, stateApath, stateBpath, bVerbose=bVerbose
                 )
                 # protein
-                wp = "protein"
+                wp = "complex"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,

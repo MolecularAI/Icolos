@@ -1,4 +1,5 @@
-from typing import Dict, List
+from typing import Dict, List, Union
+from icolos.core.containers.compound import Compound
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
@@ -27,8 +28,10 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         self._initialize_backend(executor=PMXExecutor)
 
     def execute(self):
-
-        edges = [e.get_edge_id() for e in self.get_edges()]
+        if self.run_type == _PSE.RBFE:
+            edges = [e.get_edge_id() for e in self.get_edges()]
+        elif self.run_type == _PSE.ABFE:
+            edges = [c.get_index_string() for c in self.get_compounds()]
         self.execution.parallelization.max_length_sublists = 1
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
@@ -38,26 +41,30 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             run_func=self.prepare_simulation, step_id="pmx prepare_simulations"
         )
 
-    def prepare_simulation(self, jobs: List[Edge], bLig=True, bProt=True):
-        mdp_path = os.path.join(self.work_dir, "input/mdp")
-
+    def prepare_simulation(
+        self, jobs: List[Union[Edge, Compound]], bLig=True, bProt=True
+    ):
+        # define some constants that depend on whether this is rbfe/abfe
+        # for abfe, edge refers to the ligand index
+        # mdp_path = os.path.join(self.work_dir, "input/mdp")
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
+        # FIXME: how do we get the replicas for abfe jobs without requiring input every time? inspect the workdir?
+        replicas = (
+            self.get_perturbation_map().replicas
+            if self.get_perturbation_map() is not None
+            else 1
+        )
 
         for edge in jobs:
 
-            ligTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="water"
-            )
-            protTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="protein"
-            )
-
             for state in self.states:
-                for r in range(1, self.get_perturbation_map().replicas + 1):
+                for r in range(1, replicas + 1):
+                    for wp in self.therm_cycle_branches:
 
-                    # ligand
-                    if bLig == True:
-                        wp = "water"
+                        toppath = self._get_specific_path(
+                            workPath=self.work_dir, edge=edge, wp=wp
+                        )
+                        # dir for the current sim type
                         simpath = self._get_specific_path(
                             workPath=self.work_dir,
                             edge=edge,
@@ -66,39 +73,31 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
                             r=r,
                             sim=sim_type,
                         )
+                        # dir for the previous sim type, from which we get confout.gro
+                        prev_type = self._get_previous_sim_type(sim_type)
                         empath = self._get_specific_path(
                             workPath=self.work_dir,
                             edge=edge,
                             wp=wp,
                             state=state,
                             r=r,
-                            sim="em",
+                            sim=prev_type,
                         )
-                        toppath = ligTopPath
+
                         self._prepare_single_tpr(
                             simpath, toppath, state, sim_type, empath
                         )
 
-                    # protein
-                    if bProt == True:
-                        wp = "protein"
-                        simpath = self._get_specific_path(
-                            workPath=self.work_dir,
-                            edge=edge,
-                            wp=wp,
-                            state=state,
-                            r=r,
-                            sim=sim_type,
-                        )
-                        empath = self._get_specific_path(
-                            workPath=self.work_dir,
-                            edge=edge,
-                            wp=wp,
-                            state=state,
-                            r=r,
-                            sim="em",
-                        )
-                        toppath = protTopPath
-                        self._prepare_single_tpr(
-                            simpath, toppath, state, sim_type, empath
-                        )
+    def _get_previous_sim_type(self, sim_type: str):
+        """
+        Works out where to get starting structure from based on the current run and simulation type
+        """
+        if self.run_type == _PSE.RBFE:
+            return "em"
+        elif self.run_type == _PSE.ABFE:
+            if sim_type in ("em", "nvt"):
+                return "em"
+            elif sim_type == "npt":
+                return "nvt"
+            elif sim_type == "eq":
+                return "npt"

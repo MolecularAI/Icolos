@@ -103,10 +103,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
     def prepare_transitions(self, jobs: List[Edge]):
         for edge in jobs:
             ligTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="water"
+                workPath=self.work_dir, edge=edge, wp="ligand"
             )
             protTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="protein"
+                workPath=self.work_dir, edge=edge, wp="complex"
             )
             for state in self.states:
                 for r in range(1, self.get_perturbation_map().replicas + 1):
@@ -115,8 +115,8 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                         f"Preparing transitions: {edge}, {state}, run {r}", _LE.DEBUG
                     )
                     self._prepare_system(
-                        edge=edge, state=state, wp="water", r=r, toppath=ligTopPath
+                        edge=edge, state=state, wp="ligand", r=r, toppath=ligTopPath
                     )
                     self._prepare_system(
-                        edge=edge, state=state, wp="protein", r=r, toppath=protTopPath
+                        edge=edge, state=state, wp="complex", r=r, toppath=protTopPath
                     )

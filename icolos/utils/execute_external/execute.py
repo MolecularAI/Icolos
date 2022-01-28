@@ -57,7 +57,8 @@ class ExecutorBase(metaclass=abc.ABCMeta):
             stderr=subprocess.PIPE,
             shell=True,
         )
-
+        # for line in result.stdout.split("\n"):
+        #     print(line)
         if check:
             if result.returncode != 0:
                 raise subprocess.SubprocessError(

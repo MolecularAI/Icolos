@@ -23,6 +23,11 @@ class StepGromacsBase(StepBase, BaseModel):
         super().__init__(**data)
 
     def _write_input_files(self, tmp_dir):
+        """
+        Prepares the tmpdir.  Supports two modes of operation, depending on where the data has come from:
+        1) If tmpdir is empty and generic data is not, dump generic data files into tmpdir
+        2) if dir is not empty and generic data is (we run pmx abfe like this), parse the tmpdir
+        """
 
         # Normally this should be handled by setting GMXLIB env variable, but for some programs (gmx_MMPBSA), this doesn't work and non-standard forcefields
         # need to be in the working directory
@@ -42,8 +47,12 @@ class StepGromacsBase(StepBase, BaseModel):
         self._logger.log(
             f"Writing input files to working directory at {tmp_dir}", _LE.DEBUG
         )
-        for file in self.data.generic.get_flattened_files():
-            file.write(tmp_dir)
+        # if we have an empty tmpdir:
+        if next(os.scandir(tmp_dir), None):
+            for file in self.data.generic.get_flattened_files():
+                file.write(tmp_dir)
+        else:
+            self._parse_output(tmp_dir)
 
     def _parse_arguments(self, flag_dict: dict, args: list = None) -> List:
         arguments = args if args is not None else []

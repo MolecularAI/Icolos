@@ -28,29 +28,6 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         super().__init__(**data)
         self._gromacs_executor = GromacsExecutor(prefix_execution=_SGE.GROMACS_LOAD)
 
-    def _separate_atomtypes(self, lig_path: str) -> None:
-        with open(os.path.join(lig_path, "MOL.itp"), "r") as f:
-            itp_lines = f.readlines()
-
-        start_idx = self._get_line_idx(itp_lines, _GE.ATOMTYPES)
-        stop_index = self._get_line_idx(itp_lines, _GE.MOLECULETYPES)
-
-        atomtype_lines = itp_lines[start_idx:stop_index]
-        cleaned_itp_lines = itp_lines[stop_index:]
-        with open(os.path.join(lig_path, "MOL.itp"), "w") as f:
-            f.writelines(cleaned_itp_lines)
-
-        # process the atomtype lines to remove the bondtype
-        # col causes gmx to complain
-        cleaned_atomtype_lines = []
-        for line in atomtype_lines:
-            parts = line.split()
-            if len(parts) > 5:
-                cleaned_parts = [parts[0]] + parts[2:] + ["\n"]
-                cleaned_atomtype_lines.append(" ".join(cleaned_parts))
-        with open(os.path.join(lig_path, "ffMOL.itp"), "w") as f:
-            f.writelines(cleaned_atomtype_lines)
-
     def execute(self):
         # sets the number of replicas to be used throughput the pmx run
         replicas = (
@@ -89,37 +66,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         for f in old_protein:
             os.remove(os.path.join(self.work_dir, "input/protein", f))
 
-        existing_itp_files = [
-            f
-            for f in os.listdir(os.path.join(self.work_dir, "input/protein"))
-            if f.endswith("itp") and "Protein" in f
-        ]
-        if (
-            not existing_itp_files
-        ):  # no protein itp files, we have a single chain that needs extacting from the top file
-            with open(os.path.join(self.work_dir, "input/protein/topol.top"), "r") as f:
-                top_lines = f.readlines()
-
-            moltype_line = self._get_line_idx(top_lines, _GE.MOLECULETYPES)
-
-            end_itp_line = self._get_line_idx(top_lines, "; Include water topology")
-
-            moltype = top_lines[moltype_line + 2].split()[0]
-            cleaned_top = (
-                top_lines[:moltype_line]
-                + [f'#include "topol_{moltype}.itp']
-                + top_lines[end_itp_line:]
-            )
-
-            itp_lines = top_lines[moltype_line:end_itp_line]
-
-            with open(os.path.join(self.work_dir, "input/protein/topol.top"), "w") as f:
-                f.writelines(cleaned_top)
-
-            with open(
-                os.path.join(self.work_dir, f"input/protein/topol_{moltype}.itp"), "w"
-            ) as f:
-                f.writelines(itp_lines)
+        self._clean_protein()
 
         mdp_dir = self.data.generic.get_argument_by_extension(
             ext="mdp", rtn_file_object=True
@@ -147,12 +94,12 @@ class StepPMXSetup(StepPMXBase, BaseModel):
             os.makedirs(hybridTopFolder, exist_ok=True)
 
             # water/protein
-            for wp in ["water", "protein"]:
+            for wp in self.therm_cycle_branches:
                 wppath = f"{edgepath}/{wp}"
                 os.makedirs(wppath, exist_ok=True)
 
                 # stateA/stateB
-                for state in ["stateA", "stateB"]:
+                for state in self.states:
                     statepath = f"{wppath}/{state}"
                     os.makedirs(statepath, exist_ok=True)
 
@@ -162,24 +109,6 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                         os.makedirs(runpath, exist_ok=True)
 
                         # em/eq_posre/eq/transitions
-                        for sim in ["em", "eq", "transitions"]:
+                        for sim in self.sim_types:
                             simpath = f"{runpath}/{sim}".format(runpath, sim)
                             os.makedirs(simpath, exist_ok=True)
-
-    def _parametrise_nodes(self, jobs):
-        if isinstance(jobs, list):
-            node = jobs[0]
-        else:
-            node = jobs
-        lig_path = os.path.join(self.work_dir, "input", "ligands", node.get_node_hash())
-        os.makedirs(lig_path, exist_ok=True)
-        node.conformer.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
-
-        # clean the written pdb, remove anything except hetatm/atom lines
-        self._clean_pdb_structure(lig_path)
-        # now run ACPYPE on the ligand to produce the topology file
-        self._parametrisation_pipeline(lig_path)
-
-        # produces MOL.itp, need to separate the atomtypes directive out into ffMOL.itp for pmx
-        # to generate the forcefield later
-        self._separate_atomtypes(lig_path)
