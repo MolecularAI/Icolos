@@ -29,10 +29,6 @@ class StepPanther(StepCalculationBase, BaseModel):
 
         self._initialize_backend(executor=Executor)
 
-    def _prepare_tmp_input_dir(self):
-        tmp_dir = tempfile.mkdtemp()
-        return tmp_dir
-
     def _write_panther_config_file(self, tmp_dir):
         if not self.settings.additional[_SPE.PANTHER_CONFIG_FILE]:
             self._logger.log("No config file specified, using default.", _LE.INFO)
@@ -141,7 +137,7 @@ class StepPanther(StepCalculationBase, BaseModel):
             )
 
     def execute(self):
-        tmp_dir = self._prepare_tmp_input_dir()
+        tmp_dir = self._make_tmpdir()
         self._write_panther_config_file(tmp_dir)
         self._execute_backend(tmp_dir)
         self._logger.log("Executed PANTHER and obtained negative image.", _LE.INFO)

@@ -22,7 +22,7 @@ class Test_Pdb2gmx(unittest.TestCase):
     def setUp(self):
         with open(PATHS_1UYD.PDB_PATH, "r") as f:
             self.structure = f.read()
-        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE, "r") as f:
+        with open(PATHS_1UYD.PDB_PATH, "r") as f:
             self.holo_structure = f.read()
 
     def test_pdb2gmx_run(self):
@@ -30,7 +30,7 @@ class Test_Pdb2gmx(unittest.TestCase):
             _SBE.STEPID: "test_pdb2gmx",
             _SBE.STEP_TYPE: "pdb2gmx",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -60,12 +60,12 @@ class Test_Pdb2gmx(unittest.TestCase):
     def test_lig_param(self):
         step_conf = {
             _SBE.STEPID: "test_pdb2gmx_lig_param",
-            _SBE.STEP_TYPE: "pdb2gmx_lig",
+            _SBE.STEP_TYPE: "pdb2gmx",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             _SBE.SETTINGS: {
-                _SBE.SETTINGS_ADDITIONAL: {_SBE.PIPE_INPUT: "echo 3"},
+                _SBE.SETTINGS_ADDITIONAL: {},
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-ignh"],
                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {

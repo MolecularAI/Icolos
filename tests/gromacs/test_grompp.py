@@ -2,7 +2,7 @@ from icolos.core.containers.generic import GenericData
 import unittest
 import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
-from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
+from tests.tests_paths import MAIN_CONFIG, PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.core.workflow_steps.gromacs.grompp import StepGMXGrompp
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -20,11 +20,11 @@ class Test_Grompp(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_GROMPP_INPUT_STRUCTURE, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
             self.structure = f.read()
         with open(PATHS_EXAMPLEDATA.GROMACS_IONS_MDP, "r") as f:
             self.mdp = f.read()
-        with open(PATHS_EXAMPLEDATA.GROMACS_GROMPP_TOPOL, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
             self.topol = f.read()
 
     def test_grompp(self):
@@ -32,7 +32,7 @@ class Test_Grompp(unittest.TestCase):
             _SBE.STEPID: "test_grompp",
             _SBE.STEP_TYPE: "grompp",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -44,7 +44,7 @@ class Test_Grompp(unittest.TestCase):
                         "nsteps": 50,
                         "-nsteeps": 123,
                     },  # deliberate typo to check warning
-                    _SGE.FORCEFIELD: "/projects/cc/mai/material/Icolos/forcefields/charmm36-feb2021.ff",
+                    _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
                     "-r": False,
                     _SGE.MAKE_NDX_COMMAND: "auto",
                 },

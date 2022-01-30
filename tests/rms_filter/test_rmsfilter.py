@@ -32,7 +32,7 @@ class Test_RMSfilter(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SRF.METHOD: _SRF.METHOD_ALIGNMOL,
-                    _SRF.THRESHOLD: 1,
+                    _SRF.THRESHOLD: 0.1,
                     _SRF.ORDER_BY: "E_cosmo",
                     _SRF.ORDER_ASCENDING: False,
                 },
@@ -60,17 +60,17 @@ class Test_RMSfilter(unittest.TestCase):
                 for i in range(7)
             ),
             [
-                -943306.7731,
-                -943304.5548,
-                -943301.0009,
-                -943300.9934,
-                -943303.7802,
-                -943304.0485,
-                -943304.0517,
+                -943301.7331159362,
+                -943305.056679956,
+                -943300.4223984664,
+                -943303.8183294422,
+                -943302.9784844198,
+                -943303.4405265804,
+                -943305.8605076032,
             ],
         )
 
-        step_conf[_SBE.SETTINGS][_SBE.SETTINGS_ADDITIONAL][_SRF.THRESHOLD] = 1.5
+        step_conf[_SBE.SETTINGS][_SBE.SETTINGS_ADDITIONAL][_SRF.THRESHOLD] = 0.8
         rf_step = StepRMSFilter(**step_conf)
         rf_step.get_compounds().append(Compound(compound_number=1))
         rf_step.get_compounds()[0].add_enumeration(Enumeration(), auto_update=True)
@@ -79,7 +79,7 @@ class Test_RMSfilter(unittest.TestCase):
 
         self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 11)
         rf_step.execute()
-        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 3)
+        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 2)
 
     def test_RMSfiltering_alignmol_ascending(self):
         step_conf = {
@@ -92,7 +92,7 @@ class Test_RMSfilter(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SRF.METHOD: _SRF.METHOD_ALIGNMOL,
-                    _SRF.THRESHOLD: 1,
+                    _SRF.THRESHOLD: 0.3,
                     _SRF.ORDER_BY: "E_cosmo",
                     _SRF.ORDER_ASCENDING: True,
                 },
@@ -107,7 +107,7 @@ class Test_RMSfilter(unittest.TestCase):
 
         self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 11)
         rf_step.execute()
-        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 5)
+        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 3)
 
         self.assertListEqual(
             list(
@@ -117,9 +117,9 @@ class Test_RMSfilter(unittest.TestCase):
                     .get_molecule()
                     .GetProp("E_cosmo")
                 )
-                for i in range(5)
+                for i in range(3)
             ),
-            [-943304.5487, -943300.2823, -943303.7733, -943304.0485, -943304.0517],
+            [-943302.5647092332, -943300.4223984664, -943303.365976586],
         )
 
     def test_RMSfiltering_best(self):
@@ -133,7 +133,7 @@ class Test_RMSfilter(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SRF.METHOD: _SRF.METHOD_BEST,
-                    _SRF.THRESHOLD: 1,
+                    _SRF.THRESHOLD: 0.15,
                     _SRF.ORDER_BY: "E_cosmo",
                     _SRF.ORDER_ASCENDING: False,
                 },
@@ -160,7 +160,12 @@ class Test_RMSfilter(unittest.TestCase):
                 )
                 for i in range(4)
             ),
-            [-943306.7731, -943304.5548, -943301.0009, -943304.0517],
+            [
+                -943302.5647092332,
+                -943305.056679956,
+                -943303.8183294422,
+                -943305.8605076032,
+            ],
         )
 
     def test_RMSfiltering_best_notordered(self):
@@ -174,7 +179,7 @@ class Test_RMSfilter(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SRF.METHOD: _SRF.METHOD_BEST,
-                    _SRF.THRESHOLD: 1,
+                    _SRF.THRESHOLD: 0.1,
                 },
             },
         }
@@ -187,7 +192,7 @@ class Test_RMSfilter(unittest.TestCase):
 
         self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 11)
         rf_step.execute()
-        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 4)
+        self.assertEqual(len(rf_step.get_compounds()[0][0].get_conformers()), 5)
 
         self.assertListEqual(
             list(
@@ -199,5 +204,10 @@ class Test_RMSfilter(unittest.TestCase):
                 )
                 for i in range(4)
             ),
-            [-943306.7731, -943304.5487, -943301.0009, -943304.0485],
+            [
+                -943302.5647092332,
+                -943305.056679956,
+                -943303.365976586,
+                -943300.6713199887,
+            ],
         )

@@ -47,7 +47,7 @@ class Test_MMPBSA(unittest.TestCase):
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -94,7 +94,7 @@ class Test_MMPBSA(unittest.TestCase):
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {

@@ -30,7 +30,7 @@ class Test_Genion(unittest.TestCase):
             _SBE.STEPID: "test_genion",
             _SBE.STEP_TYPE: "genion",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -56,4 +56,4 @@ class Test_Genion(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "structure.gro")
         step_genion.write_generic_by_name(self._test_dir, "structure.gro")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 874941)
+        self.assertGreater(stat_inf.st_size, 2102900)

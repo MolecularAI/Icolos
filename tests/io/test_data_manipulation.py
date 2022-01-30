@@ -74,10 +74,10 @@ class Test_DataManipulation(unittest.TestCase):
         # remove files from previous runs
         empty_output_dir(self._test_dir)
 
-        with open(PATHS_EXAMPLEDATA.PRIME_RECEPTOR_COX2, "r") as f:
+        with open(PATHS_1UYD.APO_MAE, "r") as f:
             data = f.read()
         self.complex_conformers = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.LIGANDS_1UYD
+            PATHS_1UYD.LIG4_POSES
         )
         self.mae_file = GenericData(file_name="structure.mae", file_data=data)
         conformers = get_mol_as_Conformer(PATHS_EXAMPLEDATA.CLUSTERING_11CONFS)
@@ -198,7 +198,7 @@ class Test_DataManipulation(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "structure.pdb")
         manip_step.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 734400)
+        self.assertGreater(stat_inf.st_size, 201300)
 
     def test_get_complexes(self):
         step_conf = {
@@ -211,7 +211,7 @@ class Test_DataManipulation(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SDM.ACTION: _SDM.ASSEMBLE_COMPLEXES,
-                    _SDM.RECEPTOR: PATHS_EXAMPLEDATA.RECEPTOR_1UYD,
+                    _SDM.RECEPTOR: PATHS_1UYD.PDB_PATH,
                 },
             },
         }
@@ -224,7 +224,7 @@ class Test_DataManipulation(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "0:0:0.pdb")
         manip_step.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 509600)
+        self.assertGreater(stat_inf.st_size, 279700)
 
     def test_filtering(self):
         step_conf = {

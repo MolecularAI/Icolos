@@ -36,7 +36,7 @@ class Test_Cluster(unittest.TestCase):
             SBE.STEPID: "test_cluster",
             SBE.STEP_TYPE: "cluster",
             SBE.EXEC: {
-                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             SBE.SETTINGS: {
                 SBE.SETTINGS_ARGUMENTS: {
@@ -69,4 +69,4 @@ class Test_Cluster(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "clusters.pdb")
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 2002553)
+        self.assertGreater(stat_inf.st_size, 7383600)

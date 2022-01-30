@@ -6,7 +6,7 @@ from icolos.core.step_utils.input_preparator import StepData
 from icolos.core.step_utils.step_writeout import WriteOutHandler
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.utils.general.files_paths import attach_root_path, remove_folder
-from tests.tests_paths import PATHS_EXAMPLEDATA, get_mol_as_Conformer
+from tests.tests_paths import PATHS_1UYD, PATHS_EXAMPLEDATA, get_mol_as_Conformer
 import shutil
 
 _SBE = StepBaseEnum
@@ -60,7 +60,7 @@ class Test_WriteOut(unittest.TestCase):
         )
         writeout_handler.write()
         stat_inf = os.stat(os.path.join(self._test_dir, "both_compounds.sdf"))
-        self.assertGreater(stat_inf.st_size, 39000)
+        self.assertGreater(stat_inf.st_size, 32100)
 
     def test_conformer_writeout_split(self):
         conf = {
@@ -83,9 +83,9 @@ class Test_WriteOut(unittest.TestCase):
         )
         writeout_handler.write()
         stat_inf = os.stat(os.path.join(self._test_dir, "1_split.sdf"))
-        self.assertGreater(stat_inf.st_size, 19900)
+        self.assertGreater(stat_inf.st_size, 16200)
         stat_inf = os.stat(os.path.join(self._test_dir, "2_split.sdf"))
-        self.assertGreater(stat_inf.st_size, 19500)
+        self.assertGreater(stat_inf.st_size, 15800)
 
     def test_extradata_writeout(self):
         conf = {
@@ -183,13 +183,13 @@ class Test_WriteOut(unittest.TestCase):
         writeout_handler.config.compounds.aggregation.mode = (
             _SBE.WRITEOUT_COMP_AGGREGATION_MODE_BESTPERCOMPOUND
         )
-        writeout_handler.config.compounds.selected_tags = ["Gsolv_dmso"]
-        writeout_handler.config.compounds.aggregation.key = "Gsolv_dmso"
+        writeout_handler.config.compounds.selected_tags = ["area"]
+        writeout_handler.config.compounds.aggregation.key = "area"
         writeout_handler.write()
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "tabular_notagsselected_6_compagg.csv")
+            os.path.join(self._test_dir, "tabular_notagsselected_8_compagg.csv")
         )
-        self.assertEqual(stat_inf.st_size, 56)
+        self.assertEqual(stat_inf.st_size, 61)
 
         # write-out without selecting tags and using compound-level aggregation (reverse)
         writeout_handler.config.destination.resource = os.path.join(
@@ -198,14 +198,14 @@ class Test_WriteOut(unittest.TestCase):
         writeout_handler.config.compounds.aggregation.mode = (
             _SBE.WRITEOUT_COMP_AGGREGATION_MODE_BESTPERCOMPOUND
         )
-        writeout_handler.config.compounds.selected_tags = ["Gsolv_dmso"]
-        writeout_handler.config.compounds.aggregation.key = "Gsolv_dmso"
+        writeout_handler.config.compounds.selected_tags = ["area"]
+        writeout_handler.config.compounds.aggregation.key = "area"
         writeout_handler.config.compounds.aggregation.highest_is_best = False
         writeout_handler.write()
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "tabular_notagsselected_7_compagg.csv")
+            os.path.join(self._test_dir, "tabular_notagsselected_0_compagg.csv")
         )
-        self.assertEqual(stat_inf.st_size, 56)
+        self.assertEqual(stat_inf.st_size, 61)
 
     def test_reinvent_writeout_empty(self):
         config = {
@@ -319,7 +319,7 @@ class Test_WriteOut(unittest.TestCase):
         gc = GenericContainer()
         gc.add_file(
             GenericData(
-                file_name="md_0_1.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_PDB_FILE
+                file_name="md_0_1.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC
             )
         )
         writeout_handler.set_data(StepData(generic=gc))
@@ -329,7 +329,7 @@ class Test_WriteOut(unittest.TestCase):
         writeout_handler.write()
 
         # reset the files since by default it gets removed from the source location
-        if not os.path.isfile(PATHS_EXAMPLEDATA.GROMACS_PDB_FILE):
-            shutil.copyfile(out_path, PATHS_EXAMPLEDATA.GROMACS_PDB_FILE)
+        if not os.path.isfile(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC):
+            shutil.copyfile(out_path, PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 53635)
+        self.assertGreater(stat_inf.st_size, 16415800)

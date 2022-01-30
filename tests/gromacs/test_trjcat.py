@@ -31,7 +31,7 @@ class Test_Trjcat(unittest.TestCase):
             SBE.STEPID: "test_trjcat",
             SBE.STEP_TYPE: "trjcat",
             SBE.EXEC: {
-                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             SBE.SETTINGS: {},
         }
