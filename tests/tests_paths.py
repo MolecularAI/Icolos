@@ -123,6 +123,7 @@ class PATHS_EXAMPLEDATA:
     GROMACS_1BVG_TPR = expand_path("gromacs/protein/1BVG.tpr")
     GROMACS_1BVG_XTC = expand_path("gromacs/protein/1BVG.xtc")
     GROMACS_1BVG_TOP = expand_path("gromacs/protein/1BVG.top")
+    GROMACS_1BVG_PDB = expand_path("gromacs/protein/1BVG.pdb")
     MMPBSA_CUSTOM_INPUT = expand_path("gromacs/test_input_mmpbsa.in")
     MMPBSA_POSRE = expand_path("gromacs/protein/posre.itp")
     MMPBSA_LIG_POSRE = expand_path("gromacs/protein/posre_DMP:100.itp")
@@ -157,7 +158,7 @@ class PATHS_EXAMPLEDATA:
 
     DESMOND_SETUP_PDB = expand_path("desmond/1cx2.pdb")
     DESMOND_PRODUCTION_CMS = expand_path("desmond/setup.cms")
-    TEST_FASTA_FILE = expand_path("structure_prediction/1acw.fasta")
+    TEST_FASTA_FILE = expand_path("molecules/peptides/1acw.fasta")
 
     LIGAND_HYBRID_TEST_DIR = expand_path("pmx/ligand_hybrid")
     PREPARE_SIMULATIONS_TEST_DIR = expand_path("pmx/prepare_simulations")

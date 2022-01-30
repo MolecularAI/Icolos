@@ -26,6 +26,8 @@ class Test_Grompp(unittest.TestCase):
             self.mdp = f.read()
         with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
             self.topol = f.read()
+        with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_POSRE, "r") as f:
+            self.posre = f.read()
 
     def test_grompp(self):
         step_conf = {
@@ -62,6 +64,9 @@ class Test_Grompp(unittest.TestCase):
         )
         step_grompp.data.generic.add_file(
             GenericData(file_name="tmp91023.top", file_data=self.topol, argument=True)
+        )
+        step_grompp.data.generic.add_file(
+            GenericData(file_name="DMP:100.itp", file_data=self.posre, argument=True)
         )
 
         step_grompp.execute()

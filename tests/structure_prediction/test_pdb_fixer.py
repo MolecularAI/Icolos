@@ -17,7 +17,7 @@ class TestPdbFixer(unittest.TestCase):
             os.makedirs(cls._test_dir)
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.PANTHER_RECEPTOR_PDB), "r") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.PANTHER_HOLO_PDB), "r") as f:
             self.pdb = f.read()
 
     def test_pdb_fixer_default(self):
@@ -35,7 +35,7 @@ class TestPdbFixer(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "test.pdb")
         step_pdb_fixer.write_generic_by_extension(path=self._test_dir, ext="pdb")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 738000)
+        self.assertGreater(stat_inf.st_size, 170300)
 
     def test_pdb_fixer(self):
         step_conf = {
@@ -60,4 +60,4 @@ class TestPdbFixer(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "test_2.pdb")
         step_pdb_fixer.write_generic_by_extension(path=self._test_dir, ext="pdb")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 710000)
+        self.assertGreater(stat_inf.st_size, 370300)

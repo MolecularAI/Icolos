@@ -22,7 +22,7 @@ class Test_Pdb2gmx(unittest.TestCase):
     def setUp(self):
         with open(PATHS_1UYD.PDB_PATH, "r") as f:
             self.structure = f.read()
-        with open(PATHS_1UYD.PDB_PATH, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_PDB, "r") as f:
             self.holo_structure = f.read()
 
     def test_pdb2gmx_run(self):

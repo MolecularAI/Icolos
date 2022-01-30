@@ -90,14 +90,14 @@ class Test_RMSD(unittest.TestCase):
 
         self.assertEqual(
             rf_step.get_compounds()[0][0][1].get_molecule().GetProp(_SR.RMSD_TAG),
-            "0.002",
+            "8.268",
         )
         self.assertEqual(
             rf_step.get_compounds()[0][0][1]
             .get_extra_data()[_SDM.KEY_MATCHED][0]
             .get_molecule()
             .GetProp(_SR.RMSD_TAG),
-            "0.002",
+            "8.268",
         )
         self.assertEqual(
             rf_step.get_compounds()[0][0][3].get_molecule().GetProp(_SR.RMSD_TAG), "0.0"
