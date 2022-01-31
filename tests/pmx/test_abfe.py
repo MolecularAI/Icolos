@@ -38,7 +38,7 @@ class Test_PMXabfe(unittest.TestCase):
     def test_pmx_abfe(self):
         step_conf = {
             _SBE.STEPID: "01_PMX_ABFE",
-            _SBE.STEP_TYPE: _SBE.STEP_PMX_ABFE,
+            _SBE.STEP_TYPE: _SBE.STEP_PMX_ABFE_SETUP,
             _SBE.EXEC: {
                 _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                 _SBE.EXEC_PARALLELIZATION: {
@@ -52,6 +52,7 @@ class Test_PMXabfe(unittest.TestCase):
                     # settings for protein parametrisation
                     "forcefield": "amber03",
                     "water": "tip3p",
+                    "sim_types": ["em", "nvt", "npt", "eq", "transitions"],
                 },
             },
         }

@@ -55,7 +55,7 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/protein/analyse1/results.txt")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/analyse1/results.txt")
         )
 
         self.assertGreater(stat_inf.st_size, 19000)

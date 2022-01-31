@@ -16,7 +16,7 @@ _WE = WriteOutEnum()
 # load the instantiated "config.json", holding the license key for OpenEye for example
 try:
     with open(
-        attach_root_path("icolos/config/unit_tests_config/config.json"), "r"
+        attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
 except:
