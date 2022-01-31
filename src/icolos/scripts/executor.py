@@ -8,6 +8,7 @@ import argparse
 from datetime import datetime
 from icolos.core.composite_agents.workflow import WorkFlow
 
+
 from icolos.loggers.entrypoint_logger import EntryPointLogger
 
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
@@ -21,8 +22,7 @@ from icolos.utils.entry_point_functions.parsing_functions import parse_header
 from icolos.utils.general.files_paths import attach_root_path
 
 
-if __name__ == "__main__":
-
+def main():
     # enums
     _LE = LoggingConfigEnum()
     _EE = ExecutorEnum()
@@ -92,4 +92,9 @@ if __name__ == "__main__":
     workflow.execute()
     exec_time = datetime.now() - st_time
     logger.log(f"Icolos workflow completed. Walltime: {exec_time}.", _LE.INFO)
+
+
+if __name__ == "__main__":
+    main()
+
     sys.exit(0)

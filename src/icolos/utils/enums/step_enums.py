@@ -706,6 +706,7 @@ class StepGromacsEnum:
     COUPLING_GROUP = "Other"
     MMPBSA_IN = "mmpbsa.in"
     GROMACS_LOAD = "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+    AMBERTOOLS_PREFIX = "ambertools_prefix"
     AMBERTOOLS_LOAD = "module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
     WATER_AND_IONS = "Water_and_ions"
     PROTEIN_OTHER = "Protein_Other"
