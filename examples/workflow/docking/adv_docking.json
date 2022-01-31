@@ -13,26 +13,14 @@
             }
         },
         "steps": [{
-                "step_id": "Ligprep",
-                "type": "ligprep",
-                "execution": {
-                    "prefix_execution": "module load schrodinger/2020-4",
-                    "parallelization": {
-                        "cores": 2,
-                        "max_length_sublists": 1
-                    },
-                    "failure_policy": {
-                        "n_tries": 3
-                    }
-                },
+                "step_id": "rdkit_embedding",
+                "type": "embedding",
                 "settings": {
                     "arguments": {
                         "flags": ["-epik"],
                         "parameters": {
-                            "-ph": 7.0,
-                            "-pht": 2.0,
-                            "-s": 10,
-                            "-bff": 14
+                            "protonate": true,
+                            "method": "rdkit"
                         }
                     },
                     "additional": {
@@ -82,7 +70,7 @@
                 },
                 "input": {
                     "compounds": [{
-                            "source": "Ligprep",
+                            "source": "rdkit_embedding",
                             "source_type": "step"
                         }
                     ]

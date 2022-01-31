@@ -42,9 +42,14 @@ class StepEmbedding(StepIOBase, BaseModel):
 
         # deactivate logger to suppress "missing Hs messages"
         RDLogger.DisableLog("rdApp.*")
-        embed_code = AllChem.EmbedMolecule(
-            molecule, randomSeed=42, useRandomCoords=True
-        )
+        try:
+            embed_code = AllChem.EmbedMolecule(
+                molecule, randomSeed=42, useRandomCoords=True
+            )
+        except:
+            self._logger.log(f"Could not embed molecule with SMILES \"{smile}\", critical error in \"RDkit\".",
+                             _LE.WARNING)
+            return None
 
         status = 0
         if embed_code != -1:
@@ -67,6 +72,8 @@ class StepEmbedding(StepIOBase, BaseModel):
 
         if embed_code != -1 and status == 0:
             return molecule
+        else:
+            return None
 
     def _get_embedding_method(self, parameters: dict) -> str:
         method = nested_get(parameters, [_SEE.METHOD], default=None)
@@ -91,34 +98,33 @@ class StepEmbedding(StepIOBase, BaseModel):
         embed_as = self.settings.additional[_SEE.EMBED_AS]
         for compound in self.get_compounds():
             if embed_as == _SEE.EMBED_AS_ENUMERATIONS:
-                for enumeration in compound.get_enumerations():
+                enum_buffer = deepcopy(compound.get_enumerations())
+                compound.clear_enumerations()
+                for enumeration in enum_buffer:
                     enumeration.clear_molecule()
                     enumeration.clear_conformers()
                     molecule = self._embed_molecule(
                         smile=enumeration.get_smile(), parameters=parameters
                     )
-                    enumeration.set_molecule(molecule)
-                number_successful = len(
-                    [
-                        True
-                        for enum in compound.get_enumerations()
-                        if enum.get_molecule() is not None
-                    ]
-                )
+                    if molecule is not None:
+                        enumeration.set_molecule(molecule)
+                        compound.add_enumeration(enumeration)
                 self._logger.log(
-                    f"Embedding for compound {compound.get_index_string()} (name: {compound.get_name()}) completed ({number_successful} of {len(compound)} enumerations successful).",
+                    f"Embedding for compound {compound.get_index_string()} (name: {compound.get_name()}) completed ({len(compound)} of {len(enum_buffer)} enumerations successful).",
                     _LE.INFO,
                 )
             elif embed_as == _SEE.EMBED_AS_CONFORMERS:
+                # TODO: double-check this bit
                 for enumeration in compound.get_enumerations():
                     enumeration.clear_conformers()
                     molecule = self._embed_molecule(
                         smile=enumeration.get_smile(), parameters=parameters
                     )
-                    conformer = Conformer(
-                        conformer=molecule, enumeration_object=enumeration
-                    )
-                    enumeration.add_conformer(conformer, auto_update=True)
+                    if molecule is not None:
+                        conformer = Conformer(
+                            conformer=molecule, enumeration_object=enumeration
+                        )
+                        enumeration.add_conformer(conformer, auto_update=True)
                 number_successful = len(
                     [
                         True
