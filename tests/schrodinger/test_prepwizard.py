@@ -83,7 +83,7 @@ class Test_Prepwizard(unittest.TestCase):
         with open(out_path, "w") as f:
             f.write(out_file)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 128600)
+        self.assertGreater(stat_inf.st_size, 126530)
 
     def test_auto_remove_ligand(self):
         step_conf = {
@@ -99,7 +99,9 @@ class Test_Prepwizard(unittest.TestCase):
 
         step_removelig = StepPrepwizard(**step_conf)
         step_removelig.data.generic.add_file(
-            GenericData(file_name="cox.pdb", file_data=self.holo_1uyd, argument=True)
+            GenericData(
+                file_name="1UYD_holo.pdb", file_data=self.holo_1uyd, argument=True
+            )
         )
 
         step_removelig.execute()

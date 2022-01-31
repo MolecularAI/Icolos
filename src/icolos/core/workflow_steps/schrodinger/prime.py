@@ -165,6 +165,7 @@ class StepPrime(StepSchrodingerBase, BaseModel):
                 mol.SetProp("_Name", conf_id)
                 writer.write(mol)
             writer.close()
+            print(tmp_input_sdf_file)
 
             # now we have an sdf file with all the conformers from that batch.  Attach the
             structcat_args = [

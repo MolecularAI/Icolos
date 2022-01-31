@@ -4,6 +4,7 @@ package.json
 .vscode
 tags
 .idea
+*egg-info
 
 timer.dat
 git-commands.txt
