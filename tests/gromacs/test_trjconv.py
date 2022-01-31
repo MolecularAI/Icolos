@@ -20,10 +20,10 @@ class Test_Trjconv(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_XTC, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc = f.read()
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_TPR_TRJCONV, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr = f.read()
 
     def test_trjconv(self):
@@ -31,7 +31,7 @@ class Test_Trjconv(unittest.TestCase):
             SBE.STEPID: "test_trjconv",
             SBE.STEP_TYPE: "trjconv",
             SBE.EXEC: {
-                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             SBE.SETTINGS: {
                 SBE.SETTINGS_ARGUMENTS_FLAGS: ["-center"],
@@ -50,4 +50,4 @@ class Test_Trjconv(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "structure.xtc")
         step_trjconv.write_generic_by_extension(self._test_dir, "xtc")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 10029516)
+        self.assertGreater(stat_inf.st_size, 607000)

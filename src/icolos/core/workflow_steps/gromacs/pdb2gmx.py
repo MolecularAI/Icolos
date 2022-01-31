@@ -33,7 +33,12 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         self._initialize_backend(executor=GromacsExecutor)
         self._check_backend_availability()
         self._shell_executor = Executor()
-        self._antechamber_executor = Executor(prefix_execution=_SGE.AMBERTOOLS_LOAD)
+        ambertools_prefix = (
+            self.settings.additional[_SGE.AMBERTOOLS_PREFIX]
+            if _SGE.AMBERTOOLS_PREFIX in self.settings.additional.keys()
+            else _SGE.AMBERTOOLS_LOAD
+        )
+        self._antechamber_executor = Executor(prefix_execution=ambertools_prefix)
 
     def _modify_topol_file(self, tmp_dir, itp_files):
         # read in the complex topol file, add the new itp files after the forcefield #include statement
@@ -206,7 +211,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             location=tmp_dir,
             check=True,
             pipe_input="echo 3",
-        )  # this will always be the last thing on the index file
+        )  # the ligand always be the last thing on the index file
 
         # we no longer need the ligand ndx file
         self._remove_temporary(os.path.join(tmp_dir, index_file))

@@ -4,10 +4,11 @@ package.json
 .vscode
 tags
 .idea
+*egg-info
 
 timer.dat
 git-commands.txt
-icolos/config/unit_tests_config/config.json
+
 
 tests/junk
 *.log
@@ -15,3 +16,4 @@ tests/junk
 *_cache
 *.ipynb_checkpoints
 output
+src/icolos/config/unit_tests_config/config.json

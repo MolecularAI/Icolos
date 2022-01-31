@@ -33,7 +33,7 @@ class Test_Cosmo(unittest.TestCase):
     def setUp(self):
         # initialize a Compound with 1 Enumeration and 2 Conformers (done by OMEGA)
         _paracetamol_molecule = get_mol_as_Compound(PATHS_EXAMPLEDATA.PARACETAMOL_PATH)
-        conf = get_mol_as_Conformer(PATHS_EXAMPLEDATA.PARACETAMOL_MULTIPLE_CONF)[0]
+        conf = get_mol_as_Conformer(PATHS_EXAMPLEDATA.CLUSTERING_11CONFS)[0]
         with open(PATHS_EXAMPLEDATA.PARACETAMOL_COSMO, "r") as f:
             cosmofile = f.readlines()
         conf.add_extra_data(key=_CTE.EXTRA_DATA_COSMOFILE, data=cosmofile)
