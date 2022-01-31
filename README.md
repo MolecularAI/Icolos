@@ -16,8 +16,7 @@ and straight-forward extensibiltiy to add additional functionality. It was princ
 Workflows are constructed from elementary 'steps', individual blocks which specify a sequential list of operations (normally corresponding to a single program being executed),
 with control of the command-line options provided through step settings, and options to control other aspects of the step's behaviour included in the `additional` block.
 
-For many use cases, one of the template workflows might suit your needs, or need a few tweaks to do what you want. The JSONs in the example folder are less regularly updated
-with new features and are mostly used for integration testing.
+For many use cases, one of the template workflows might suit your needs, or need a few tweaks to do what you want. Demonstration notebooks for common use cases are available [here](https://github.com/MolecularAI/IcolosCommunity).
 
 ## Initial configuration
 You are welcome to clone the repository and use a local version, and in particular if you would like to experiment with the code base and/or contribute features, please get 
@@ -28,6 +27,11 @@ After cloning, first install the `icolosprod` `conda` environment:
 ```
 conda create -f environment_min.yml
 ```
+Then install the package:
+```
+pip install -e .
+```
+This will give you access to the `icolos` entrypoint
 
 ### `ESPsim` installation
 The following will install the `ESPsim` package into the environment - this is only required if ligand-based matching using this package is desired.
@@ -39,13 +43,15 @@ cd espsim
 conda activate icolosprod
 pip install -e .
 ```
+## Unit testing
+Icolos is extensively unit tested, and relies on an external data repo located [here](https://github.com/MolecularAI/IcolosData).  The full test suite takes ~60 mins on a workstation, therefore it is recommended that you execute a subset of unit tests relevant to the workflow you are running.  
 
 ## Execution
 Once a `JSON` is specified, the workflow can be executed like so:
 
 ```
 conda activate icolosprod
-python executor.py -conf workflow.json
+icolos -conf workflow.json
 ```
 
 ## `SLURM` Execution
@@ -60,7 +66,7 @@ Once specified, a workflow can be called like this in a `bash` script:
 #SBATCH --mem-per-cpu=2G
 
 source /<conda_path>/miniconda3/bin/activate /<conda_path>/minconda3/envs/icolosprod
-python /<icolos_path>/Icolos/executor.py -conf workflow.json
+icolos -conf workflow.json
 ```
 For GROMACS workflows requiring the GPU partition, you will need to adapt the header accordingly, e.g. like so:
 
@@ -69,14 +75,11 @@ For GROMACS workflows requiring the GPU partition, you will need to adapt the he
 #SBATCH -J gmx_cco1_fold_microsecond
 #SBATCH -o MygpuJob_out_%j.txt
 #SBATCH -e MygpuJob_err_%j.txt
-#SBATCH --nodes=1
-#SBATCH --ntasks=4
-#SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:4
-#SBATCH --gres-flags=enforce-binding
+#SBATCH -c 8
+#SBATCH --gres=gpu:1
 #SBATCH --mem-per-cpu=4g
 #SBATCH -p gpu
-#SBATCH --time=370:00:00
+#SBATCH --time=12:00:00
 
 ```
 

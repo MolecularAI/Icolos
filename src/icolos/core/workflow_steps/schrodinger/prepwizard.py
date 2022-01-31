@@ -61,9 +61,13 @@ class StepPrepwizard(StepSchrodingerBase, BaseModel):
             if remove_res == _SPE.LIGANDS:
                 # automatically remove ligands, keep cofactors that are specified in the enum.
                 for line in f.readlines():
-                    if line is not None and (
-                        line.split()[0] == "ATOM"
-                        or any(l in line for l in _SPE.COFACTOR_IDS)
+                    if (
+                        line is not None
+                        and len(line.split()) > 3
+                        and (
+                            line.split()[0] == "ATOM"
+                            or any(l in line for l in _SPE.COFACTOR_IDS)
+                        )
                     ):
                         cleaned_pdb_lines.append(line)
             else:

@@ -56,7 +56,7 @@ def move_up_directory(path, n=1):
 
 def attach_root_path(path):
     """Function to attach the root path of the module for a given "path"."""
-    ROOT_DIR = move_up_directory(os.path.abspath(__file__), n=3)
+    ROOT_DIR = move_up_directory(os.path.abspath(__file__), n=4)
     return os.path.join(ROOT_DIR, path)
 
 

@@ -1,10 +1,12 @@
 import os
+from posixpath import dirname
 
 from icolos.loggers.base_logger import BaseLogger
 
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.entry_points import ExecutorEnum
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
+from icolos.utils.general.files_paths import move_up_directory
 
 _WE = WorkflowEnum()
 _LE = LoggingConfigEnum()
@@ -52,6 +54,10 @@ def get_runtime_global_variables(args_conf: str, entry_point_path: str) -> dict:
         # directory where the JSON lies
         _EE.RUNTIME_GLOBAL_VARIABLE_CONFIGDIR: os.path.dirname(
             os.path.abspath(args_conf)
+        ),
+        # top level of Icolos icolos package
+        _EE.RUNTIME_GLOBAL_VARIABLE_PACKAGEDIR: move_up_directory(
+            os.path.dirname(entry_point_path), 3
         ),
     }
 

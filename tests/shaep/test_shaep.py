@@ -1,6 +1,7 @@
 from icolos.core.containers.generic import GenericData
 from icolos.utils.enums.program_parameters import ShaepEnum
 from tests.tests_paths import (
+    PATHS_1UYD,
     PATHS_EXAMPLEDATA,
     get_mol_as_Compound,
     get_mol_as_Conformer,
@@ -27,8 +28,8 @@ class Test_Shaep(unittest.TestCase):
 
     def setUp(self):
         # TODO: update to load at least 3 compounds docked (at least 5 poses each)
-        mol = get_mol_as_Compound(PATHS_EXAMPLEDATA.SHAEP_LIGAND_DOCKED_POSE)
-        conf = get_mol_as_Conformer(PATHS_EXAMPLEDATA.SHAEP_LIGAND_DOCKED_POSE)
+        mol = get_mol_as_Compound(PATHS_1UYD.NATIVE_LIGAND_SDF)
+        conf = get_mol_as_Conformer(PATHS_1UYD.NATIVE_LIGAND_SDF)
         mol[0].add_conformers(conf, auto_update=True)
         self.mol = mol
 
@@ -54,7 +55,7 @@ class Test_Shaep(unittest.TestCase):
                 .get_molecule()
                 .GetProp(_SE.TAG_SHAPE_SIMILARITY)
             ),
-            0.737409,
+            0.663072,
         )
         self.assertEqual(
             float(
@@ -62,11 +63,11 @@ class Test_Shaep(unittest.TestCase):
                 .get_molecule()
                 .GetProp(_SE.TAG_ESP_SIMILARITY)
             ),
-            0.106811,
+            0.302026,
         )
 
         # check, whether the tags got added
         out_path = os.path.join(self._test_dir, "mols_nibr.sdf")
         shaep_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 17358)
+        self.assertEqual(stat_inf.st_size, 2586)

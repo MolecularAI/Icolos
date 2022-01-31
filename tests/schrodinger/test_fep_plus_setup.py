@@ -29,40 +29,40 @@ class Test_FepPlusSetup(unittest.TestCase):
             PATHS_1UYD.LIG4_POSES, poseviewer=self.poseviewer
         )
         self.mol2 = get_ligands_as_compounds_with_conformers(
-            PATHS_1UYD.LIG_SDF, poseviewer=self.poseviewer
+            PATHS_1UYD.LIG4_POSES, poseviewer=self.poseviewer
         )
         empty_output_dir(self._test_dir)
 
-    def test_fep_setup_with_xray(self):
-        step_conf = {
-            _SBE.STEPID: "test_fep_setup_with_xray",
-            _SBE.STEP_TYPE: _SBE.STEP_FEP_PLUS_SETUP,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-1-js-aws"
-            },
-            _SBE.SETTINGS: {
-                _SBE.SETTINGS_ARGUMENTS: {
-                    _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
-                },
-                _SBE.SETTINGS_ADDITIONAL: {
-                    _SFE.XRAY_STRUCTURES: PATHS_1UYD.XRAY_STRUCTURES
-                },
-            },
-        }
-        step_fep_plus_setup = StepFepPlusSetup(**step_conf)
-        step_fep_plus_setup.data.compounds = self.mol2
-        step_fep_plus_setup.execute()
+    # def test_fep_setup_with_xray(self):
+    #     step_conf = {
+    #         _SBE.STEPID: "test_fep_setup_with_xray",
+    #         _SBE.STEP_TYPE: _SBE.STEP_FEP_PLUS_SETUP,
+    #         _SBE.EXEC: {
+    #             _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-1-js-aws"
+    #         },
+    #         _SBE.SETTINGS: {
+    #             _SBE.SETTINGS_ARGUMENTS: {
+    #                 _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+    #                 _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+    #             },
+    #             _SBE.SETTINGS_ADDITIONAL: {
+    #                 _SFE.XRAY_STRUCTURES: PATHS_1UYD.XRAY_STRUCTURES
+    #             },
+    #         },
+    #     }
+    #     step_fep_plus_setup = StepFepPlusSetup(**step_conf)
+    #     step_fep_plus_setup.data.compounds = self.mol2
+    #     step_fep_plus_setup.execute()
 
-        # now confirm that the map has been generated properly
-        out_path = os.path.join(self._test_dir, "xray_test_out.fmp")
-        step_fep_plus_setup.write_generic_by_extension(
-            path=os.path.join(self._test_dir, "xray_test_out.fmp"),
-            ext="fmp",
-            join=False,
-        )
-        stat_inf = os.stat(out_path)
-        self.assertAlmostEqual(stat_inf.st_size, 821966, delta=500)
+    #     # now confirm that the map has been generated properly
+    #     out_path = os.path.join(self._test_dir, "xray_test_out.fmp")
+    #     step_fep_plus_setup.write_generic_by_extension(
+    #         path=os.path.join(self._test_dir, "xray_test_out.fmp"),
+    #         ext="fmp",
+    #         join=False,
+    #     )
+    #     stat_inf = os.stat(out_path)
+    #     self.assertAlmostEqual(stat_inf.st_size, 821966, delta=500)
 
     def test_fep_setup(self):
         step_conf = {

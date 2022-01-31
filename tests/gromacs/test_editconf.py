@@ -20,7 +20,9 @@ class Test_Editconf(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_STRUCTURE_FILE), "r") as f:
+        with open(
+            attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
+        ) as f:
             self.structure = f.read()
 
     def test_editconf_run(self):
@@ -28,7 +30,7 @@ class Test_Editconf(unittest.TestCase):
             _SBE.STEPID: "test_editconf",
             _SBE.STEP_TYPE: "editconf",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -51,4 +53,4 @@ class Test_Editconf(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "structure.gro")
         step_editconf.write_generic_by_name(self._test_dir, "structure.gro")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 22377)
+        self.assertEqual(stat_inf.st_size, 2102964)

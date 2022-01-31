@@ -57,13 +57,13 @@ class Test_OMEGA_confgen(unittest.TestCase):
         omega_step.execute()
 
         # check number of conformers returned (only one Compound with only one Enumeration)
-        self.assertEqual(len(omega_step.get_compounds()[0][0]), 2)
+        self.assertEqual(len(omega_step.get_compounds()[0][0]), 1)
 
         # check SDF write-out (including energy-as-tag annotation)
         out_path = os.path.join(self._test_dir, "OMEGA_conformers_paracetamol.sdf")
         omega_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 4274)
+        self.assertEqual(stat_inf.st_size, 1878)
 
     def test_coordinate_generation_neutral_high_RMS(self):
         step_conf = {
@@ -93,7 +93,7 @@ class Test_OMEGA_confgen(unittest.TestCase):
         )
         omega_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 2137)
+        self.assertEqual(stat_inf.st_size, 1878)
 
     def test_coordinate_generation_charged(self):
         step_conf = {
@@ -115,10 +115,10 @@ class Test_OMEGA_confgen(unittest.TestCase):
         omega_step.execute()
 
         # check number of conformers returned (only one Compound with only one Enumeration)
-        self.assertEqual(len(omega_step.get_compounds()[0][0]), 2)
+        self.assertEqual(len(omega_step.get_compounds()[0][0]), 10)
 
         # check SDF write-out (including energy-as-tag annotation)
         out_path = os.path.join(self._test_dir, "OMEGA_conformers_aspirin.sdf")
         omega_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 3480)
+        self.assertEqual(stat_inf.st_size, 19574)

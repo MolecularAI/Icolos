@@ -20,13 +20,15 @@ class Test_Cluster(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_XTC), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC), "rb") as f:
             self.xtc = f.read()
 
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_TPR_TRJCONV), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
             self.tpr = f.read()
 
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_STRUCTURE_FILE), "r") as f:
+        with open(
+            attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
+        ) as f:
             self.structure = f.read()
 
     def test_cluster(self):
@@ -34,7 +36,7 @@ class Test_Cluster(unittest.TestCase):
             SBE.STEPID: "test_cluster",
             SBE.STEP_TYPE: "cluster",
             SBE.EXEC: {
-                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             SBE.SETTINGS: {
                 SBE.SETTINGS_ARGUMENTS: {
@@ -67,4 +69,4 @@ class Test_Cluster(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "clusters.pdb")
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 2002553)
+        self.assertGreater(stat_inf.st_size, 7383600)
