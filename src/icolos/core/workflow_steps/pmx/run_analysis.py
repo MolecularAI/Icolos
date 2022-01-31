@@ -104,7 +104,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     def _summarize_results(self, edges):
         bootnum = 1000
         for edge in edges:
-            for wp in ["water", "protein"]:
+            for wp in self.therm_cycle_branches:
                 dg = []
                 erra = []
                 errb = []
@@ -148,8 +148,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     )
 
             #### also collect self.results_summary
-            rowNameWater = "{0}_{1}".format(edge, "water")
-            rowNameProtein = "{0}_{1}".format(edge, "protein")
+            rowNameWater = "{0}_{1}".format(edge, "ligand")
+            rowNameProtein = "{0}_{1}".format(edge, "complex")
             dg = (
                 self.results_all.loc[rowNameProtein, "val"]
                 - self.results_all.loc[rowNameWater, "val"]
@@ -174,7 +174,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     def analysis_summary(self, edges):
         for edge in edges:
             for r in range(1, self.get_perturbation_map().replicas + 1):
-                for wp in ["ligand", "complex"]:
+                for wp in self.therm_cycle_branches:
                     analysispath = "{0}/analyse{1}".format(
                         self._get_specific_path(
                             workPath=self.work_dir, edge=edge, wp=wp

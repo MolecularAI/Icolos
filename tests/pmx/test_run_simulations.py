@@ -103,7 +103,9 @@ class Test_PMXRunSimulations(unittest.TestCase):
 
         self.assertEqual(stat_inf.st_size, 1347767)
 
-    stat_inf = os.stat(
-        os.path.join(self._test_dir, "0cd4b47_4f2ffa1/protein/stateB/run3/em/tpr.tpr")
-    )
-    self.assertEqual(stat_inf.st_size, 3501084)
+        stat_inf = os.stat(
+            os.path.join(
+                self._test_dir, "0cd4b47_4f2ffa1/protein/stateB/run3/em/tpr.tpr"
+            )
+        )
+        self.assertEqual(stat_inf.st_size, 3501084)

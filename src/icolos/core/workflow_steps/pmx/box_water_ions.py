@@ -45,10 +45,10 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
 
         for edge in jobs:
             outLigPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="water"
+                workPath=self.work_dir, edge=edge, wp="ligand"
             )
             outProtPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="protein"
+                workPath=self.work_dir, edge=edge, wp="complex"
             )
 
             # box ligand

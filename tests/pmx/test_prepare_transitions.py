@@ -62,7 +62,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
         stat_inf = os.stat(
             os.path.join(
                 self._test_dir,
-                "0ec09ef_4afa8f9/protein/stateA/run1/transitions/frame1.gro",
+                "0ec09ef_4afa8f9/complex/stateA/run1/transitions/frame1.gro",
             )
         )
         self.assertGreater(stat_inf.st_size, 2500000)
@@ -70,7 +70,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
         stat_inf = os.stat(
             os.path.join(
                 self._test_dir,
-                "0ec09ef_4afa8f9/protein/stateB/run1/transitions/frame1.gro",
+                "0ec09ef_4afa8f9/complex/stateB/run1/transitions/frame1.gro",
             )
         )
         self.assertGreater(stat_inf.st_size, 2500000)
@@ -78,7 +78,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
         stat_inf = os.stat(
             os.path.join(
                 self._test_dir,
-                "0ec09ef_4afa8f9/water/stateA/run1/transitions/frame1.gro",
+                "0ec09ef_4afa8f9/ligand/stateA/run1/transitions/frame1.gro",
             )
         )
         self.assertGreater(stat_inf.st_size, 414600)
@@ -86,7 +86,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
         stat_inf = os.stat(
             os.path.join(
                 self._test_dir,
-                "0ec09ef_4afa8f9/water/stateB/run1/transitions/frame1.gro",
+                "0ec09ef_4afa8f9/ligand/stateB/run1/transitions/frame1.gro",
             )
         )
         self.assertGreater(stat_inf.st_size, 414600)
