@@ -68,7 +68,7 @@
                         "configuration": {
                             "AMIDE_MODE": "trans",
                             "EXPANDED_SAMPLING": "True",
-                            "GRIDFILE": ["{entrypoint_dir}/../IcolosData/Glide/1UYD_grid_constraints.zip"],
+                            "GRIDFILE": ["{package_dir}/../IcolosData/Glide/1UYD_grid_constraints.zip"],
                             "NENHANCED_SAMPLING": "1",
                             "POSE_OUTTYPE": "ligandlib_sd",
                             "POSES_PER_LIG": "3",
@@ -78,7 +78,7 @@
                             "REWARD_INTRA_HBONDS": "True"
                         },
                         "maestro_in_file": {
-                            "path": "{entrypoint_dir}/../IcolosData/Glide/example.in"
+                            "path": "{package_dir}/../IcolosData/Glide/example.in"
                         }
                     }
                 },
@@ -95,7 +95,7 @@
                             "category": "conformers"
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/docked_conformers.sdf",
+                            "resource": "{package_dir}/tests/junk/docked_conformers.sdf",
                             "type": "file",
                             "format": "SDF"
                         }
@@ -110,7 +110,7 @@
                             }
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/docked_conformers.csv",
+                            "resource": "{package_dir}/tests/junk/docked_conformers.csv",
                             "type": "file",
                             "format": "CSV"
                         }

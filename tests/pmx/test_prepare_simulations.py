@@ -25,10 +25,11 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
 
     def setUp(self):
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
         p_map = PerturbationMap(compounds=self.compounds)
-        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG_SINGLE_EDGE)
+        p_map.replicas = 1
+        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
         self.p_map = p_map
 
         export_unit_test_env_vars()
@@ -40,7 +41,6 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
             _SBE.STEP_TYPE: "pmx_prepare_simulations",
             _SBE.EXEC: {
                 _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
-                _SBE.EXEC_BINARYLOCATION: MAIN_CONFIG["PMX"]["CLI_ENTRYPOINT"],
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -60,14 +60,16 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
         step_prepare_simulations.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/water/stateA/run1/em/tpr.tpr")
+            os.path.join(
+                self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em/tpr.tpr"
+            )
         )
 
-        self.assertGreater(stat_inf.st_size, 213300)
+        self.assertGreater(stat_inf.st_size, 168400)
 
         stat_inf = os.stat(
             os.path.join(
-                self._test_dir, "0cd4b47_4f2ffa1/protein/stateB/run3/em/tpr.tpr"
+                self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/tpr.tpr"
             )
         )
-        self.assertGreater(stat_inf.st_size, 3501000)
+        self.assertGreater(stat_inf.st_size, 1317000)

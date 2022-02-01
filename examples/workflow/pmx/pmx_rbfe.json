@@ -36,7 +36,7 @@
 				]
 			},
 			"global_variables": {
-				"file_path": "{entrypoint_dir}/../IcolosData/pmx",
+				"file_path": "{package_dir}/../IcolosData/pmx",
 				"output_dir": "{work_dir}/tests/junk/pmx"
 			},
 			"global_settings": {
@@ -210,11 +210,6 @@
 					"additional": {}
 				},
 				"input": {
-					"perturbation_map": [
-						{
-							"source": "04_assemble_systems"
-						}
-					]
 				}
 			},
 			{

@@ -28,12 +28,12 @@ class Test_PMX_setup(unittest.TestCase):
 
     def setUp(self):
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
-        with open(PATHS_EXAMPLEDATA.FEP_PLUS_OTHER_PROTEIN, "r") as f:
+        with open(PATHS_EXAMPLEDATA.PMX_TNKS_PROTEIN, "r") as f:
             data = f.read()
         self.protein = GenericData(file_name="protein.pdb", file_data=data)
-        with open(PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG, "r") as f:
+        with open(PATHS_EXAMPLEDATA.PMX_TNKS_MAP, "r") as f:
             data = f.read()
         self.log_file = GenericData(
             file_name="map.log", file_data=data, extension="log"
@@ -75,6 +75,6 @@ class Test_PMX_setup(unittest.TestCase):
 
         assert os.path.isdir(os.path.join(self._test_dir, "input"))
         assert os.path.isdir(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/water/stateA/run1/em")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em")
         )
         # stat some of the ligand files and check they've been deposited in the right directory

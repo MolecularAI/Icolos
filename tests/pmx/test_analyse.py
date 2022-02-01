@@ -25,11 +25,12 @@ class Test_PMXanalyse(unittest.TestCase):
 
     def setUp(self):
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
         p_map = PerturbationMap(compounds=self.compounds)
-        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG_SINGLE_EDGE)
+        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
         self.p_map = p_map
+        self.p_map.replicas = 1
         export_unit_test_env_vars()
 
     def test_pmx_analyse(self):
@@ -38,7 +39,6 @@ class Test_PMXanalyse(unittest.TestCase):
             _SBE.STEP_TYPE: "pmx_analyse",
             _SBE.EXEC: {
                 _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a",
-                _SBE.EXEC_BINARYLOCATION: MAIN_CONFIG["PMX"]["CLI_ENTRYPOINT"],
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -55,11 +55,11 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/protein/analyse1/results.txt")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/analyse1/results.txt")
         )
 
         self.assertGreater(stat_inf.st_size, 19000)
 
         stat_inf = os.stat(os.path.join(self._test_dir, "resultsAll.csv"))
 
-        self.assertGreater(stat_inf.st_size, 480)
+        self.assertGreater(stat_inf.st_size, 200)

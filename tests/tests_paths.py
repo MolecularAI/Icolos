@@ -16,7 +16,7 @@ _WE = WriteOutEnum()
 # load the instantiated "config.json", holding the license key for OpenEye for example
 try:
     with open(
-        attach_root_path("icolos/config/unit_tests_config/config.json"), "r"
+        attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
 except:
@@ -174,7 +174,6 @@ class PATHS_EXAMPLEDATA:
     PMX_TNKS_MAP = expand_path("pmx/fep_mapper.log")
     PMX_TNKS_LIGANDS = expand_path("pmx/ligands.sdf")
     PMX_TNKS_PROTEIN = expand_path("pmx/5tbm.pdb")
-
     DSSP_PDB_1 = expand_path("structure_prediction/1e0n.pdb")
     DSSP_PDB_2 = expand_path("structure_prediction/1jbf.pdb")
     DSSP_PDB_3 = expand_path("structure_prediction/6nox.pdb")

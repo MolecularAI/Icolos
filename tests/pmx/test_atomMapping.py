@@ -26,10 +26,10 @@ class Test_PMXatomMapping(unittest.TestCase):
 
     def setUp(self):
         self.compounds = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.FEP_PLUS_LIGANDS
+            PATHS_EXAMPLEDATA.PMX_TNKS_LIGANDS
         )
         p_map = PerturbationMap(compounds=self.compounds)
-        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.FEP_PLUS_MAP_LOG_SINGLE_EDGE)
+        p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
         self.p_map = p_map
 
         export_unit_test_env_vars()
@@ -62,6 +62,6 @@ class Test_PMXatomMapping(unittest.TestCase):
         step_atom_mapping.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0cd4b47_4f2ffa1/hybridStrTop/out_pdb1.pdb")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/hybridStrTop/out_pdb1.pdb")
         )
-        self.assertEqual(stat_inf.st_size, 4631)
+        self.assertGreater(stat_inf.st_size, 3450)
