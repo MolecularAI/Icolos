@@ -55,7 +55,7 @@ class Test_PMX_setup(unittest.TestCase):
                     # settings for protein parametrisation
                     "forcefield": "amber03",
                     "water": "tip3p",
-                    _SGE.CHARGE_METHOD: "bcc",
+                    _SGE.CHARGE_METHOD: "gas",
                 },
             },
         }
