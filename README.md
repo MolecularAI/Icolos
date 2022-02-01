@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black) 
 [![GitHub contributors](https://badgen.net/github/contributors/MolecularAI/Icolos)](https://GitHub.com/MolecularAI/Icolos/graphs/contributors/)
 [![Latest tag](https://badgen.net/github/tag/MolecularAI/Icolos)](https://github.com/MolecularAI/Icolos/tag)

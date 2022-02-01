@@ -47,12 +47,8 @@ class StepGromacsBase(StepBase, BaseModel):
         self._logger.log(
             f"Writing input files to working directory at {tmp_dir}", _LE.DEBUG
         )
-        # if we have an empty tmpdir:
-        if next(os.scandir(tmp_dir), None):
-            for file in self.data.generic.get_flattened_files():
-                file.write(tmp_dir)
-        else:
-            self._parse_output(tmp_dir)
+        for file in self.data.generic.get_flattened_files():
+            file.write(tmp_dir)
 
     def _parse_arguments(self, flag_dict: dict, args: list = None) -> List:
         arguments = args if args is not None else []
