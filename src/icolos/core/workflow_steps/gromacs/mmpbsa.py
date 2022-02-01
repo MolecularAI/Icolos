@@ -46,9 +46,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         else:
             self._logger.log("No input file found, defaulting to template", _LE.WARNING)
             # parses user arguments and creates the formatted amber input file from the user specification
-            with open(
-                attach_root_path("icolos/config/amber/default_mmpbsa.in"), "r"
-            ) as f:
+            with open(attach_root_path(_SGE.DEFAULT_MMPBSA_IN), "r") as f:
                 template = GenericData(file_name="mmpbsa.in", file_data=f.read())
 
         self.data.generic.add_file(template)

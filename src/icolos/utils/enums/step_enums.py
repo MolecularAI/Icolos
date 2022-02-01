@@ -717,6 +717,7 @@ class StepGromacsEnum:
     CLUSTERS_NUMBER = "clustersNumber"
     LENGTHS = "lengths"
     COUPLING_GROUPS = "coupling_groups"
+    DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
 
     def __getattr__(self, name):
         if name in self:
