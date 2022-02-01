@@ -8,10 +8,10 @@ class LoggingConfigEnum:
     EXCEPTION = "exception"
 
     # paths to the configuration JSONs that are shipped with Icolos
-    PATH_CONFIG_DEFAULT = "icolos/config/logging/default.json"
-    PATH_CONFIG_VERBOSE = "icolos/config/logging/verbose.json"
-    PATH_CONFIG_DEBUG = "icolos/config/logging/debug.json"
-    PATH_CONFIG_TUTORIAL = "icolos/config/logging/tutorial.json"
+    PATH_CONFIG_DEFAULT = "src/icolos/config/logging/default.json"
+    PATH_CONFIG_VERBOSE = "src/icolos/icolos/config/logging/verbose.json"
+    PATH_CONFIG_DEBUG = "src/icolos/icolos/config/logging/debug.json"
+    PATH_CONFIG_TUTORIAL = "src/icolos/icolos/config/logging/tutorial.json"
 
     # high-level loggers defined in the configurations
     LOGGER_IO = "io"
