@@ -29,7 +29,7 @@
                 "type": "initialization",
                 "input": {
                     "compounds": [{
-                            "source": "{entrypoint_dir}/../IcolosData/molecules/paracetamol.sdf",
+                            "source": "{package_dir}/../IcolosData/molecules/paracetamol.sdf",
                             "source_type": "file",
                             "format": "SDF"
                         }
@@ -308,7 +308,7 @@
                             "category": "conformers"
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/ePSA_permeability_final.sdf",
+                            "resource": "{package_dir}/tests/junk/ePSA_permeability_final.sdf",
                             "type": "file",
                             "format": "SDF"
                         }
@@ -322,7 +322,7 @@
                             }
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/ePSA.csv",
+                            "resource": "{package_dir}/tests/junk/ePSA.csv",
                             "type": "file",
                             "format": "CSV"
                         }
