@@ -17,3 +17,4 @@ tests/junk
 *.ipynb_checkpoints
 output
 src/icolos/config/unit_tests_config/config.json
+build

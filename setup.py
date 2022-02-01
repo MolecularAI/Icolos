@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="icolos",
@@ -9,7 +9,7 @@ setup(
     package_dir={"": "src"},
     # include_package_data=True,
     # package_dir={"config": "icolos/config"},
-    # package_data={"icolos": ["config/logging/*.json"]},
+    # package_data={"icolos": ["src/icolos/config/logging/*.json"]},
     description="Icolos Workflow Manager",
     python_requires=">=3.8",
     entry_points={"console_scripts": ["icolos = icolos.scripts.executor:main"]},

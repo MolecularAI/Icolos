@@ -35,7 +35,7 @@ Then install the package:
 ```
 pip install -e .
 ```
-This will give you access to the `icolos` entrypoint
+This will give you access to the `icolos` entrypoint.
 
 ### `ESPsim` installation
 The following will install the `ESPsim` package into the environment - this is only required if ligand-based matching using this package is desired.
