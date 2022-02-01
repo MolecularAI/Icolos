@@ -12,9 +12,9 @@
                 ]
             },
             "global_variables": {
-                "receptor_input_apo_path": "{entrypoint_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
-                "reference_ligand_path": "{entrypoint_dir}/../IcolosData/molecules/1UYD/PU8_native_ligand.pdb",
-                "receptor_output_path": "{entrypoint_dir}/tests/junk/1UYD_fixed.pdbqt"
+                "receptor_input_apo_path": "{package_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
+                "reference_ligand_path": "{package_dir}/../IcolosData/molecules/1UYD/PU8_native_ligand.pdb",
+                "receptor_output_path": "{package_dir}/tests/junk/1UYD_fixed.pdbqt"
             }
         },
         "steps": [{
