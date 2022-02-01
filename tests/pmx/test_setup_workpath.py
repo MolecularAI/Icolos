@@ -2,7 +2,7 @@ import unittest
 import os
 from icolos.core.containers.generic import GenericData
 from icolos.core.workflow_steps.pmx.setup_workpath import StepPMXSetup
-from icolos.utils.enums.step_enums import StepBaseEnum
+from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import (
     PATHS_EXAMPLEDATA,
     export_unit_test_env_vars,
@@ -13,6 +13,7 @@ import shutil
 from icolos.core.composite_agents.workflow import WorkFlow
 
 _SBE = StepBaseEnum
+_SGE = StepGromacsEnum()
 
 
 class Test_PMX_setup(unittest.TestCase):
@@ -54,6 +55,7 @@ class Test_PMX_setup(unittest.TestCase):
                     # settings for protein parametrisation
                     "forcefield": "amber03",
                     "water": "tip3p",
+                    _SGE.CHARGE_METHOD: "bcc",
                 },
             },
         }

@@ -16,10 +16,6 @@
 					{
 						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
 						"value": "true"
-					},
-					{
-						"key": "ACPYPE",
-						"value": "${ACPYPE}/acpype"
 					}
 				]
 			},
