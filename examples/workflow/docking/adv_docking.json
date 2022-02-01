@@ -9,7 +9,7 @@
             },
             "global_variables": {
                 "smiles": "another_mol:Nc1ccc(cc1N)C(F)(F)F;failure:CXXC;aspirin:O=C(C)Oc1ccccc1C(=O)O",
-                "receptor_path": "{entrypoint_dir}/../IcolosData/AutoDockVina/1UYD_fixed.pdbqt"
+                "receptor_path": "{package_dir}/../IcolosData/AutoDockVina/1UYD_fixed.pdbqt"
             }
         },
         "steps": [{
@@ -81,7 +81,7 @@
                             "category": "conformers"
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/adv_docked_conformers.sdf",
+                            "resource": "{package_dir}/tests/junk/adv_docked_conformers.sdf",
                             "type": "file",
                             "format": "SDF"
                         }
@@ -96,7 +96,7 @@
                             }
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/adv_docked_conformers.csv",
+                            "resource": "{package_dir}/tests/junk/adv_docked_conformers.csv",
                             "type": "file",
                             "format": "CSV"
                         }

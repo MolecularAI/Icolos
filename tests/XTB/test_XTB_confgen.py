@@ -36,7 +36,7 @@ class Test_XTB_confgen(unittest.TestCase):
         )
         self._aspirin_molecule = get_mol_as_Compound(PATHS_EXAMPLEDATA.ASPIRIN_PATH)
         self._medium_molecules = get_ligands_as_compounds_with_conformers(
-            PATHS_EXAMPLEDATA.MEDIUM_MOLECULES_SDF_PATH
+            PATHS_EXAMPLEDATA.SMALL_MOLECULES_SDF_PATH
         )
 
     @classmethod
@@ -66,7 +66,7 @@ class Test_XTB_confgen(unittest.TestCase):
         xtb_step = StepXTB(**step_conf)
         xtb_step.data.compounds = [self._paracetamol_molecule]
         confs = get_mol_as_Conformer(
-            attach_root_path(PATHS_EXAMPLEDATA.PARACETAMOL_MULTIPLE_CONF)
+            attach_root_path(PATHS_EXAMPLEDATA.CLUSTERING_11CONFS)
         )
         xtb_step.data.compounds[0][0].add_conformers(confs, auto_update=True)
         self.assertListEqual(
@@ -128,7 +128,7 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-2.5065, -0.0698, 5.1132],
+            [1.8851, -1.0363, -0.1124],
         )
         xtb_step.execute()
         self.assertListEqual(
@@ -138,7 +138,7 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-2.0964, -0.6968, 4.0397],
+            [1.8526, -0.9638, -0.1394],
         )
 
         # check number of conformers returned (only one Compound with only one Enumeration)
@@ -180,7 +180,7 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-2.5065, -0.0698, 5.1132],
+            [1.8851, -1.0363, -0.1124],
         )
         t1 = time.time()
         xtb_step.execute()
@@ -193,7 +193,7 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-2.0964, -0.6968, 4.0397],
+            [1.8526, -0.9638, -0.1394],
         )
 
         # check number of conformers returned (only one Compound with only one Enumeration)

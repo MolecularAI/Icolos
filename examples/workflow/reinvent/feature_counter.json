@@ -6,8 +6,8 @@
             "environment": {
             },
             "global_variables": {
-                "input_path_json": "{entrypoint_dir}/../IcolosData/reinvent/small_input.json",
-                "output_path_json": "{entrypoint_dir}/tests/junk/fc_rings_reinvent.json"
+                "input_path_json": "{package_dir}/../IcolosData/reinvent/small_input.json",
+                "output_path_json": "{package_dir}/tests/junk/fc_rings_reinvent.json"
             }
         },
         "steps": [{

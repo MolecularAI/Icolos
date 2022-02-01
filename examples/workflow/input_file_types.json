@@ -29,7 +29,7 @@
                 "input": {
                   "compounds": [
                     {
-                      "source": "{entrypoint_dir}/../IcolosData/molecules/aspirin.sdf",
+                      "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
                       "source_type": "file",
                       "format": "SDF"
                     }
@@ -42,7 +42,7 @@
                 "input": {
                   "compounds": [
                     {
-                      "source": "{entrypoint_dir}/../IcolosData/molecules/paracetamol.smi",
+                      "source": "{package_dir}/../IcolosData/molecules/paracetamol.smi",
                       "source_type": "file",
                       "format": "SMI"
                     }
@@ -55,7 +55,7 @@
                 "input": {
                   "compounds": [
                     {
-                      "source": "{entrypoint_dir}/../IcolosData/molecules/small_molecules.csv",
+                      "source": "{package_dir}/../IcolosData/molecules/small_molecules.csv",
                       "columns": {
                         "smiles": "SMILES",
                         "names": "name"

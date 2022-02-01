@@ -33,7 +33,6 @@ class Test_Glide(unittest.TestCase):
         )
         self.receptor_path = PATHS_1UYD.GRID_PATH
         self.receptor_constraints_path = PATHS_1UYD.GRID_CONSTRAINTS_PATH
-        self.receptor_path_COX2 = PATHS_EXAMPLEDATA.PRIME_COX2_GRID
 
     @classmethod
     def tearDownClass(cls):
@@ -392,7 +391,7 @@ class Test_Glide(unittest.TestCase):
                         _EE.GLIDE_AMIDE_MODE: "trans",
                         _EE.GLIDE_EXPANDED_SAMPLING: "True",
                         _EE.GLIDE_GRIDFILE: [
-                            self.receptor_path_COX2,
+                            self.receptor_constraints_path,
                             self.receptor_path,
                         ],
                         _EE.GLIDE_NENHANCED_SAMPLING: "1",
@@ -433,10 +432,10 @@ class Test_Glide(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [7.3776, 55.7005, 70.3807],
+            [-1.6072, 10.8798, 24.1289],
         )
         self.assertListEqual(
-            ["mygrid2", "mygrid2", "mygrid1", "mygrid2", "mygrid1", "mygrid1"],
+            ["mygrid2", "mygrid2", "mygrid1", "mygrid1", "mygrid1", "mygrid2"],
             [
                 comp.get_molecule().GetProp(_SBE.ANNOTATION_GRID_ID)
                 for comp in list(glide_step.get_compounds()[0][0])

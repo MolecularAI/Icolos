@@ -35,7 +35,7 @@ class Test_Turbomole(unittest.TestCase):
     def setUp(self):
         # initialize a Compound with 1 Enumeration and 2 Conformers (done by OMEGA)
         _paracetamol_molecule = get_mol_as_Compound(PATHS_EXAMPLEDATA.PARACETAMOL_PATH)
-        confs = get_mol_as_Conformer(PATHS_EXAMPLEDATA.PARACETAMOL_MULTIPLE_CONF)
+        confs = get_mol_as_Conformer(PATHS_EXAMPLEDATA.CLUSTERING_11CONFS)
         _paracetamol_molecule[0].add_conformers(confs, auto_update=True)
         self._paracetamol_molecule = _paracetamol_molecule
 
@@ -80,7 +80,7 @@ class Test_Turbomole(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         tm_step.execute()
         self.assertListEqual(
@@ -227,7 +227,7 @@ class Test_Turbomole(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         tm_step.execute()
         self.assertListEqual(
