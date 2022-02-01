@@ -18,3 +18,4 @@ tests/junk
 output
 src/icolos/config/unit_tests_config/config.json
 build
+{entrypoint_dir}
