@@ -702,6 +702,7 @@ class StepGromacsEnum:
     STD_XTC = "structure.xtc"
     STD_STRUCTURE = "structure.gro"
     POSRE_LIG = "posre_lig.itp"
+    CHARGE_METHOD = "charge_method"
     FORCE_CONSTANTS = "1000 1000 1000"
     LIG_ID = "lig_id"
     COUPLING_GROUP = "Other"

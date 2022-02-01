@@ -41,7 +41,7 @@ class StepPMXBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._antechamber_executor = Executor(prefix_execution=_SGE.AMBERTOOLS_LOAD)
+        self._antechamber_executor = Executor()
         self._gromacs_executor = GromacsExecutor(
             prefix_execution=self.execution.prefix_execution
         )
@@ -52,14 +52,14 @@ class StepPMXBase(StepBase, BaseModel):
         self.therm_cycle_branches = ["ligand", "complex"]
 
         # simulation setup
-        self.run_type = self.get_setting(_SPE.RUN_TYPE, "rbfe")
+        self.run_type = self.get_additional_setting(_SPE.RUN_TYPE, "rbfe")
         self.ff = "amber99sb-star-ildn-mut.ff"
-        self.boxshape = self.get_setting(_SPE.BOXSHAPE, "dodecahedron")
-        self.boxd = self.get_setting(_SPE.BOXD, 1.5)
-        self.water = self.get_setting(_SPE.WATER, "tip3p")
-        self.conc = self.get_setting(_SPE.CONC, 0.15)
-        self.pname = self.get_setting(_SPE.PNAME, "NaJ")
-        self.nname = self.get_setting(_SPE.NNAME, "ClJ")
+        self.boxshape = self.get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
+        self.boxd = self.get_additional_setting(_SPE.BOXD, 1.5)
+        self.water = self.get_additional_setting(_SPE.WATER, "tip3p")
+        self.conc = self.get_additional_setting(_SPE.CONC, 0.15)
+        self.pname = self.get_additional_setting(_SPE.PNAME, "NaJ")
+        self.nname = self.get_additional_setting(_SPE.NNAME, "ClJ")
         self.mdp_prefixes = {
             "em": "em",
             "nvt": "nvt",
@@ -67,16 +67,6 @@ class StepPMXBase(StepBase, BaseModel):
             "eq": "eq",
             "transitions": "ti",
         }
-
-    def get_setting(self, key: str, default: str):
-        """
-        Query settings.additional with the key, if not set use the default
-        """
-        return (
-            self.settings.additional[key]
-            if key in self.settings.additional.keys()
-            else default
-        )
 
     def _get_specific_path(
         self,
@@ -227,16 +217,20 @@ class StepPMXBase(StepBase, BaseModel):
             check=True,
             location=tmp_dir,
         )
-
+        charge_method = self.get_additional_setting(
+            key=_SGE.CHARGE_METHOD, default="bcc"
+        )
         arguments_acpype = [
-            os.path.join(_GE.ACPYPE_PATH, _GE.ACPYPE_BINARY),
             "-di",
             "MOL.mol2",
             "-c",
-            "gas",
+            charge_method,
         ]
         self._antechamber_executor.execute(
-            command=_GE.PYTHON, arguments=arguments_acpype, location=tmp_dir, check=True
+            command=_GE.ACPYPE_BINARY,
+            arguments=arguments_acpype,
+            location=tmp_dir,
+            check=True,
         )
         # search the output dir for the itp file
         acpype_dir = [p for p in os.listdir(tmp_dir) if p.endswith(".acpype")][0]

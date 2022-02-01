@@ -33,12 +33,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         self._initialize_backend(executor=GromacsExecutor)
         self._check_backend_availability()
         self._shell_executor = Executor()
-        ambertools_prefix = (
-            self.settings.additional[_SGE.AMBERTOOLS_PREFIX]
-            if _SGE.AMBERTOOLS_PREFIX in self.settings.additional.keys()
-            else _SGE.AMBERTOOLS_LOAD
-        )
-        self._antechamber_executor = Executor(prefix_execution=ambertools_prefix)
+        self._antechamber_executor = Executor()
 
     def _modify_topol_file(self, tmp_dir, itp_files):
         # read in the complex topol file, add the new itp files after the forcefield #include statement
@@ -172,16 +167,21 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         )
 
         # Step 4: run the acpype script to generate the ligand topology file for GAFF
+        charge_method = self.get_additional_setting(
+            key=_SGE.CHARGE_METHOD, default="bcc"
+        )
         self._logger.log(f"Running acpype on structure {input_pdb}", _LE.DEBUG)
-        arguments_acpype = [
-            os.path.join(_GE.ACPYPE_PATH, _GE.ACPYPE_BINARY),
+        acpype_args = [
             "-di",
             output_file,
             "-c",
-            "gas",
+            charge_method,
         ]
         self._antechamber_executor.execute(
-            command=_GE.PYTHON, arguments=arguments_acpype, location=tmp_dir, check=True
+            command=_GE.ACPYPE_BINARY,
+            arguments=acpype_args,
+            location=tmp_dir,
+            check=True,
         )
         # produce the ndx file for genrestr later
         index_file = stub + ".ndx"
