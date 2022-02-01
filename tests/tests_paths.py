@@ -169,7 +169,7 @@ class PATHS_EXAMPLEDATA:
     RUN_ANALYSIS_TEST_DIR = expand_path("pmx/analyse")
     PMX_MDP_FILES = expand_path("pmx/assemble_systems/input/mdp")
 
-    RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations_work_dir")
+    RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations")
     PMX_TNKS_TEST_DIR = expand_path("pmx")
     PMX_TNKS_MAP = expand_path("pmx/fep_mapper.log")
     PMX_TNKS_LIGANDS = expand_path("pmx/ligands.sdf")

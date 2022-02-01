@@ -39,6 +39,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         elif self.run_type == "abfe":
             edges = [c.get_index_string() for c in self.get_compounds()]
         self.sim_type = self.settings.additional[_PSE.SIM_TYPE]
+        assert (
+            self.sim_type in self.mdp_prefixes.keys()
+        ), f"sim type {self.sim_type} not recognised!"
+
         # prepare and pool jobscripts, unroll replicas, states etc
         job_pool = self._prepare_job_pool(edges)
         self._logger.log(
@@ -110,11 +114,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     "gpu",
                 ]
                 for flag in self.settings.arguments.flags:
-                    job_command.append(flag)
+                    single_command.append(flag)
                 for key, value in self.settings.arguments.parameters.items():
-                    job_command.append(key)
-                    job_command.append(value)
-                job_command.append(single_command)
+                    single_command.append(key)
+                    single_command.append(value)
+                single_command.append("\n\n")
+                job_command += single_command
+
         return job_command
 
     def _prepare_single_job(self, edge: str, wp: str, state: str, r: int):

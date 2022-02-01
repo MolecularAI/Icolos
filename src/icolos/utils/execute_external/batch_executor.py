@@ -46,6 +46,11 @@ class BatchExecutor(ExecutorBase):
         pipe_input=None,
         tmpfile: str = None,
     ):
+        """
+        Creates and executes the batch script using the provided resource requirements
+        If a path to an existing batch script has not been passed via tmpfile,  it is created
+        Attempts to sbatch the jobscript, falling back on bash to provide compatibility with workstations (in this case #SLURM lines are ignored, and the execution becomes blocking)
+        """
         if tmpfile is None:
             tmpfile = self.prepare_batch_script(
                 command, arguments, pipe_input, location
@@ -138,16 +143,21 @@ class BatchExecutor(ExecutorBase):
 
         return state
 
-    def _tail_log_file(self, location: str):
+    def _tail_log_file(
+        self,
+        location: str,
+        completed_line: str = "Finished mdrun",
+        failed_line: str = "Fatal error",
+    ):
         # TODO, this is not very robust at the moment!
         completed = False
         state = None
         while not completed:
             with open(os.path.join(location, "md.log"), "r") as f:
                 lines = f.readlines()
-            completed = any(["Finished mdrun" in l for l in lines])
+            completed = any([completed_line in l for l in lines])
             state = _SE.COMPLETED
-            failed = any(["Fatal error:" in l for l in lines])
+            failed = any([failed_line in l for l in lines])
             if failed:
                 state = _SE.FAILED
                 for line in lines[-40:]:
