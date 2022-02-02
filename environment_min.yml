@@ -23,3 +23,5 @@ dependencies:
     - black
     - regex
     - peptidebuilder>=1.1
+    - pytest
+    - pytest-xdist
