@@ -6,7 +6,7 @@ from icolos.core.workflow_steps.autodockvina.docking import StepAutoDockVina
 from icolos.utils.enums.step_enums import StepBaseEnum, StepAutoDockVinaEnum
 from icolos.utils.enums.program_parameters import AutoDockVinaEnum
 
-from tests.tests_paths import PATHS_1UYD, get_1UYD_ligands_as_Compounds
+from tests.tests_paths import PATHS_EXAMPLEDATA, get_1UYD_ligands_as_Compounds, PATHS_1UYD
 from icolos.utils.general.files_paths import attach_root_path
 
 _SBE = StepBaseEnum
@@ -23,7 +23,7 @@ class Test_ADV_docking(unittest.TestCase):
 
     def setUp(self):
         self._1UYD_compounds = get_1UYD_ligands_as_Compounds(
-            abs_path=PATHS_1UYD.LIGANDS
+            abs_path=PATHS_EXAMPLEDATA.PARACETAMOL_PATH
         )
         self.receptor_path = PATHS_1UYD.PDBQT_PATH
 
@@ -61,7 +61,7 @@ class Test_ADV_docking(unittest.TestCase):
         adv_step.data.compounds = self._1UYD_compounds
 
         adv_step.execute()
-        self.assertEqual(len(adv_step.get_compounds()), 15)
+        self.assertEqual(len(adv_step.get_compounds()), 1)
         self.assertEqual(len(adv_step.get_compounds()[0][0].get_conformers()), 2)
         self.assertListEqual(
             list(
@@ -70,26 +70,17 @@ class Test_ADV_docking(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [1.953, 10.113, 25.16],
-        )
-        self.assertListEqual(
-            list(
-                adv_step.get_compounds()[14][0][1]
-                .get_molecule()
-                .GetConformer(0)
-                .GetPositions()[0]
-            ),
-            [3.682, 15.421, 26.244],
+            [5.305, 11.464, 24.663]
         )
         self.assertEqual(
             adv_step.get_compounds()[0][0][0]
             .get_molecule()
             .GetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE),
-            "-9.1",
+            "-6.0",
         )
 
         # check SDF write-out
         out_path = os.path.join(self._test_dir, "adv_docked.sdf")
         adv_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 105000)
+        self.assertGreater(stat_inf.st_size, 3500)
