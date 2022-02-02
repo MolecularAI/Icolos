@@ -54,14 +54,19 @@ class Test_MDrun(unittest.TestCase):
             _SBE.STEPID: "test_mdrun",
             _SBE.STEP_TYPE: "mdrun",
             _SBE.EXEC: {
-                _SBE.EXEC_RESOURCE: "slurm",
-                _SBE.EXEC_JOB_CONTROL: {
-                    _SBE.EXEC_JOB_CONTROL_PARTITION: "gpu",
-                    _SBE.EXEC_JOB_CONTROL_GRES: "gpu:1",
-                    _SBE.EXEC_JOB_CONTROL_MODULES: [
+                _SBE.EXEC_PLATFORM: "slurm",
+                _SBE.EXEC_RESOURCES: {
+                    _SBE.EXEC_RESOURCES_PARTITION: "gpu",
+                    _SBE.EXEC_RESOURCES_GRES: "gpu:1",
+                    _SBE.EXEC_RESOURCES_MODULES: [
                         "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                     ],
                 },
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ARGUMENTS: {
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-nsteps": 1000}
+                }
             },
         }
 
@@ -74,4 +79,4 @@ class Test_MDrun(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "structure.gro")
         step_mdrun.write_generic_by_extension(self._test_dir, "gro")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 874941)
+        self.assertEqual(stat_inf.st_size, 3224484)

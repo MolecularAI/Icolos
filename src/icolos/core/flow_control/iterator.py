@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 from icolos.core.flow_control.flow_control import BaseStepConfig, FlowControlBase
 from copy import deepcopy
-from icolos.core.job_control.job_control import StepJobControl
 from icolos.core.workflow_steps.step import _LE
+from icolos.core.step_dispatch.dispatcher import StepDispatcher
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
@@ -180,9 +180,9 @@ class StepIterator(FlowControlBase, BaseModel):
             return steps
         else:
 
-            wrapper = StepJobControl(
+            wrapper = StepDispatcher(
                 step_id="JobControl",
-                type=_SBE.STEP_JOB_CONTROL,
+                type=_SBE.STEP_DISPATCHER,
                 initialized_steps=steps,
                 parallel_execution=self.iter_settings.parallelizer_settings,
             )

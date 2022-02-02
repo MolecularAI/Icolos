@@ -39,7 +39,8 @@ class Test_Pdb2gmx(unittest.TestCase):
                         "-water": "tip4p",
                         "-ff": "amber03",
                     },
-                }
+                },
+                _SBE.SETTINGS_ADDITIONAL: {_SGE.CHARGE_METHOD: "gas"},
             },
         }
 
@@ -73,6 +74,7 @@ class Test_Pdb2gmx(unittest.TestCase):
                         "-ff": "amber03",
                     },
                 },
+                _SBE.SETTINGS_ADDITIONAL: {_SGE.CHARGE_METHOD: "gas"},
             },
         }
 

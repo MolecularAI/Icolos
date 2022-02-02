@@ -1,4 +1,4 @@
-from icolos.core.job_control.job_control import StepJobControl
+from icolos.core.step_dispatch.dispatcher import StepDispatcher
 from icolos.core.workflow_steps.autodockvina.docking import StepAutoDockVina
 from icolos.core.workflow_steps.autodockvina.target_preparation import (
     StepAutoDockVinaTargetPreparation,
@@ -105,6 +105,6 @@ class StepInitializationEnum:
         _SBE.STEP_AUTODOCKVINA_DOCKING: StepAutoDockVina,
         _SBE.STEP_AUTODOCKVINA_TARGET_PREPARATION: StepAutoDockVinaTargetPreparation,
         _SBE.STEP_PMX_RUN_SIMULATIONS: StepPMXRunSimulations,
-        _SBE.STEP_JOB_CONTROL: StepJobControl,
+        _SBE.STEP_DISPATCHER: StepDispatcher,
         _SBE.STEP_ESP_SIM: StepEspSim,
     }

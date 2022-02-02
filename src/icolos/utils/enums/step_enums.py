@@ -75,7 +75,7 @@ class StepBaseEnum(str, Enum):
     STEP_DSSP = "DSSP"
     STEP_TS_CLUSTER = "TS_CLUSTER"
     STEP_ESP_SIM = "ESP_SIM"
-    STEP_JOB_CONTROL = "JOB_CONTROL"
+    STEP_DISPATCHER = "DISPATCHER"
     STEP_ACTIVE_LEARNING = "ACTIVE_LEARNING"
 
     # flow control blocks
@@ -90,14 +90,14 @@ class StepBaseEnum(str, Enum):
     EXEC_PARALLELIZATION_MAXLENSUBLIST = "max_length_sublists"
     EXEC_FAILUREPOLICY = "failure_policy"
     EXEC_FAILUREPOLICY_NTRIES = "n_tries"
-    EXEC_RESOURCE = "resource"
-    EXEC_JOB_CONTROL = "job_control"
-    EXEC_JOB_CONTROL_PARTITION = "partition"
-    EXEC_JOB_CONTROL_GRES = "gres"
-    EXEC_JOB_CONTROL_MODULES = "modules"
-    EXEC_JOB_CONTROL_MEM = "mem"
-    EXEC_JOB_CONTROL_CORES = "cores"
-    EXEC_JOB_CONTROL_OTHER_ARGS = "other_args"
+    EXEC_PLATFORM = "platform"
+    EXEC_RESOURCES = "resources"
+    EXEC_RESOURCES_PARTITION = "partition"
+    EXEC_RESOURCES_GRES = "gres"
+    EXEC_RESOURCES_MODULES = "modules"
+    EXEC_RESOURCES_MEM = "mem"
+    EXEC_RESOURCES_CORES = "cores"
+    EXEC_RESOURCES_OTHER_ARGS = "other_args"
 
     # settings
     SETTINGS = "settings"
