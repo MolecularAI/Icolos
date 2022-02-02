@@ -8,7 +8,7 @@
                 ]
             },
             "global_variables": {
-				"output_dir": "{entrypoint_dir}/tests/junk/desmond"
+				"output_dir": "{package_dir}/tests/junk/desmond"
             }
         },
         "steps": [{
@@ -38,7 +38,7 @@
                 },
                 "input": {
                     "generic": [{
-                            "source": "{entrypoint_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
+                            "source": "{package_dir}/../IcolosData/molecules/1UYD/1UYD_apo.pdb",
                             "extension": "pdb"
                         }
                     ]

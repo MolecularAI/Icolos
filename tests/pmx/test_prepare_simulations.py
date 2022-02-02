@@ -60,14 +60,16 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
         step_prepare_simulations.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/water/stateA/run1/em/tpr.tpr")
+            os.path.join(
+                self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em/tpr.tpr"
+            )
         )
 
         self.assertGreater(stat_inf.st_size, 168400)
 
         stat_inf = os.stat(
             os.path.join(
-                self._test_dir, "0ec09ef_4afa8f9/protein/stateB/run1/em/tpr.tpr"
+                self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/tpr.tpr"
             )
         )
         self.assertGreater(stat_inf.st_size, 1317000)

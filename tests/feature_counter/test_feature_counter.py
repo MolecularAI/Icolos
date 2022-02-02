@@ -27,7 +27,7 @@ class Test_FeatureCounter(unittest.TestCase):
             get_mol_as_Conformer(PATHS_EXAMPLEDATA.CLUSTERING_11CONFS), auto_update=True
         )
         comp1[0].add_conformers(
-            get_mol_as_Conformer(PATHS_EXAMPLEDATA.MEDIUM_MOLECULES_SDF_PATH),
+            get_mol_as_Conformer(PATHS_EXAMPLEDATA.SMALL_MOLECULES_SDF_PATH),
             auto_update=True,
         )
         self.comp0 = comp0
@@ -59,13 +59,13 @@ class Test_FeatureCounter(unittest.TestCase):
             fc_step.get_compounds()[0][0][0]
             .get_molecule()
             .GetProp(_FC.PROPERTY_NUM_RINGS),
-            "2",
+            "1",
         )
         self.assertEqual(
             fc_step.get_compounds()[1][0][1]
             .get_molecule()
             .GetProp(_FC.PROPERTY_NUM_RINGS),
-            "2",
+            "1",
         )
 
     def test_aromatic_ring_counting(self):
@@ -92,7 +92,7 @@ class Test_FeatureCounter(unittest.TestCase):
             fc_step.get_compounds()[0][0][0]
             .get_molecule()
             .GetProp(_FC.PROPERTY_NUM_AROMATIC_RINGS),
-            "2",
+            "1",
         )
         self.assertEqual(
             fc_step.get_compounds()[1][0][1]

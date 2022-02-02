@@ -9,30 +9,18 @@
             },
             "global_variables": {
                 "smiles": "another_mol:Nc1ccc(cc1N)C(F)(F)F;failure:CXXC;aspirin:O=C(C)Oc1ccccc1C(=O)O",
-                "receptor_path": "{entrypoint_dir}/../IcolosData/AutoDockVina/1UYD_fixed.pdbqt"
+                "receptor_path": "{package_dir}/../IcolosData/AutoDockVina/1UYD_fixed.pdbqt"
             }
         },
         "steps": [{
-                "step_id": "Ligprep",
-                "type": "ligprep",
-                "execution": {
-                    "prefix_execution": "module load schrodinger/2020-4",
-                    "parallelization": {
-                        "cores": 2,
-                        "max_length_sublists": 1
-                    },
-                    "failure_policy": {
-                        "n_tries": 3
-                    }
-                },
+                "step_id": "rdkit_embedding",
+                "type": "embedding",
                 "settings": {
                     "arguments": {
                         "flags": ["-epik"],
                         "parameters": {
-                            "-ph": 7.0,
-                            "-pht": 2.0,
-                            "-s": 10,
-                            "-bff": 14
+                            "protonate": true,
+                            "method": "rdkit"
                         }
                     },
                     "additional": {
@@ -82,7 +70,7 @@
                 },
                 "input": {
                     "compounds": [{
-                            "source": "Ligprep",
+                            "source": "rdkit_embedding",
                             "source_type": "step"
                         }
                     ]
@@ -93,7 +81,7 @@
                             "category": "conformers"
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/adv_docked_conformers.sdf",
+                            "resource": "{package_dir}/tests/junk/adv_docked_conformers.sdf",
                             "type": "file",
                             "format": "SDF"
                         }
@@ -108,7 +96,7 @@
                             }
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/adv_docked_conformers.csv",
+                            "resource": "{package_dir}/tests/junk/adv_docked_conformers.csv",
                             "type": "file",
                             "format": "CSV"
                         }

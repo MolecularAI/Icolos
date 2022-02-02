@@ -65,7 +65,7 @@ class Test_InputPreparator(unittest.TestCase):
             target_field="cosmo_test_file",
         )
         source7 = StepInputSource(
-            source=attach_root_path(PATHS_EXAMPLEDATA.PANTHER_NEGATIVE_IMAGE),
+            source=PATHS_EXAMPLEDATA.PANTHER_NEGATIVE_IMAGE,
             extension="mol2",
         )
         self.params = StepInputParameters(
@@ -92,10 +92,11 @@ class Test_InputPreparator(unittest.TestCase):
         )
         self.assertEqual(len(data.compounds), 3)
         self.assertEqual(len(data.generic.get_all_files()), 1)
-        with open(attach_root_path(PATHS_EXAMPLEDATA.PANTHER_NEGATIVE_IMAGE), "r") as f:
+        print(data.generic.get_all_files())
+        with open(PATHS_EXAMPLEDATA.PANTHER_NEGATIVE_IMAGE, "r") as f:
             file = f.read()
         self.assertEqual(
-            data.generic.get_file_by_name("panther_test_output.mol2").get_data(), file
+            data.generic.get_file_by_name("1uyd_negative_image.mol2").get_data(), file
         )
         self.assertEqual(len(data.compounds[1]), 1)
         self.assertEqual((len(data.compounds[2][1])), 3)

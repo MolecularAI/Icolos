@@ -34,7 +34,7 @@
                 "input": {
                     "compounds": [
                         {
-                            "source": "{entrypoint_dir}/../IcolosData/molecules/aspirin.sdf",
+                            "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
                             "source_type": "file",
                             "format": "SDF"
                         }
@@ -351,7 +351,7 @@
                         "key": "cosmo_file"
                     },
                     "destination": {
-                        "resource": "{entrypoint_dir}/tests/junk/[compound_name]/[conformer_id].cosmo",
+                        "resource": "{package_dir}/tests/junk/[compound_name]/[conformer_id].cosmo",
                         "type": "file",
                         "format": "TXT"
                     }
@@ -361,7 +361,7 @@
                         "key": "coord_file"
                     },
                     "destination": {
-                        "resource": "{entrypoint_dir}/tests/junk/[compound_name]/[conformer_id].coord",
+                        "resource": "{package_dir}/tests/junk/[compound_name]/[conformer_id].coord",
                         "type": "file",
                         "format": "TXT"
                     }
@@ -452,7 +452,7 @@
                       "category": "conformers"
                     },
                     "destination": {
-                      "resource": "{entrypoint_dir}/tests/junk/full_rescoss_reweighting_output_opt.sdf",
+                      "resource": "{package_dir}/tests/junk/full_rescoss_reweighting_output_opt.sdf",
                       "type": "file",
                       "format": "SDF"
                     }

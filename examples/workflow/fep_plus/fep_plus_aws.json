@@ -83,7 +83,7 @@
                         "configuration": {
                             "AMIDE_MODE": "trans",
                             "EXPANDED_SAMPLING": "True",
-                            "GRIDFILE": ["{entrypoint_dir}/../IcolosData_junk/molecules/1CX2/1cx2_GridGen.zip"],
+                            "GRIDFILE": ["{package_dir}/../IcolosData_junk/molecules/1CX2/1cx2_GridGen.zip"],
                             "NENHANCED_SAMPLING": "1",
                             "POSE_OUTTYPE": "poseviewer",
                             "POSES_PER_LIG": "1",
@@ -159,7 +159,7 @@
                             "selected_tags": ["dG", "docking_score"]
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/fe_plus_resultsv",
+                            "resource": "{package_dir}/tests/junk/fe_plus_resultsv",
                             "type": "file",
                             "format": "CSV"
                         }

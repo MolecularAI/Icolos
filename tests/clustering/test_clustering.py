@@ -31,7 +31,7 @@ class Test_Clustering(unittest.TestCase):
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                        _SC.N_CLUSTERS: 3,
+                        _SC.N_CLUSTERS: 2,
                         _SC.MAX_ITER: 300,
                     },
                 },

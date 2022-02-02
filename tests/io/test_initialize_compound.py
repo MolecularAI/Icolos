@@ -14,7 +14,7 @@ class Test_InitializeCompound(unittest.TestCase):
 
     def setUp(self):
         self._paracetamol_path = PATHS_EXAMPLEDATA.PARACETAMOL_PATH
-        self._SMI_path = PATHS_EXAMPLEDATA.MEDIUM_MOLECULES_SMI_PATH
+        self._SMI_path = PATHS_EXAMPLEDATA.SMALL_MOLECULES_SMI_PATH
         self._JSON_path = PATHS_EXAMPLEDATA.SMALL_MOLECULES_JSON_PATH
         self._CSV_path = PATHS_EXAMPLEDATA.SMALL_MOLECULES_CSV_PATH
         self._CSV_path_semicolon = (
@@ -54,7 +54,7 @@ class Test_InitializeCompound(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-3.8276, -1.0625, 0.3279],
+            [1.8851, -1.0363, -0.1124],
         )
 
     def test_initialize_compound_SMI(self):
@@ -81,9 +81,9 @@ class Test_InitializeCompound(unittest.TestCase):
 
         self.assertEqual(
             init_step.get_compounds()[0][0].get_smile(),
-            "CN(C)CCn1cc(c2ccc(F)cc2)c(n1)n3cccc3",
+            "CC(=O)Nc1ccc(O)cc1",
         )
-        self.assertEqual(init_step.get_compounds()[1].get_name(), "mol7")
+        self.assertEqual(init_step.get_compounds()[1].get_name(), "Aspirin")
 
     def test_initialize_compound_JSON(self):
         step_conf = {
@@ -109,9 +109,9 @@ class Test_InitializeCompound(unittest.TestCase):
 
         self.assertEqual(
             init_step.get_compounds()[0][0].get_smile(),
-            "C#CCCCn1c(Cc2cc(OC)c(OC)c(OC)c2Cl)nc2c(N)ncnc21",
+            "O=C(C)Oc1ccccc1C(=O)O",
         )
-        self.assertEqual(init_step.get_compounds()[1].get_name(), "1")
+        self.assertEqual(init_step.get_compounds()[1].get_name(), "paracetamol")
 
     def test_initialize_compound_smile(self):
         step_conf = {
@@ -197,12 +197,12 @@ class Test_InitializeCompound(unittest.TestCase):
         init_step.generate_input()
         init_step.execute()
 
-        self.assertEqual(len(init_step.get_compounds()), 3)
+        self.assertEqual(len(init_step.get_compounds()), 2)
         self.assertEqual(len(init_step.get_compounds()[0]), 1)
         self.assertEqual(len(init_step.get_compounds()[0][0]), 0)
 
         self.assertEqual(
-            init_step.get_compounds()[0][0].get_smile(), "COc1cc2sc(C)nc2cc1OC"
+            init_step.get_compounds()[0][0].get_smile(), "O=C(C)Oc1ccccc1C(=O)O"
         )
         self.assertEqual(init_step.get_compounds()[1].get_name(), "1")
 
@@ -229,12 +229,12 @@ class Test_InitializeCompound(unittest.TestCase):
         init_step.generate_input()
         init_step.execute()
 
-        self.assertEqual(len(init_step.get_compounds()), 3)
+        self.assertEqual(len(init_step.get_compounds()), 2)
         self.assertEqual(len(init_step.get_compounds()[0]), 1)
         self.assertEqual(len(init_step.get_compounds()[0][0]), 0)
-        self.assertEqual(len(init_step.get_compounds()[2]), 2)
+        self.assertEqual(len(init_step.get_compounds()[1]), 1)
 
         self.assertEqual(
-            init_step.get_compounds()[0][0].get_smile(), "COc1cc2sc(C)nc2cc1OC"
+            init_step.get_compounds()[0][0].get_smile(), "O=C(C)Oc1ccccc1C(=O)O"
         )
-        self.assertEqual(init_step.get_compounds()[1].get_name(), "mol2_a")
+        self.assertEqual(init_step.get_compounds()[1].get_name(), "Paracetamol")

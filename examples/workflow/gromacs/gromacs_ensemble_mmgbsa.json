@@ -16,16 +16,12 @@
 					{
 						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
 						"value": "true"
-					},
-					{
-						"key": "ACPYPE",
-						"value": "${ACPYPE}/acpype"
 					}
 				]
 			},
 			"global_variables": {
-				"file_base": "{entrypoint_dir}/../IcolosData/gromacs/protein",
-				"output_dir": "{entrypoint_dir}/tests/junk/gromacs"
+				"file_base": "{package_dir}/../IcolosData/gromacs/protein",
+				"output_dir": "{package_dir}/tests/junk/gromacs"
 			}
 		},
 		"steps": [

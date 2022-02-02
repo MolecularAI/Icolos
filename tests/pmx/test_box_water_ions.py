@@ -59,11 +59,11 @@ class Test_PMXBoxWaterIons(unittest.TestCase):
         step._workflow_object.workflow_data.perturbation_map = self.p_map
         step.execute()
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/water/tpr.tpr")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/tpr.tpr")
         )
-        self.assertGreater(stat_inf.st_size, 167000)
+        self.assertGreater(stat_inf.st_size, 147300)
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/protein/tpr.tpr")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/tpr.tpr")
         )
-        self.assertGreater(stat_inf.st_size, 1317800)
+        self.assertGreater(stat_inf.st_size, 1245800)

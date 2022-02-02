@@ -1,7 +1,7 @@
 from icolos.utils.enums.program_parameters import PantherEnum
 import os
 import unittest
-from tests.tests_paths import PATHS_EXAMPLEDATA, MAIN_CONFIG
+from tests.tests_paths import PATHS_1UYD, PATHS_EXAMPLEDATA, MAIN_CONFIG
 
 from icolos.utils.enums.step_enums import StepBaseEnum, StepPantherEnum
 from icolos.core.workflow_steps.calculation.panther import StepPanther
@@ -30,11 +30,7 @@ class Test_Panther(unittest.TestCase):
                     _SPE.PANTHER_CONFIG_FILE: attach_root_path(
                         PATHS_EXAMPLEDATA.PANTHER_CONFIG
                     ),
-                    _SPE.FIELDS: {
-                        "1-Pdb file": attach_root_path(
-                            PATHS_EXAMPLEDATA.PANTHER_RECEPTOR_PDB
-                        )
-                    },
+                    _SPE.FIELDS: {"1-Pdb file": PATHS_EXAMPLEDATA.PANTHER_HOLO_PDB},
                 }
             },
         }
@@ -45,4 +41,4 @@ class Test_Panther(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "neg_image.mol2")
         panther_step.write_generic_by_extension(self._test_dir, "mol2")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 6044)
+        self.assertEqual(stat_inf.st_size, 12598)

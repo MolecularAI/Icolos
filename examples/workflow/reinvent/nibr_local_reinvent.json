@@ -87,7 +87,7 @@
                         "configuration": {
                             "AMIDE_MODE": "trans",
                             "EXPANDED_SAMPLING": "True",
-                            "GRIDFILE": ["{entrypoint_dir}/../IcolosData/Glide/1UYD_grid_constraints.zip"],
+                            "GRIDFILE": ["{package_dir}/../IcolosData/Glide/1UYD_grid_constraints.zip"],
                             "NENHANCED_SAMPLING": "1",
                             "POSE_OUTTYPE": "ligandlib_sd",
                             "POSES_PER_LIG": "3",
@@ -97,7 +97,7 @@
                             "REWARD_INTRA_HBONDS": "True"
                         },
                         "maestro_in_file": {
-                            "path": "{entrypoint_dir}/../IcolosData/Glide/example.in"
+                            "path": "{package_dir}/../IcolosData/Glide/example.in"
                         }
                     }
                 },
@@ -116,7 +116,7 @@
                 },
                 "input": {
                     "generic": [{
-                            "source": "{entrypoint_dir}/../IcolosData/panther/1uyd_negative_image.mol2",
+                            "source": "{package_dir}/../IcolosData/panther/1uyd_negative_image.mol2",
                             "extension": "mol2"
                         }],
                     "compounds": [{
@@ -132,7 +132,7 @@
                             "selected_tags": ["shape_similarity", "esp_similarity", "docking_score"]
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/nibr_reinvent/nibr_reinvent_all.csv",
+                            "resource": "{package_dir}/tests/junk/nibr_reinvent/nibr_reinvent_all.csv",
                             "type": "file",
                             "format": "CSV"
                         }
@@ -147,7 +147,7 @@
                             }
                         },
                         "destination": {
-                            "resource": "{entrypoint_dir}/tests/junk/nibr_reinvent/nibr_reinvent.json",
+                            "resource": "{package_dir}/tests/junk/nibr_reinvent/nibr_reinvent.json",
                             "type": "file",
                             "format": "JSON"
                         }

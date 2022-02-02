@@ -24,13 +24,13 @@ class Test_MMPBSA(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
             self.structure = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_TOP, "r") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
             self.topol = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_TPR, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr_file = f.read()
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_XTC, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc_file = f.read()
 
         with open(PATHS_EXAMPLEDATA.MMPBSA_POSRE, "rb") as f:
@@ -47,7 +47,7 @@ class Test_MMPBSA(unittest.TestCase):
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -94,7 +94,7 @@ class Test_MMPBSA(unittest.TestCase):
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {

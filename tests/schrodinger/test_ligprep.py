@@ -4,6 +4,7 @@ from icolos.core.workflow_steps.schrodinger.ligprep import StepLigprep
 from icolos.utils.enums.step_enums import StepBaseEnum, TokenGuardEnum, StepLigprepEnum
 from icolos.utils.enums.program_parameters import LigprepEnum
 from tests.tests_paths import (
+    MAIN_CONFIG,
     PATHS_EXAMPLEDATA,
     get_mol_as_Compound,
     get_test_Compounds_without_molecules,
@@ -41,7 +42,7 @@ class Test_Ligprep(unittest.TestCase):
             _SBE.STEPID: "01_ligprep",
             _SBE.STEP_TYPE: _SBE.STEP_LIGPREP,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2020-4",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 2,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 2,
@@ -75,8 +76,8 @@ class Test_Ligprep(unittest.TestCase):
         )
         self.assertEqual(
             [
-                "[H]c1c([H])c(Cl)c2c(=O)nc(N([H])C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]c1c([H])c(Cl)c2c(=O)nc(C(=O)[O-])sc2c1[H]",
+                "[H]Oc1c([H])c([H])c(N([H])C(=O)C([H])([H])[H])c([H])c1[H]",
+                "[H]OC(=O)c1c([H])c([H])c([H])c([H])c1OC(=O)C([H])([H])[H]",
                 "O=C(C)Oc1ccccc1C(=O)O",
             ],
             [
@@ -87,8 +88,8 @@ class Test_Ligprep(unittest.TestCase):
         )
         self.assertEqual(
             [
-                "[H]c1c([H])c(Cl)c2c(=O)nc(N([H])C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]OC(=O)c1nc(=O)c2c(Cl)c([H])c([H])c([H])c2s1",
+                "[H]Oc1c([H])c([H])c(N([H])C(=O)C([H])([H])[H])c([H])c1[H]",
+                "[H]OC(=O)c1c([H])c([H])c([H])c([H])c1OC(=O)C([H])([H])[H]",
                 "[H]OC(=O)c1c([H])c([H])c([H])c([H])c1OC(=O)C([H])([H])[H]",
             ],
             [
@@ -104,7 +105,7 @@ class Test_Ligprep(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-4.9037, 3.0725, 2.0034],
+            [-4.5506, -0.9449, 0.0089],
         )
         self.assertListEqual(
             list(
@@ -113,7 +114,7 @@ class Test_Ligprep(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-4.8794, 3.0688, -2.0104],
+            [-0.4609, 4.5302, 0.1569],
         )
         self.assertListEqual(
             list(
@@ -130,7 +131,7 @@ class Test_Ligprep(unittest.TestCase):
             _SBE.STEPID: "01_ligprep",
             _SBE.STEP_TYPE: _SBE.STEP_LIGPREP,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2020-4",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 2,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 2,
@@ -159,8 +160,9 @@ class Test_Ligprep(unittest.TestCase):
         ]
 
         ligprep_step.execute()
+
         self.assertEqual(
-            ["0:0", "0:1", "1:0"],
+            ["0:0"],
             [
                 enum.get_index_string()
                 for comp in ligprep_step.get_compounds()
@@ -168,11 +170,7 @@ class Test_Ligprep(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            [
-                "[H]c1c([H])c(Cl)c2c(=O)nc(N([H])C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]c1c([H])c(Cl)c2c(=O)nc(N([H])C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]c1c([H])c(Cl)c2c(=O)nc(C(=O)[O-])sc2c1[H]",
-            ],
+            ["[H]Oc1c([H])c([H])c(N([H])C(=O)C([H])([H])[H])c([H])c1[H]"],
             [
                 enum.get_original_smile()
                 for comp in ligprep_step.get_compounds()
@@ -180,11 +178,7 @@ class Test_Ligprep(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            [
-                "[H]c1c([H])c(Cl)c2c(=O)n([H])/c(=N\\C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]c1c([H])c(Cl)c2c(=O)nc(N([H])C(=O)C([H])([H])[H])sc2c1[H]",
-                "[H]c1c([H])c(Cl)c2c(=O)[n+]([H])c(C(=O)[O-])sc2c1[H]",
-            ],
+            ["[H]Oc1c([H])c([H])c(N([H])C(=O)C([H])([H])[H])c([H])c1[H]"],
             [
                 enum.get_smile()
                 for comp in ligprep_step.get_compounds()
@@ -198,23 +192,5 @@ class Test_Ligprep(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-4.7828, 5.0389, -2.1622],
-        )
-        self.assertListEqual(
-            list(
-                ligprep_step.get_compounds()[0][1]
-                .get_molecule()
-                .GetConformer(0)
-                .GetPositions()[0]
-            ),
-            [-4.9037, 3.0725, 2.0034],
-        )
-        self.assertListEqual(
-            list(
-                ligprep_step.get_compounds()[1][0]
-                .get_molecule()
-                .GetConformer(0)
-                .GetPositions()[0]
-            ),
-            [-5.2155, 3.215, -1.1152],
+            [-4.5506, -0.9449, 0.0089],
         )

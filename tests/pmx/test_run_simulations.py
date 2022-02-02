@@ -13,6 +13,7 @@ from tests.tests_paths import (
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.composite_agents.workflow import WorkFlow
+from glob import glob
 
 _SBE = StepBaseEnum
 
@@ -32,16 +33,24 @@ class Test_PMXRunSimulations(unittest.TestCase):
         self.protein = GenericData(file_name="protein.pdb", file_data=data)
         p_map = PerturbationMap(compounds=self.compounds, protein=self.protein)
         p_map.parse_map_file(file_path=PATHS_EXAMPLEDATA.PMX_TNKS_MAP)
+        p_map.replicas = 1
         self.p_map = p_map
         export_unit_test_env_vars()
 
-    # def test_run_simulations(self):
+    # def test_run_simulations_em(self):
     #     pass
     #     step_conf = {
     #         _SBE.STEPID: "prepare_simulations",
     #         _SBE.STEP_TYPE: "pmx_prepare_simulations",
     #         _SBE.EXEC: {
-    #             _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+    #             "resource": "slurm",
+    #             "resources": {
+    #                 "partition": "gpu",
+    #                 "gres": "gpu:1",
+    #                 "modules": [
+    #                     "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+    #                 ],
+    #             },
     #         },
     #         _SBE.SETTINGS: {
     #             _SBE.SETTINGS_ARGUMENTS: {
@@ -61,53 +70,76 @@ class Test_PMXRunSimulations(unittest.TestCase):
     #     step_run_simulations.execute()
 
     #     stat_inf = os.stat(
-    #         os.path.join(self._test_dir, "0cd4b47_4f2ffa1/water/stateB/run3/em/md.log")
+    #         os.path.join(
+    #             self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/md.log"
+    #         )
+    #     )
+    #     self.assertGreater(stat_inf.st_size, 2300000)
+
+    #     stat_inf = os.stat(
+    #         os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
     #     )
 
-    #     self.assertEqual(stat_inf.st_size, 1347767)
+    #     self.assertGreater(stat_inf.st_size, 1300000)
 
     #     stat_inf = os.stat(
     #         os.path.join(
-    #             self._test_dir, "0cd4b47_4f2ffa1/protein/stateB/run3/em/tpr.tpr"
+    #             self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
     #         )
     #     )
-    #     self.assertEqual(stat_inf.st_size, 3501084)
+    #     self.assertEqual(stat_inf.st_size, 72000)
 
-    # def test_run_simulations_parallel(self):
-    #     step_conf = {
-    #         _SBE.STEPID: "prepare_simulations",
-    #         _SBE.STEP_TYPE: "pmx_prepare_simulations",
-    #         _SBE.EXEC: {
-    #             _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a",
-    #             _SBE.EXEC_BINARYLOCATION: MAIN_CONFIG["PMX"]["CLI_ENTRYPOINT"],
-    #             _SBE.EXEC_PARALLELIZATION: {
-    #                 _SBE.EXEC_PARALLELIZATION_CORES: 2
-    #             }
-    #         },
-    #         _SBE.SETTINGS: {
-    #             _SBE.SETTINGS_ARGUMENTS: {
-    #                 _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-    #                 _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
-    #             },
-    #             _SBE.SETTINGS_ADDITIONAL: {"sim_type": "em"},
-    #         },
-    #     }
+    def test_run_simulations_transitions(self):
+        pass
+        step_conf = {
+            _SBE.STEPID: "prepare_simulations",
+            _SBE.STEP_TYPE: "pmx_prepare_simulations",
+            _SBE.EXEC: {
+                "resource": "slurm",
+                "resources": {
+                    "partition": "gpu",
+                    "gres": "gpu:1",
+                    "modules": [
+                        "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                    ],
+                },
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ARGUMENTS: {
+                    _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                },
+                _SBE.SETTINGS_ADDITIONAL: {"sim_type": "transitions"},
+            },
+        }
 
-    #     step_run_simulations = StepPMXRunSimulations(**step_conf)
-    #     step_run_simulations.work_dir = self._test_dir
-    #     step_run_simulations._workflow_object = WorkFlow()
-    #     step_run_simulations.get_workflow_object().perturbation_map = self.p_map
-    #     step_run_simulations.execute()
+        step_run_simulations = StepPMXRunSimulations(**step_conf)
+        step_run_simulations.work_dir = self._test_dir
+        step_run_simulations._workflow_object = WorkFlow()
+        step_run_simulations.get_workflow_object().workflow_data.perturbation_map = (
+            self.p_map
+        )
+        step_run_simulations.execute()
 
-    #     stat_inf = os.stat(
-    #         os.path.join(self._test_dir, "0cd4b47_4f2ffa1/water/stateB/run3/em/md.log")
-    #     )
+        stat_inf = os.stat(
+            glob(
+                os.path.join(
+                    self._test_dir,
+                    "0ec09ef_4afa8f9/complex/stateB/run1/transitions/*.sh",
+                )
+            )[0]
+        )
+        self.assertEqual(stat_inf.st_size, 43014)
 
-    #     self.assertEqual(stat_inf.st_size, 1347767)
+        # stat_inf = os.stat(
+        #     os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
+        # )
 
-    # stat_inf = os.stat(
-    #     os.path.join(
-    #         self._test_dir, "0cd4b47_4f2ffa1/protein/stateB/run3/em/tpr.tpr"
-    #     )
-    # )
-    # self.assertEqual(stat_inf.st_size, 3501084)
+        # self.assertGreater(stat_inf.st_size, 1339800)
+
+        # stat_inf = os.stat(
+        #     os.path.join(
+        #         self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
+        #     )
+        # )
+        # self.assertEqual(stat_inf.st_size, 72216)

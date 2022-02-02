@@ -16,7 +16,7 @@ _WE = WriteOutEnum()
 # load the instantiated "config.json", holding the license key for OpenEye for example
 try:
     with open(
-        attach_root_path("icolos/config/unit_tests_config/config.json"), "r"
+        attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
 except:
@@ -57,10 +57,11 @@ class PATHS_1UYD:
     GRID_CONSTRAINTS_PATH = expand_path("Glide/1UYD_grid_constraints.zip")
     PDBQT_PATH = expand_path("AutoDockVina/1UYD_fixed.pdbqt")
     PDB_PATH = expand_path("molecules/1UYD/1UYD_apo.pdb")
+    APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
     NATIVE_LIGAND_SDF = expand_path("molecules/1UYD/PU8_native_ligand.sdf")
     NATIVE_LIGAND_PDB = expand_path("molecules/1UYD/PU8_native_ligand.pdb")
-    LIG4_POSES = expand_path("fep_plus/1uyd_lig4.sdf")
+    LIG4_POSES = expand_path("fep_plus/1UYD_ligand_subset.sdf")
     XRAY_STRUCTURES = expand_path("fep_plus/xray_structures")
 
     # try to find the internal value and return
@@ -104,40 +105,31 @@ class PATHS_EXAMPLEDATA:
     PRIME_DOCKED_LIGAND_SDF = expand_path("prime/docked_ligand.sdf")
     CLUSTERING_11CONFS = expand_path("clustering/paracetamol_11_conformers.sdf")
     PANTHER_CONFIG = expand_path("panther/default_panther.in")
-    PANTHER_RECEPTOR_PDB = expand_path("panther/COX2_A.pdb")
-    PANTHER_NEGATIVE_IMAGE = expand_path("panther/panther_test_output.mol2")
+    PANTHER_NEGATIVE_IMAGE = expand_path("panther/1uyd_negative_image.mol2")
+    PANTHER_HOLO_PDB = expand_path("panther/1UYD_holo_residue_X.pdb")
     SHAEP_LIGAND_DOCKED_POSE = expand_path("panther/cox2_ligand_bound.sdf")
 
-    GROMACS_STRUCTURE_FILE = expand_path("gromacs/test_structure.gro")
-    GROMACS_PDB_FILE = expand_path("gromacs/test_structure.pdb")
-    GROMACS_NVT_MDP = expand_path("gromacs/nvt_equil.mdp")
-    GROMACS_NPT_MDP = expand_path("gromacs/npt_equil.mdp")
-    GROMACS_MINIM_MDP = expand_path("gromacs/minim.mdp")
-    GROMACS_IONS_MDP = expand_path("gromacs/ions.mdp")
-    GROMACS_MD_MDP = expand_path("gromacs/md.mdp")
-    GROMACS_TPR_FILE = expand_path("gromacs/test.tpr")
-    GROMACS_TOPOL_FILE = expand_path("gromacs/topol.top")
-    GROMACS_GROMPP_INPUT_STRUCTURE = expand_path("gromacs/grompp_input.gro")
-    GROMACS_XTC = expand_path("gromacs/md_0_1.xtc")
-    GROMACS_TPR_TRJCONV = expand_path("gromacs/md_0_1.tpr")
+    GROMACS_NVT_MDP = expand_path("gromacs/protein/nvt_equil.mdp")
+    GROMACS_NPT_MDP = expand_path("gromacs/protein/npt_equil.mdp")
+    GROMACS_MINIM_MDP = expand_path("gromacs/protein/minim.mdp")
+    GROMACS_IONS_MDP = expand_path("gromacs/protein/ions.mdp")
+    GROMACS_MD_MDP = expand_path("gromacs/protein/md.mdp")
     GROMACS_HOLO_STRUCTURE = expand_path("gromacs/protein/1BVG.pdb")
     GROMACS_HOLO_STRUCTURE_GRO = expand_path("gromacs/protein/1BVG.gro")
     GROMACS_DMP_LIGAND_TRJ = expand_path("gromacs/protein/DMP.xtc")
     GROMACS_DMP_LIGAND_SDF = expand_path("gromacs/protein/DMP.sdf")
     GROMACS_PROTEIN_FILE_BASE = expand_path("gromacs/protein")
-    GROMACS_GROMPP_TOPOL = expand_path("gromacs/grompp_topol.top")
-    GROMACS_DSSP_TPR = expand_path("gromacs/<FILE>.tpr")
-    GROMACS_DSSP_XTC = expand_path("gromacs/<FILE>.xtc")
     GROMACS_TS_CLUSTERS = expand_path("gromacs/clusters_ts_example.xvg")
-    MMPBSA_TPR = expand_path("gromacs/protein/1BVG.tpr")
-    MMPBSA_XTC = expand_path("gromacs/protein/1BVG.xtc")
-    MMPBSA_TOP = expand_path("gromacs/protein/1BVG.top")
+    GROMACS_1BVG_TPR = expand_path("gromacs/protein/1BVG.tpr")
+    GROMACS_1BVG_XTC = expand_path("gromacs/protein/1BVG.xtc")
+    GROMACS_1BVG_TOP = expand_path("gromacs/protein/1BVG.top")
+    GROMACS_1BVG_PDB = expand_path("gromacs/protein/1BVG.pdb")
     MMPBSA_CUSTOM_INPUT = expand_path("gromacs/test_input_mmpbsa.in")
     MMPBSA_POSRE = expand_path("gromacs/protein/posre.itp")
     MMPBSA_LIG_POSRE = expand_path("gromacs/protein/posre_DMP:100.itp")
     MMPBSA_LIG_ITP = expand_path("gromacs/protein/DMP:100.itp")
 
-    FEP_PLUS_DOCKING_PV = expand_path("fep_plus/set_pv.maegz")
+    FEP_PLUS_DOCKING_PV = expand_path("fep_plus/1UYD_ligands_pv.maegz")
     FEP_PLUS_EXAMPLE_FMP = expand_path("fep_plus/out.fmp")
     FEP_PLUS_MAP_LOG = expand_path("fep_plus/fep_mapper.log")
     FEP_PLUS_MAP_LOG_MIN = expand_path("fep_plus/fep_mapper_min.log")
@@ -154,10 +146,7 @@ class PATHS_EXAMPLEDATA:
         "model_building/OptunaAZ_example_config.json"
     )
     MODEL_BUILDER_TEST_INPUT_SDF = expand_path("model_building/test_input_data.sdf")
-    PRIME_POSEVIEWER = expand_path("molecules/1CX2/1cx2_poseviewer_pv.maegz")
     COX2_ACTIVES_DOCKED = expand_path("molecules/1CX2/docked_actives.sdf")
-    LIGANDS_1UYD = expand_path("prime/glide_docked.sdf")
-    RECEPTOR_1UYD = expand_path("molecules/1UYD/1UYDreceptor.pdb")
 
     CAVITY_TRJ_FOLDER = expand_path("cavity_explorer/parch_align_trj")
     CAVITY_DTR_FILE = expand_path("cavity_explorer/parch_align_trj/clickme.dtr")
@@ -169,7 +158,7 @@ class PATHS_EXAMPLEDATA:
 
     DESMOND_SETUP_PDB = expand_path("desmond/1cx2.pdb")
     DESMOND_PRODUCTION_CMS = expand_path("desmond/setup.cms")
-    TEST_FASTA_FILE = expand_path("structure_prediction/1acw.fasta")
+    TEST_FASTA_FILE = expand_path("molecules/peptides/1acw.fasta")
 
     LIGAND_HYBRID_TEST_DIR = expand_path("pmx/ligand_hybrid")
     PREPARE_SIMULATIONS_TEST_DIR = expand_path("pmx/prepare_simulations")
@@ -180,7 +169,7 @@ class PATHS_EXAMPLEDATA:
     RUN_ANALYSIS_TEST_DIR = expand_path("pmx/analyse")
     PMX_MDP_FILES = expand_path("pmx/assemble_systems/input/mdp")
 
-    RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations_work_dir")
+    RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations")
     PMX_TNKS_TEST_DIR = expand_path("pmx")
     PMX_TNKS_MAP = expand_path("pmx/fep_mapper.log")
     PMX_TNKS_LIGANDS = expand_path("pmx/ligands.sdf")
