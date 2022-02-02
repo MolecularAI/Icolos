@@ -10,8 +10,7 @@ from icolos.utils.enums.program_parameters import (
     SlurmEnum,
     StepPMXEnum,
 )
-from icolos.utils.execute_external.slurm_executor import BatchExecutor
-from icolos.utils.execute_external.gromacs import GromacsExecutor
+from icolos.utils.execute_external.slurm_executor import SlurmExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
@@ -30,7 +29,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         super().__init__(**data)
 
         # Note: if youre running the job on, for example, a workstation, without slurm, this will simply execute the scripts directly (the slurm header is simply ignored in this case)
-        self._initialize_backend(executor=BatchExecutor)
+        self._initialize_backend(executor=SlurmExecutor)
 
     def execute(self):
 
