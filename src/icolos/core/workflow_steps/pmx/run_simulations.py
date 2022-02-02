@@ -10,7 +10,7 @@ from icolos.utils.enums.program_parameters import (
     SlurmEnum,
     StepPMXEnum,
 )
-from icolos.utils.execute_external.batch_executor import BatchExecutor
+from icolos.utils.execute_external.slurm_executor import BatchExecutor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
