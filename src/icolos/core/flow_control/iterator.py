@@ -181,7 +181,7 @@ class StepIterator(FlowControlBase, BaseModel):
         else:
 
             wrapper = StepDispatcher(
-                step_id="JobControl",
+                step_id="step_dispatcher",
                 type=_SBE.STEP_DISPATCHER,
                 initialized_steps=steps,
                 parallel_execution=self.iter_settings.parallelizer_settings,
