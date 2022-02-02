@@ -88,7 +88,6 @@ class PATHS_EXAMPLEDATA:
     )
     MEDIUM_MOLECULES_SMI_PATH = expand_path("molecules/medium_molecules.smi")
     SMALL_MOLECULES_SDF_PATH = expand_path("molecules/small_molecules.sdf")
-    SMALL_MOLECULE_SDF_PATH = expand_path("molecules/small_molecule.sdf")
     SMALL_MOLECULES_JSON_PATH = expand_path("reinvent/small_input.json")
     MEDIUM_MOLECULES_SDF_PATH = expand_path("molecules/medium_molecules.sdf")
     PARACETAMOL_MULTIPLE_CONF = expand_path("molecules/paracetamol_multiple.sdf")

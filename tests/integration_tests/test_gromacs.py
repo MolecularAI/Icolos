@@ -42,14 +42,9 @@ class Test_MD_Fpocket(unittest.TestCase):
                             _WE.ENVIRONMENT_EXPORT_KEY: "GMX_FORCE_UPDATE_DEFAULT_GPU",
                             _WE.ENVIRONMENT_EXPORT_VALUE: "True",
                         },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "GMXLIB",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "<path>/forcefields/",
-                        },
                     ]
                 },
                 _WE.GLOBAL_VARIABLES: {
-                    "root_dir": "<path>/icolos",
                     "file_base": os.path.join(
                         MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"
                     ),
@@ -67,8 +62,8 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-ignh"],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                "-water": "tip4p",
-                                "-ff": "amber14sb_OL15",
+                                "-water": "tip3p",
+                                "-ff": "amber03",
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
@@ -77,7 +72,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.INPUT_GENERIC: [
                             {
                                 _SBE.INPUT_SOURCE: attach_root_path(
-                                    PATHS_EXAMPLEDATA.MDPOCKET_PDB_FILE_DRY
+                                    PATHS_EXAMPLEDATA.GROMACS_1BVG_PDB
                                 ),
                                 _SBE.INPUT_EXTENSION: "pdb",
                             }
@@ -94,7 +89,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                "-d": "1.5",
+                                "-d": "1.0",
                                 "-bt": "dodecahedron",
                             },
                         },
@@ -118,7 +113,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "tip4p"},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "tip3p"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },

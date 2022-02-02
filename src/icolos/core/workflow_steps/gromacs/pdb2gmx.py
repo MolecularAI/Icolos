@@ -144,6 +144,9 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         :param input_pdb: file name for the ligand being parametrised
         """
         # main pipeline for producing GAFF parameters for a ligand
+        charge_method = self.get_additional_setting(
+            key=_SGE.CHARGE_METHOD, default="bcc"
+        )
         stub = input_pdb.split(".")[0]
         output_file = stub + ".mol2"
         arguments_antechamber = [
@@ -156,7 +159,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             "-fo",
             "mol2",
             "-c",
-            "gas",
+            charge_method,
         ]
         self._logger.log(f"Running antechamber on structure {input_pdb}", _LE.DEBUG)
         self._antechamber_executor.execute(
@@ -167,9 +170,6 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         )
 
         # Step 4: run the acpype script to generate the ligand topology file for GAFF
-        charge_method = self.get_additional_setting(
-            key=_SGE.CHARGE_METHOD, default="bcc"
-        )
         self._logger.log(f"Running acpype on structure {input_pdb}", _LE.DEBUG)
         acpype_args = [
             "-di",

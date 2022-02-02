@@ -20,10 +20,10 @@ class Test_Trjcat(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_XTC, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc = f.read()
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_TPR_TRJCONV, "rb") as f:
+        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr = f.read()
 
     def test_trjconv(self):
@@ -53,4 +53,4 @@ class Test_Trjcat(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "trjcat_out.xtc")
         step_trjconv.write_generic_by_extension(self._test_dir, "xtc")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 30088548)
+        self.assertEqual(stat_inf.st_size, 49247628)

@@ -58,6 +58,7 @@ class BatchExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
+            print("Warning - Slurm was not found, falling back to local execution!")
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
@@ -191,7 +192,8 @@ class BatchExecutor(ExecutorBase):
             f"#SBATCH -p {self.partition}",
             f"#SBATCH --time={self.time}",
         ]
-        header.append(f"#SBATCH --gres={self.gres}")
+        if self.gres is not None:
+            header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
             header.append(f"#SBATCH {key}={value}")
 
