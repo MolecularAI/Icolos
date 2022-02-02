@@ -1,15 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_namespace_packages
 
 setup(
     name="icolos",
     maintainer="Christian Margreitter, Harry Moore",
-    version="1.4.0",
+    version="1.5.0",
     url="https://github.com/MolecularAI/Icolos",
-    packages=["icolos"],
+    packages=find_namespace_packages(where="src"),
     package_dir={"": "src"},
-    # include_package_data=True,
-    # package_dir={"config": "icolos/config"},
-    # package_data={"icolos": ["src/icolos/config/logging/*.json"]},
     description="Icolos Workflow Manager",
     python_requires=">=3.8",
     entry_points={"console_scripts": ["icolos = icolos.scripts.executor:main"]},

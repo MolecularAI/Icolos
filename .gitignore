@@ -5,6 +5,7 @@ package.json
 tags
 .idea
 *egg-info
+dist
 
 timer.dat
 git-commands.txt
