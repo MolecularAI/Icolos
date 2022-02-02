@@ -9,19 +9,17 @@
 
 # `Icolos`: Workflow manager
 
-The `Icolos` tool is a workflow manager, that aims at separating execution logic from actual implementation as much as
-possible. Workflows are specified in `JSON` files (see folder `examples`), linking steps together. Currently wrapped are
-a diverse set of tools and internal steps, including QM and MD software.
+The `Icolos` tool is a workflow manager for structure-based workflows in computational chemistry, that abstracts execution logic from implementation as much as possible. Icolos was designed to interface with [REINVENT](https://github.com/MolecularAI/Reinvent), and workflows can be called as a component of the scoring function, or to postprocess results with more expensive methods. Workflows are specified in `JSON` format (see folder `examples`). Currently wrapped are
+a diverse set of tools and internal steps, including docking, QM and MD capabilities.  The preprint is available [here](https://doi.org/10.26434/chemrxiv-2022-sjcp3)
 
 
 ## Introduction
-`Icolos` provides a single, unified interface to a host of software for common computational chemistry calculations, with built in parallelization,
-and straight-forward extensibiltiy to add additional functionality. It was principally developed to handle structural calculations for `REINVENT` jobs, however, various workflows have also been used as stand-alone pipelines.
+`Icolos` provides a unified interface to a host of software for common computational chemistry calculations, with built in parallelization,
+and straight-forward extensibiltiy to add additional functionality. It was principally developed to handle structural calculations for `REINVENT` jobs, however, workflows can also be run independently.
 
-Workflows are constructed from elementary 'steps', individual blocks which specify a sequential list of operations (normally corresponding to a single program being executed),
-with control of the command-line options provided through step settings, and options to control other aspects of the step's behaviour included in the `additional` block.
+Workflows are constructed from elementary 'steps', individual blocks which are combined to specify a sequential list of operations, with control of the command-line options provided through step settings, and options to control other aspects of the step's behaviour included in the `additional` block.
 
-For many use cases, one of the template workflows might suit your needs, or need a few tweaks to do what you want. Demonstration notebooks for common use cases are available [here](https://github.com/MolecularAI/IcolosCommunity).
+For many use cases, one of the template workflows might suit your needs, or need a few tweaks to do what you want. Demonstration notebooks for common workflows are available [here](https://github.com/MolecularAI/IcolosCommunity).
 
 ## Initial configuration
 You are welcome to clone the repository and use a local version, and in particular if you would like to experiment with the code base and/or contribute features, please get 
@@ -49,7 +47,10 @@ conda activate icolosprod
 pip install -e .
 ```
 ## Unit testing
-Icolos is extensively unit tested, and relies on an external data repo located [here](https://github.com/MolecularAI/IcolosData).  The full test suite takes ~60 mins on a workstation, therefore it is recommended that you execute a subset of unit tests relevant to the workflow you are running.  
+Icolos is extensively unit tested, and relies on an external data repo located [here](https://github.com/MolecularAI/IcolosData).  The full test suite takes ~60 mins on a workstation, therefore it is recommended that you execute a subset of unit tests relevant to the workflow you are running.  To execute the full test suite, run something like:
+```
+pytest -n 8 tests/
+```
 
 ## Execution
 Once a `JSON` is specified, the workflow can be executed like so:
