@@ -10,7 +10,7 @@ import re
 from copy import deepcopy
 from distutils.dir_util import copy_tree
 from icolos.utils.enums.program_parameters import GromacsEnum
-from icolos.utils.execute_external.batch_executor import BatchExecutor
+from icolos.utils.execute_external.slurm_executor import BatchExecutor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 
 _SGE = StepGromacsEnum()
