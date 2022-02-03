@@ -1,10 +1,11 @@
+from cProfile import run
 from typing import Dict, List, Union
 from pydantic import BaseModel
 
 from icolos.core.flow_control.flow_control import BaseStepConfig, FlowControlBase
 from copy import deepcopy
-from icolos.core.job_control.job_control import StepJobControl
 from icolos.core.workflow_steps.step import _LE
+from icolos.core.step_dispatch.dispatcher import StepDispatcher
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
@@ -59,22 +60,6 @@ class StepIterator(FlowControlBase, BaseModel):
         # either generate a list, if serial execution, or initialize a single JobControl
         # step with each config as an initialized step
 
-    def _initialize_n_iters(self) -> List:
-        """
-        Initialise n identical copies of the same step config
-        """
-        init_steps = []
-        for i in range(self.iter_settings.n_iters):
-
-            list_step_conf = deepcopy(self.base_config)
-
-            # hand all steps over to the config updater
-            formatted_confs = self._update_config(list_step_conf, f"run_{i}")
-            for step_conf in formatted_confs:
-                initialized_step = self._initialize_step_from_dict(step_conf._as_dict())
-                init_steps.append(initialized_step)
-        return init_steps
-
     def _modify_settings(
         self, settings: BaseStepConfig, step_config: BaseStepConfig, i: int
     ):
@@ -98,16 +83,23 @@ class StepIterator(FlowControlBase, BaseModel):
             # however many lists of n items
             base_conf.settings.additional[key] = val[i]
 
-        # in pmx abfe, we iterate over workdirs
-        if isinstance(iter_settings.work_dir, str):
-            # a single top dir has been provided, extract the subdirs and walk over these
-            work_dirs = glob(f"{iter_settings.work_dir}/**/", recursive=True)
-            # TODO, automatically acquire the number of iters from this
-            base_conf.work_dir = os.path.join(iter_settings.work_dir, work_dirs[i])
-        elif isinstance(iter_settings.work_dir, list) and iter_settings.work_dir:
-            base_conf.work_dir = iter_settings.work_dir[i]
-
         return base_conf
+
+    def _initialize_n_iters(self) -> List:
+        """
+        Initialise n identical copies of the same step config
+        """
+        init_steps = []
+        for i in range(self.iter_settings.n_iters):
+
+            list_step_conf = deepcopy(self.base_config)
+
+            # hand all steps over to the config updater
+            formatted_confs = self._update_config(list_step_conf, f"run_{i}")
+            for step_conf in formatted_confs:
+                initialized_step = self._initialize_step_from_dict(step_conf._as_dict())
+                init_steps.append(initialized_step)
+        return init_steps
 
     def _initialize_settings(self) -> List:
         """
@@ -118,7 +110,7 @@ class StepIterator(FlowControlBase, BaseModel):
 
             # iterate over the steps in the base config, and the corresponding settings, if these are to be modified
             step_sublist = []
-            for step_config in self.base_config:
+            for step_config in deepcopy(self.base_config):
 
                 # check if we need to iterate through settings in this step, else just use the base config
                 if step_config.step_id in self.iter_settings.settings.keys():
@@ -134,25 +126,6 @@ class StepIterator(FlowControlBase, BaseModel):
                 init_steps.append(initialized_step)
         return init_steps
 
-    # def _initialize_compounds(self):
-    #     """
-    #     Generates n copies of a step, each with a single compound loaded from the source step
-    #     * Only the first step in base_config needs updating, downstream data handover from this step is handed properly anyway
-    #     """
-    #     init_steps = []
-    #     # TODO: get the number of compounds automatically?
-    #     for i in range(self.iter_settings.n_iters):
-    #         list_step_conf = deepcopy(self.base_config)
-    #         first_step_config = list_step_conf[0]
-    #         # probably only expecting one set of input compounds but this will select the ith for all inputs
-    #         for inp_block in first_step_config.input.compounds:
-    #             inp_block.selected_compound_id = i
-    #         formatted_confs = self._update_config(list_step_conf, f"run_{i}")
-    #         for step_conf in formatted_confs:
-    #             initialized_step = self._initialize_step_from_dict(step_conf.as_dict())
-    #             init_steps.append(initialized_step)
-    #     return init_steps
-
     def _initialize_steps(self) -> Union[List, StepBase]:
         """
         Handle step init according to config
@@ -167,10 +140,8 @@ class StepIterator(FlowControlBase, BaseModel):
         elif self.iter_settings.iter_mode == _IE.SINGLE:
             # for n different settings, iterate through each, returning n steps
             steps += self._initialize_settings()
-        elif self.iter_settings.iter_mode == _IE.ALL:
+        else:
             raise NotImplementedError
-            # initialise all combinations of steps by combining settings
-            # steps.append(self._initialize_combined())
 
         self._logger.log(
             f"Iterator has initialized {len(steps)} steps for step  {self.base_config[0].step_id}",
@@ -180,9 +151,9 @@ class StepIterator(FlowControlBase, BaseModel):
             return steps
         else:
 
-            wrapper = StepJobControl(
-                step_id="JobControl",
-                type=_SBE.STEP_JOB_CONTROL,
+            wrapper = StepDispatcher(
+                step_id="step_dispatcher",
+                type=_SBE.STEP_DISPATCHER,
                 initialized_steps=steps,
                 parallel_execution=self.iter_settings.parallelizer_settings,
             )
@@ -204,11 +175,12 @@ class StepIterator(FlowControlBase, BaseModel):
             st_id = conf.step_id
             conf.step_id = st_id + "_" + run_id
             # modify the writeout paths: add a key_value dir the writeout path
-            for idx, block in enumerate(conf.writeout):
+            for block in conf.writeout:
                 if block.destination.resource is not None:
                     resource = block.destination.resource
                     parts = resource.split("/")
                     new_resource = os.path.join("/".join(parts[:-1]), run_id, parts[-1])
+                    print(new_resource)
                     block.destination.resource = new_resource
 
             # modify the step_input blocks if they reference a step_id contained in step_conf

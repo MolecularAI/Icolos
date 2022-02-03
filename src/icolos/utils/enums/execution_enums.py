@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ExecutionResourceEnum(str, Enum):
+class ExecutionPlatformEnum(str, Enum):
     LOCAL = "local"
     SLURM = "slurm"
     PARTITION = "partition"

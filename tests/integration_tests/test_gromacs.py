@@ -1,6 +1,11 @@
 import unittest
 import os
-from tests.tests_paths import MAIN_CONFIG, PATHS_EXAMPLEDATA, export_unit_test_env_vars
+from tests.tests_paths import (
+    MAIN_CONFIG,
+    PATHS_1UYD,
+    PATHS_EXAMPLEDATA,
+    export_unit_test_env_vars,
+)
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
@@ -42,14 +47,9 @@ class Test_MD_Fpocket(unittest.TestCase):
                             _WE.ENVIRONMENT_EXPORT_KEY: "GMX_FORCE_UPDATE_DEFAULT_GPU",
                             _WE.ENVIRONMENT_EXPORT_VALUE: "True",
                         },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "GMXLIB",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "<path>/forcefields/",
-                        },
                     ]
                 },
                 _WE.GLOBAL_VARIABLES: {
-                    "root_dir": "<path>/icolos",
                     "file_base": os.path.join(
                         MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"
                     ),
@@ -67,17 +67,17 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-ignh"],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                "-water": "tip4p",
-                                "-ff": "amber14sb_OL15",
+                                "-water": "tip3p",
+                                "-ff": "amber03",
                             },
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {},
+                        _SBE.SETTINGS_ADDITIONAL: {_SGE.CHARGE_METHOD: "gas"},
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
                                 _SBE.INPUT_SOURCE: attach_root_path(
-                                    PATHS_EXAMPLEDATA.MDPOCKET_PDB_FILE_DRY
+                                    PATHS_1UYD.PDB_PATH
                                 ),
                                 _SBE.INPUT_EXTENSION: "pdb",
                             }
@@ -94,7 +94,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                "-d": "1.5",
+                                "-d": "1.0",
                                 "-bt": "dodecahedron",
                             },
                         },
@@ -118,7 +118,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "tip4p"},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "spc216"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
@@ -519,7 +519,6 @@ class Test_MD_Fpocket(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {}
                         },
                         _SBE.SETTINGS_ADDITIONAL: {"format": "gromacs"},
-                        _SBE.SETTINGS_ADDITIONAL: {"format": "gromacs"},
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
@@ -583,10 +582,6 @@ class Test_MD_Fpocket(unittest.TestCase):
                             _WE.ENVIRONMENT_EXPORT_KEY: "ACPYPE",
                             _WE.ENVIRONMENT_EXPORT_VALUE: "/projects/cc/mai/binaries/acpype",
                         },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "GMXLIB",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "<path>/gmx_workflow/forcefields/",
-                        },
                     ]
                 },
                 _WE.GLOBAL_VARIABLES: {
@@ -606,11 +601,11 @@ class Test_MD_Fpocket(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-ignh"],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                "-water": "tip4p",
-                                "-ff": "amber14sb_OL15",
+                                "-water": "tip3p",
+                                "-ff": "amber03",
                             },
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"forcefield": "{forcefield}"},
+                        _SBE.SETTINGS_ADDITIONAL: {_SGE.CHARGE_METHOD: "gas"},
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
@@ -637,7 +632,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                                 "-bt": "dodecahedron",
                             },
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"forcefield": "{forcefield}"},
+                        _SBE.SETTINGS_ADDITIONAL: {},
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
@@ -657,7 +652,7 @@ class Test_MD_Fpocket(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "tip4p"},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "spc216"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },

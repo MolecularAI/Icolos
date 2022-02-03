@@ -47,8 +47,10 @@ class StepEmbedding(StepIOBase, BaseModel):
                 molecule, randomSeed=42, useRandomCoords=True
             )
         except:
-            self._logger.log(f"Could not embed molecule with SMILES \"{smile}\", critical error in \"RDkit\".",
-                             _LE.WARNING)
+            self._logger.log(
+                f'Could not embed molecule with SMILES "{smile}", critical error in "RDkit".',
+                _LE.WARNING,
+            )
             return None
 
         status = 0

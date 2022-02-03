@@ -18,7 +18,10 @@ dependencies:
   - requests
   - openbabel>=3
   - rdkit>=2021.09.2
+  - acpype>=2022
   - pip:
     - black
     - regex
     - peptidebuilder>=1.1
+    - pytest
+    - pytest-xdist

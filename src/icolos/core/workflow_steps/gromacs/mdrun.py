@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
 import os
 
+from icolos.utils.execute_external.gromacs import GromacsExecutor
+
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 
@@ -17,7 +19,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=self._get_gromacs_executor())
+        self._initialize_backend(executor=GromacsExecutor)
         self._check_backend_availability()
 
     def _get_log_file(self, tmp_dir):

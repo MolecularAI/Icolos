@@ -1,5 +1,11 @@
 # Update log
 
+### Version 1.5.0 | 2022-02-01
+#### Internal
+- Refactored gromacs + free energy tools to use ambertools installed in the conda env
+- Restructured repository to make the package pip installable
+- Improved unit test coverage for pmx steps
+
 ### Version 1.4.0 | 2022-01-19
 #### Features
 - Added support for non-equilibrium relative binding free energy calculation with PMX.

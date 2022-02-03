@@ -55,22 +55,10 @@ class StepWriteoutGenericParameters(BaseModel):
 class StepWriteoutDestinationParameters(BaseModel):
     resource: str = None
     type: _SBE = _SBE.WRITEOUT_DESTINATION_TYPE_FILE
-    #     Union[
-    #     _SBE.WRITEOUT_DESTINATION_TYPE_FILE,
-    #     _SBE.WRITEOUT_DESTINATION_TYPE_REINVENT,
-    #     _SBE.WRITEOUT_DESTINATION_TYPE_STDERR,
-    #     _SBE.WRITEOUT_DESTINATION_TYPE_STDOUT,
-    #     _SBE.WRITEOUT_DESTINATION_TYPE_REST,
-    # ]
-    # Union[_SBE.FORMAT_SDF, _SBE.FORMAT_CSV, _SBE.FORMAT_TXT]
+
     format: _SBE = _SBE.FORMAT_TXT
     merge: bool = True
     mode: _SBE = _SBE.WRITEOUT_DESTINATION_BASE_NAME
-    #     Union[
-    #     _SBE.WRITEOUT_DESTINATION_AUTOMATIC,
-    #     _SBE.WRITEOUT_DESTINATION_BASE_NAME,
-    #     _SBE.WRITEOUT_DESTINATION_DIR,
-    # ] = _SBE.WRITEOUT_DESTINATION_BASE_NAME
 
 
 class StepWriteoutParameters(BaseModel):
@@ -164,7 +152,6 @@ class WriteOutHandler(BaseModel):
                     )
 
                 # TODO: At the moment, this only splits at the compound level (taking the first conformer for resolving),
-                #       add full generic support.
                 if self.config.destination.merge:
                     _write_compounds(self.data.compounds, resource=resource)
                 else:
@@ -234,22 +221,14 @@ class WriteOutHandler(BaseModel):
             raise ValueError(f"{self.config.compounds.category} not supported.")
 
     def _write_generic_data(self):
-        if (
-            self.config.destination.type.lower() != _SBE.WRITEOUT_DESTINATION_TYPE_FILE
-            or self.config.destination.format.upper() != _SBE.FORMAT_TXT
-        ):
-            raise ValueError(
-                'When writing out generic data, you must use type "file" and format "txt".'
-            )
-        # resource should be a directory for writeout only, in most cases it should already exist
+        # type and format do not apply here, simply overwrite
+        self.config.destination.type = _SBE.WRITEOUT_DESTINATION_TYPE_FILE
+        self.config.destination.format = _SBE.FORMAT_TXT
         resource = self._handle_destination_type()
         self._make_folder(resource)
         if self.config.destination.mode == _SBE.WRITEOUT_DESTINATION_DIR:
             # The output path should be a directory only
-            if not os.path.isdir(resource):
-                raise AssertionError(
-                    "When specifying a directory, the writeout destination resource must not be a filepath!"
-                )
+            assert os.path.isdir(resource), f"The path: {resource} is not a directory!"
         # write out all files from that step with the required extension
         for idx, file in enumerate(
             self.data.generic.get_files_by_extension(self.config.generic.key)
@@ -259,6 +238,7 @@ class WriteOutHandler(BaseModel):
                 resource = parts[0] + f"_{idx}." + parts[1]
                 file.write(resource, join=False)
             elif self.config.destination.mode == _SBE.WRITEOUT_DESTINATION_AUTOMATIC:
+                # take the original file name from the step (these tend not to be very descriptive)
                 parts = file.get_file_name().split(".")
                 file_name = parts[0] + f"_{idx}." + parts[1]
                 resource = os.path.join("/".join(resource.split("/")[:-1]), file_name)

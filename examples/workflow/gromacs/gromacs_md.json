@@ -13,9 +13,6 @@
                 }, {
                     "key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
                     "value": "true"
-                }, {
-                    "key": "ACPYPE",
-                    "value": "${ACPYPE}/acpype"
                 }
                 ]
             },
@@ -28,7 +25,7 @@
             "step_id": "01_pdb2gmx",
             "type": "pdb2gmx",
             "execution": {
-                "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
 
             },
             "settings": {
@@ -53,7 +50,7 @@
             "step_id": "02_editconf",
             "type": "editconf",
             "execution": {
-                "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             "settings": {
                 "arguments": {
@@ -80,7 +77,7 @@
             "step_id": "03_solvate",
             "type": "solvate",
             "execution": {
-                "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
             },
             "settings": {
                 "arguments": {
@@ -109,7 +106,7 @@
                 "step_id": "04_grompp",
                 "type": "grompp",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -142,7 +139,7 @@
                 "step_id": "05_genion",
                 "type": "genion",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -174,7 +171,7 @@
                 "step_id": "06_grompp_eminim",
                 "type": "grompp",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -208,7 +205,7 @@
                 "step_id": "07_eminim_mdrun",
                 "type": "mdrun",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -231,7 +228,7 @@
                 "step_id": "08_nvt_grompp",
                 "type": "grompp",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -265,7 +262,7 @@
                 "step_id": "09_nvt_mdrun",
                 "type": "mdrun",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -287,7 +284,7 @@
                 "step_id": "10_npt_grompp",
                 "type": "grompp",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -321,7 +318,7 @@
                 "step_id": "11_npt_mdrun",
                 "type": "mdrun",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -345,7 +342,7 @@
                 "step_id": "12_prod_md_grompp",
                 "type": "grompp",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -383,7 +380,7 @@
                 "step_id": "13_prod_mdrun",
                 "type": "mdrun",
                 "execution": {
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings": {
                     "arguments": {
@@ -448,7 +445,7 @@
                 "step_id": "14_trjconv",
                 "type": "trjconv",
                 "execution":{
-                    "prefix_execution": "module load GROMACS/2020.3-fosscuda-2019a"
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
                 },
                 "settings":{
                     "arguments":{

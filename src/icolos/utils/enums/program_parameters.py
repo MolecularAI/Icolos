@@ -927,9 +927,7 @@ class SchrodingerExecutablesEnum:
     PREPWIZARD = "prepwizard"
     PREPWIZARD_CALL = "$SCHRODINGER/utilities/prepwizard"
     MULTISIM_EXEC = "$SCHRODINGER/utilities/multisim"
-    AWS_BINARY_LOC = (
-        "ssh <location> /opt/schrodinger/suite/installations/default/"
-    )
+    AWS_BINARY_LOC = "ssh <location> /opt/schrodinger/suite/installations/default/"
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -1030,12 +1028,10 @@ class GromacsEnum:
     RMS = "gmx rms"
     ANTECHAMBER = "antechamber"
     PDB2GMX_FAIL_ID_STRING = "Required option was not provided"
-    PYTHON = "python3"
-    ACPYPE_BINARY = "acpype.py"
+    ACPYPE_BINARY = "acpype"
     MMPBSA = "gmx_MMPBSA"
     DO_DSSP = "gmx do_dssp"
     SELECT = "gmx select"
-    ACPYPE_PATH = "$ACPYPE"
     CLUSTER_TS = "Rscript $MDPLOT/MDplot/inst/bash/MDplot_bash.R clusters_ts"
     PRIMARY_COMPONENTS = ["Protein", "DNA", "RNA"]
     # from residuetypes.dat

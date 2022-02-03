@@ -128,7 +128,7 @@
 				"step_id": "mdrun_eq",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -189,7 +189,7 @@
 				"step_id": "nvt_equil",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -251,7 +251,7 @@
 				"step_id": "equilibration_npt",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -314,7 +314,7 @@
 				"step_id": "end_state_md",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -375,7 +375,7 @@
 				"step_id": "equilibration",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",

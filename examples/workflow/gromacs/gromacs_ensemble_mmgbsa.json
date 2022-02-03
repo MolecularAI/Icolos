@@ -16,10 +16,6 @@
 					{
 						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
 						"value": "true"
-					},
-					{
-						"key": "ACPYPE",
-						"value": "${ACPYPE}/acpype"
 					}
 				]
 			},
@@ -228,7 +224,7 @@
 						"step_id": "07_eminim_mdrun",
 						"type": "mdrun",
 						"execution": {
-							"resource": "slurm",
+							"platform": "slurm",
 							"resources": {
 								"partition": "gpu",
 								"gres": "gpu:1",
@@ -296,7 +292,7 @@
 						"step_id": "09_nvt_mdrun",
 						"type": "mdrun",
 						"execution": {
-							"resource": "slurm",
+							"platform": "slurm",
 							"resources": {
 								"partition": "gpu",
 								"gres": "gpu:1",
@@ -368,7 +364,7 @@
 						"step_id": "11_npt_mdrun",
 						"type": "mdrun",
 						"execution": {
-							"resource": "slurm",
+							"platform": "slurm",
 							"resources": {
 								"partition": "gpu",
 								"gres": "gpu:1",
@@ -439,7 +435,7 @@
 						"step_id": "13_prod_mdrun",
 						"type": "mdrun",
 						"execution": {
-							"resource": "slurm",
+							"platform": "slurm",
 							"resources": {
 								"partition": "gpu",
 								"gres": "gpu:1",
@@ -596,9 +592,7 @@
 									"key": "dat"
 								},
 								"destination": {
-									"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat",
-									"type": "file",
-									"format": "TXT"
+									"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
 								}
 							}
 						]

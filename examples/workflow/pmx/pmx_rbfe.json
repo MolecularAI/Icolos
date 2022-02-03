@@ -235,7 +235,7 @@
 				"step_id": "06b_run_simulations",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -280,7 +280,7 @@
 				"step_id": "07b_run_simulations",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -325,7 +325,7 @@
 				"step_id": "09_run_transitions",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",

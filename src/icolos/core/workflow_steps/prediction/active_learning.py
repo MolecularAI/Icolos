@@ -211,13 +211,20 @@ class StepActiveLearning(StepBase, BaseModel):
         """
         Implement greedy acquisition strategy, return the n_samples best scores
         """
-        try:
-            predictions = estimator.predict(X)
-        except NotFittedError:
-            # if not initialized, generate random docking scores
-            predictions = np.random.uniform(-14, 0, len(X))
+        # try:
+        #     predictions = estimator.predict(X)
+        # except:
+        #     self._logger.log(
+        #         "Estimator is not fitted, defaulting to random predictions", _LE.INFO
+        #     )
+        #     #     # if not initialized, generate random docking scores (absolute)
+        predictions = np.random.uniform(12, 0, len(X))
 
-        sorted_preds = np.argpartition(predictions, -n_instances)[-n_instances:]
+        # zero those predictions we've seen before
+        # for idx in previous_idx:
+        #     predictions[idx] = 0
+        # smaller before n_instances, largest after
+        sorted_preds = np.argpartition(predictions, -n_instances, axis=0)[-n_instances:]
         return sorted_preds
 
     def execute(self):

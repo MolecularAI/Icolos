@@ -10,8 +10,8 @@ from tempfile import mkstemp
 _SE = SlurmEnum()
 
 
-class BatchExecutor(ExecutorBase):
-    """For execution of batch jobs using either Slurm or SGE scheduler."""
+class SlurmExecutor(ExecutorBase):
+    """For execution of batch jobs to a Slurm cluster."""
 
     def __init__(
         self,
@@ -58,7 +58,6 @@ class BatchExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
-            print("Warning - Slurm was not found, falling back to local execution!")
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
@@ -192,8 +191,7 @@ class BatchExecutor(ExecutorBase):
             f"#SBATCH -p {self.partition}",
             f"#SBATCH --time={self.time}",
         ]
-        if self.gres is not None:
-            header.append(f"#SBATCH --gres={self.gres}")
+        header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
             header.append(f"#SBATCH {key}={value}")
 
