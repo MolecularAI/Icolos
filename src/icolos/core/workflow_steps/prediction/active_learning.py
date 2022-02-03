@@ -8,6 +8,7 @@ from pydantic.main import BaseModel
 from sklearn.gaussian_process.kernels import DotProduct
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.exceptions import NotFittedError
 
 try:
     import torch
@@ -209,11 +210,11 @@ class StepActiveLearning(StepBase, BaseModel):
         """
         try:
             predictions = estimator.predict(X)
-        except:
+        except NotFittedError:
             self._logger.log(
                 "Estimator is not fitted, defaulting to random predictions", _LE.INFO
             )
-            #     # if not initialized, generate random docking scores (absolute)
+            #     #     # if not initialized, generate random docking scores (absolute)
             predictions = np.random.uniform(12, 0, len(X))
 
         # zero those predictions we've seen before
@@ -303,10 +304,11 @@ class StepActiveLearning(StepBase, BaseModel):
         n_instances = self.settings.additional[_SALE.BATCH_SIZE]
         queried_compound_idx = []
         fraction_top1_hits = []
-
+        X = np.array(list(lib[_SALE.MORGAN_FP]))
+        print(X.shape)
         for idx in range(rounds):
             query_idx, _ = learner.query(
-                np.array(lib[_SALE.MORGAN_FP]),
+                X,
                 n_instances=n_instances,
                 previous_idx=queried_compound_idx,
             )
@@ -335,12 +337,14 @@ class StepActiveLearning(StepBase, BaseModel):
                     ],
                     dtype=np.float32,
                 )
-                scores = scores.reshape(-1, 1)
+                if self.settings.additional["running_mode"] == "ffnn":
+                    scores = scores.reshape(-1, 1)
             self._logger.log("Fitting with new data...", _LE.INFO)
             new_data = np.array(
                 [compound[_SALE.MORGAN_FP] for compound in query_compounds],
                 dtype=np.float32,
             )
+            print(new_data.shape)
             learner.teach(
                 new_data,
                 scores,
