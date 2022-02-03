@@ -9,8 +9,7 @@
 
 # `Icolos`: Workflow manager
 
-The `Icolos` tool is a workflow manager for structure-based workflows in computational chemistry, that abstracts execution logic from implementation as much as possible. Icolos was designed to interface with [REINVENT](https://github.com/MolecularAI/Reinvent), and workflows can be called as a component of the scoring function, or to postprocess results with more expensive methods. Workflows are specified in `JSON` format (see folder `examples`). Currently wrapped are
-a diverse set of tools and internal steps, including docking, QM and MD capabilities.  The preprint is available [here](https://doi.org/10.26434/chemrxiv-2022-sjcp3)
+The `Icolos` tool is a workflow manager for structure-based workflows in computational chemistry, that abstracts execution logic from implementation as much as possible. Icolos was designed to interface with [REINVENT](https://github.com/MolecularAI/Reinvent), and workflows can be called as a component of the scoring function, or to postprocess results with more expensive methods. Workflows are specified in `JSON` format (see folder `examples`). Currently wrapped are a diverse set of tools and internal steps, including docking, QM and MD capabilities. The pre-print is available [here](https://doi.org/10.26434/chemrxiv-2022-sjcp3).
 
 
 ## Introduction
