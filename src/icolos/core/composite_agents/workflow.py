@@ -61,7 +61,7 @@ class WorkFlow(BaseAgent, BaseModel):
                     for st in step.initialized_steps:
                         st.set_workflow_object(self)
                         self._initialized_steps.append(st)
-                elif isinstance(step.initialized_steps,StepDispatcher):
+                elif isinstance(step.initialized_steps, StepDispatcher):
                     # parallelize was set, returns a JobControl wrapper
                     # step.initialized_steps.initialized_steps.
                     # set_workflow_object(self)
@@ -108,7 +108,7 @@ class WorkFlow(BaseAgent, BaseModel):
         for step in self._initialized_steps:
             if step.step_id == step_id:
                 return step
-            elif step.type == _SBE.STEP_JOB_CONTROL:
+            elif step.type == _SBE.STEP_DISPATCHER:
                 # the steps themselves are buried in the _initialized_steps attribute of JobControl,
                 for st in step.initialized_steps:
                     if st.step_id == step_id:

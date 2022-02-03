@@ -592,9 +592,7 @@
 									"key": "dat"
 								},
 								"destination": {
-									"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat",
-									"type": "file",
-									"format": "TXT"
+									"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
 								}
 							}
 						]

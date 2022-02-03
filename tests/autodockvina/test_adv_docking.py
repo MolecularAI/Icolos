@@ -6,7 +6,11 @@ from icolos.core.workflow_steps.autodockvina.docking import StepAutoDockVina
 from icolos.utils.enums.step_enums import StepBaseEnum, StepAutoDockVinaEnum
 from icolos.utils.enums.program_parameters import AutoDockVinaEnum
 
-from tests.tests_paths import PATHS_EXAMPLEDATA, get_1UYD_ligands_as_Compounds, PATHS_1UYD
+from tests.tests_paths import (
+    PATHS_EXAMPLEDATA,
+    get_1UYD_ligands_as_Compounds,
+    PATHS_1UYD,
+)
 from icolos.utils.general.files_paths import attach_root_path
 
 _SBE = StepBaseEnum
@@ -70,7 +74,7 @@ class Test_ADV_docking(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [5.305, 11.464, 24.663]
+            [5.305, 11.464, 24.663],
         )
         self.assertEqual(
             adv_step.get_compounds()[0][0][0]
