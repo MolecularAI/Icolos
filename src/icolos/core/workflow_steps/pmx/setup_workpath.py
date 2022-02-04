@@ -81,7 +81,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(nodes)
         self._execute_pmx_step_parallel(
-            run_func=self._parametrise_nodes, step_id="pmx_setup"
+            run_func=self._parametrise_nodes, step_id="pmx_setup", 
         )
 
         # create the output folder structure

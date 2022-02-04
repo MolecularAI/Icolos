@@ -10,8 +10,7 @@ from icolos.utils.enums.program_parameters import (
     SlurmEnum,
     StepPMXEnum,
 )
-from icolos.utils.execute_external.batch_executor import BatchExecutor
-from icolos.utils.execute_external.gromacs import GromacsExecutor
+from icolos.utils.execute_external.slurm_executor import SlurmExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
@@ -30,7 +29,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         super().__init__(**data)
 
         # Note: if youre running the job on, for example, a workstation, without slurm, this will simply execute the scripts directly (the slurm header is simply ignored in this case)
-        self._initialize_backend(executor=BatchExecutor)
+        self._initialize_backend(executor=SlurmExecutor)
 
     def execute(self):
 
@@ -57,7 +56,9 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(job_pool)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="pmx_run_simulations"
+            run_func=self._execute_command,
+            step_id="pmx_run_simulations",
+            result_checker=self._inspect_log_files,
         )
 
     def get_mdrun_command(
@@ -197,4 +198,18 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             location = "/".join(job.split("/")[:-1])
             self._backend_executor.execute(tmpfile=job, location=location, check=False)
 
-    # def _inspect_log_files()
+    def _inspect_log_files(self, jobs: List[str]) -> List[List[bool]]:
+        """
+        Check the md.log files in the edge's job dir, return
+        :param jobs: list of paths to the batch scripts
+        """
+        results = []
+        for subtask in jobs:
+            subtask_results = []
+            for sim in subtask:
+                location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
+                with open(location, "r") as f:
+                    lines = f.readlines()
+                subtask_results.append(any(["Finished mdrun" in l for l in lines]))
+            results.append(subtask_results)
+        return results

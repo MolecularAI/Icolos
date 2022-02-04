@@ -278,6 +278,7 @@ class StepPMXBase(StepBase, BaseModel):
         Instantiates Icolos's parallelizer object,
         runs the step's execute method,
         passes any kwargs straight to the run_func
+        If result_checker is provided,
 
 
         """
@@ -299,7 +300,6 @@ class StepPMXBase(StepBase, BaseModel):
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
             # # TODO: find a reliable way to sort this, ideally by inspecting log files
-
             if result_checker is not None:
                 batch_results = result_checker(jobs)
 
@@ -312,7 +312,6 @@ class StepPMXBase(StepBase, BaseModel):
                             )
                         else:
                             subtask.set_status_success()
-
             else:
                 for element in next_batch:
                     for subtask in element:
@@ -419,7 +418,7 @@ class StepPMXBase(StepBase, BaseModel):
         )
         self.get_workflow_object().set_perturbation_map(perturbation_map)
 
-    def _prepare_edges(self, batch):
+    def _prepare_edges(self, batch) -> List[str]:
         edges = []
 
         for task in batch:

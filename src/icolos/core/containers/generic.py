@@ -186,6 +186,7 @@ class GenericContainer:
         for file in self.get_flattened_files():
             if file.get_extension() == ext:
                 files.append(file)
+        assert len(files) > 0, f"No files with extension {ext} were found!"
         try:
             assert len(files) == 1
         except AssertionError:

@@ -3,12 +3,6 @@ import abc
 import subprocess
 from shlex import quote
 
-from icolos.utils.enums.execution_enums import ExecutionResourceEnum
-from icolos.utils.enums.program_parameters import SlurmEnum
-
-_ERE = ExecutionResourceEnum
-_SE = SlurmEnum()
-
 
 class ExecutorBase(metaclass=abc.ABCMeta):
     """Virtual base class for the general and program-specific executors."""

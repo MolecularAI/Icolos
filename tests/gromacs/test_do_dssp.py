@@ -20,9 +20,9 @@ class Test_Editconf(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_DSSP_TPR), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
             self.structure = f.read()
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_DSSP_XTC), "rb") as f:
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC), "rb") as f:
             self.traj = f.read()
 
     def test_editconf_run(self):

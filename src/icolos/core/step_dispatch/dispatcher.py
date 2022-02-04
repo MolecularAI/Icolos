@@ -15,10 +15,12 @@ class IterParallelizer(BaseModel):
     dependent_steps: int = None
 
 
-class StepJobControl(StepBase, BaseModel):
+class StepDispatcher(StepBase, BaseModel):
     """
     Step class containing job control functionality required for StepIterator, supports Slurm for job scheduling
     Supports running Icolos process as master job for parallel step execution on cluster.  Generates a pool of initialized steps to be executed, based on the
+
+    Step-type class for disaptching multiple steps in parallel, useful for executing multiple batch jobs simultaneously
     """
 
     initialized_steps: List = []
@@ -74,7 +76,7 @@ class StepJobControl(StepBase, BaseModel):
 
             result = parallelizer.execute_parallel(steps=steps)
 
-            # sucessful execution of each step is not explicitly checked,
+            # TODO: sucessful execution of each step is not explicitly checked,
             # the step is responsible for throwing errors if something has gone wrong
             for task in next_batch:
                 for subtask in task:

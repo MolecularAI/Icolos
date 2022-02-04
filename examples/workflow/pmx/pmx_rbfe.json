@@ -134,13 +134,6 @@
 						"water": "tip3p",
 						"forcefield": "amber99sb-star-ildn-mut"
 					}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "01_pmx_setup"
-						}
-					]
 				}
 			},
 			{
@@ -157,13 +150,6 @@
 						}
 					},
 					"additional": {}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "02_pmx_atomMapping"
-						}
-					]
 				}
 			},
 			{
@@ -184,13 +170,6 @@
 					"additional": {
 						"edges": []
 					}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "03_pmx_ligandHybrid"
-						}
-					]
 				}
 			},
 			{
@@ -208,8 +187,6 @@
 						"parameters": {}
 					},
 					"additional": {}
-				},
-				"input": {
 				}
 			},
 			{
@@ -235,7 +212,7 @@
 				"step_id": "06b_run_simulations",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -280,7 +257,7 @@
 				"step_id": "07b_run_simulations",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",
@@ -325,7 +302,7 @@
 				"step_id": "09_run_transitions",
 				"type": "pmx_run_simulations",
 				"execution": {
-					"resource": "slurm",
+					"platform": "slurm",
 					"resources": {
 						"partition": "gpu",
 						"gres": "gpu:1",

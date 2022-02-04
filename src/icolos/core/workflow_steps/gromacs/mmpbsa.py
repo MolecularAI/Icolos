@@ -7,6 +7,7 @@ from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.program_parameters import GromacsEnum
 import os
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.files_paths import attach_root_path
 
 _SGE = StepGromacsEnum()
@@ -23,7 +24,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(self._get_gromacs_executor())
+        self._initialize_backend(GromacsExecutor)
         self._check_backend_availability()
 
     def _get_arg(self, ext) -> AnyStr:

@@ -28,38 +28,7 @@ class TestDockingWorkflow(unittest.TestCase):
         conf = {
             _WE.HEADER: {
                 _WE.ID: "NIBR",
-                _WE.ENVIRONMENT: {
-                    _WE.ENVIRONMENT_EXPORT: [
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "OE_LICENSE",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "/opt/scp/software/oelicense/1.0/oe_license.seq1",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "XTBHOME",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "/projects/cc/mai/binaries/xtb-6.4.0",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "XTBPATH",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "${XTBHOME}/share/xtb",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "PATH",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "${PATH}:${XTBHOME}/bin",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "PKG_CONFIG_PATH",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "${PKG_CONFIG_PATH}:${XTBHOME}/lib64/pkgconfig",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "PARA_ARCH",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "MPI",
-                        },
-                        {
-                            _WE.ENVIRONMENT_EXPORT_KEY: "PARNODES",
-                            _WE.ENVIRONMENT_EXPORT_VALUE: "6",
-                        },
-                    ]
-                },
+                _WE.ENVIRONMENT: {_WE.ENVIRONMENT_EXPORT: []},
                 _WE.GLOBAL_VARIABLES: {
                     "smiles": "3,4-DIAMINOBENZOTRIFLUORIDE:Nc1ccc(cc1N)C(F)(F)F;aspirin:O=C(C)Oc1ccccc1C(=O)O"
                 },
@@ -81,7 +50,7 @@ class TestDockingWorkflow(unittest.TestCase):
                     _SBE.STEPID: "Ligprep",
                     _SBE.STEP_TYPE: "ligprep",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-1-js-aws",
+                        _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
                         _SBE.EXEC_PARALLELIZATION: {
                             _SBE.EXEC_PARALLELIZATION_CORES: 4,
                             _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
@@ -114,7 +83,7 @@ class TestDockingWorkflow(unittest.TestCase):
                                 _SBE.WRITEOUT_COMP_CATEGORY: _SBE.WRITEOUT_COMP_CATEGORY_ENUMERATIONS
                             },
                             _SBE.WRITEOUT_DESTINATION: {
-                                _SBE.WRITEOUT_DESTINATION_RESOURCE: f"{self._test_dir}/nibr_ligprep.sdf",
+                                _SBE.WRITEOUT_DESTINATION_RESOURCE: f"{self._test_dir}/ligprep_out.sdf",
                                 _SBE.STEP_TYPE: "file",
                                 _SBE.WRITEOUT_DESTINATION_FORMAT: "SDF",
                             },
@@ -125,7 +94,7 @@ class TestDockingWorkflow(unittest.TestCase):
                     _SBE.STEPID: "Glide",
                     _SBE.STEP_TYPE: "glide",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-1-js-aws",
+                        _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
                         _SBE.EXEC_PARALLELIZATION: {
                             _SBE.EXEC_PARALLELIZATION_CORES: 8,
                             _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,

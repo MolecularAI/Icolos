@@ -2,7 +2,7 @@ import unittest
 import os
 from icolos.core.containers.generic import GenericData
 from icolos.core.workflow_steps.pmx.abfe import StepPMXabfe
-from icolos.utils.enums.step_enums import StepBaseEnum
+from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import (
     PATHS_EXAMPLEDATA,
     PATHS_1UYD,
@@ -15,6 +15,7 @@ from icolos.core.composite_agents.workflow import WorkFlow
 import shutil
 
 _SBE = StepBaseEnum
+_SGE = StepGromacsEnum()
 
 
 class Test_PMXabfe(unittest.TestCase):
@@ -28,7 +29,7 @@ class Test_PMXabfe(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.PMX_TNKS_PROTEIN, "r") as f:
+        with open(PATHS_EXAMPLEDATA.PMX_ABFE_PROTEIN, "r") as f:
             data = f.read()
         self.protein = GenericData(file_name="complex.pdb", file_data=data)
         self.compounds = get_ligands_as_compounds_with_conformers(
@@ -53,6 +54,7 @@ class Test_PMXabfe(unittest.TestCase):
                     "forcefield": "amber03",
                     "water": "tip3p",
                     "sim_types": ["em", "nvt", "npt", "eq", "transitions"],
+                    _SGE.CHARGE_METHOD: "gas",
                 },
             },
         }

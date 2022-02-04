@@ -120,3 +120,23 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                     self._prepare_system(
                         edge=edge, state=state, wp="complex", r=r, toppath=protTopPath
                     )
+
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = [
+            f"ligand/stateA/run1/transitions/ti_80.tpr",
+            f"ligand/stateB/run1/transitions/ti_80.tpr",
+            f"complex/stateA/run1/transitions/ti_80.tpr",
+            f"complex/stateB/run1/transitions/ti_80.tpr",
+        ]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all([os.path.isfile(os.path.join(job, f)) for f in output_files])
+                )
+            results.append(subjob_results)
+        return results

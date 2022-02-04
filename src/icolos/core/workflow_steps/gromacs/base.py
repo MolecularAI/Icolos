@@ -1,5 +1,4 @@
 from icolos.core.containers.generic import GenericData
-from icolos.utils.enums.execution_enums import ExecutionResourceEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from pydantic import BaseModel
 import os
@@ -10,12 +9,9 @@ import re
 from copy import deepcopy
 from distutils.dir_util import copy_tree
 from icolos.utils.enums.program_parameters import GromacsEnum
-from icolos.utils.execute_external.batch_executor import BatchExecutor
-from icolos.utils.execute_external.gromacs import GromacsExecutor
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
-_ERE = ExecutionResourceEnum
 
 
 class StepGromacsBase(StepBase, BaseModel):
@@ -185,15 +181,3 @@ class StepGromacsBase(StepBase, BaseModel):
         )
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
-
-    def _get_gromacs_executor(self):
-        # return either the GromacsExecutor or batch executor depending on the running mode for the job
-
-        if self.execution.resource == _ERE.LOCAL:
-            return GromacsExecutor
-        elif self.execution.resource == _ERE.SLURM:
-            return BatchExecutor
-        else:
-            raise TypeError(
-                f"Exeucution resource type {self.execution.resource} not recognised",
-            )

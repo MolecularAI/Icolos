@@ -44,28 +44,34 @@ class Test_EspSim(unittest.TestCase):
         step_esp_sim.generate_input()
         step_esp_sim.execute()
 
-        esp_sim_score = [
-            0.811
-        ]
+        esp_sim_score = [0.811]
 
-        shape_sim_score = [
-            0.642
-        ]
+        shape_sim_score = [0.642]
 
         for i in range(len(esp_sim_score)):
-            self.assertEqual(round(float(
-                step_esp_sim.data.compounds[i]
-                .get_enumerations()[0]
-                .get_conformers()[0]
-                .get_molecule()
-                .GetProp("esp_sim")), ndigits=3),
-                esp_sim_score[i]
+            self.assertEqual(
+                round(
+                    float(
+                        step_esp_sim.data.compounds[i]
+                        .get_enumerations()[0]
+                        .get_conformers()[0]
+                        .get_molecule()
+                        .GetProp("esp_sim")
+                    ),
+                    ndigits=3,
+                ),
+                esp_sim_score[i],
             )
-            self.assertEqual(round(float(
-                step_esp_sim.data.compounds[i]
-                .get_enumerations()[0]
-                .get_conformers()[0]
-                .get_molecule()
-                .GetProp("shape_sim")), ndigits=3),
-                shape_sim_score[i]
+            self.assertEqual(
+                round(
+                    float(
+                        step_esp_sim.data.compounds[i]
+                        .get_enumerations()[0]
+                        .get_conformers()[0]
+                        .get_molecule()
+                        .GetProp("shape_sim")
+                    ),
+                    ndigits=3,
+                ),
+                shape_sim_score[i],
             )

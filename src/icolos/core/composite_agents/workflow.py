@@ -3,8 +3,7 @@ from typing import Dict, List
 from pydantic import BaseModel, PrivateAttr
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.flow_control.flow_control import FlowControlBase
-from icolos.core.job_control.job_control import StepJobControl
-
+from icolos.core.step_dispatch.dispatcher import StepDispatcher
 from icolos.core.steps_utils import initialize_step_from_dict
 from icolos.core.workflow_steps.step import StepBase
 from icolos.core.composite_agents.base_agent import BaseAgent, AgentHeaderParameters
@@ -62,7 +61,7 @@ class WorkFlow(BaseAgent, BaseModel):
                     for st in step.initialized_steps:
                         st.set_workflow_object(self)
                         self._initialized_steps.append(st)
-                elif isinstance(step.initialized_steps, StepJobControl):
+                elif isinstance(step.initialized_steps, StepDispatcher):
                     # parallelize was set, returns a JobControl wrapper
                     # step.initialized_steps.initialized_steps.
                     # set_workflow_object(self)
@@ -109,7 +108,7 @@ class WorkFlow(BaseAgent, BaseModel):
         for step in self._initialized_steps:
             if step.step_id == step_id:
                 return step
-            elif step.type == _SBE.STEP_JOB_CONTROL:
+            elif step.type == _SBE.STEP_DISPATCHER:
                 # the steps themselves are buried in the _initialized_steps attribute of JobControl,
                 for st in step.initialized_steps:
                     if st.step_id == step_id:
