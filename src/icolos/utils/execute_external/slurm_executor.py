@@ -58,17 +58,20 @@ class SlurmExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
+            print("Warning - Slurm was not found, falling back to local execution!")
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
             command=launch_command, arguments=[], location=location, check=check
         )
+
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
             state = self._wait_for_job_completion(job_id=job_id)
+        # if using local resources, bash call is blocking, no need to monitor, just wait for result to return
         else:
-            state = self._tail_log_file(location)
+            state = _SE.COMPLETED if result.returncode == 0 else _SE.FAILED
 
         # check the result from slurm
         if check == True:
@@ -153,16 +156,20 @@ class SlurmExecutor(ExecutorBase):
         completed = False
         state = None
         while not completed:
-            with open(os.path.join(location, "md.log"), "r") as f:
-                lines = f.readlines()
-            completed = any([completed_line in l for l in lines])
-            state = _SE.COMPLETED
-            failed = any([failed_line in l for l in lines])
-            if failed:
-                state = _SE.FAILED
-                for line in lines[-40:]:
-                    print(line)
-                completed = True
+            try:
+                with open(os.path.join(location, "md.log"), "r") as f:
+                    lines = f.readlines()
+                completed = any([completed_line in l for l in lines])
+                state = _SE.COMPLETED
+                failed = any([failed_line in l for l in lines])
+                if failed:
+                    state = _SE.FAILED
+                    for line in lines[-40:]:
+                        print(line)
+                    completed = True
+            except FileNotFoundError:
+                print("log file not found, sleeping")
+                time.sleep(10)
         return state
 
     def _check_job_status(self, job_id):

@@ -172,7 +172,7 @@ class PATHS_EXAMPLEDATA:
     PMX_TNKS_TEST_DIR = expand_path("pmx")
     PMX_TNKS_MAP = expand_path("pmx/fep_mapper.log")
     PMX_TNKS_LIGANDS = expand_path("pmx/ligands.sdf")
-    PMX_TNKS_PROTEIN = expand_path("pmx/5tbm.pdb")
+    PMX_TNKS_PROTEIN = expand_path("pmx/4ui5.pdb")
     DSSP_PDB_1 = expand_path("structure_prediction/1e0n.pdb")
     DSSP_PDB_2 = expand_path("structure_prediction/1jbf.pdb")
     DSSP_PDB_3 = expand_path("structure_prediction/6nox.pdb")

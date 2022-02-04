@@ -134,13 +134,6 @@
 						"water": "tip3p",
 						"forcefield": "amber99sb-star-ildn-mut"
 					}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "01_pmx_setup"
-						}
-					]
 				}
 			},
 			{
@@ -157,13 +150,6 @@
 						}
 					},
 					"additional": {}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "02_pmx_atomMapping"
-						}
-					]
 				}
 			},
 			{
@@ -184,13 +170,6 @@
 					"additional": {
 						"edges": []
 					}
-				},
-				"input": {
-					"perturbation_map": [
-						{
-							"source": "03_pmx_ligandHybrid"
-						}
-					]
 				}
 			},
 			{
@@ -208,8 +187,6 @@
 						"parameters": {}
 					},
 					"additional": {}
-				},
-				"input": {
 				}
 			},
 			{
