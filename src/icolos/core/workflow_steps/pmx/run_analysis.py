@@ -246,3 +246,23 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 self._run_analysis_script(
                     analysispath, stateApath, stateBpath, bVerbose=bVerbose
                 )
+
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = ["integ0.dat", "integ1.dat", "results.txt", "wplot.png"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(os.path.join(job, "analyse1", f))
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

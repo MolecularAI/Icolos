@@ -66,7 +66,7 @@ class Test_CREST_confgen(unittest.TestCase):
         crest_step.execute()
 
         # check number of conformers returned (only one Compound with only one Enumeration)
-        self.assertGreaterEqual(len(crest_step.get_compounds()[0][0]), 15)
+        self.assertGreaterEqual(len(crest_step.get_compounds()[0][0]), 14)
 
         # check SDF write-out (including energy-as-tag annotation)
         out_path = os.path.join(self._test_dir, "CREST_conformers_paracetamol.sdf")
