@@ -3,6 +3,7 @@ from icolos.core.workflow_steps.autodockvina.docking import StepAutoDockVina
 from icolos.core.workflow_steps.autodockvina.target_preparation import (
     StepAutoDockVinaTargetPreparation,
 )
+from icolos.core.workflow_steps.ccdc.docking import StepGold
 from icolos.core.workflow_steps.calculation.electrostatics.esp_sim import StepEspSim
 from icolos.core.workflow_steps.calculation.feature_counter import StepFeatureCounter
 from icolos.core.workflow_steps.gromacs.do_dssp import StepGMXDoDSSP
@@ -104,6 +105,7 @@ class StepInitializationEnum:
         _SBE.STEP_FEATURE_COUNTER: StepFeatureCounter,
         _SBE.STEP_AUTODOCKVINA_DOCKING: StepAutoDockVina,
         _SBE.STEP_AUTODOCKVINA_TARGET_PREPARATION: StepAutoDockVinaTargetPreparation,
+        _SBE.STEP_GOLD_DOCKING: StepGold,
         _SBE.STEP_PMX_RUN_SIMULATIONS: StepPMXRunSimulations,
         _SBE.STEP_DISPATCHER: StepDispatcher,
         _SBE.STEP_ESP_SIM: StepEspSim,

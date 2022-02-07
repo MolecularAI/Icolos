@@ -1,7 +1,7 @@
-from icolos.utils.enums.program_parameters import GoldOutputEnum
+from icolos.utils.enums.program_parameters import GoldEnum
 from icolos.utils.execute_external.execute import ExecutorBase
 
-_EE = GoldOutputEnum()
+_EE = GoldEnum()
 
 
 class GoldExecutor(ExecutorBase):

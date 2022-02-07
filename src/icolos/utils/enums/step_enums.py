@@ -47,7 +47,6 @@ class StepBaseEnum(str, Enum):
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
     STEP_GOLD_DOCKING = "GOLD_DOCKING"
-    STEP_GOLD_TARGET_PREPARATION = "GOLD_TARGET_PREPARATION"
     STEP_FEP_PLUS_SETUP = "FEP_PLUS_SETUP"
     STEP_FEP_PLUS_EXEC = "FEP_PLUS_EXEC"
     STEP_FEP_PLUS_ANALYSIS = "FEP_PLUS_ANALYSIS"
@@ -391,6 +390,19 @@ class StepPredictorEnum:
     FEATURES = "features"
     NAME_PREDICTED = "name_predicted"
     NAME_PREDICTED_DEFAULT = "pred_value"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepGoldEnum:
 
     # try to find the internal value and return
     def __getattr__(self, name):
