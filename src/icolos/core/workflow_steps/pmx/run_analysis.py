@@ -163,13 +163,13 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
             )
             rowName = edge
+
+            self.results_summary.loc[rowName, "lig1"] = edge.split("_")[0]
+            self.results_summary.loc[rowName, "lig2"] = edge.split("_")[1]
             self.results_summary.loc[rowName, "val"] = dg
             self.results_summary.loc[rowName, "err_analyt"] = erra
             self.results_summary.loc[rowName, "err_boot"] = errb
-
-        # final write to disk
-        self.results_summary.to_csv(os.path.join(self.work_dir, "results_summary.csv"))
-        self.results_all.to_csv(os.path.join(self.work_dir, "resultsAll.csv"))
+            print(self.results_summary)
 
     def analysis_summary(self, edges):
         for edge in edges:
@@ -188,6 +188,56 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         # the values have been collected now
         # let's calculate ddGs
         self._summarize_results(edges)
+        try:
+            if "exp_results" in self.settings.additional.keys() and os.path.isfile(
+                self.settings.additional["exp_results"]
+            ):
+                exp_data = pd.read_csv(
+                    self.settings.additional["exp_results"],
+                    converters={"Ligand": lambda x: str(x).split(".")[0]},
+                )
+                print(exp_data)
+                # compute the experimental ddG and append to resultsSummary
+                node_data = self.get_perturbation_map().node_df
+                self.results_summary["exp_ddG"] = self.results_summary.apply(
+                    lambda x: np.array(
+                        self.compute_exp_ddG(
+                            x["lig1"], x["lig2"], node_data=node_data, exp_data=exp_data
+                        )
+                    ),
+                    axis=1,
+                )
+        except Exception as e:
+            self._logger.log(
+                f"Failed to compute experimental results, error was: {e}", _LE.WARNING
+            )
+        # final write to disk
+        self.results_summary.to_csv(os.path.join(self.work_dir, "resultsSummary.csv"))
+        self.results_all.to_csv(os.path.join(self.work_dir, "resultsAll.csv"))
+
+    def compute_exp_ddG(
+        self, lig1: str, lig2: str, node_data: pd.DataFrame, exp_data: pd.DataFrame
+    ) -> float:
+        """
+        Compute the ddG between two ligands from experimental data
+        """
+        lig1_id = (
+            node_data.loc[node_data["hash_id"] == lig1]["node_id"]
+            .to_list()[0]
+            .replace(" ", "")
+        )
+        lig2_id = (
+            node_data.loc[node_data["hash_id"] == lig2]["node_id"]
+            .to_list()[0]
+            .replace(" ", "")
+        )
+        lig1_dG = float(
+            exp_data.loc[exp_data["Ligand"] == lig1_id]["Exp. ΔG"].tolist()[0]
+        )
+        lig2_dG = float(
+            exp_data.loc[exp_data["Ligand"] == lig2_id]["Exp. ΔG"].tolist()[0]
+        )
+        return lig2_dG - lig1_dG
 
     def run_analysis(self, jobs: List[str], bVerbose=True):
         for idx, edge in enumerate(jobs):
