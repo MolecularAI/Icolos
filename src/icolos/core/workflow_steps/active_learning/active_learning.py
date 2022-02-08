@@ -21,12 +21,11 @@ except:
 
 
 from icolos.core.containers.compound import Compound, Enumeration
-from icolos.core.workflow_steps.prediction.models.ffnn import FeedForwardNet
+from icolos.core.workflow_steps.active_learning.models.ffnn import FeedForwardNet
 from icolos.core.workflow_steps.step import StepBase
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import (
     StepBaseEnum,
-    StepGlideEnum,
     StepActiveLearningEnum,
 )
 
@@ -35,15 +34,9 @@ from rdkit.Chem import PandasTools, Mol
 import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
-from sklearn.metrics import mean_squared_error, confusion_matrix
-from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
-
-from icolos.utils.general.convenience_functions import nested_get
 
 
-_SGE = StepGlideEnum()
 _SALE = StepActiveLearningEnum()
-_IE = StepInitializationEnum()
 
 
 class StepActiveLearning(StepBase, BaseModel):
@@ -97,7 +90,6 @@ class StepActiveLearning(StepBase, BaseModel):
         Notes:
         This could be an arbitrarily complex workflow, but the only thing that's going to change is the compounds.
         """
-        # initialize the basic oracle, load the query compounds for evaluation
         oracle_steps = self._initialize_oracle(compound_list)
         # we have a fully initialized step with the compounds loaded.  Execute them
         for idx, step in enumerate(oracle_steps):
@@ -133,7 +125,7 @@ class StepActiveLearning(StepBase, BaseModel):
 
         return np.absolute(top_scores)
 
-    def _generate_library(
+    def _parse_library(
         self, extract_property: bool = True
     ) -> Tuple[DataFrame, np.ndarray]:
         """
@@ -172,57 +164,6 @@ class StepActiveLearning(StepBase, BaseModel):
 
         return library, scores
 
-    def _prepare_validation_data(self) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
-        """
-        parses sdf file with results to dataframe, extract fingerprints + results
-        """
-        val_lib = PandasTools.LoadSDF(
-            self.settings.additional[_SALE.VALIDATION_LIB],
-            smilesName=_SALE.SMILES,
-            molColName=_SALE.MOLECULE,
-            includeFingerprints=True,
-            removeHs=False,
-            embedProps=True,
-        )
-        val_lib[_SALE.MORGAN_FP] = val_lib.apply(
-            lambda x: np.array(
-                GetMorganFingerprintAsBitVect(x[_SALE.MOLECULE], 2, nBits=2048),
-                dtype=np.float32,
-            ),
-            axis=1,
-        )
-        scores = np.absolute(
-            pd.to_numeric(val_lib[self.settings.additional[_SALE.CRITERIA]].fillna(0))
-        )
-
-        return np.array(val_lib[_SALE.MORGAN_FP]), scores, val_lib
-
-    def greedy_acquisition(
-        self,
-        estimator: RandomForestRegressor,
-        X: np.ndarray,
-        previous_idx,
-        n_instances: int,
-    ) -> np.ndarray:
-        """
-        Implement greedy acquisition strategy, return the n_samples best scores
-        """
-        try:
-            predictions = estimator.predict(X)
-        except:
-            self._logger.log(
-                "Estimator is not fitted, defaulting to random predictions", _LE.INFO
-            )
-            #     # if not initialized, generate random docking scores (absolute)
-            predictions = np.random.uniform(12, 0, len(X))
-
-        # zero those predictions we've seen before
-        for idx in previous_idx:
-            predictions[idx] = 0
-        # smaller before n_instances, largest after
-        sorted_preds = np.argpartition(predictions, -n_instances, axis=0)[-n_instances:]
-        return sorted_preds
-
     def _initialize_learner(self):
         running_mode = self.settings.additional["running_mode"]
         if running_mode == "gpr":
@@ -234,12 +175,11 @@ class StepActiveLearning(StepBase, BaseModel):
             )
         elif running_mode == "random_forest":
             learner = ActiveLearner(
-                estimator=RandomForestRegressor(n_estimators=1000),
+                estimator=RandomForestRegressor(n_estimators=100),
                 query_strategy=self.greedy_acquisition,
             )
         elif running_mode == "ffnn":
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            # regressor = MLPRegressor(hidden_layer_sizes=(4096, 2048, 1024, 512))
             regressor = NeuralNetRegressor(
                 FeedForwardNet,
                 criterion=nn.MSELoss,
@@ -257,44 +197,6 @@ class StepActiveLearning(StepBase, BaseModel):
         else:
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
-
-    def execute(self):
-        tmp_dir = self._make_tmpdir()
-        lib, docking_scores = self._generate_library(
-            extract_property=self.settings.additional["evaluate"]
-        )
-        if docking_scores is not None:
-            top_1_percent = int(0.01 * len(docking_scores))
-            top_1_idx = np.argpartition(docking_scores, -top_1_percent)[-top_1_percent:]
-
-        learner = self._initialize_learner()
-
-        # if we are using a pre-calculated dataset for evaluation
-        if self.check_additional("debug"):
-            (val_lib, val_docking_scores) = self._generate_library(
-                extract_property=True
-            )
-
-            top_1_val = int(0.01 * len(val_docking_scores))
-            # extract indices of top1% of compounds
-            top_1_val = np.argpartition(docking_scores, -top_1_val)[-top_1_val:]
-            self._logger.log("Starting debug run...", _LE.DEBUG)
-            self._run_learning_loop(
-                learner=learner, lib=val_lib, debug=True, top_1_idx=list(top_1_val)
-            )
-        else:
-            self._run_learning_loop(
-                learner=learner,
-                lib=lib,
-                debug=False,
-                top_1_idx=list(top_1_idx),
-            )
-
-        # pickle the final model
-        with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
-            pickle.dump(learner, f)
-
-        self._parse_output(tmp_dir)
 
     def _run_learning_loop(
         self, learner, lib, debug: bool = False, top_1_idx: list = None
@@ -359,29 +261,40 @@ class StepActiveLearning(StepBase, BaseModel):
                 fraction_top1_hits.append(hits_queried)
         self._logger.log(f"Hits queried at each epoch:\n{fraction_top1_hits}", _LE.INFO)
 
-        # get the predictions
-        # val_predictions = learner.predict(val_compounds)
-        # mse = mean_squared_error(val_scores, val_predictions)
-        # self._logger.log(
-        #     f"Round {idx+1} Validation set rmsd: {np.sqrt(mse)}", _LE.INFO
-        # )
-        # self._logger.log(f"Predictions: \n{val_predictions[:5]}", _LE.INFO)
-        # self._logger.log(f"Actual: \n{val_scores[:5]}", _LE.INFO)
+    def execute(self):
+        tmp_dir = self._make_tmpdir()
+        lib, scores = self._parse_library(
+            extract_property=self.settings.additional["evaluate"]
+        )
+        if scores is not None:
+            top_1_percent = int(0.01 * len(scores))
+            top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
 
-        # produce tsne embedding
-        #     emb = self._pca.transform(learner.X_training)
-        #     axs[idx].scatter(emb[0], emb[1])
-        # if tmp_dir is not None:
-        #     fig.savefig(os.path.join(tmp_dir, "embeddings.png"))
+        learner = self._initialize_learner()
 
-    def _initialize_oracle_step_from_dict(self, step_conf: dict) -> StepBase:
-        # note this is a bit of a hack to get around a circular import, we can't use the main util
-        _STE = StepBaseEnum
-        step_type = nested_get(step_conf, _STE.STEP_TYPE, default=None)
-        step_type = None if step_type is None else step_type.upper()
-        if step_type in _IE.STEP_INIT_DICT.keys():
-            return _IE.STEP_INIT_DICT[step_type](**step_conf)
-        else:
-            raise ValueError(
-                f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
+        # if we are using a pre-calculated dataset for evaluation
+        if self.check_additional("debug"):
+            # (val_lib, val_docking_scores) = self._parse_library(
+            #     extract_property=True
+            # )
+
+            # top_1_val = int(0.01 * len(val_docking_scores))
+            # # extract indices of top1% of compounds
+            # top_1_val = np.argpartition(scores, -top_1_val)[-top_1_val:]
+            self._logger.log("Starting debug run...", _LE.DEBUG)
+            self._run_learning_loop(
+                learner=learner, lib=lib, debug=True, top_1_idx=list(top_1_idx)
             )
+        else:
+            self._run_learning_loop(
+                learner=learner,
+                lib=lib,
+                debug=False,
+                top_1_idx=list(top_1_idx),
+            )
+
+        # pickle the final model
+        with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
+            pickle.dump(learner, f)
+
+        self._parse_output(tmp_dir)
