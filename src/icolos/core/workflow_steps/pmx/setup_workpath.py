@@ -12,7 +12,7 @@ from icolos.utils.general.parallelization import SubtaskContainer
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 
-# These classes were inspired by the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
+# These classes are based on the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
 class StepPMXSetup(StepPMXBase, BaseModel):
     """
     Create the directory tree structure.
@@ -81,7 +81,8 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(nodes)
         self._execute_pmx_step_parallel(
-            run_func=self._parametrise_nodes, step_id="pmx_setup", 
+            run_func=self._parametrise_nodes,
+            step_id="pmx_setup",
         )
 
         # create the output folder structure

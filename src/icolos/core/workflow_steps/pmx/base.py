@@ -196,35 +196,17 @@ class StepPMXBase(StepBase, BaseModel):
 
     def _parametrisation_pipeline(self, tmp_dir, include_top=False, include_gro=False):
         # main pipeline for producing GAFF parameters for a ligand
-        arguments_antechamber = [
-            "-i",
-            "MOL.pdb",
-            "-o",
-            "MOL.mol2",
-            "-fi",
-            "pdb",
-            "-fo",
-            "mol2",
-            "-c",
-            "gas",
-        ]
-        self._logger.log(
-            f"Running antechamber on structure {tmp_dir.split('/')[-1]}", _LE.DEBUG
-        )
-        self._antechamber_executor.execute(
-            command=_GE.ANTECHAMBER,
-            arguments=arguments_antechamber,
-            check=True,
-            location=tmp_dir,
-        )
         charge_method = self.get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
         arguments_acpype = [
             "-di",
-            "MOL.mol2",
+            "MOL.pdb",
             "-c",
             charge_method,
+            "-a",
+            "gaff2",
+            "-o" "gmx",
         ]
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,
