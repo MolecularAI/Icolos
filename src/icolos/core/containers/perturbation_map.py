@@ -101,6 +101,7 @@ class PerturbationMap(BaseModel):
     protein: GenericData = None
     vmap_output: IFrame = None
     replicas: int = 3
+    node_df: pd.DataFrame = None
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -181,7 +182,7 @@ class PerturbationMap(BaseModel):
                 "Solvent dG",
             ],
         )
-        node_info = pd.DataFrame(
+        self.node_df = pd.DataFrame(
             data[start_node + 3 : stop_node - 1],
             index=None,
             columns=[
@@ -206,7 +207,7 @@ class PerturbationMap(BaseModel):
                 "BidirectionSnapCore",
             ],
         ).dropna()
-        for hash_id, node_id in zip(node_info["hash_id"], node_info["node_id"]):
+        for hash_id, node_id in zip(self.node_df["hash_id"], self.node_df["node_id"]):
             # map the hashes to the compound IDs
             self.hash_map[hash_id] = node_id
             node = Node(
