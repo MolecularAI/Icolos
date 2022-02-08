@@ -4,8 +4,9 @@ from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
 from icolos.core.containers.compound import Compound
-from icolos.core.containers.perturbation_map import Node, PerturbationMap
+from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
+from icolos.utils.enums.parallelization import ParallelizationEnum
 from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
@@ -19,6 +20,7 @@ import glob
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
+_PE = ParallelizationEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
@@ -281,20 +283,34 @@ class StepPMXBase(StepBase, BaseModel):
 
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
-            # # TODO: find a reliable way to sort this, ideally by inspecting log files
             if result_checker is not None:
                 batch_results = result_checker(jobs)
 
                 for task, result in zip(next_batch, batch_results):
+                    # returns boolean arrays: False => failed job
                     for subtask, sub_result in zip(task, result):
-                        if sub_result:
+                        if sub_result == False:
                             subtask.set_status_failed()
                             self._logger.log(
                                 f"Warning: job {subtask} failed!", _LE.WARNING
                             )
+                            if (
+                                self.get_perturbation_map().strict_execution
+                                and isinstance(subtask.data, str)
+                            ):
+                                edge = self.get_perturbation_map().get_edge_by_id(
+                                    subtask.data
+                                )
+                                print("got edge", edge)
+                                edge._set_status(_PE.STATUS_FAILED)
+                                print("setting status to failed!")
                         else:
                             subtask.set_status_success()
             else:
+                self._logger.log(
+                    f"Step {step_id} is running without a result checker - failed executions will be ignored!",
+                    _LE.WARNING,
+                )
                 for element in next_batch:
                     for subtask in element:
                         subtask.set_status_success()
@@ -389,6 +405,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
+            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
         )
         perturbation_map.parse_map_file(
             os.path.join(self.work_dir, log_file.get_file_name())

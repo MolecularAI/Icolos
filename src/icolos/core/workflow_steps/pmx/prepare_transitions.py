@@ -35,7 +35,9 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self.prepare_transitions, step_id="pmx prepare_transitions"
+            run_func=self.prepare_transitions,
+            step_id="pmx prepare_transitions",
+            result_checker=self._check_result,
         )
 
     def _extract_snapshots(self, eqpath, tipath):
@@ -136,7 +138,12 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             subjob_results = []
             for job in subjob:
                 subjob_results.append(
-                    all([os.path.isfile(os.path.join(job, f)) for f in output_files])
+                    all(
+                        [
+                            os.path.isfile(os.path.join(self.work_dir, job, f))
+                            for f in output_files
+                        ]
+                    )
                 )
             results.append(subjob_results)
         return results

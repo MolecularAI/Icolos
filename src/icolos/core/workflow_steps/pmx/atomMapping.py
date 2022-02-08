@@ -39,11 +39,12 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
             prepared_args.append(value)
         return prepared_args
 
-    def _execute_command(self, jobs: List[Edge]):
-        assert isinstance(jobs, list)
+    def _execute_command(self, jobs: List[str]):
+
         edge = jobs[0]
-        lig1 = edge.get_source_node_name()
-        lig2 = edge.get_destination_node_name()
+        parts = edge.split("_")
+        lig1 = parts[0]
+        lig2 = parts[1]
         # write them to the right dir as a pdb from the outset
         arguments = {
             "-i1": os.path.join(
@@ -59,7 +60,7 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
                 "MOL.pdb",
             ),
         }
-        output_dir = os.path.join(self.work_dir, edge.get_edge_id(), _PE.HYBRID_STR_TOP)
+        output_dir = os.path.join(self.work_dir, edge, _PE.HYBRID_STR_TOP)
         arguments = self._prepare_arguments(args=arguments, output_dir=output_dir)
 
         result = self._backend_executor.execute(
@@ -73,7 +74,7 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
         # check the workflow has been configured correctly to use a shared work_dir
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
 
-        edges = self.get_edges()
+        edges = [e.get_edge_id() for e in self.get_edges()]
         # enforce single edge per job queue
         self.execution.parallelization.max_length_sublists = 1
         self._subtask_container = SubtaskContainer(
@@ -99,7 +100,7 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(job.get_edge_id(), "hybridStrTop", f)
+                                os.path.join(self.work_dir, job, "hybridStrTop", f)
                             )
                             for f in output_files
                         ]

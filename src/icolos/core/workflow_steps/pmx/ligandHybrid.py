@@ -21,10 +21,11 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
         super().__init__(**data)
         self._initialize_backend(PMXExecutor)
 
-    def _execute_command(self, jobs: List[Edge]):
+    def _execute_command(self, jobs: List[str]):
         edge = jobs[0]
-        lig1 = edge.get_source_node_name()
-        lig2 = edge.get_destination_node_name()
+        parts = edge.split("_")
+        lig1 = parts[0]
+        lig2 = parts[1]
 
         arguments = {
             "-i1": os.path.join(
@@ -43,7 +44,7 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
             "-itp2": os.path.join(self.work_dir, _PAE.LIGAND_DIR, lig2, "MOL.itp"),
         }
         # write output files the hybridStrTop directory for each edge
-        output_dir = os.path.join(self.work_dir, edge.get_edge_id(), _PE.HYBRID_STR_TOP)
+        output_dir = os.path.join(self.work_dir, edge, _PE.HYBRID_STR_TOP)
         arguments = self._prepare_arguments(args=arguments, output_dir=output_dir)
         self._backend_executor.execute(
             command=_PE.LIGANDHYBRID,
@@ -82,14 +83,8 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
     def execute(self):
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
 
-        edges = self.get_edges()
-        total_edges = len(edges)
-        # for idx, edge in enumerate(edges):
-        #     progress = np.round(idx / total_edges * 100, 2)
-        #     self._logger.log(
-        #         f"Executing pmx ligandHybrid for edge {edge.get_edge_id()} - {progress}% complete",
-        #         _LE.DEBUG,
-        #     )
+        edges = [e.get_edge_id() for e in self.get_edges()]
+
         self.execution.parallelization.max_length_sublists = 1
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
@@ -101,7 +96,7 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
 
-    def _check_result(self, batch: List[List[Edge]]) -> List[List[bool]]:
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
         """
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
@@ -114,7 +109,7 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(job.get_edge_id(), "hybridStrTop", f)
+                                os.path.join(self.work_dir, job, "hybridStrTop", f)
                             )
                             for f in output_files
                         ]
