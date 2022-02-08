@@ -96,8 +96,32 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="ligandHybrid"
+            run_func=self._execute_command,
+            step_id="ligandHybrid",
+            result_checker=self._check_result,
         )
+
+    def _check_result(self, batch: List[List[Edge]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = ["ffmerged.itp", "mergedB.pdb", "mergedA.pdb"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(job.get_edge_id(), "hybridStrTop", f)
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results
 
 
 help_string = """

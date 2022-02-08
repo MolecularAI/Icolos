@@ -1,11 +1,11 @@
 # Update log
 
-### Version 1.6.0 | 2022-02-
-#### Features
-
+### Version 1.6.0 | 2022-02-04
 #### Internal
 - Unit tests fixed.
 - Improved stability for `AutoDock Vina` and `RDkit` embedding steps.
+- Change nomenclature for parallel step dispatch and Slurm interface
+- Improve error handling for PMX steps
 
 ### Version 1.5.0 | 2022-02-01
 #### Internal

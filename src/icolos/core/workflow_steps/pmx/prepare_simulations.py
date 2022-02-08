@@ -38,7 +38,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self.prepare_simulation, step_id="pmx prepare_simulations"
+            run_func=self.prepare_simulation,
+            step_id="pmx prepare_simulations",
+            result_checker=self._check_result,
         )
 
     def prepare_simulation(
@@ -101,3 +103,24 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
                 return "nvt"
             elif sim_type == "eq":
                 return "npt"
+
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        sim_type = self.settings.additional[_PSE.SIM_TYPE]
+        output_files = [
+            f"ligand/stateA/run1/{sim_type}/tpr.tpr",
+            f"ligand/stateB/run1/{sim_type}/tpr.tpr",
+            f"complex/stateA/run1/{sim_type}/tpr.tpr",
+            f"complex/stateB/run1/{sim_type}/tpr.tpr",
+        ]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all([os.path.isfile(os.path.join(job, f)) for f in output_files])
+                )
+            results.append(subjob_results)
+        return results
