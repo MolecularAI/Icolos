@@ -206,7 +206,8 @@ class StepPMXBase(StepBase, BaseModel):
             charge_method,
             "-a",
             "gaff2",
-            "-o" "gmx",
+            "-o",
+            "gmx",
         ]
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,
