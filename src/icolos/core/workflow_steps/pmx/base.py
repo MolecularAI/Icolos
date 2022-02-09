@@ -3,7 +3,7 @@ from selectors import EpollSelector
 from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
-from icolos.core.containers.compound import Compound
+from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.parallelization import ParallelizationEnum
@@ -16,6 +16,7 @@ from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
+from rdkit.Chem import rdmolops
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -196,10 +197,15 @@ class StepPMXBase(StepBase, BaseModel):
             with open(os.path.join(tmp_dir, file), "w") as f:
                 f.writelines(cleaned_lines)
 
-    def _parametrisation_pipeline(self, tmp_dir, include_top=False, include_gro=False):
+    def _parametrisation_pipeline(
+        self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
+    ):
         # main pipeline for producing GAFF parameters for a ligand
         charge_method = self.get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
+        )
+        formal_charge = (
+            rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
         )
         arguments_acpype = [
             "-di",
@@ -208,7 +214,8 @@ class StepPMXBase(StepBase, BaseModel):
             charge_method,
             "-a",
             "gaff2",
-            "-o" "gmx",
+            "-o",
+            "gmx",
         ]
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,

@@ -58,6 +58,7 @@ class PATHS_1UYD:
     GRID_CONSTRAINTS_PATH = expand_path("Glide/1UYD_grid_constraints.zip")
     PDBQT_PATH = expand_path("AutoDockVina/1UYD_fixed.pdbqt")
     PDB_PATH = expand_path("molecules/1UYD/1UYD_apo.pdb")
+    HOLO_PDB = expand_path("molecules/1UYD/1UYD_holo.pdb")
     APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
     NATIVE_LIGAND_SDF = expand_path("molecules/1UYD/PU8_native_ligand.sdf")

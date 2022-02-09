@@ -12,6 +12,7 @@ import os
 import re
 from typing import AnyStr, List
 from string import ascii_uppercase
+from rdkit import Chem
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
@@ -147,35 +148,25 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         charge_method = self.get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
+        conf = Chem.rdmolfiles.MolFromPDBFile(os.path.join(tmp_dir, input_pdb))
+        formal_charge = Chem.rdmolops.GetFormalCharge(conf) if conf is not None else 0
         stub = input_pdb.split(".")[0]
-        output_file = stub + ".mol2"
-        arguments_antechamber = [
-            "-i",
-            input_pdb,
-            "-o",
-            output_file,
-            "-fi",
-            "pdb",
-            "-fo",
-            "mol2",
-            "-c",
-            charge_method,
-        ]
-        self._logger.log(f"Running antechamber on structure {input_pdb}", _LE.DEBUG)
-        self._antechamber_executor.execute(
-            command=_GE.ANTECHAMBER,
-            arguments=arguments_antechamber,
-            check=True,
-            location=tmp_dir,
+        self._logger.log(
+            f"Computed formal charge: {formal_charge} for structure {input_pdb}",
+            _LE.DEBUG,
         )
 
         # Step 4: run the acpype script to generate the ligand topology file for GAFF
         self._logger.log(f"Running acpype on structure {input_pdb}", _LE.DEBUG)
         acpype_args = [
             "-di",
-            output_file,
+            input_pdb,
             "-c",
             charge_method,
+            "-o",
+            "gmx",
+            "-n",
+            formal_charge,
         ]
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,

@@ -13,18 +13,16 @@ import os
 # Note that this implementation leverages parmed for now, although will likely move over to the OpenFF Interchange tooling once stable
 _SOFE = StepOpenFFEnum()
 
-
+# TOOD: Eventually this step should be able to do a pdb2gmx job
 class StepOFF2gmx(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def execute(self):
+    def parametrise_mols(self, tmp_dir: str):
         """
-        Builds a system and parametrise using OpenFF SAGE params, then convert to a GROMACS top/gro format for downstream simulation
+        Generate parameters for each mol
         """
-        tmp_dir = self._make_tmpdir()
-        self.data.generic.write_out_all_files(tmp_dir)
-
+        # TODO: do we want to throw everything together or split the params into separate files?
         mols = [
             Molecule.from_smiles(smi)
             for smi in self.get_additional_setting(_SOFE.UNIQUE_MOLS)
@@ -44,8 +42,8 @@ class StepOFF2gmx(StepBase, BaseModel):
             parmed_struct = parmed.openmm.load_topology(
                 omm_topology, omm_system, pdb_file.positions
             )
-            parmed_struct.save(os.path.join(tmp_dir, "system.top"), overwrite=True)
-            parmed_struct.save(os.path.join(tmp_dir, "system.gro"), overwrite=True)
+            parmed_struct.save(os.path.join(tmp_dir, "MOL.top"), overwrite=True)
+            parmed_struct.save(os.path.join(tmp_dir, "MOL.gro"), overwrite=True)
 
             # TODO: validate energy differences
 
@@ -54,5 +52,17 @@ class StepOFF2gmx(StepBase, BaseModel):
         else:
             raise NotImplementedError
 
+    def execute(self):
+        """
+        Builds a system and parametrise using OpenFF SAGE params, then convert to a GROMACS top/gro format for downstream simulation
+        """
+        tmp_dir = self._make_tmpdir()
+        self.data.generic.write_out_all_files(tmp_dir)
+
+        self.parametrise_mols(tmp_dir)
+
         self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)
+
+
+# If we want to build OpenFF params instead of gaff, we would need to make a call to a different parametrisation pipeline, then load the protein into a ParmEd System, combine with the OpenFF-built system and combine into a gro/top file.
