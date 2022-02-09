@@ -205,7 +205,10 @@ class StepPMXBase(StepBase, BaseModel):
         formal_charge = (
             rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
         )
-        print(formal_charge)
+        self._logger.log(
+            f"Formal charge for ligand {conf.get_compound_name()}: {formal_charge}",
+            _LE.DEBUG,
+        )
         arguments_acpype = [
             "-di",
             "MOL.pdb",
