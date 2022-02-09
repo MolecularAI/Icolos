@@ -730,6 +730,14 @@ class StepGromacsEnum:
         raise ValueError("No changes allowed.")
 
 
+class StepOpenFFEnum:
+    UNIQUE_MOLS = "unique_molecules"
+    METHOD = "method"
+    PARMED = "parmed"
+    INTERCHANGE = "interchange"
+    FORCEFIELD = "forcefield"
+
+
 class StepCavExploreEnum:
     FIELD_KEY_DTR = "dtr"
     FIELD_KEY_CMS = "cms"

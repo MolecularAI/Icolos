@@ -19,7 +19,8 @@ try:
         attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
-except:
+except Exception as e:
+    print(e)
     MAIN_CONFIG = {}
 
 
