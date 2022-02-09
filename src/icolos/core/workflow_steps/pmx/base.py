@@ -209,6 +209,7 @@ class StepPMXBase(StepBase, BaseModel):
             "-o",
             "gmx",
         ]
+        self._logger.log("Generating ligand parameters...", _LE.DEBUG)
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,
             arguments=arguments_acpype,
