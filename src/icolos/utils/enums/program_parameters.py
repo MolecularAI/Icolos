@@ -1351,6 +1351,8 @@ class StepPMXEnum:
     ABFE = "abfe"
     RBFE = "rbfe"
 
+    STRICT = "strict"
+
 
 class PMXAtomMappingEnum:
 

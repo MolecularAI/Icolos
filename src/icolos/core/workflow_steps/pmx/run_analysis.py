@@ -41,7 +41,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self.run_analysis, step_id="pmx_run_analysis"
+            run_func=self.run_analysis,
+            step_id="pmx_run_analysis",
+            result_checker=self._check_result,
         )
         self.analysis_summary(edges)
 
@@ -309,7 +311,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 subjob_results.append(
                     all(
                         [
-                            os.path.isfile(os.path.join(job, "analyse1", f))
+                            os.path.isfile(
+                                os.path.join(self.work_dir, job, "analyse1", f)
+                            )
                             for f in output_files
                         ]
                     )

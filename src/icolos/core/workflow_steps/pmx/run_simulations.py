@@ -1,7 +1,4 @@
-from importlib.resources import path
-from subprocess import CompletedProcess
-from typing import Dict, List
-from icolos.core.containers.perturbation_map import Edge
+from typing import List
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
@@ -210,6 +207,8 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
                 with open(location, "r") as f:
                     lines = f.readlines()
-                subtask_results.append(any(["Finished mdrun" in l for l in lines]))
+                subtask_results.append(
+                    any(["Finished mdrun" in l for l in lines[-20:]])
+                )
             results.append(subtask_results)
         return results
