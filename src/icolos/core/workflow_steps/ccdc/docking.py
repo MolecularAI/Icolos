@@ -112,7 +112,6 @@ class StepGold(StepBase, BaseModel):
         for next_subtask_list in batch:
             # generate temporary input files and output directory
             cur_tmp_output_dir = tempfile.mkdtemp()
-            _, cur_tmp_mae = gen_tmp_file(suffix=".mae", dir=cur_tmp_output_dir)
 
             # write-out the temporary input files: one molecule per file each
             one_written = False
@@ -160,13 +159,12 @@ class StepGold(StepBase, BaseModel):
                 tmp_input_paths,
                 tmp_output_paths
             ) = self._generate_temporary_input_output_files(next_batch)
-            print(tmp_output_dirs)
 
             # execute the current batch in parallel; hand over lists of parameters (will be handled by Parallelizer)
             # also increment the tries and set the status to "failed" (don't do that inside subprocess, as data is
             # copied, not shared!)
-            #_ = [sub.increment_tries() for element in next_batch for sub in element]
-            #_ = [sub.set_status_failed() for element in next_batch for sub in element]
+            _ = [sub.increment_tries() for element in next_batch for sub in element]
+            _ = [sub.set_status_failed() for element in next_batch for sub in element]
             #adv_parallelizer.execute_parallel(
             #    input_path_pdbqt=tmp_input_paths, output_path_sdf=tmp_output_paths
             #)
@@ -180,10 +178,10 @@ class StepGold(StepBase, BaseModel):
             #)
 
             # clean-up
-            #self._remove_temporary(tmp_output_dirs)
+            self._remove_temporary(tmp_output_dirs)
 
             # print the progress for this execution
-            #self._log_execution_progress()
+            self._log_execution_progress()
 
     def _parse_adv_output_batch(
         self,

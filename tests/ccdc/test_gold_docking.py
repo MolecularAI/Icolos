@@ -25,7 +25,7 @@ class Test_Gold_docking(unittest.TestCase):
 
     def setUp(self):
         self._1UYD_compounds = get_1UYD_ligands_as_Compounds(
-            abs_path=PATHS_EXAMPLEDATA.PARACETAMOL_PATH
+            abs_path=PATHS_1UYD.LIGANDS
         )
         self.receptor_path = PATHS_1UYD.PDBQT_PATH
 
@@ -101,6 +101,7 @@ class Test_Gold_docking(unittest.TestCase):
         }
 
         gold_step = StepGold(**step_conf)
+        gold_step.data.compounds = self._1UYD_compounds
         gold_step.execute()
 
 
