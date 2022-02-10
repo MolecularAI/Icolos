@@ -405,12 +405,24 @@ class StepPredictorEnum:
 class StepGoldEnum:
 
     CONFIGURATION = "configuration"
+    BLOCK_INDENT = "  "
+    CONFIGURATION_START = "GOLD CONFIGURATION FILE"
+    AUTOMATIC_SETTINGS = "AUTOMATIC SETTINGS"
+    AUTOSCALE = "autoscale"
+    POPULATION = "POPULATION"
+    GENETIC_OPERATORS = "GENETIC OPERATORS"
     FLOOD_FILL = "FLOOD FILL"
     CAVITY_FILE = "cavity_file"
     DATA_FILES = "DATA FILES"
     LIGAND_DATA_FILE = "ligand_data_file"
+    FLAGS = "FLAGS"
+    TERMINATION = "TERMINATION"
+    CONSTRAINTS = "CONSTRAINTS"
+    COVALENT_BONDING = "COVALENT BONDING"
+    SAVE_OPTIONS = "SAVE OPTIONS"
+    FITNESS_FUNCTION_SETTINGS = "FITNESS FUNCTION SETTINGS"
     PROTEIN_DATA = "PROTEIN DATA"
-    PROTEIN_DATA_FILE = "protein_data_file"
+    PROTEIN_DATAFILE = "protein_datafile"
 
     # try to find the internal value and return
     def __getattr__(self, name):

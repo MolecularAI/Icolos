@@ -19,7 +19,7 @@ _SGE = StepGoldEnum()
 class Test_Gold_docking(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._test_dir = attach_root_path("tests/junk/ADV")
+        cls._test_dir = attach_root_path("tests/junk/Gold")
         if not os.path.isdir(cls._test_dir):
             os.makedirs(cls._test_dir)
 
@@ -43,14 +43,14 @@ class Test_Gold_docking(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SGE.CONFIGURATION: {
-                        _SGE.DATA_FILES: {
-                            _SGE.LIGAND_DATA_FILE: ["nope"]
+                        _SGE.AUTOMATIC_SETTINGS: {
+                            _SGE.AUTOSCALE: 0.5
                         },
                         _SGE.FLOOD_FILL: {
                             _SGE.CAVITY_FILE: "whatever"
                         },
                         _SGE.PROTEIN_DATA: {
-                            _SGE.PROTEIN_DATA_FILE: "string"
+                            _SGE.PROTEIN_DATAFILE: "string"
                         }
                     }
                 },
@@ -58,10 +58,19 @@ class Test_Gold_docking(unittest.TestCase):
         }
 
         gold_step = StepGold(**step_conf)
-        gold_step.data.compounds = self._1UYD_compounds
 
-        config_path = os.path.join(self._test_dir, "test_config.json")
-        gold_step.generate_config_file(config_path)
+        # check the two mandatory settings and one "overwrite"
+        self.assertEqual(gold_step.gold_additional.configuration.flood_fill.cavity_file, "whatever")
+        self.assertEqual(gold_step.gold_additional.configuration.protein_data.protein_datafile, "string")
+        self.assertEqual(gold_step.gold_additional.configuration.automatic_settings.autoscale, 0.5)
+
+        # check config file size
+        config_path = os.path.join(self._test_dir, "test_config.cfg")
+        gold_step.generate_config_file(config_path,
+                                       ["/a/path/to/an/SDF/with/a/compound.sdf",
+                                        "/another/path.sdf"])
+        stat_inf = os.stat(config_path)
+        self.assertGreater(stat_inf.st_size, 1400)
 
     def test_docking(self):
 

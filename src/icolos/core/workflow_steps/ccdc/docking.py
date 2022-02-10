@@ -86,8 +86,8 @@ class StepGold(StepBase, BaseModel):
         self._initialize_backend(executor=GoldExecutor)
         self._check_backend_availability()
 
-        # set ADV specific settings and ensure that each molecule gets its own sublist
-        #self.adv_additional = ADVAdditional(**self.settings.additional)
+        # set Gold specific settings
+        self.gold_additional = GoldAdditional(**self.settings.additional)
 
     def _set_docking_score(self, conformer: Chem.Mol) -> bool:
         try:
@@ -101,31 +101,6 @@ class StepGold(StepBase, BaseModel):
             return False
         conformer.SetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE, str(docking_score))
         return True
-
-    def _write_molecule_to_pdbqt(self, path: str, molecule: Chem.Mol) -> bool:
-        # generate temporary copy as PDB
-        _, tmp_pdb = gen_tmp_file(suffix=".pdb", dir=os.path.dirname(path))
-        Chem.MolToPDBFile(molecule, filename=tmp_pdb)
-
-        # translate the pdb into a pdbqt including partial charges
-        # Note: In contrast to the target preparation,
-        # we will use a tree-based flexibility treatment here -
-        # thus, the option "-xr" is NOT used.
-        arguments = [
-            tmp_pdb,
-            _OBE.OBABEL_OUTPUT_FORMAT_PDBQT,
-            "".join([_OBE.OBABEL_O, path]),
-            _OBE.OBABEL_PARTIALCHARGE,
-            _OBE.OBABEL_PARTIALCHARGE_GASTEIGER,
-        ]
-        self._openbabel_executor.execute(
-            command=_OBE.OBABEL, arguments=arguments, check=False
-        )
-
-        if os.path.exists(path):
-            return True
-        else:
-            return False
 
     def _generate_temporary_input_output_files(
         self, batch: List[List[Subtask]]
@@ -325,8 +300,92 @@ class StepGold(StepBase, BaseModel):
         )
         self._delay_file_system(path=output_path_sdf)
 
-    def generate_config_file(self, path: str):
-        pass
+    def generate_config_file(self, path: str, ligand_files: List[str]):
+        # very complicated custom format for GOLD; see file in "external_documentation/gold.conf" for details
+        # TODO: constraints are not yet supported (and probably a few other fine-grained settings)
+        def block_indent(block_name: str) -> str:
+            return "".join([_SGE.BLOCK_INDENT, block_name])
+
+        def empty_line() -> str:
+            return ""
+
+        def add_block(list_lines: List[str], block: dict):
+            for key, value in block.items():
+                if key == _SGE.LIGAND_DATA_FILE:
+                    # this needs to be overwritten by the actual compound collection
+                    self._logger.log(f"Do not set ligand data files explicitly, use the compound handover - skipping.",
+                                     _LE.WARNING)
+                    continue
+                list_lines.append(' '.join([key, '=', str(value)]))
+
+        config = [block_indent(_SGE.CONFIGURATION_START), empty_line()]
+
+        # automatic settings
+        config.append(block_indent(_SGE.AUTOMATIC_SETTINGS))
+        add_block(config, self.gold_additional.configuration.automatic_settings.dict())
+        config.append(empty_line())
+
+        # population
+        config.append(block_indent(_SGE.POPULATION))
+        add_block(config, self.gold_additional.configuration.population.dict())
+        config.append(empty_line())
+
+        # genetic operators
+        config.append(block_indent(_SGE.GENETIC_OPERATORS))
+        add_block(config, self.gold_additional.configuration.genetic_operators.dict())
+        config.append(empty_line())
+
+        # flood fill
+        config.append(block_indent(_SGE.FLOOD_FILL))
+        add_block(config, self.gold_additional.configuration.flood_fill.dict())
+        config.append(empty_line())
+
+        # data files
+        config.append(block_indent(_SGE.DATA_FILES))
+        for ligand_file in ligand_files:
+            config.append(' '.join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
+        add_block(config, self.gold_additional.configuration.data_files.dict())
+        config.append(empty_line())
+
+        # flags
+        config.append(block_indent(_SGE.FLAGS))
+        add_block(config, self.gold_additional.configuration.flags.dict())
+        config.append(empty_line())
+
+        # termination
+        config.append(block_indent(_SGE.TERMINATION))
+        add_block(config, self.gold_additional.configuration.termination.dict())
+        config.append(empty_line())
+
+        # constraints
+        config.append(block_indent(_SGE.CONSTRAINTS))
+        add_block(config, self.gold_additional.configuration.constraints.dict())
+        config.append(empty_line())
+
+        # covalent bonding
+        config.append(block_indent(_SGE.COVALENT_BONDING))
+        add_block(config, self.gold_additional.configuration.covalent_bonding.dict())
+        config.append(empty_line())
+
+        # save options
+        config.append(block_indent(_SGE.SAVE_OPTIONS))
+        add_block(config, self.gold_additional.configuration.save_options.dict())
+        config.append(empty_line())
+
+        # fitness function settings
+        config.append(block_indent(_SGE.FITNESS_FUNCTION_SETTINGS))
+        add_block(config, self.gold_additional.configuration.fitness_function_settings.dict())
+        config.append(empty_line())
+
+        # protein data
+        config.append(block_indent(_SGE.PROTEIN_DATA))
+        add_block(config, self.gold_additional.configuration.protein_data.dict())
+        config.append(empty_line())
+
+        # write out
+        with open(path, 'w') as f:
+            for line in config:
+                f.write(line + "\n")
 
     def execute(self):
         # Note: This step only supports one grid at a time, ensemble docking is taken care of at the workflow level!
