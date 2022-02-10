@@ -83,9 +83,9 @@ class StepSchrodingerBase(StepBase, BaseModel):
 
     def _replace_config_value(self, key, value, config):
         value = str(value)
-        pattern = fr"({key} =).*"
+        pattern = rf"({key} =).*"
         pattern = re.compile(pattern)
-        config = re.sub(pattern, fr"\1 {value}", config)
+        config = re.sub(pattern, rf"\1 {value}", config)
         return config
 
     def _get_template(self, file_name):

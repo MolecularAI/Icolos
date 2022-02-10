@@ -368,8 +368,6 @@ class GoldEnum:
 
 class GoldOutputEnum:
 
-
-
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:

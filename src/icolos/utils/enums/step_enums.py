@@ -404,6 +404,14 @@ class StepPredictorEnum:
 
 class StepGoldEnum:
 
+    CONFIGURATION = "configuration"
+    FLOOD_FILL = "FLOOD FILL"
+    CAVITY_FILE = "cavity_file"
+    DATA_FILES = "DATA FILES"
+    LIGAND_DATA_FILE = "ligand_data_file"
+    PROTEIN_DATA = "PROTEIN DATA"
+    PROTEIN_DATA_FILE = "protein_data_file"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:
@@ -927,8 +935,6 @@ class StepAutoDockVinaTargetPreparationEnum:
 
 
 class StepGoldTargetPreparationEnum:
-
-
 
     # try to find the internal value and return
     def __getattr__(self, name):

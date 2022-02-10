@@ -106,10 +106,10 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
 
                 # catch cases where ions have non-standard residue names e.g. NA3
                 elif parts[3][:2] in _GE.IONS and re.findall(
-                    re.compile(fr"{parts[3][:2]}[0-9]+"), line
+                    re.compile(rf"{parts[3][:2]}[0-9]+"), line
                 ):
 
-                    pattern = fr"{parts[3][:2]}[0-9]+"
+                    pattern = rf"{parts[3][:2]}[0-9]+"
                     pattern = re.compile(pattern)
 
                     line = re.sub(pattern, parts[3][:2], line)

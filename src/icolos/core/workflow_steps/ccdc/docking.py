@@ -17,7 +17,20 @@ from icolos.core.containers.compound import Conformer
 from icolos.utils.enums.program_parameters import GoldOutputEnum, GoldEnum
 from icolos.core.workflow_steps.step import _LE, StepBase
 from icolos.utils.general.parallelization import Subtask, SubtaskContainer, Parallelizer
-from icolos.core.step_utils.gold_config import *
+from icolos.core.step_utils.gold_config import (
+    ConfigAutomaticSettings,
+    ConfigPopulation,
+    ConfigGeneticOperators,
+    ConfigFloodFill,
+    ConfigDataFiles,
+    ConfigFlags,
+    ConfigProteinData,
+    ConfigFitnessFunctionSettings,
+    ConfigSaveOptions,
+    ConfigCovalentBonding,
+    ConfigConstraints,
+    ConfigTermination,
+)
 
 _SBE = StepBaseEnum
 _CGE = GoldEnum()
@@ -26,19 +39,34 @@ _GOE = GoldOutputEnum()
 
 
 class GoldConfiguration(BaseModel):
-    automatic_settings: ConfigAutomaticSettings = Field(alias="AUTOMATIC SETTINGS", default=ConfigAutomaticSettings())
+    automatic_settings: ConfigAutomaticSettings = Field(
+        alias="AUTOMATIC SETTINGS", default=ConfigAutomaticSettings()
+    )
     population: ConfigPopulation = Field(alias="POPULATION", default=ConfigPopulation())
-    genetic_operators: ConfigGeneticOperators = Field(alias="GENETIC OPERATORS", default=ConfigGeneticOperators())
-    flood_fill: ConfigFloodFill = Field(alias="FLOOD FILL", default=ConfigFloodFill())
+    genetic_operators: ConfigGeneticOperators = Field(
+        alias="GENETIC OPERATORS", default=ConfigGeneticOperators()
+    )
+    flood_fill: ConfigFloodFill = Field(alias="FLOOD FILL", default=None)
     data_files: ConfigDataFiles = Field(alias="DATA FILES", default=ConfigDataFiles())
     flags: ConfigFlags = Field(alias="FLAGS", default=ConfigFlags())
-    termination: ConfigTermination = Field(alias="TERMINATION", default=ConfigTermination())
-    constraints: ConfigConstraints = Field(alias="CONSTRAINTS", default=ConfigConstraints())
-    covalent_bonding: ConfigCovalentBonding = Field(alias="COVALENT BONDING", default=ConfigCovalentBonding())
-    save_options: ConfigSaveOptions = Field(alias="SAVE OPTIONS", default=ConfigSaveOptions())
-    fitness_function_settings: ConfigFitnessFunctionSettings = Field(alias="FITNESS FUNCTION SETTINGS",
-                                                                     default=ConfigFitnessFunctionSettings())
-    protein_data: ConfigProteinData = Field(alias="PROTEIN DATA", default=ConfigProteinData())
+    termination: ConfigTermination = Field(
+        alias="TERMINATION", default=ConfigTermination()
+    )
+    constraints: ConfigConstraints = Field(
+        alias="CONSTRAINTS", default=ConfigConstraints()
+    )
+    covalent_bonding: ConfigCovalentBonding = Field(
+        alias="COVALENT BONDING", default=ConfigCovalentBonding()
+    )
+    save_options: ConfigSaveOptions = Field(
+        alias="SAVE OPTIONS", default=ConfigSaveOptions()
+    )
+    fitness_function_settings: ConfigFitnessFunctionSettings = Field(
+        alias="FITNESS FUNCTION SETTINGS", default=ConfigFitnessFunctionSettings()
+    )
+    protein_data: ConfigProteinData = Field(
+        alias="PROTEIN DATA", default=None
+    )
 
 
 class GoldAdditional(BaseModel):
@@ -55,19 +83,11 @@ class StepGold(StepBase, BaseModel):
         super().__init__(**data)
 
         # initialize the executor and test availability
-        self._initialize_backend(executor=AutoDockVinaExecutor)
+        self._initialize_backend(executor=GoldExecutor)
         self._check_backend_availability()
 
-        # initialize the executor for all "OpenBabel"
-        self._openbabel_executor = OpenBabelExecutor()
-        if not self._openbabel_executor.is_available():
-            raise StepFailed(
-                "AutoDock Vina requires OpenBabel execution, initialization failed."
-            )
-
         # set ADV specific settings and ensure that each molecule gets its own sublist
-        self.adv_additional = ADVAdditional(**self.settings.additional)
-        self.execution.parallelization.max_length_sublists = 1
+        #self.adv_additional = ADVAdditional(**self.settings.additional)
 
     def _set_docking_score(self, conformer: Chem.Mol) -> bool:
         try:
@@ -305,6 +325,9 @@ class StepGold(StepBase, BaseModel):
         )
         self._delay_file_system(path=output_path_sdf)
 
+    def generate_config_file(self, path: str):
+        pass
+
     def execute(self):
         # Note: This step only supports one grid at a time, ensemble docking is taken care of at the workflow level!
 
@@ -324,9 +347,6 @@ class StepGold(StepBase, BaseModel):
 
         # execute ADV
         self._execute_autodockvina()
-
-
-
 
 
 """import os

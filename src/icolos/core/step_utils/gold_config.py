@@ -28,6 +28,7 @@ class ConfigConstraints(BaseModel):
     # TODO: extend to support constrained docking
     force_constraints: int = 0
 
+
 class ConfigTermination(BaseModel):
     early_termination: int = 1
     n_top_solutions: int = 3
@@ -53,7 +54,7 @@ class ConfigDataFiles(BaseModel):
     param_file: str = "DEFAULT"
     set_ligand_atom_types: int = 1
     set_protein_atom_types: int = 0
-    directory: str = '.'
+    directory: str = "."
     tordist_file: str = "DEFAULT"
     make_subdirs: int = 0
     save_lone_pairs: int = 1
@@ -86,6 +87,12 @@ class ConfigPopulation(BaseModel):
 
 
 class ConfigAutomaticSettings(BaseModel):
-    autoscale: float = 1.0                         # between 0 (off) and 5.0 (the larger the slower but more sampling)
-    autoscale_nops_max: float = 0                  # maximum value for autoscale operations (0 means off)
-    autoscale_nops_min: float = 0                  # minimum value for autoscale operations (0 means off)
+    autoscale: float = (
+        1.0  # between 0 (off) and 5.0 (the larger the slower but more sampling)
+    )
+    autoscale_nops_max: float = (
+        0  # maximum value for autoscale operations (0 means off)
+    )
+    autoscale_nops_min: float = (
+        0  # minimum value for autoscale operations (0 means off)
+    )
