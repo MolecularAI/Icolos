@@ -77,7 +77,7 @@ class TurbomoleEnum:
     CT_COSMOTHERM_TAB_ENDING = "cosmother.tab"
 
     CT_CONFIG = "cosmotherm_config"
-    CT_CONFIG_DEFAULTPATH = "icolos/config/cosmo/default_cosmo.config"
+    CT_CONFIG_DEFAULTPATH = "src/icolos/config/cosmo/default_cosmo.config"
 
     # control script fields
     # ---------
