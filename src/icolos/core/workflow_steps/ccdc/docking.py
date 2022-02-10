@@ -103,58 +103,52 @@ class StepGold(StepBase, BaseModel):
         return True
 
     def _generate_temporary_input_output_files(
-        self, batch: List[List[Subtask]]
-    ) -> Tuple[List[str], List[str], List[str], List[str]]:
+            self, batch: List[List[Subtask]]
+    ) -> Tuple[List[str], List[List[str]], List[List[str]]]:
         tmp_output_dirs = []
-        tmp_input_paths = []
-        tmp_output_paths = []
-        enumeration_ids = []
+        tmp_input_sdf_paths = []
+        tmp_output_sdf_paths = []
 
         for next_subtask_list in batch:
-            # for "AutoDock Vina", only single molecules can be handled so every sublist is
-            # guaranteed at this stage to have only one element
-            if len(next_subtask_list) > 1:
-                self._logger.log(
-                    f"Subtask list length for ADV is > 1 ({len(next_subtask_list)}), only the first element will be processed.",
-                    _LE.WARNING,
-                )
-            subtask = next_subtask_list[0]
-
             # generate temporary input files and output directory
             cur_tmp_output_dir = tempfile.mkdtemp()
-            _, cur_tmp_input_pdbqt = gen_tmp_file(
-                suffix=".pdbqt", dir=cur_tmp_output_dir
-            )
-            _, cur_tmp_output_sdf = gen_tmp_file(suffix=".sdf", dir=cur_tmp_output_dir)
+            _, cur_tmp_mae = gen_tmp_file(suffix=".mae", dir=cur_tmp_output_dir)
 
-            # try to write the enumeration molecules out as PDBQT files
-            enumeration = subtask.data
-            mol = deepcopy(enumeration.get_molecule())
-            if mol is None:
-                shutil.rmtree(cur_tmp_output_dir)
-                self._logger.log(
-                    f"Enumeration {enumeration.get_index_string()} did not hold a valid RDkit molecule - skipped.",
-                    _LE.DEBUG,
-                )
-                continue
-            if not self._write_molecule_to_pdbqt(cur_tmp_input_pdbqt, mol):
-                self._logger.log(
-                    f"Could not generate PDBQT intermediate file from enumeration {enumeration.get_index_string()} - skipped.",
-                    _LE.DEBUG,
-                )
+            # write-out the temporary input files: one molecule per file each
+            one_written = False
+            list_input_files = []
+            list_output_files = []
+            for subtask in next_subtask_list:
+                enumeration = subtask.data
+                mol = deepcopy(enumeration.get_molecule())
+                if mol is not None:
+                    _, cur_tmp_sdf = gen_tmp_file(suffix=".sdf", dir=cur_tmp_output_dir)
+                    writer = Chem.SDWriter(cur_tmp_sdf)
+                    mol.SetProp("_Name", enumeration.get_index_string())
+                    writer.write(mol)
+                    writer.close()
+                    list_input_files.append(cur_tmp_sdf)
+                    list_output_files.append(os.path.join(cur_tmp_output_dir, "whatever_",
+                                                          enumeration.get_index_string(), ".sdf"))
+                    one_written = True
+            if one_written is False:
+                # no compound left from this batch: remove the temporary folder and skip this one
+                self._remove_temporary(cur_tmp_output_dir)
                 continue
 
-            # also store all the paths in case it succeeded -> these will be used later, failures will be ignored
+            # since all went well, add input and output paths here
+            tmp_input_sdf_paths.append(list_input_files)
+            tmp_output_sdf_paths.append(list_output_files)
             tmp_output_dirs.append(cur_tmp_output_dir)
-            tmp_input_paths.append(cur_tmp_input_pdbqt)
-            tmp_output_paths.append(cur_tmp_output_sdf)
-            enumeration_ids.append(enumeration.get_index_string())
+        return (
+            tmp_output_dirs,
+            tmp_input_sdf_paths,
+            tmp_output_sdf_paths
+        )
 
-        return tmp_output_dirs, tmp_input_paths, tmp_output_paths, enumeration_ids
-
-    def _execute_autodockvina(self):
+    def _execute_gold(self):
         # get number of sublists in batch and initialize Parallelizer
-        adv_parallelizer = Parallelizer(func=self._run_subjob)
+        gold_parallelizer = Parallelizer(func=self._run_subjob)
 
         # continue until everything is successfully done or number of retries have been exceeded
         while self._subtask_container.done() is False:
@@ -164,32 +158,32 @@ class StepGold(StepBase, BaseModel):
             (
                 tmp_output_dirs,
                 tmp_input_paths,
-                tmp_output_paths,
-                enumeration_ids,
+                tmp_output_paths
             ) = self._generate_temporary_input_output_files(next_batch)
+            print(tmp_output_dirs)
 
             # execute the current batch in parallel; hand over lists of parameters (will be handled by Parallelizer)
             # also increment the tries and set the status to "failed" (don't do that inside subprocess, as data is
             # copied, not shared!)
-            _ = [sub.increment_tries() for element in next_batch for sub in element]
-            _ = [sub.set_status_failed() for element in next_batch for sub in element]
-            adv_parallelizer.execute_parallel(
-                input_path_pdbqt=tmp_input_paths, output_path_sdf=tmp_output_paths
-            )
+            #_ = [sub.increment_tries() for element in next_batch for sub in element]
+            #_ = [sub.set_status_failed() for element in next_batch for sub in element]
+            #adv_parallelizer.execute_parallel(
+            #    input_path_pdbqt=tmp_input_paths, output_path_sdf=tmp_output_paths
+            #)
 
             # parse the output of that particular batch and remove temporary files
-            self._parse_adv_output_batch(
-                tmp_input_paths=tmp_input_paths,
-                tmp_output_paths=tmp_output_paths,
-                enumeration_ids=enumeration_ids,
-                next_batch=next_batch,
-            )
+            #self._parse_adv_output_batch(
+            #    tmp_input_paths=tmp_input_paths,
+            #    tmp_output_paths=tmp_output_paths,
+            #    enumeration_ids=enumeration_ids,
+            #    next_batch=next_batch,
+            #)
 
             # clean-up
-            self._remove_temporary(tmp_output_dirs)
+            #self._remove_temporary(tmp_output_dirs)
 
             # print the progress for this execution
-            self._log_execution_progress()
+            #self._log_execution_progress()
 
     def _parse_adv_output_batch(
         self,
@@ -317,70 +311,59 @@ class StepGold(StepBase, BaseModel):
                                      _LE.WARNING)
                     continue
                 list_lines.append(' '.join([key, '=', str(value)]))
+            list_lines.append(empty_line())
 
         config = [block_indent(_SGE.CONFIGURATION_START), empty_line()]
 
         # automatic settings
         config.append(block_indent(_SGE.AUTOMATIC_SETTINGS))
         add_block(config, self.gold_additional.configuration.automatic_settings.dict())
-        config.append(empty_line())
 
         # population
         config.append(block_indent(_SGE.POPULATION))
         add_block(config, self.gold_additional.configuration.population.dict())
-        config.append(empty_line())
 
         # genetic operators
         config.append(block_indent(_SGE.GENETIC_OPERATORS))
         add_block(config, self.gold_additional.configuration.genetic_operators.dict())
-        config.append(empty_line())
 
         # flood fill
         config.append(block_indent(_SGE.FLOOD_FILL))
         add_block(config, self.gold_additional.configuration.flood_fill.dict())
-        config.append(empty_line())
 
         # data files
         config.append(block_indent(_SGE.DATA_FILES))
         for ligand_file in ligand_files:
             config.append(' '.join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
         add_block(config, self.gold_additional.configuration.data_files.dict())
-        config.append(empty_line())
 
         # flags
         config.append(block_indent(_SGE.FLAGS))
         add_block(config, self.gold_additional.configuration.flags.dict())
-        config.append(empty_line())
 
         # termination
         config.append(block_indent(_SGE.TERMINATION))
         add_block(config, self.gold_additional.configuration.termination.dict())
-        config.append(empty_line())
 
         # constraints
         config.append(block_indent(_SGE.CONSTRAINTS))
         add_block(config, self.gold_additional.configuration.constraints.dict())
-        config.append(empty_line())
 
         # covalent bonding
         config.append(block_indent(_SGE.COVALENT_BONDING))
         add_block(config, self.gold_additional.configuration.covalent_bonding.dict())
-        config.append(empty_line())
 
         # save options
         config.append(block_indent(_SGE.SAVE_OPTIONS))
         add_block(config, self.gold_additional.configuration.save_options.dict())
-        config.append(empty_line())
 
         # fitness function settings
         config.append(block_indent(_SGE.FITNESS_FUNCTION_SETTINGS))
         add_block(config, self.gold_additional.configuration.fitness_function_settings.dict())
-        config.append(empty_line())
 
         # protein data
         config.append(block_indent(_SGE.PROTEIN_DATA))
         add_block(config, self.gold_additional.configuration.protein_data.dict())
-        config.append(empty_line())
 
         # write out
         with open(path, 'w') as f:
@@ -390,7 +373,7 @@ class StepGold(StepBase, BaseModel):
     def execute(self):
         # Note: This step only supports one grid at a time, ensemble docking is taken care of at the workflow level!
 
-        # in order to be able to efficiently execute ADV on the enumeration level, all of them have to be unrolled
+        # in order to be able to efficiently execute Gold on the enumeration level, all of them have to be unrolled
         # Note: As they retain their respective Compound object, the attribution later on is simple
         all_enumerations = []
         for compound in self.get_compounds():
@@ -404,8 +387,8 @@ class StepGold(StepBase, BaseModel):
         )
         self._subtask_container.load_data(all_enumerations)
 
-        # execute ADV
-        self._execute_autodockvina()
+        # execute Gold docking
+        self._execute_gold()
 
 
 """import os
