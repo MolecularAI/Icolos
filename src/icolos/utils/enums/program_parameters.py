@@ -355,6 +355,8 @@ class GoldEnum:
     GOLD_HELP_IDENTIFICATION_STRING = "Usage: gold_auto"
     GOLD_QUIET = "-q"
 
+    REMARK_TAG = "REMARK"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:

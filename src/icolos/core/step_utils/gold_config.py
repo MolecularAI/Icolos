@@ -90,9 +90,9 @@ class ConfigAutomaticSettings(BaseModel):
     autoscale: float = (
         1.0  # between 0 (off) and 5.0 (the larger the slower but more sampling)
     )
-    autoscale_nops_max: float = (
-        0  # maximum value for autoscale operations (0 means off)
+    autoscale_nops_max: int = (
+        100000  # maximum value for autoscale operations (0 means off)
     )
-    autoscale_nops_min: float = (
-        0  # minimum value for autoscale operations (0 means off)
+    autoscale_nops_min: int = (
+        100  # minimum value for autoscale operations (0 means off)
     )

@@ -59,6 +59,8 @@ class PATHS_1UYD:
     PDB_PATH = expand_path("molecules/1UYD/1UYD_apo.pdb")
     APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
+    GOLD_MOL2_PROTEIN = "Gold/1UYD_protein.mol2"
+    GOLD_CAVITY_MOL2 = "molecules/1UYD/PU8_reference_ligand.mol2"
     NATIVE_LIGAND_SDF = expand_path("molecules/1UYD/PU8_native_ligand.sdf")
     NATIVE_LIGAND_PDB = expand_path("molecules/1UYD/PU8_native_ligand.pdb")
     LIG4_POSES = expand_path("fep_plus/1UYD_ligand_subset.sdf")

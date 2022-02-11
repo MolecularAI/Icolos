@@ -6,7 +6,6 @@ from icolos.core.workflow_steps.ccdc.docking import StepGold
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGoldEnum
 
 from tests.tests_paths import (
-    PATHS_EXAMPLEDATA,
     get_1UYD_ligands_as_Compounds,
     PATHS_1UYD,
 )
@@ -26,8 +25,9 @@ class Test_Gold_docking(unittest.TestCase):
     def setUp(self):
         self._1UYD_compounds = get_1UYD_ligands_as_Compounds(
             abs_path=PATHS_1UYD.LIGANDS
-        )
-        self.receptor_path = PATHS_1UYD.PDBQT_PATH
+        )[:3]
+        self.cavity_file = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_CAVITY_MOL2))
+        self.receptor_path = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_MOL2_PROTEIN))
 
     def test_config_generation(self):
         step_conf = {
@@ -90,10 +90,10 @@ class Test_Gold_docking(unittest.TestCase):
                             _SGE.AUTOSCALE: 0.5
                         },
                         _SGE.FLOOD_FILL: {
-                            _SGE.CAVITY_FILE: "whatever"
+                            _SGE.CAVITY_FILE: self.cavity_file
                         },
                         _SGE.PROTEIN_DATA: {
-                            _SGE.PROTEIN_DATAFILE: "string"
+                            _SGE.PROTEIN_DATAFILE: self.receptor_path
                         }
                     }
                 },
@@ -104,28 +104,16 @@ class Test_Gold_docking(unittest.TestCase):
         gold_step.data.compounds = self._1UYD_compounds
         gold_step.execute()
 
-
-
-        #self.assertEqual(len(adv_step.get_compounds()), 1)
-        #self.assertEqual(len(adv_step.get_compounds()[0][0].get_conformers()), 2)
-        #self.assertListEqual(
-        #    list(
-        #        adv_step.get_compounds()[0][0][0]
-        #        .get_molecule()
-        #        .GetConformer(0)
-        #        .GetPositions()[0]
-        #    ),
-        #    [5.305, 11.464, 24.663],
-        #)
-        #self.assertEqual(
-        #    adv_step.get_compounds()[0][0][0]
-        #    .get_molecule()
-        #    .GetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE),
-        #    "-6.0",
-        #)
+        self.assertEqual(len(gold_step.get_compounds()), 3)
+        self.assertEqual(len(list(
+                gold_step.get_compounds()[0][0][0]
+                .get_molecule()
+                .GetConformer(0)
+                .GetPositions()[0]
+            )), 3)
 
         # check SDF write-out
-        #out_path = os.path.join(self._test_dir, "adv_docked.sdf")
-        #adv_step.write_conformers(out_path)
-        #stat_inf = os.stat(out_path)
-        #self.assertGreater(stat_inf.st_size, 3500)
+        out_path = os.path.join(self._test_dir, "gold_docked.sdf")
+        gold_step.write_conformers(out_path)
+        stat_inf = os.stat(out_path)
+        self.assertGreater(stat_inf.st_size, 50000)
