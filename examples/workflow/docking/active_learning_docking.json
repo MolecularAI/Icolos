@@ -19,7 +19,6 @@
 						"running_mode": "active_learning",
 						"virtual_lib": "<path>/lib.sdf",
 						"validation_lib": "<path>/val.sdf",
-						"activity_threshold": -7,
 						"n_rounds": 10,
 						"init_samples": 256,
 						"batch_size" : 128,

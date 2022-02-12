@@ -192,6 +192,7 @@ class TestIterator(unittest.TestCase):
         # )
 
         # should return JobControl object
-        assert isinstance(step_mmpbsa_job_control.initialized_steps, StepBase)
+        assert isinstance(step_mmpbsa_job_control.initialized_workflows, StepBase)
+        assert len(step_mmpbsa_job_control.initialized_workflows.workflows) == 4
         # TODO: there isn't really a good way to unit test this, it is a pain to load the data in to the individual steps
         # step_mmpbsa_job_control.initialized_steps.execute()
