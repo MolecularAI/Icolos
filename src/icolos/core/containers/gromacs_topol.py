@@ -143,7 +143,6 @@ class GromacsTopol(BaseModel):
         for itp, file_lines in self.itps.items():
             selection, remaining = self._extract_atomtype(file_lines)
             atomtype_lines.extend(selection)
-            print(itp, len(selection), len(remaining))
             self.itps[itp] = remaining
         atomtype_lines = self._remove_duplicate_atomtypes(atomtype_lines)
         return atomtype_lines
@@ -157,19 +156,16 @@ class GromacsTopol(BaseModel):
         stop_index = None
         selection = []
         remaining = []
-        print("line length", len(lines))
         for idx, line in enumerate(lines):
             if _GE.ATOMTYPES in line:
                 start_index = idx
             if _GE.MOLECULETYPES in line:
                 stop_index = idx
-        print(start_index, stop_index)
         if start_index is not None:
             selection = lines[start_index:stop_index]
             remaining = lines[:start_index]
 
         remaining.extend(lines[stop_index:])
-        print(len(selection), len(remaining))
         return selection, remaining
 
     def _remove_duplicate_atomtypes(self, atomtypes: List):

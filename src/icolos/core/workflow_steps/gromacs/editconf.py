@@ -24,7 +24,6 @@ class StepGMXEditConf(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        # self._write_input_files(tmp_dir)
         topol = self.get_topol()
         topol.write_structure(tmp_dir)
         topol.write_topol(tmp_dir)
@@ -54,5 +53,5 @@ class StepGMXEditConf(StepGromacsBase, BaseModel):
             f"Completed execution for {self.step_id} successfully", _LE.INFO
         )
         topol.set_structure(tmp_dir)
-        # self._parse_output(tmp_dir)
+        self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)

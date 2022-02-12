@@ -222,7 +222,6 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         """
 
         tmp_dir = self._make_tmpdir()
-        print(tmp_dir)
         topol = self.get_topol()
         self._write_input_files(tmp_dir)
         lig_ids = self._split_protein_ligand_complex(tmp_dir)
@@ -278,6 +277,5 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             check=True,
         )
         topol.set_structure(tmp_dir)
-        print(topol)
-        # self._parse_output(tmp_dir)
-        # self._remove_temporary(tmp_dir)
+        self._parse_output(tmp_dir)
+        self._remove_temporary(tmp_dir)

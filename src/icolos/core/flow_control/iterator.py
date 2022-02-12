@@ -7,6 +7,7 @@ from icolos.core.flow_control.flow_control import BaseStepConfig, FlowControlBas
 from copy import deepcopy
 from icolos.core.workflow_steps.step import _LE
 from icolos.core.step_dispatch.dispatcher import StepDispatcher
+from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
@@ -15,6 +16,7 @@ from glob import glob
 
 _IE = IteratorEnum
 _SBE = StepBaseEnum
+_WE = WorkflowEnum()
 
 
 class IterSettingsParameters(BaseModel):
@@ -52,15 +54,12 @@ class StepIterator(FlowControlBase, BaseModel):
 
     # holds the dict of iterables for the bits to chang
     iter_settings: IterSettings = IterSettings()
-    initialized_workflows: List[WorkFlow] = []
+    dispatcher: StepDispatcher = None
 
     def __init__(self, **data):
         super().__init__(**data)
-        # when init_step_from_dict calls this method, we need to initialise a list of steps,
-        # controlled by iter_settings.iter_mode
-        self.initialized_workflows: List[WorkFlow] = self._initialize_workflows()
-        # either generate a list, if serial execution, or initialize a single JobControl
-        # step with each config as an initialized step
+
+        self.dispatcher = self._initialize_workflows()
 
     def _modify_settings(
         self, settings: BaseStepConfig, step_config: BaseStepConfig, i: int
@@ -101,11 +100,13 @@ class StepIterator(FlowControlBase, BaseModel):
             for step in step_confs:
                 workflow_steps.append(step.as_dict())
             wf_config = {
-                "workflow": {
-                    "steps": workflow_steps,
-                }
+                _WE.HEADER: {
+                    _WE.ID: f"workflow_{i}",
+                    _WE.ENVIRONMENT: {_WE.ENVIRONMENT_EXPORT: []},
+                },
+                _WE.STEPS: workflow_steps,
             }
-            workflows.append(wf_config)
+            workflows.append(WorkFlow(**wf_config))
         return workflows
 
     def _initialize_settings(self) -> List:
@@ -133,7 +134,7 @@ class StepIterator(FlowControlBase, BaseModel):
                 init_steps.append(initialized_step)
         return init_steps
 
-    def _initialize_workflows(self) -> Union[List, StepBase]:
+    def _initialize_workflows(self) -> StepDispatcher:
         """
         Handle step init according to config
         Returns a Step-like JobControl that holds a list of separate workflows, which will be executed according to the parallelization scheme.
@@ -154,8 +155,7 @@ class StepIterator(FlowControlBase, BaseModel):
             f"Initialized {len(workflows)} jobs for step  {self.base_config[0].step_id}",
             _LE.DEBUG,
         )
-        # always return the wrapped step, even if that means we use a single core, small overhead but much cleaner impl
-
+        print("initialized workflows", workflows)
         dispatcher = StepDispatcher(
             step_id="step_dispatcher",
             type=_SBE.STEP_DISPATCHER,
@@ -171,7 +171,7 @@ class StepIterator(FlowControlBase, BaseModel):
         Manages modifications to each step in the config:
         * writeout paths are updated to separate output from each of the runs
         """
-        original_step_ids = [conf.step_id for conf in step_conf]
+
         formatted_confs = []
         for conf in step_conf:
 
@@ -182,27 +182,6 @@ class StepIterator(FlowControlBase, BaseModel):
                     parts = resource.split("/")
                     new_resource = os.path.join("/".join(parts[:-1]), run_id, parts[-1])
                     block.destination.resource = new_resource
-
-            # THis lot is not unnecessary, the steps are in individual workflows now
-            # modify the step_input blocks if they reference a step_id contained in step_conf
-            # treat compounds
-            # for comp in conf.input.compounds:
-            #     if comp.source in original_step_ids:
-            #         comp.source += f"_{run_id}"
-
-            # for gen in conf.input.generic:
-            #     if gen.source in original_step_ids:
-            #         gen.source += f"_{run_id}"
-
-            # # TODO: this is a bodge for now
-            # # we have an edge case in data manipularion that needs to match compounds those from another step, the source name needs the same treatment
-            # if conf.type.upper() == _SBE.STEP_DATA_MANIPULATION:
-            #     if (
-            #         _SBE.INPUT_SOURCE in conf.settings.additional.keys()
-            #         and conf.settings.additional[_SBE.INPUT_SOURCE] in original_step_ids
-            #     ):
-
-            #         conf.settings.additional[_SBE.INPUT_SOURCE] += f"_{run_id}"
 
             formatted_confs.append(conf)
 

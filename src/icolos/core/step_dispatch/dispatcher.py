@@ -53,9 +53,9 @@ class StepDispatcher(StepBase, BaseModel):
 
         # TODO, we can repeat entire workflows if we want, I'm not sure this makes sense though
         self._subtask_container = SubtaskContainer(max_tries=1)
-        self._subtask_container.load_data(self.initialized_steps)
+        self._subtask_container.load_data(self.workflows)
 
-        parallelizer = Parallelizer(func=self._run_step)
+        parallelizer = Parallelizer(func=self.execute_workflow)
         n = 1
 
         while self._subtask_container.done() is False:
@@ -73,7 +73,7 @@ class StepDispatcher(StepBase, BaseModel):
 
             jobs = self._prepare_batch(next_batch)
 
-            result = parallelizer.execute_parallel(steps=jobs)
+            result = parallelizer.execute_parallel(jobs=jobs)
 
             # TODO: sucessful execution of each step is not explicitly checked,
             # the step is responsible for throwing errors if something has gone wrong
@@ -85,4 +85,5 @@ class StepDispatcher(StepBase, BaseModel):
         # submits then monitors the step
         for job in jobs:
             job.initialize()
+            print("initialized job", job)
             job.execute()

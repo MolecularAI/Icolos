@@ -58,18 +58,11 @@ class WorkFlow(BaseAgent, BaseModel):
                 step.set_workflow_object(self)
                 self._initialized_steps.append(step)
             elif isinstance(step, FlowControlBase):
-                # flow control has returned a list of steps, or a single JobControl step
-                if isinstance(step.initialized_steps, list):
-                    for st in step.initialized_steps:
-                        st.set_workflow_object(self)
-                        self._initialized_steps.append(st)
-                elif isinstance(step.initialized_steps, StepDispatcher):
-                    # parallelize was set, returns a JobControl wrapper
-                    # step.initialized_steps.initialized_steps.
-                    # set_workflow_object(self)
-                    for st in step.initialized_steps.initialized_steps:
-                        st.set_workflow_object(self)
-                    self._initialized_steps.append(step.initialized_steps)
+
+                # parallelize was set, returns a JobControl wrapper
+                # step.initialized_steps.initialized_steps.
+                # set_workflow_object(self)
+                self._initialized_steps.append(step.dispatcher)
         self._logger.log(
             f"Initialized {len(self._initialized_steps)} steps in workflow {self.header.id}.",
             _LE.DEBUG,
