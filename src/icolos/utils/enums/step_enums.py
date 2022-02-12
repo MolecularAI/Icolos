@@ -700,7 +700,7 @@ class StepGromacsEnum:
     STD_TOPOL = "topol.top"
     STD_TPR = "structure.tpr"
     STD_XTC = "structure.xtc"
-    STD_STRUCTURE = "structure.gro"
+    STD_STRUCTURE = "confout.gro"
     POSRE_LIG = "posre_lig.itp"
     CHARGE_METHOD = "charge_method"
     FORCE_CONSTANTS = "1000 1000 1000"
@@ -709,7 +709,6 @@ class StepGromacsEnum:
     MMPBSA_IN = "mmpbsa.in"
     GROMACS_LOAD = "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
     AMBERTOOLS_PREFIX = "ambertools_prefix"
-    AMBERTOOLS_LOAD = "module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
     WATER_AND_IONS = "Water_and_ions"
     PROTEIN_OTHER = "Protein_Other"
     SIM_COMPLETE = "Finished mdrun"
@@ -719,6 +718,16 @@ class StepGromacsEnum:
     LENGTHS = "lengths"
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
+    PARAM_METHOD = "param_method"
+    GAFF = "gaff"
+    OPENFF = "openff"
+    WATER_POSRE = """
+#ifdef POSRES_WATER
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+    """
 
     def __getattr__(self, name):
         if name in self:
@@ -735,7 +744,7 @@ class StepOpenFFEnum:
     METHOD = "method"
     PARMED = "parmed"
     INTERCHANGE = "interchange"
-    FORCEFIELD = "forcefield"
+    FORCEFIELD = "off_forcefield"
 
 
 class StepCavExploreEnum:

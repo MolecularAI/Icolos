@@ -1252,6 +1252,8 @@ class GromacsEnum:
     MOLECULES = "[ molecules ]\n"
     SOLVENTS = ["HOH ", "SOL", "WAT"]
     TERMINATIONS = ["ENDMDL", "END"]
+    SYSTEM = "[ system ]"
+    DEFAULTS = "[ defaults ]"
 
     def __getattr__(self, name):
         if name in self:

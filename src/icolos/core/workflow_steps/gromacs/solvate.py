@@ -22,15 +22,15 @@ class StepGMXSolvate(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
-        structure_file = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
-        )
+        topol = self.get_topol()
+        topol.write_structure(tmp_dir)
+        topol.write_topol(tmp_dir)
+
         arguments = self._parse_arguments(
             flag_dict={
-                "-cp": structure_file,
-                "-p": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TOPOL),
-                "-o": structure_file,
+                "-cp": _SGE.STD_STRUCTURE,
+                "-p": _SGE.STD_TOPOL,
+                "-o": _SGE.STD_STRUCTURE,
             }
         )
         result = self._backend_executor.execute(
@@ -41,5 +41,7 @@ class StepGMXSolvate(StepGromacsBase, BaseModel):
         self._logger.log(
             f"Completed execution for {self.step_id} successfully.", _LE.INFO
         )
-        self._parse_output(tmp_dir)
+        # self._parse_output(tmp_dir)
+        topol.set_structure(tmp_dir)
+        topol.set_topol(tmp_dir)
         self._remove_temporary(tmp_dir)

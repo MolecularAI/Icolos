@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from pydantic import BaseModel, PrivateAttr
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.flow_control.flow_control import FlowControlBase
 from icolos.core.step_dispatch.dispatcher import StepDispatcher
@@ -26,6 +27,7 @@ class WorkflowHeaderParameters(AgentHeaderParameters, BaseModel):
 class WorkflowData(BaseModel):
     work_dir: str = None
     perturbation_map: PerturbationMap = None
+    gmx_topol: GromacsTopol = GromacsTopol()
 
 
 class WorkFlow(BaseAgent, BaseModel):

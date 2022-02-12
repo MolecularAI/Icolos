@@ -1,7 +1,10 @@
+import shutil
+from tokenize import group
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
 )
-from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum, StepOpenFFEnum
 from pydantic import BaseModel
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from icolos.utils.execute_external.gromacs import GromacsExecutor
@@ -10,15 +13,23 @@ from icolos.utils.execute_external.schrodinger import SchrodingerExecutor
 from icolos.core.workflow_steps.step import _LE
 import os
 import re
-from typing import AnyStr, List
 from string import ascii_uppercase
 from rdkit import Chem
+from openmm.app import PDBFile
+from openff.toolkit.topology import Molecule, Topology
+from openff.toolkit.typing.engines.smirnoff import ForceField
+from openff.toolkit.utils import get_data_file_path
+import parmed as pmd
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
+_SOFE = StepOpenFFEnum()
 
 
 class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
     _shell_executor: Executor = None
     _antechamber_executor: Executor = None
     _acpype_executor: Executor = None
@@ -35,49 +46,6 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         self._check_backend_availability()
         self._shell_executor = Executor()
         self._antechamber_executor = Executor()
-
-    def _modify_topol_file(self, tmp_dir, itp_files):
-        # read in the complex topol file, add the new itp files after the forcefield #include statement
-        with open(os.path.join(tmp_dir, _SGE.COMPLEX_TOP), "r") as f:
-            lines = f.readlines()
-        index = [idx for idx, s in enumerate(lines) if _SGE.FORCEFIELD_ITP in s][0]
-        new_topol = lines[: index + 1]
-        for file in itp_files:
-            new_topol.append(f'#include "{file}"\n')
-        for line in lines[index + 1 :]:
-            new_topol.append(line)
-        for file in itp_files:
-            stub = file.split(".")[0]
-            new_topol.append(f"{stub}   1\n")
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "w") as f:
-            f.writelines(new_topol)
-
-        # remove all but the final topol file form the paths, makes file handling cleaner later
-        top_files = [
-            f for f in os.listdir(tmp_dir) if f.endswith("top") and f != _SGE.STD_TOPOL
-        ]
-
-        for f in top_files:
-            os.remove(os.path.join(tmp_dir, f))
-
-    def _add_posre_to_topol(self, tmp_dir, lig):
-        """
-        Add lines to topol file to invoke positional restraints for the parametrised ligands
-        """
-        stub = lig.split(".")[0]
-        lig_itp = stub + ".itp"
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "r") as f:
-            lines = f.readlines()
-        index = [idx for idx, s in enumerate(lines) if lig_itp in s][0]
-        new_topol = lines[: index + 1]
-        new_topol.append(
-            f"#ifdef POSRES_{stub.upper()}\n#include posre_{stub}.itp\n#endif\n"
-        )
-        for line in lines[index + 1 :]:
-            new_topol.append(line)
-
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "w") as f:
-            f.writelines(new_topol)
 
     def _split_protein_ligand_complex(self, tmp_dir):
         # split the file into protein and an arbitrary number of ligands and cofactors
@@ -139,10 +107,14 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         self._remove_temporary(os.path.join(tmp_dir, struct_file))
         return list(ligand_lines.keys())
 
-    def _parametrisation_pipeline(self, tmp_dir, input_pdb) -> None:
+    def _generate_gaff_params(
+        self, tmp_dir: str, input_pdb: str, topol: GromacsTopol
+    ) -> None:
         """
         :param tmp_dir: step's base directory
         :param input_pdb: file name for the ligand being parametrised
+
+        Produces a gmx ITP file for the ligand, and updates topology
         """
         # main pipeline for producing GAFF parameters for a ligand
         charge_method = self.get_additional_setting(
@@ -174,185 +146,64 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             location=tmp_dir,
             check=True,
         )
-        # produce the ndx file for genrestr later
-        index_file = stub + ".ndx"
-        ndx_arguments = ["-f", input_pdb, "-o", index_file]
 
-        self._backend_executor.execute(
-            command=_GE.MAKE_NDX,
-            arguments=ndx_arguments,
-            location=tmp_dir,
-            check=True,
-            pipe_input='echo -e "0 & ! a H* \nq"',  # all system heavy atoms, excl hydrogens
-        )
-        # generate positional restraints for the ligand
-        genrestr_args = [
-            "-f",
-            input_pdb,
-            "-n",
-            index_file,
-            "-o",
-            f"posre_{stub}.itp",
-            "-fc",
-            _SGE.FORCE_CONSTANTS,
-        ]
-        self._backend_executor.execute(
-            command=_GE.GENRESTR,
-            arguments=genrestr_args,
-            location=tmp_dir,
-            check=True,
-            pipe_input="echo 3",
-        )  # the ligand always be the last thing on the index file
+        acpype_dir = [p for p in os.listdir(tmp_dir) if p.endswith(".acpype")][0]
+        # TODO: refactor this
+        lig_itp = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.endswith("GMX.itp")
+        ][0]
+        lig_posre = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.startswith("posre")
+        ][0]
+        lig_pdb = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.endswith("pdb")
+        ][0]
 
-        # we no longer need the ligand ndx file
-        self._remove_temporary(os.path.join(tmp_dir, index_file))
-
-    def _sort_components(self, lig_ids: List, components: List):
-        """
-        Ensure components go back into the concatenated pdb file in the same order as the original
-        """
-        new_components = []
-        for idx in lig_ids:
-            for component in components:
-                if idx in component:
-                    new_components.append(component)
-        return new_components
-
-    def _concatenate_structures(self, tmp_dir: str, lig_ids: List):
-        """
-        Extract newly parametrised components, concatenate everything into a single pdb file
-        """
-
-        components = []
-        for root, _, files in os.walk(tmp_dir):
-            for file in files:
-                if file.endswith("_NEW.pdb"):
-                    components.append(os.path.join(root, file))
-        components = self._sort_components(lig_ids, components)
-        self._logger.log(f"Found components: {components}", _LE.DEBUG)
-        with open(os.path.join(tmp_dir, _SGE.PROTEIN_PDB), "r") as f:
-            pdb_lines = f.readlines()
-
-        for file in components:
-            with open(file, "r") as f:
-
-                pdb_lines.extend(f.readlines())
-
-        pdb_lines = [
-            l for l in pdb_lines if not any(s in l for s in ["TER", "ENDMDL", "REMARK"])
-        ]
-        pdb_lines.extend(["TER\n", "ENDMDL\n"])
-        with open(os.path.join(tmp_dir, "Complex.pdb"), "w") as f:
-            f.writelines(pdb_lines)
-
-        # also deal with renaming the itp files here
-        for root, _, files in os.walk(tmp_dir):
-            for item in files:
-                if (
-                    item.endswith("GMX.itp")
-                    and _SGE.PROTEIN_TOP not in item
-                    and os.path.join(root, item) != os.path.join(tmp_dir, item)
-                ):
-                    os.rename(
-                        os.path.join(root, item),
-                        os.path.join(tmp_dir, item.split("_")[0]) + ".itp",
-                    )
-        # rename the protein top to complex
-        os.rename(
-            os.path.join(tmp_dir, _SGE.PROTEIN_TOP),
-            os.path.join(tmp_dir, _SGE.COMPLEX_TOP),
+        shutil.copyfile(
+            os.path.join(tmp_dir, acpype_dir, lig_itp), os.path.join(tmp_dir, lig_itp)
         )
 
-    def _extract_atomtype(self, tmp_dir: str, file: str) -> List[AnyStr]:
+        shutil.copyfile(
+            os.path.join(tmp_dir, acpype_dir, lig_posre),
+            os.path.join(tmp_dir, lig_posre),
+        )
+        topol.add_itp(os.path.join(tmp_dir, acpype_dir), [lig_itp])
+        topol.add_posre(os.path.join(tmp_dir, acpype_dir), [lig_posre])
+        topol.add_molecule(lig_itp.split("_")[0], 1)
+        topol.append_structure(
+            os.path.join(tmp_dir, acpype_dir), lig_pdb, sanitize=True
+        )
+
+    def _generate_openff_params(
+        self, tmp_dir: str, input_pdb: str, topol: GromacsTopol
+    ):
         """
-        Pull the atomtype lines out of the topol file and return them as a list, write the sanitised itp file to directory
+        Generate Amber-compatible Smirnoff params for a single component
         """
-        with open(os.path.join(tmp_dir, file), "r") as f:
-            lines = f.readlines()
-        start_index = None
-        stop_index = None
-        for idx, line in enumerate(lines):
-            if _GE.ATOMTYPES in line:
-                start_index = idx
-            if _GE.MOLECULETYPES in line:
-                stop_index = idx
+        # get the mols
+        mols = [Molecule.from_file()]
+        pdb_file = PDBFile(os.path.join(tmp_dir, input_pdb))
+        omm_topology = pdb_file.topology
 
-        selection = lines[start_index:stop_index]
-        # remove the offending lines from the topol
-        remaining = lines[:start_index]
-        remaining.extend(lines[stop_index:])
-        self._remove_temporary(os.path.join(tmp_dir, file))
-        with open(os.path.join(tmp_dir, file), "w") as f:
-            f.writelines(remaining)
-        return selection
+        off_topology = Topology.from_openmm(omm_topology, unique_molecules=mols)
 
-    def _remove_duplicate_atomtypes(self, atomtypes: List):
-        output = [atomtypes[0]]
-        for line in atomtypes:
-            if line not in output:
-                output.append(line)
-        return output
+        forcefield = ForceField(self.get_additional_setting(_SOFE.FORCEFIELD))
 
-    def _modify_itp_files(self, tmp_dir):
-        # cut the moleculetype directives out of all the individual itp files and add them to the top of the topol
-        atomtype_lines = []
-        # read the topol file, identify all the itp files it is #including
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "r") as f:
-            topol_lines = [
-                l.split()[-1].strip('"')
-                for l in f.readlines()
-                if ".itp" in l and "posre" not in l
-            ]
-        topol_lines = [l for l in topol_lines if l in os.listdir(tmp_dir)]
-        for file in topol_lines:
-            atomtype_lines.extend(self._extract_atomtype(tmp_dir, file))
-        atomtype_lines = self._remove_duplicate_atomtypes(atomtype_lines)
+        omm_system = forcefield.create_openmm_system(off_topology)
 
-        # write an 'atomtypes.itp' files to be included just below the forcefield, with all the atomtypes contained in the extra components
-        with open(os.path.join(tmp_dir, "atomtypes.itp"), "w") as f:
-            f.writelines(atomtype_lines)
+        parmed_struct = pmd.openmm.load_topology(
+            omm_topology, system=omm_system, xyz=pdb_file.positions
+        )
+        parmed_struct.save(os.path.join(tmp_dir, "MOL.itp"), overwrite=True)
+        parmed_struct.save(os.path.join(tmp_dir, "MOL.pdb"), overwrite=True)
 
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "r") as f:
-            lines = f.readlines()
-        self._remove_temporary(os.path.join(tmp_dir, _SGE.STD_TOPOL))
-        index = [idx for idx, s in enumerate(lines) if _SGE.FORCEFIELD_ITP in s][0]
-        new_topol = lines[: index + 1]
-
-        new_topol.append('#include "atomtypes.itp"\n')
-        new_topol.extend(lines[index + 1 :])
-        with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "w") as f:
-            f.writelines(new_topol)
-
-    def _modify_water_molecules(self, tmp_dir: str):
-        with open(os.path.join(tmp_dir, _SGE.COMPLEX_PDB), "r") as f:
-            lines = f.readlines()
-
-        solvent = []
-        # pick out the water lines
-        for line in lines:
-            if any([x in line for x in _GE.SOLVENTS]):
-                solvent.append(line)
-        for line in solvent:
-            lines.remove(line)
-        lines.extend(solvent)
-        for line in lines:
-            if any([x in line for x in _GE.TERMINATIONS]):
-                lines.remove(line)
-
-        with open(os.path.join(tmp_dir, _SGE.COMPLEX_PDB), "w") as f:
-            f.writelines(lines)
-
-        if solvent:
-            # modify the topol to put the solvent in last in the [ molecules ] directive
-            with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "r") as f:
-                lines = f.readlines()
-            molecule_idx = lines.index(_GE.MOLECULES)
-            for line in lines[molecule_idx:]:
-                if any([x in line for x in _GE.SOLVENTS]):
-                    out = lines.pop(lines.index(line))
-                    lines.append(out)
-            with open(os.path.join(tmp_dir, _SGE.STD_TOPOL), "w") as f:
-                f.writelines(lines)
+        # TODO: validate energy differences
 
     def execute(self):
         """Takes in a ligand pdb file and generates the required topology, based on the backend specified in the config json.
@@ -371,7 +222,9 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         """
 
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)  # dump generic data fields to the tmpdir
+        print(tmp_dir)
+        topol = self.get_topol()
+        self._write_input_files(tmp_dir)
         lig_ids = self._split_protein_ligand_complex(tmp_dir)
         self._logger.log(
             f"Parameters will be generated for the following components: {str(lig_ids)}",
@@ -390,62 +243,41 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         self._backend_executor.execute(
             command=_GE.PDB2GMX, arguments=arguments_pdb2gmx, location=tmp_dir
         )
+        # instantiate a separate topology object that will do a beter job of writing out than parmed can
 
+        topol.forcefield = self.settings.arguments.parameters["-ff"]
+        topol.water = self.settings.arguments.parameters["-water"]
+        topol.parse(os.path.join(tmp_dir, _SGE.PROTEIN_TOP))
+        topol.set_structure(tmp_dir, _SGE.PROTEIN_PDB, sanitize=True)
+        posre_files = [
+            f for f in os.listdir(tmp_dir) if f.endswith(".itp") and "posre" in f
+        ]
+        topol.add_posre(tmp_dir, posre_files)
+
+        param_method = self.get_additional_setting(_SGE.PARAM_METHOD, default="gaff")
         for lig in lig_ids:
             input_file = lig + ".pdb"
-            # generate the itp files for each component, named by their PDB identifier
-            self._parametrisation_pipeline(tmp_dir, input_file)
+            if param_method == _SGE.GAFF:
+                # generate the itp files for each component, named by their PDB identifier
+                self._generate_gaff_params(tmp_dir, input_file, topol)
+            elif param_method == _SGE.OPENFF:
+                self._generate_openff_params(tmp_dir, input_file, topol)
+            else:
+                raise NotImplementedError
 
-        # concatenate the structures to produce Complex.pdb
-        if lig_ids:
-            self._concatenate_structures(tmp_dir, lig_ids)
-            # step 6: Modify protein topol file for ligand
-            itp_files = [
-                f
-                for f in os.listdir(tmp_dir)
-                if f.endswith(".itp")
-                and "posre" not in f
-                and not any(
-                    [x in f for x in _GE.PRIMARY_COMPONENTS]
-                )  # avoid any duplicated itp file entries from components of the protein already handles by pdb2gmx (TODO: makes sure this works for DNA/RNA as well)
-            ]
-            # need to sort the itp files to match the ordering from the original pdb structure
-            itp_files = self._sort_components(lig_ids, itp_files)
-            self._modify_topol_file(tmp_dir, itp_files)
-
-            # step 10: modify the topol file to add the ligand posre file if restraints are applied
-            for lig in lig_ids:
-                self._add_posre_to_topol(tmp_dir, lig)
-
-            # if more than two ligands present, modify the ligand itp files so all the [atomtype] directives come before the [moleculetype] directives in the full topol
-            if len(lig_ids) > 1:
-                self._modify_itp_files(tmp_dir)
-
-        else:
-            # just convert the file names in place, no addition of ligands
-            os.rename(
-                os.path.join(tmp_dir, _SGE.PROTEIN_TOP),
-                os.path.join(tmp_dir, _SGE.STD_TOPOL),
-            )
-            os.rename(
-                os.path.join(tmp_dir, _SGE.PROTEIN_PDB),
-                os.path.join(tmp_dir, _SGE.COMPLEX_PDB),
-            )
-
-            # step 7: run editconf to convert the combined pdb to a gro file
-
-        # do final check to move crystallographic waters to the end of the pdb file, after
-        # the ligand, to ensure continuous solvent group later
-        self._modify_water_molecules(tmp_dir)
-        # and adjust the topol file to put any solvent last
-
-        editconf_arguments = ["-f", _SGE.COMPLEX_PDB, "-o", "structure.gro"]
+        os.remove(os.path.join(tmp_dir, _SGE.PROTEIN_TOP))
+        os.remove(os.path.join(tmp_dir, _SGE.PROTEIN_PDB))
+        # final writeout of parametrized system
+        topol.write_structure(tmp_dir, _SGE.COMPLEX_PDB)
+        # convert pdb to gro
+        editconf_arguments = ["-f", _SGE.COMPLEX_PDB, "-o", _SGE.STD_STRUCTURE]
         self._backend_executor.execute(
             command=_GE.EDITCONF,
             arguments=editconf_arguments,
             location=tmp_dir,
             check=True,
         )
-
-        self._parse_output(tmp_dir)
-        self._remove_temporary(tmp_dir)
+        topol.set_structure(tmp_dir)
+        print(topol)
+        # self._parse_output(tmp_dir)
+        # self._remove_temporary(tmp_dir)

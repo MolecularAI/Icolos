@@ -1,3 +1,4 @@
+import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
@@ -23,12 +24,13 @@ class StepGMXEditConf(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
-        structure_file = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
-        )
+        # self._write_input_files(tmp_dir)
+        topol = self.get_topol()
+        topol.write_structure(tmp_dir)
+        topol.write_topol(tmp_dir)
+
         arguments = self._parse_arguments(
-            flag_dict={"-f": structure_file, "-o": structure_file}
+            flag_dict={"-f": _SGE.STD_STRUCTURE, "-o": _SGE.STD_STRUCTURE}
         )
 
         pipe_input = (
@@ -51,6 +53,6 @@ class StepGMXEditConf(StepGromacsBase, BaseModel):
         self._logger.log(
             f"Completed execution for {self.step_id} successfully", _LE.INFO
         )
-
-        self._parse_output(tmp_dir)
+        topol.set_structure(tmp_dir)
+        # self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)

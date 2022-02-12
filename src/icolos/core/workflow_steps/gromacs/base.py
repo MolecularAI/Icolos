@@ -1,4 +1,5 @@
 from icolos.core.containers.generic import GenericData
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from pydantic import BaseModel
 import os
@@ -164,7 +165,7 @@ class StepGromacsBase(StepBase, BaseModel):
     def _add_index_group(self, tmp_dir, pipe_input):
         ndx_args_2 = [
             "-f",
-            self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_STRUCTURE),
+            os.path.join(tmp_dir, _SGE.STD_STRUCTURE),
             "-o",
             os.path.join(tmp_dir, _SGE.STD_INDEX),
         ]
@@ -181,3 +182,6 @@ class StepGromacsBase(StepBase, BaseModel):
         )
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
+
+    def get_topol(self) -> GromacsTopol:
+        return self.get_workflow_object().workflow_data.gmx_topol
