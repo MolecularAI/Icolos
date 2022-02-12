@@ -4,7 +4,6 @@ channels:
   - conda-forge
   - defaults
   - rdkit
-  - bioconda
 dependencies:
   - biopython>=1.79
   - ipython
@@ -21,7 +20,6 @@ dependencies:
   - rdkit>=2021.09.2
   - acpype>=2022
   - openff-toolkit>= 0.10.2
-  - gromacs >= 2021.3
   - pip:
     - black
     - regex
