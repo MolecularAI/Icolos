@@ -81,7 +81,7 @@ class StepGromacsBase(StepBase, BaseModel):
     ):
         file_data = config_file.get_data()
         for key, value in update_dict.items():
-            pattern = fr"({key})(\s*=\s*)[a-zA-Z0-9\s\_]*(\s*;)"
+            pattern = rf"({key})(\s*=\s*)[a-zA-Z0-9\s\_]*(\s*;)"
             pattern = re.compile(pattern)
             matches = re.findall(pattern, file_data)
             if len(matches) == 0:
@@ -91,7 +91,7 @@ class StepGromacsBase(StepBase, BaseModel):
                 )
             else:
 
-                file_data = re.sub(pattern, fr"\1\2 {value} \3", file_data)
+                file_data = re.sub(pattern, rf"\1\2 {value} \3", file_data)
                 self._logger.log(
                     f"Replaced field {key} of mdp file with value {value}", _LE.DEBUG
                 )

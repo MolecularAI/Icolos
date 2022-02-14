@@ -348,6 +348,39 @@ class AutoDockVinaEnum:
         raise ValueError("No changes allowed.")
 
 
+class GoldEnum:
+
+    GOLD_CALL = "gold_auto"
+    GOLD_HELP = "-h"
+    GOLD_HELP_IDENTIFICATION_STRING = "Usage: gold_auto"
+    GOLD_QUIET = "-q"
+
+    REMARK_TAG = "REMARK"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class GoldOutputEnum:
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
 class CrestOutputEnum:
 
     COORD = "coord"
