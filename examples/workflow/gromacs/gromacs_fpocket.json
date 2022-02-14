@@ -97,18 +97,6 @@
 						}
 					},
 					"additional": {}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "02_editconf",
-							"extension": "gro"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "top"
-						}
-					]
 				}
 			},
 			{
@@ -128,21 +116,10 @@
 				},
 				"input": {
 					"generic": [
-						{
-							"source": "03_solvate",
-							"extension": "gro"
-						},
+						
 						{
 							"source": "{file_base}/ions.mdp",
 							"extension": "mdp"
-						},
-						{
-							"source": "03_solvate",
-							"extension": "top"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "itp"
 						}
 					]
 				}
@@ -172,10 +149,6 @@
 						{
 							"source": "04_grompp",
 							"extension": "tpr"
-						},
-						{
-							"source": "04_grompp",
-							"extension": "top"
 						}
 					]
 				}
@@ -197,21 +170,10 @@
 				},
 				"input": {
 					"generic": [
-						{
-							"source": "05_genion",
-							"extension": "gro"
-						},
-						{
-							"source": "{file_base}/minim.mdp",
-							"extension": "mdp"
-						},
+						
 						{
 							"source": "05_genion",
 							"extension": "top"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "itp"
 						}
 					]
 				}
@@ -259,21 +221,10 @@
 				},
 				"input": {
 					"generic": [
-						{
-							"source": "07_eminim_mdrun",
-							"extension": "gro"
-						},
-						{
-							"source": "05_genion",
-							"extension": "top"
-						},
+						
 						{
 							"source": "{file_base}/nvt_equil.mdp",
 							"extension": "mdp"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "itp"
 						}
 					]
 				}
@@ -321,24 +272,8 @@
 				"input": {
 					"generic": [
 						{
-							"source": "09_nvt_mdrun",
-							"extension": "gro"
-						},
-						{
-							"source": "05_genion",
-							"extension": "top"
-						},
-						{
 							"source": "{file_base}/npt_equil.mdp",
 							"extension": "mdp"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "itp"
-						},
-						{
-							"source": "08_nvt_grompp",
-							"extension": "ndx"
 						}
 					]
 				}
@@ -389,24 +324,8 @@
 				"input": {
 					"generic": [
 						{
-							"source": "11_npt_mdrun",
-							"extension": "gro"
-						},
-						{
-							"source": "05_genion",
-							"extension": "top"
-						},
-						{
 							"source": "{file_base}/md.mdp",
 							"extension": "mdp"
-						},
-						{
-							"source": "01_pdb2gmx",
-							"extension": "itp"
-						},
-						{
-							"source": "08_nvt_grompp",
-							"extension": "ndx"
 						}
 					]
 				}
@@ -570,19 +489,8 @@
 					"additional": {
 						"pipe_input": "Protein"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "12_prod_md_grompp",
-							"extension": "gro"
-						},
-						{
-							"source": "12_prod_md_grompp",
-							"extension": "ndx"
-						}
-					]
 				}
+				
 			},
 			{
 				"step_id": "17_MDpocket",

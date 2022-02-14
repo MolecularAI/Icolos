@@ -207,7 +207,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         gmx_top.write(os.path.join(tmp_dir, "MOL.itp"), itp=True)
         topol.add_itp(path=tmp_dir, files=["MOL.itp"])
         topol.generate_posre(path=tmp_dir, itp_file="MOL.itp")
-        topol.append_structure(os.path.join(tmp_dir, "MOL.pdb"), sanitize=True)
+        topol.append_structure(path=tmp_dir, file="MOL.pdb", sanitize=True)
 
     def execute(self):
         """Takes in a ligand pdb file and generates the required topology, based on the backend specified in the config json.

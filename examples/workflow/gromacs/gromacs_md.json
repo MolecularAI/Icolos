@@ -63,15 +63,8 @@
                 },
                 "additional": {
                 }
-            },
-            "input": {
-                "generic": [
-                    {
-                        "source": "01_pdb2gmx",
-                        "extension": "gro"
-                    }
-
-                ]}
+            }
+           
 
         },{
             "step_id": "03_solvate",
@@ -88,18 +81,8 @@
                 },
                 "additional": {
                 }
-            },
-            "input": {
-                "generic": [
-                    {
-                        "source": "02_editconf",
-                        "extension": "gro"
-                    },{
-                        "source": "01_pdb2gmx",
-                        "extension": "top"
-                    }
-
-                ]}
+            }
+            
 
         },
             {
@@ -121,17 +104,8 @@
                 "input": {
                     "generic": [
                         {
-                            "source": "03_solvate",
-                            "extension": "gro"
-                        },{
                             "source": "{file_base}/ions.mdp",
                             "extension": "mdp"
-                        },{
-                            "source": "03_solvate",
-                            "extension": "top"
-                        },{
-                            "source": "01_pdb2gmx",
-                            "extension": "itp"
                         }
                     ]}
 
@@ -158,12 +132,6 @@
                         {
                             "source": "04_grompp",
                             "extension": "tpr"
-                        },{
-                            "source": "04_grompp",
-                            "extension": "top"
-                        },{
-                            "source": "04_grompp",
-                            "extension": "itp"
                         }
                     ]}
 
@@ -186,18 +154,9 @@
                 },
                 "input": {
                     "generic": [
-                        {
-                            "source": "05_genion",
-                            "extension": "gro"
-                        },{
+                       {
                             "source": "{file_base}/minim.mdp",
                             "extension": "mdp"
-                        },{
-                            "source": "05_genion",
-                            "extension": "top"
-                        },{
-                            "source": "05_genion",
-                            "extension": "itp"
                         }
 
                     ]}
@@ -245,17 +204,8 @@
                 "input": {
                     "generic": [
                         {
-                            "source": "07_eminim_mdrun",
-                            "extension": "gro"
-                        },{
-                            "source": "05_genion",
-                            "extension": "top"
-                        },{
                             "source": "{file_base}/nvt_equil.mdp",
                             "extension": "mdp"
-                        },{
-                            "source": "01_pdb2gmx",
-                            "extension": "itp"
                         }
                     ]}
             },{
@@ -300,18 +250,9 @@
                 },
                 "input": {
                     "generic": [
-                        {
-                            "source": "09_nvt_mdrun",
-                            "extension": "gro"
-                        },{
-                            "source": "05_genion",
-                            "extension": "top"
-                        },{
+                       {
                             "source": "{file_base}/npt_equil.mdp",
                             "extension": "mdp"
-                        },{
-                            "source": "01_pdb2gmx",
-                            "extension": "itp"
                         }
                     ]}
             },{
@@ -362,17 +303,8 @@
                 "input": {
                     "generic": [
                         {
-                            "source": "11_npt_mdrun",
-                            "extension": "gro"
-                        },{
-                            "source": "05_genion",
-                            "extension": "top"
-                        },{
                             "source": "{file_base}/md.mdp",
                             "extension": "mdp"
-                        },{
-                            "source": "01_pdb2gmx",
-                            "extension": "itp"
                         }
                     ]
                 }
