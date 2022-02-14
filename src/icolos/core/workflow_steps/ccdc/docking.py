@@ -69,6 +69,8 @@ class GoldConfiguration(BaseModel):
 
 class GoldAdditional(BaseModel):
     configuration: GoldConfiguration = GoldConfiguration()
+    gold_config_file: str = None
+    docking_score_tag: str = "Gold.Goldscore.Fitness"
     grid_ids: List[str] = ["grid0"]
 
 
@@ -88,18 +90,15 @@ class StepGold(StepBase, BaseModel):
         self.gold_additional = GoldAdditional(**self.settings.additional)
 
     def _set_docking_score(self, conformer: Chem.Mol) -> bool:
-        """try:
-            result_tag_lines = conformer.GetProp(_GOE.REMARK_TAG).split("\n")
-            result_line = [
-                line for line in result_tag_lines if _ADE.RESULT_LINE_IDENTIFIER in line
-            ][0]
-            parts = result_line.split()
-            docking_score = parts[_ADE.RESULT_LINE_POS_SCORE]
+        tag = self.gold_additional.docking_score_tag
+        try:
+            docking_score = conformer.GetProp(tag)
         except KeyError:
+            self._logger.log(f"Could not find tag \"{tag}\" in conformer, use \"docking_score_tag\" to adjust.",
+                             _LE.DEBUG)
             return False
-        conformer.SetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE, str(docking_score))"""
+        conformer.SetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE, str(docking_score))
         return True
-        # TODO: write the docking score to the _SBE.ANNOTATION_TAG_DOCKING_SCORE tag
 
     def _generate_temporary_input_output_files(
             self, batch: List[List[Subtask]]
@@ -270,9 +269,28 @@ class StepGold(StepBase, BaseModel):
         os.chdir(old_dir)
         time.sleep(3)
 
-    def generate_config_file(self, path: str, ligand_files: List[str]):
-        # very complicated custom format for GOLD; see file in "external_documentation/gold.conf" for details
-        # TODO: constraints are not yet supported (and probably a few other fine-grained settings)
+    def _config_from_file(self, ligand_files: List[str]) -> List[str]:
+        config = []
+        with open(self.gold_additional.gold_config_file, 'r') as f:
+            buffer = f.readlines()
+            idx = 0
+            while idx < len(buffer):
+                line = buffer[idx].rstrip('\n')
+                config.append(line)
+                if _SGE.DATA_FILES in line:
+                    # skip over all defined ligand files
+                    while _SGE.LIGAND_DATA_FILE in buffer[idx+1]:
+                        self._logger.log("Skipping pre-defined ligand in configuration file (remove lines starting with \"ligand_data_file\" to suppress this information).",
+                                         _LE.DEBUG)
+                        idx = idx + 1
+
+                    # add ligand files as required
+                    for ligand_file in ligand_files:
+                        config.append(' '.join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
+                idx = idx + 1
+        return config
+
+    def _config_from_default(self, ligand_files: List[str]) -> List[str]:
         def block_indent(block_name: str) -> str:
             return "".join([_SGE.BLOCK_INDENT, block_name])
 
@@ -340,6 +358,23 @@ class StepGold(StepBase, BaseModel):
         # protein data
         config.append(block_indent(_SGE.PROTEIN_DATA))
         add_block(config, self.gold_additional.configuration.protein_data.dict())
+        
+        return config
+
+    def generate_config_file(self, path: str, ligand_files: List[str]):
+        # very complicated custom format for GOLD; see file in "external_documentation/gold.conf" for details
+
+        if self.gold_additional.gold_config_file is None:
+            # generate config file step by step from default and overwrite set elements
+            # TODO: constraints are not yet supported (and probably a few other fine-grained settings)
+            config = self._config_from_default(ligand_files=ligand_files)
+        else:
+            # load path to config file and replace "ligand_files" as required; as configuration element is ignored in
+            # this mode, check that it is not set
+            if _SGE.CONFIGURATION in self.gold_additional.dict().keys():
+                self._logger.log("The \"configuration\" elements are ignored when a config file path is specified.",
+                                 _LE.WARNING)
+            config = self._config_from_file(ligand_files=ligand_files)
 
         # write out
         with open(path, 'w') as f:

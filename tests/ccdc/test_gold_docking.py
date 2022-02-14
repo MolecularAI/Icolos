@@ -8,6 +8,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepGoldEnum
 from tests.tests_paths import (
     get_1UYD_ligands_as_Compounds,
     PATHS_1UYD,
+    PATHS_EXAMPLEDATA
 )
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -28,6 +29,7 @@ class Test_Gold_docking(unittest.TestCase):
         )[:3]
         self.cavity_file = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_CAVITY_MOL2))
         self.receptor_path = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_MOL2_PROTEIN))
+        self.config_file_path = attach_root_path(os.path.join("../IcolosData", PATHS_EXAMPLEDATA.GOLD_EXAMPLE_CONFIG))
 
     def test_config_generation(self):
         step_conf = {
@@ -72,7 +74,7 @@ class Test_Gold_docking(unittest.TestCase):
         stat_inf = os.stat(config_path)
         self.assertGreater(stat_inf.st_size, 1400)
 
-    def test_docking(self):
+    def test_docking_default_config(self):
         step_conf = {
             _SBE.STEPID: "01_Gold",
             _SBE.STEP_TYPE: _SBE.STEP_GOLD_DOCKING,
@@ -117,3 +119,39 @@ class Test_Gold_docking(unittest.TestCase):
         gold_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 50000)
+
+    def test_docking_with_config_file(self):
+        step_conf = {
+            _SBE.STEPID: "01_Gold",
+            _SBE.STEP_TYPE: _SBE.STEP_GOLD_DOCKING,
+            _SBE.EXEC: {
+                _SBE.EXEC_PREFIXEXECUTION: "module load ccdc"
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ARGUMENTS: {
+                    _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                },
+                _SBE.SETTINGS_ADDITIONAL: {
+                    _SGE.GOLD_CONFIG_FILE: self.config_file_path
+                },
+            },
+        }
+
+        gold_step = StepGold(**step_conf)
+
+        # check config file size
+        config_path = os.path.join(self._test_dir, "test_config_file.cfg")
+        gold_step.generate_config_file(config_path,
+                                       ["/another/file1/whatever_1.sdf",
+                                        "/another/file1/whatever_111.sdf",
+                                        "/another/file1/whatever_1982734.sdf",
+                                        "/another/file1/whatever_1356638975934.sdf",
+                                        "/another/file1/whatever_33331.sdf",
+                                        "/another/file1/whatever_14642.sdf",
+                                        "/another/file1/whatever_1098604.sdf",
+                                        "/another/file1/whatever_2563241.sdf",
+                                        "/another/file1/whatever_1999374.sdf"])
+        stat_inf = os.stat(config_path)
+        self.assertGreater(stat_inf.st_size, 1400)
+

@@ -405,6 +405,7 @@ class StepPredictorEnum:
 class StepGoldEnum:
 
     CONFIGURATION = "configuration"
+    GOLD_CONFIG_FILE = "gold_config_file"
     BLOCK_INDENT = "  "
     CONFIGURATION_START = "GOLD CONFIGURATION FILE"
     AUTOMATIC_SETTINGS = "AUTOMATIC SETTINGS"
@@ -421,6 +422,7 @@ class StepGoldEnum:
     COVALENT_BONDING = "COVALENT BONDING"
     SAVE_OPTIONS = "SAVE OPTIONS"
     FITNESS_FUNCTION_SETTINGS = "FITNESS FUNCTION SETTINGS"
+    GOLD_FITFUNC_PATH = "gold_fitfunc_path"
     PROTEIN_DATA = "PROTEIN DATA"
     PROTEIN_DATAFILE = "protein_datafile"
 

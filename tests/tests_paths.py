@@ -100,6 +100,7 @@ class PATHS_EXAMPLEDATA:
         "models/ePSA_Boltzmann_weighting.sdf"
     )
     GLIDE_EXAMPLE_IN = expand_path("Glide/example.in")
+    GOLD_EXAMPLE_CONFIG = "Gold/gold.conf"
     EPSA_EXAMPLE_MOLECULE = expand_path("models/ePSA_example_mol.sdf")
     PRIME_RECEPTOR_COX2 = expand_path("prime/cox2_receptor.mae")
     PRIME_COX2_GRID = expand_path("molecules/1CX2/1cx2_GridGen.zip")

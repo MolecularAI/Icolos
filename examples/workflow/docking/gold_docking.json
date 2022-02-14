@@ -1,0 +1,108 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "Gold docking",
+            "description": "Runs docking using CCDC's GOLD and a pre-defined receptor file.",
+            "environment": {
+                "export": [
+                ]
+            },
+            "global_variables": {
+                "smiles": "another_mol:Nc1ccc(cc1N)C(F)(F)F;failure:CXXC;aspirin:O=C(C)Oc1ccccc1C(=O)O",
+                "cavity_mol2_path": "{package_dir}/../IcolosData/molecules/1UYD/PU8_reference_ligand.mol2",
+                "receptor_path": "{package_dir}/../IcolosData/Gold/1UYD_protein.mol2"
+            }
+        },
+        "steps": [{
+                "step_id": "rdkit_embedding",
+                "type": "embedding",
+                "settings": {
+                    "arguments": {
+                        "flags": ["-epik"],
+                        "parameters": {
+                            "protonate": true,
+                            "method": "rdkit"
+                        }
+                    },
+                    "additional": {
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "{smiles}",
+                            "source_type": "string"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Gold",
+                "type": "gold_docking",
+                "execution": {
+                    "prefix_execution": "module load ccdc",
+                    "parallelization": {
+                        "cores": 4
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                        }
+                    },
+                    "additional": {
+                        "configuration": {
+                            "AUTOMATIC SETTINGS": {
+                                "autoscale": 0.5
+                            },
+                            "FLOOD FILL": {
+                                "cavity_file": "{cavity_mol2_path}"
+                            },
+                            "PROTEIN DATA": {
+                                "protein_datafile": "{receptor_path}"
+                            }
+                        },
+                        "grid_ids": ["1UYD"]
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "rdkit_embedding",
+                            "source_type": "step"
+                        }
+                    ]
+                },
+                "writeout": [
+                    {
+                        "compounds": {
+                            "category": "conformers"
+                        },
+                        "destination": {
+                            "resource": "{package_dir}/tests/junk/gold_docked_conformers.sdf",
+                            "type": "file",
+                            "format": "SDF"
+                        }
+                    },
+                    {
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["docking_score", "grid_id"],
+                            "aggregation": {
+                                "mode": "best_per_compound",
+                                "key": "docking_score",
+                                "highest_is_best": true
+                            }
+                        },
+                        "destination": {
+                            "resource": "{package_dir}/tests/junk/gold_docked_conformers.csv",
+                            "type": "file",
+                            "format": "CSV"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
