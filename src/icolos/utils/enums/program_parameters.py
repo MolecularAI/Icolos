@@ -1247,9 +1247,11 @@ class GromacsEnum:
     LIG_ID = "lig_id.lig"
     LIG_EXT = "lig"
     ATOMS = ["HETATM", "ATOM"]
+    ATOMS_DIRECTIVE = "[ atoms ]"
+    BONDS = "[ bonds ]"
     ATOMTYPES = "[ atomtypes ]"
     MOLECULETYPES = "[ moleculetype ]"
-    MOLECULES = "[ molecules ]\n"
+    MOLECULES = "[ molecules ]"
     SOLVENTS = ["HOH ", "SOL", "WAT"]
     TERMINATIONS = ["ENDMDL", "END"]
     SYSTEM = "[ system ]"

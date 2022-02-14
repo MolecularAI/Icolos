@@ -1,5 +1,4 @@
 import shutil
-from tokenize import group
 from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
@@ -16,9 +15,9 @@ import re
 from string import ascii_uppercase
 from rdkit import Chem
 from openmm.app import PDBFile
+from parmed.gromacs import GromacsTopologyFile
 from openff.toolkit.topology import Molecule, Topology
 from openff.toolkit.typing.engines.smirnoff import ForceField
-from openff.toolkit.utils import get_data_file_path
 import parmed as pmd
 
 _SGE = StepGromacsEnum()
@@ -185,10 +184,12 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
     ):
         """
         Generate Amber-compatible Smirnoff params for a single component
+
         """
+        # TODO: ensure we can handle parameter generation for multiple unique mol types
         # get the mols
-        mols = [Molecule.from_file()]
-        pdb_file = PDBFile(os.path.join(tmp_dir, input_pdb))
+        mols = [Molecule.from_smiles(self.get_additional_setting(_SOFE.UNIQUE_MOLS))]
+        pdb_file = PDBFile(os.path.join(self.get_additional_setting("lig_pdb")))
         omm_topology = pdb_file.topology
 
         off_topology = Topology.from_openmm(omm_topology, unique_molecules=mols)
@@ -200,10 +201,13 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         parmed_struct = pmd.openmm.load_topology(
             omm_topology, system=omm_system, xyz=pdb_file.positions
         )
-        parmed_struct.save(os.path.join(tmp_dir, "MOL.itp"), overwrite=True)
+        parmed_struct.save(os.path.join(tmp_dir, "MOL.top"), overwrite=True)
         parmed_struct.save(os.path.join(tmp_dir, "MOL.pdb"), overwrite=True)
-
-        # TODO: validate energy differences
+        gmx_top = GromacsTopologyFile().from_structure(parmed_struct)
+        gmx_top.write(os.path.join(tmp_dir, "MOL.itp"), itp=True)
+        topol.add_itp(path=tmp_dir, files=["MOL.itp"])
+        topol.generate_posre(path=tmp_dir, itp_file="MOL.itp")
+        topol.append_structure(os.path.join(tmp_dir, "MOL.pdb"), sanitize=True)
 
     def execute(self):
         """Takes in a ligand pdb file and generates the required topology, based on the backend specified in the config json.
@@ -212,13 +216,9 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         Execution looks like this currently:
         (1) split the protein from the other components
         (2) generate the topology for the protein separately
-        (3) identify components to be parametrised (cofactors, ligands etc)
-        (4) run the parametrisation pipeline on each component in serial (reasonably fast exec time per ligand)
-            (4a) store the resIDs of the ligands using the file handling system to be retrieved in a later step
-        (5) modify the topology file to add the #include statements for the relevant itp files
-        (6) convert the resulting concatenated pdb file to .gro with editconf
-        (7) add the posres stuff to the topol file for each ligand for the subsequent equilibration steps
-        (8) if more than one ligand, modify the itp files to ensure all moleculetype directives are specified first
+        (4) run the parametrisation pipeline on each HET component in serial, generating either GAFF or SMIRNOFF params
+        (5) combine the topologies
+
         """
 
         tmp_dir = self._make_tmpdir()

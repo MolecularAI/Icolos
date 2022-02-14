@@ -122,18 +122,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
-                    _SBE.INPUT: {
-                        _SBE.INPUT_GENERIC: [
-                            {
-                                _SBE.INPUT_SOURCE: "02_editconf",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                        ]
-                    },
+                    _SBE.INPUT: {_SBE.INPUT_GENERIC: []},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -153,21 +142,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "03_solvate",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "03_solvate",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "itp",
-                            },
+                            }
                         ]
                     },
                 },
@@ -194,11 +171,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "04_grompp",
                                 _SBE.INPUT_EXTENSION: "tpr",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "04_grompp",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
+                            }
                         ]
                     },
                 },
@@ -220,21 +193,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "05_genion",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "05_genion",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "itp",
-                            },
+                            }
                         ]
                     },
                 },
@@ -278,21 +239,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "07_eminim_mdrun",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "05_genion",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                            {
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "itp",
-                            },
+                            }
                         ]
                     },
                 },
@@ -337,21 +286,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "09_nvt_mdrun",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "05_genion",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                            {
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "itp",
-                            },
+                            }
                         ]
                     },
                 },
@@ -397,21 +334,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "11_npt_mdrun",
-                                _SBE.INPUT_EXTENSION: "gro",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "05_genion",
-                                _SBE.INPUT_EXTENSION: "top",
-                            },
-                            {
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            },
-                            {
-                                _SBE.INPUT_SOURCE: "01_pdb2gmx",
-                                _SBE.INPUT_EXTENSION: "itp",
-                            },
+                            }
                         ]
                     },
                 },
@@ -980,4 +905,4 @@ class Test_GROMACS_MD(unittest.TestCase):
 
         out_path = os.path.join(self._test_dir, "md_0_1_0.xtc")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 324000)
+        self.assertGreater(stat_inf.st_size, 316516)

@@ -1,4 +1,5 @@
 import os
+from turtle import st
 from typing import AnyStr, Dict, List
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import GromacsEnum
@@ -13,13 +14,24 @@ _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
 
 
+class AtomType(BaseModel):
+    number: int
+    a_type: str
+    resi: int
+    res: str
+    atom: str
+    cgnr: int
+    charge: float
+    mass: float
+
+
 class GromacsTopol(BaseModel):
     top_lines: List = []
     itps: Dict = {}
     posre: Dict = {}
     atomtypes: List = []
     chains: List = None
-    forcefield: str = "amber03.ff"
+    forcefield: str = "amber03"
     water: str = "tip3p"
     system: List = []
     molecules: Dict = {}
@@ -32,20 +44,45 @@ class GromacsTopol(BaseModel):
     def parse(self, file):
         """
         Populate the fields from parsing a topol file (normally from gmx pdb2gmx)
-        Need system names and , molecules
+        If a moleculetype has been defined in a single topology, this is separated into its own itp file
         """
         # get the system name
         work_dir = os.path.dirname(file)
         with open(file, "r") as f:
             lines = f.readlines()
-            # extract itp files (not including forcefield stuff)
+
+        # first check for included atomtypes to be extracted to their own itp files
+        start_idx = None
+        stop_idx = None
         for line in lines:
-            if line.startswith("#include") and ".itp" in line and ".ff" not in line:
+            if line.startswith(_GE.MOLECULETYPES):
+                start_idx = lines.index(line)
+            # go all the way to IFDEF POSRE
+            elif line.startswith("#ifdef POSRES") and start_idx is not None:
+                stop_idx = lines.index(line) + 3
+                break
+        if all([x is not None for x in (start_idx, stop_idx)]):
+            itp_extract = lines[start_idx:stop_idx]
+            itp_key = itp_extract[2].split()[0] + ".itp"
+            self.itps[itp_key] = itp_extract
+            lines = lines[:start_idx] + lines[stop_idx:]
+
+        # extract itp files (not including forcefield stuff)
+        for line in lines:
+            if (
+                line.startswith("#include")
+                and ".itp" in line
+                and all([item not in line for item in (".ff", "posre")])
+            ):
                 itp_file = line.split()[-1].replace('"', "")
                 with open(os.path.join(work_dir, itp_file), "r") as f:
                     itp_lines = f.readlines()
                 self.itps[itp_file] = itp_lines
-
+        # extract water model
+        for line in lines:
+            if line.startswith("#include") and ".ff/tip" in line:
+                self.water = line.split("/")[-1].split(".")[0].replace('"', "")
+                self.forcefield = line.split()[-1].split(".")[0].replace('"', "")
         start = lines.index([l for l in lines if l.startswith(_GE.SYSTEM)][0])
         stop = lines.index([l for l in lines[start:] if l.startswith(_GE.MOLECULES)][0])
         for line in lines[start + 1 : stop]:
@@ -92,10 +129,10 @@ class GromacsTopol(BaseModel):
         # now include the itp files
         for file in self.itps.keys():
             top_lines.append(f'#include "{file}"')
-            stub = file.split("_")[0]
+        for file in self.posre.keys():
             if "Protein" not in file:
                 # these are handled independently in the itp files
-                top_lines.append(f'#ifdef POSRES\n#include "posre_{stub}.itp"\n#endif')
+                top_lines.append(f'#ifdef POSRES\n#include "{file}"\n#endif')
 
         # add water model
         top_lines.append(f'#include "{self.forcefield}.ff/{self.water}.itp"')
@@ -124,6 +161,39 @@ class GromacsTopol(BaseModel):
 
             self.posre[file] = lines
 
+    def generate_posre(self, path: str, itp_file: str, force: int = 1000):
+        stub = itp_file.split(".")[0]
+        with open(os.path.join(path, itp_file), "r") as f:
+            lines = f.readlines()
+        start_idx = None
+        stop_idx = None
+        for line in lines:
+            if line.startswith(_GE.ATOMS_DIRECTIVE):
+                start_idx = lines.index(line) + 1
+            elif line.startswith(_GE.BONDS) and start_idx is not None:
+                stop_idx = lines.index(line)
+                break
+        lines = [
+            l for l in lines[start_idx:stop_idx] if not l.startswith(";") and l.strip()
+        ]
+        args = ["number", "a_type", "resi", "res", "atom", "cgnr", "charge", "mass"]
+        atoms = []
+        for line in lines:
+            args_dict = {}
+            for arg, val in zip(args, line.split(";")[0].split()):
+                args_dict[arg] = val
+            atoms.append(AtomType(**args_dict))
+
+        posre = "posre_" + stub + ".itp"
+        out_path = os.path.join(path, posre)
+        with open(out_path, "w") as f:
+            f.write("\n[ position_restraints ]\n; atom  type      fx      fy      fz\n")
+            for atom in atoms:
+                if not atom.a_type.upper().startswith("H"):
+                    f.write(
+                        f"{atom.number:>6d}     1 {force:>5d} {force:>5d} {force:>5d}\n"
+                    )
+
     def _construct_block(self, header, items) -> List:
         block = [header]
         if isinstance(items, dict):
@@ -144,7 +214,8 @@ class GromacsTopol(BaseModel):
             selection, remaining = self._extract_atomtype(file_lines)
             atomtype_lines.extend(selection)
             self.itps[itp] = remaining
-        atomtype_lines = self._remove_duplicate_atomtypes(atomtype_lines)
+        if atomtype_lines:
+            atomtype_lines = self._remove_duplicate_atomtypes(atomtype_lines)
         return atomtype_lines
 
     def _extract_atomtype(self, lines: List) -> List[AnyStr]:
@@ -202,7 +273,7 @@ class GromacsTopol(BaseModel):
         self.structure.extend(lines)
 
     def __str__(self) -> str:
-        return f"Gromacs Topology object: System: {self.system} | Molecules: {[m for m in self.molecules]} | FF: {self.forcefield} | itp files: {[f for f in self.itps.keys()]}"
+        return f"Gromacs Topology object: System: {self.system} | Molecules: {[m for m in self.molecules]} | FF: {self.forcefield} | itp files: {[f for f in self.itps.keys()]} | posre files {[f for f in self.posre.keys()]}"
 
     def __repr__(self) -> str:
         return self.__str__()
