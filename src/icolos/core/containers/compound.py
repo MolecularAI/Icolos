@@ -349,11 +349,14 @@ class Enumeration:
             if self.get_compound_object() is None
             else self.get_compound_object().get_compound_number()
         )
-        return "<Icolos enumeration: id=%s, smile=%s, parent compound: %s, num_conformers: %i>" % (
-            self.get_enumeration_id(),
-            self.get_smile(),
-            parent_compound_id,
-            len(self._conformers),
+        return (
+            "<Icolos enumeration: id=%s, smile=%s, parent compound: %s, num_conformers: %i>"
+            % (
+                self.get_enumeration_id(),
+                self.get_smile(),
+                parent_compound_id,
+                len(self._conformers),
+            )
         )
 
     def __str__(self):

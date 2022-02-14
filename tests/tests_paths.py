@@ -61,6 +61,8 @@ class PATHS_1UYD:
     HOLO_PDB = expand_path("molecules/1UYD/1UYD_holo.pdb")
     APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
+    GOLD_MOL2_PROTEIN = "Gold/1UYD_protein.mol2"
+    GOLD_CAVITY_MOL2 = "molecules/1UYD/PU8_reference_ligand.mol2"
     NATIVE_LIGAND_SDF = expand_path("molecules/1UYD/PU8_native_ligand.sdf")
     NATIVE_LIGAND_PDB = expand_path("molecules/1UYD/PU8_native_ligand.pdb")
     LIG4_POSES = expand_path("fep_plus/1UYD_ligand_subset.sdf")
@@ -100,6 +102,7 @@ class PATHS_EXAMPLEDATA:
         "models/ePSA_Boltzmann_weighting.sdf"
     )
     GLIDE_EXAMPLE_IN = expand_path("Glide/example.in")
+    GOLD_EXAMPLE_CONFIG = "Gold/gold.conf"
     EPSA_EXAMPLE_MOLECULE = expand_path("models/ePSA_example_mol.sdf")
     PRIME_RECEPTOR_COX2 = expand_path("prime/cox2_receptor.mae")
     PRIME_COX2_GRID = expand_path("molecules/1CX2/1cx2_GridGen.zip")

@@ -105,9 +105,9 @@ class StepPanther(StepCalculationBase, BaseModel):
         self, config_file: str, update_dictionary: dict
     ) -> str:
         for key, value in update_dictionary.items():
-            pattern = fr"({key}.*:: ).*"
+            pattern = rf"({key}.*:: ).*"
             pattern = re.compile(pattern)
-            config_file = re.sub(pattern, fr"\1 {value}", config_file)
+            config_file = re.sub(pattern, rf"\1 {value}", config_file)
         return config_file
 
     def _execute_backend(self, tmp_dir):

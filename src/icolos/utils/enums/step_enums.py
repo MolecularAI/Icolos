@@ -45,6 +45,7 @@ class StepBaseEnum(str, Enum):
     STEP_GLIDE = "GLIDE"
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
+    STEP_GOLD_DOCKING = "GOLD_DOCKING"
     STEP_FEP_PLUS_SETUP = "FEP_PLUS_SETUP"
     STEP_FEP_PLUS_EXEC = "FEP_PLUS_EXEC"
     STEP_FEP_PLUS_ANALYSIS = "FEP_PLUS_ANALYSIS"
@@ -388,6 +389,41 @@ class StepPredictorEnum:
     FEATURES = "features"
     NAME_PREDICTED = "name_predicted"
     NAME_PREDICTED_DEFAULT = "pred_value"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepGoldEnum:
+
+    CONFIGURATION = "configuration"
+    GOLD_CONFIG_FILE = "gold_config_file"
+    BLOCK_INDENT = "  "
+    CONFIGURATION_START = "GOLD CONFIGURATION FILE"
+    AUTOMATIC_SETTINGS = "AUTOMATIC SETTINGS"
+    AUTOSCALE = "autoscale"
+    POPULATION = "POPULATION"
+    GENETIC_OPERATORS = "GENETIC OPERATORS"
+    FLOOD_FILL = "FLOOD FILL"
+    CAVITY_FILE = "cavity_file"
+    DATA_FILES = "DATA FILES"
+    LIGAND_DATA_FILE = "ligand_data_file"
+    FLAGS = "FLAGS"
+    TERMINATION = "TERMINATION"
+    CONSTRAINTS = "CONSTRAINTS"
+    COVALENT_BONDING = "COVALENT BONDING"
+    SAVE_OPTIONS = "SAVE OPTIONS"
+    FITNESS_FUNCTION_SETTINGS = "FITNESS FUNCTION SETTINGS"
+    GOLD_FITFUNC_PATH = "gold_fitfunc_path"
+    PROTEIN_DATA = "PROTEIN DATA"
+    PROTEIN_DATAFILE = "protein_datafile"
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -916,6 +952,19 @@ class StepAutoDockVinaTargetPreparationEnum:
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT = "reference_ligand_format"
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_PDB = "PDB"
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_SDF = "SDF"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepGoldTargetPreparationEnum:
 
     # try to find the internal value and return
     def __getattr__(self, name):
