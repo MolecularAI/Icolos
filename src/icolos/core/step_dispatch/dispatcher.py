@@ -1,5 +1,6 @@
 from typing import List
 from pydantic.main import BaseModel
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 from icolos.core.workflow_steps.step import _LE
@@ -46,11 +47,6 @@ class StepDispatcher(StepBase, BaseModel):
         # Spin up multiple processes.
         self.execution.parallelization.cores = self.parallel_execution.cores
 
-        # This is now irrelevant, we get this for free now things are wrapped in WF objects.
-        # self.execution.parallelization.max_length_sublists = (
-        #     self.parallel_execution.dependent_steps
-        # )
-
         # TODO, we can repeat entire workflows if we want, I'm not sure this makes sense though
         self._subtask_container = SubtaskContainer(max_tries=1)
         self._subtask_container.load_data(self.workflows)
@@ -81,9 +77,12 @@ class StepDispatcher(StepBase, BaseModel):
                 for subtask in task:
                     subtask.set_status_success()
 
-    def execute_workflow(self, jobs: List):
+    def execute_workflow(self, jobs):
         # submits then monitors the step
-        for job in jobs:
+        wf_data = self.get_workflow_object().workflow_data
+        for idx, job in enumerate(jobs):
+            # copy existing wf data up to this point int othe new wf object
             job.initialize()
-            print("initialized job", job)
+            job.workflow_data = wf_data
+            self._logger.log(f"Executing workflow {idx} of {len(jobs)}", _LE.DEBUG)
             job.execute()

@@ -129,10 +129,9 @@ class GromacsTopol(BaseModel):
         # now include the itp files
         for file in self.itps.keys():
             top_lines.append(f'#include "{file}"')
-        for file in self.posre.keys():
             if "Protein" not in file:
                 # these are handled independently in the itp files
-                top_lines.append(f'#ifdef POSRES\n#include "{file}"\n#endif')
+                top_lines.append(f'#ifdef POSRES\n#include "posre_{file}"\n#endif')
 
         # add water model
         top_lines.append(f'#include "{self.forcefield}.ff/{self.water}.itp"')
@@ -145,11 +144,14 @@ class GromacsTopol(BaseModel):
         top_lines.extend(self._construct_block(_GE.MOLECULES, self.molecules))
         return top_lines
 
-    def add_itp(self, path, files: List[str]) -> None:
+    def add_itp(self, path, files: List[str], gen_posre: bool = True) -> None:
         for file in files:
             with open(os.path.join(path, file), "r") as f:
                 lines = f.readlines()
             self.itps[file] = lines
+            if gen_posre:
+                # also generate a posre file
+                self.generate_posre(path, file)
 
     def add_molecule(self, name: str, num: int = 1):
         self.molecules[name] = num
@@ -186,13 +188,18 @@ class GromacsTopol(BaseModel):
 
         posre = "posre_" + stub + ".itp"
         out_path = os.path.join(path, posre)
+        header = "\n[ position_restraints ]\n; atom  type      fx      fy      fz\n"
+        written_lines = [header]
         with open(out_path, "w") as f:
-            f.write("\n[ position_restraints ]\n; atom  type      fx      fy      fz\n")
+            f.write(header)
             for atom in atoms:
                 if not atom.a_type.upper().startswith("H"):
-                    f.write(
+                    line = (
                         f"{atom.number:>6d}     1 {force:>5d} {force:>5d} {force:>5d}\n"
                     )
+                    f.write(line)
+                    written_lines.append(line)
+        self.posre[posre] = written_lines
 
     def _construct_block(self, header, items) -> List:
         block = [header]

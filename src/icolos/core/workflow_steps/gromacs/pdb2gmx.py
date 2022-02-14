@@ -153,27 +153,13 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
             if f.endswith("GMX.itp")
         ][0]
-        lig_posre = [
-            f
-            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
-            if f.startswith("posre")
-        ][0]
         lig_pdb = [
             f
             for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
             if f.endswith("pdb")
         ][0]
 
-        shutil.copyfile(
-            os.path.join(tmp_dir, acpype_dir, lig_itp), os.path.join(tmp_dir, lig_itp)
-        )
-
-        shutil.copyfile(
-            os.path.join(tmp_dir, acpype_dir, lig_posre),
-            os.path.join(tmp_dir, lig_posre),
-        )
-        topol.add_itp(os.path.join(tmp_dir, acpype_dir), [lig_itp])
-        topol.add_posre(os.path.join(tmp_dir, acpype_dir), [lig_posre])
+        topol.add_itp(os.path.join(tmp_dir, acpype_dir), [lig_itp], gen_posre=True)
         topol.add_molecule(lig_itp.split("_")[0], 1)
         topol.append_structure(
             os.path.join(tmp_dir, acpype_dir), lig_pdb, sanitize=True

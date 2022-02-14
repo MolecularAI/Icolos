@@ -1,4 +1,3 @@
-from cProfile import run
 from typing import Dict, List, Union
 from pydantic import BaseModel
 from icolos.core.composite_agents.workflow import WorkFlow
@@ -12,7 +11,6 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
 import os
-from glob import glob
 
 _IE = IteratorEnum
 _SBE = StepBaseEnum
@@ -155,7 +153,6 @@ class StepIterator(FlowControlBase, BaseModel):
             f"Initialized {len(workflows)} jobs for step  {self.base_config[0].step_id}",
             _LE.DEBUG,
         )
-        print("initialized workflows", workflows)
         dispatcher = StepDispatcher(
             step_id="step_dispatcher",
             type=_SBE.STEP_DISPATCHER,

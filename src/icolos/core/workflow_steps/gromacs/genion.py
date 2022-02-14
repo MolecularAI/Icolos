@@ -68,4 +68,6 @@ class StepGMXGenion(StepGromacsBase, BaseModel):
 
         self._logger.log('Added index group to "index.ndx"', _LE.DEBUG)
         self._parse_output(tmp_dir)
+        topol.set_structure(tmp_dir)
+        topol.set_topol(tmp_dir)
         self._remove_temporary(tmp_dir)

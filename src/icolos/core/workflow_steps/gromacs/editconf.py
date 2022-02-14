@@ -26,7 +26,7 @@ class StepGMXEditConf(StepGromacsBase, BaseModel):
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
         topol.write_structure(tmp_dir)
-        self.write_input_files()
+        self.write_input_files(tmp_dir)
         arguments = self._parse_arguments(
             flag_dict={"-f": _SGE.STD_STRUCTURE, "-o": _SGE.STD_STRUCTURE}
         )

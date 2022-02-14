@@ -269,4 +269,4 @@ class TestIterator(unittest.TestCase):
         step_gromacs_preprocess.dispatcher.execute()
         out_path = os.path.join(self._test_dir, "run_3", "topol_out_0.top")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 1568)
+        self.assertGreater(stat_inf.st_size, 1560)

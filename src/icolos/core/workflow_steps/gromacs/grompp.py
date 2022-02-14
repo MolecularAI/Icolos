@@ -110,7 +110,6 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
                 "-c": _SGE.STD_STRUCTURE,
                 "-p": _SGE.STD_TOPOL,
                 "-o": _SGE.STD_TPR,
-                "-maxwarn": 50,
             },
             args=args,
         )

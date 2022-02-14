@@ -4,8 +4,6 @@ from pydantic import BaseModel, PrivateAttr
 from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.flow_control.flow_control import FlowControlBase
-from icolos.core.step_dispatch.dispatcher import StepDispatcher
-from icolos.core.steps_utils import initialize_step_from_dict
 from icolos.core.workflow_steps.step import StepBase
 from icolos.core.composite_agents.base_agent import BaseAgent, AgentHeaderParameters
 from icolos.utils.enums.step_enums import StepBaseEnum
@@ -48,6 +46,10 @@ class WorkFlow(BaseAgent, BaseModel):
         self._initialized_steps = []
 
     def initialize(self):
+        # this feels hacky but it fixes a circular import and allows a step in the workflow
+        # to create other workflows
+        from icolos.core.steps_utils import initialize_step_from_dict
+
         super().initialize()
         self._initialized_steps = []
         for step_conf in self.steps:
@@ -58,11 +60,8 @@ class WorkFlow(BaseAgent, BaseModel):
                 step.set_workflow_object(self)
                 self._initialized_steps.append(step)
             elif isinstance(step, FlowControlBase):
-
-                # parallelize was set, returns a JobControl wrapper
-                # step.initialized_steps.initialized_steps.
-                # set_workflow_object(self)
                 self._initialized_steps.append(step.dispatcher)
+                step.dispatcher.set_workflow_object(self)
         self._logger.log(
             f"Initialized {len(self._initialized_steps)} steps in workflow {self.header.id}.",
             _LE.DEBUG,
@@ -103,11 +102,8 @@ class WorkFlow(BaseAgent, BaseModel):
         for step in self._initialized_steps:
             if step.step_id == step_id:
                 return step
-            elif step.type == _SBE.STEP_DISPATCHER:
-                # the steps themselves are buried in the _initialized_steps attribute of JobControl,
-                for st in step.initialized_steps:
-                    if st.step_id == step_id:
-                        return st
+            elif step.step_id == _SBE.STEP_DISPATCHER:
+                pass
 
         raise IndexError(f"Could not find step with step_id {step_id} in workflow.")
 
