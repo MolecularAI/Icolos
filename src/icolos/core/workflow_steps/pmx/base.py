@@ -3,6 +3,8 @@ from selectors import EpollSelector
 from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
+from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
 from rdkit.Chem import rdmolops
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
@@ -17,6 +19,7 @@ from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
+from rdkit.Chem import rdmolops
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -198,7 +201,7 @@ class StepPMXBase(StepBase, BaseModel):
                 f.writelines(cleaned_lines)
 
     def _parametrisation_pipeline(
-        self, tmp_dir, conf: Conformer = None, include_top=False, include_gro=False
+        self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
     ):
         # main pipeline for producing GAFF parameters for a ligand
         charge_method = self.get_additional_setting(
@@ -206,10 +209,6 @@ class StepPMXBase(StepBase, BaseModel):
         )
         formal_charge = (
             rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
-        )
-        self._logger.log(
-            f"Formal charge for ligand {conf.get_compound_name()}: {formal_charge}",
-            _LE.DEBUG,
         )
         arguments_acpype = [
             "-di",

@@ -19,7 +19,8 @@ try:
         attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
-except:
+except Exception as e:
+    print(e)
     MAIN_CONFIG = {}
 
 
@@ -57,6 +58,7 @@ class PATHS_1UYD:
     GRID_CONSTRAINTS_PATH = expand_path("Glide/1UYD_grid_constraints.zip")
     PDBQT_PATH = expand_path("AutoDockVina/1UYD_fixed.pdbqt")
     PDB_PATH = expand_path("molecules/1UYD/1UYD_apo.pdb")
+    HOLO_PDB = expand_path("molecules/1UYD/1UYD_holo.pdb")
     APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
     GOLD_MOL2_PROTEIN = "Gold/1UYD_protein.mol2"

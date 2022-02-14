@@ -24,7 +24,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         # give the option to run a make_ndx step preceding clustering to facilitate clustering on custom groups
         if _SGE.INDEX_FLAG in self.settings.arguments.parameters.keys():

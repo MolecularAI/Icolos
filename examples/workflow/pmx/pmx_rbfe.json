@@ -18,10 +18,6 @@
 						"value": "true"
 					},
 					{
-						"key": "ACPYPE",
-						"value": "${ACPYPE}/acpype"
-					},
-					{
 						"key": "PMX_PYTHON",
 						"value": "${CONDA}/envs/pmx/bin/python"
 					},

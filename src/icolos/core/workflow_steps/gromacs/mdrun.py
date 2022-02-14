@@ -45,9 +45,10 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
     def execute(self):
 
         tmp_dir = self._make_tmpdir()
+        topol = self.get_topol()
         # if we're simulating a protein, we need to modify the topol file to include the correct index groups \
         # to allow ligand restraint.  This means an ndx file must be specified in the json
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
         # append _out to the xtc file name
         xtc_output_file = self.generate_output_file(_SGE.STD_XTC)
         arguments = self._parse_arguments(
@@ -66,4 +67,9 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             f"Completed execution for {self.step_id} successfully", _LE.INFO
         )
         self._parse_output(tmp_dir)
+        if "-c" in self.settings.arguments.parameters.keys():
+            topol.set_structure(tmp_dir, self.settings.arguments.parameters["-c"])
+        else:
+            topol.set_structure(tmp_dir)
+
         self._remove_temporary(tmp_dir)

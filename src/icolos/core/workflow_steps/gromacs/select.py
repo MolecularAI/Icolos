@@ -24,7 +24,7 @@ class StepGMXselect(StepGromacsBase, BaseModel):
         tmp_dir = self._make_tmpdir()
 
         # write out generic files
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         flag_dict = {
             "-s": self.data.generic.get_argument_by_extension("tpr"),

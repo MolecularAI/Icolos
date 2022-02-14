@@ -1,6 +1,8 @@
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import MAIN_CONFIG, PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.core.workflow_steps.gromacs.grompp import StepGMXGrompp
@@ -20,14 +22,22 @@ class Test_Grompp(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
-            self.structure = f.read()
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP), "r") as f:
+            topol = f.readlines()
+        with open(
+            attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
+        ) as f:
+            struct = f.readlines()
         with open(PATHS_EXAMPLEDATA.GROMACS_IONS_MDP, "r") as f:
             self.mdp = f.read()
-        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
-            self.topol = f.read()
-        with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_POSRE, "r") as f:
-            self.posre = f.read()
+
+        self.topol = GromacsTopol()
+        self.topol.structure = struct
+        self.topol.top_lines = topol
+        self.topol.add_itp(
+            os.path.join(MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"),
+            ["DMP:100.itp"],
+        )
 
     def test_grompp(self):
         step_conf = {
@@ -54,20 +64,13 @@ class Test_Grompp(unittest.TestCase):
         }
 
         step_grompp = StepGMXGrompp(**step_conf)
-        step_grompp.data.generic.add_file(
-            GenericData(
-                file_name="tmp029389.gro", file_data=self.structure, argument=True
-            )
-        )
+
         step_grompp.data.generic.add_file(
             GenericData(file_name="tmp03394.mdp", file_data=self.mdp, argument=True)
         )
-        step_grompp.data.generic.add_file(
-            GenericData(file_name="tmp91023.top", file_data=self.topol, argument=True)
-        )
-        step_grompp.data.generic.add_file(
-            GenericData(file_name="DMP:100.itp", file_data=self.posre, argument=True)
-        )
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+        step_grompp.set_workflow_object(wf)
 
         step_grompp.execute()
 

@@ -17,6 +17,7 @@ class StepBaseEnum(str, Enum):
     STEP_EMBEDDING = "EMBEDDING"
     STEP_PREDICTION = "PREDICTION"
     STEP_MODEL_BUILDING = "MODEL_BUILDING"
+    STEP_FEATURE_COUNTER = "FEATURE_COUNTER"
     STEP_BOLTZMANN_WEIGHTING = "BOLTZMANN_WEIGHTING"
     STEP_PKA_PREDICTION = "PKA_PREDICTION"
     STEP_PRIME = "PRIME"
@@ -30,13 +31,11 @@ class StepBaseEnum(str, Enum):
     STEP_PANTHER = "PANTHER"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
-    STEP_PDB2GMX_LIG = "PDB2GMX_LIG"
     STEP_EDITCONF = "EDITCONF"
     STEP_SOLVATE = "SOLVATE"
     STEP_GENION = "GENION"
     STEP_GROMPP = "GROMPP"
     STEP_MDRUN = "MDRUN"
-    STEP_FEATURE_COUNTER = "FEATURE_COUNTER"
     STEP_TRJCONV = "TRJCONV"
     STEP_TRJCAT = "TRJCAT"
     STEP_GMX_RMSD = "GMX_RMSD"
@@ -736,7 +735,7 @@ class StepGromacsEnum:
     STD_TOPOL = "topol.top"
     STD_TPR = "structure.tpr"
     STD_XTC = "structure.xtc"
-    STD_STRUCTURE = "structure.gro"
+    STD_STRUCTURE = "confout.gro"
     POSRE_LIG = "posre_lig.itp"
     CHARGE_METHOD = "charge_method"
     FORCE_CONSTANTS = "1000 1000 1000"
@@ -745,7 +744,6 @@ class StepGromacsEnum:
     MMPBSA_IN = "mmpbsa.in"
     GROMACS_LOAD = "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
     AMBERTOOLS_PREFIX = "ambertools_prefix"
-    AMBERTOOLS_LOAD = "module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
     WATER_AND_IONS = "Water_and_ions"
     PROTEIN_OTHER = "Protein_Other"
     SIM_COMPLETE = "Finished mdrun"
@@ -755,6 +753,16 @@ class StepGromacsEnum:
     LENGTHS = "lengths"
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
+    PARAM_METHOD = "param_method"
+    GAFF = "gaff"
+    OPENFF = "openff"
+    WATER_POSRE = """
+#ifdef POSRES_WATER
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+    """
 
     def __getattr__(self, name):
         if name in self:
@@ -764,6 +772,14 @@ class StepGromacsEnum:
     # prohibit any attempt to set any values
     def __setattr__(self, key, value):
         raise ValueError("No changes allowed.")
+
+
+class StepOpenFFEnum:
+    UNIQUE_MOLS = "unique_molecules"
+    METHOD = "method"
+    PARMED = "parmed"
+    INTERCHANGE = "interchange"
+    FORCEFIELD = "off_forcefield"
 
 
 class StepCavExploreEnum:

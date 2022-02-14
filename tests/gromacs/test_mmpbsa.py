@@ -1,3 +1,5 @@
+from icolos.core.composite_agents.workflow import WorkFlow
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.core.workflow_steps.gromacs.mmpbsa import StepGMXmmpbsa
 from icolos.core.containers.generic import GenericData
 import unittest
@@ -22,17 +24,13 @@ class Test_MMPBSA(unittest.TestCase):
 
     def setUp(self) -> None:
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
-            self.structure = f.read()
-
-        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
-            self.topol = f.read()
+            self.structure = f.readlines()
 
         with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
             self.tpr_file = f.read()
 
         with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
             self.xtc_file = f.read()
-
         with open(PATHS_EXAMPLEDATA.MMPBSA_POSRE, "rb") as f:
             self.posre = f.read()
 
@@ -42,12 +40,20 @@ class Test_MMPBSA(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_POSRE, "rb") as f:
             self.lig_posre = f.read()
 
+        self.topol = GromacsTopol()
+        self.topol.parse(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        self.topol.structure = self.structure
+        self.topol.add_itp(
+            os.path.join(MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"),
+            ["DMP:100.itp"],
+        )
+
     def test_protein_lig_single_traj(self):
         step_conf = {
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA "
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -60,13 +66,11 @@ class Test_MMPBSA(unittest.TestCase):
                 },
             },
         }
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+
         step_mmpbsa = StepGMXmmpbsa(**step_conf)
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.gro", file_data=self.structure)
-        )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="topol.top", file_data=self.topol)
-        )
+        step_mmpbsa.set_workflow_object(wf)
         step_mmpbsa.data.generic.add_file(
             GenericData(file_name="structure.xtc", file_data=self.xtc_file)
         )
@@ -74,13 +78,7 @@ class Test_MMPBSA(unittest.TestCase):
             GenericData(file_name="structure.tpr", file_data=self.tpr_file)
         )
         step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="posre.itp", file_data=self.posre)
-        )
-        step_mmpbsa.data.generic.add_file(
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
-        )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="posre_DMP:100.itp", file_data=self.lig_posre)
         )
         step_mmpbsa.execute()
         out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
@@ -94,7 +92,7 @@ class Test_MMPBSA(unittest.TestCase):
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA && module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA"
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
@@ -105,17 +103,14 @@ class Test_MMPBSA(unittest.TestCase):
                     _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
                     _SGE.COUPLING_GROUPS: "Protein Other",
                     _SGE.INPUT_FILE: PATHS_EXAMPLEDATA.MMPBSA_CUSTOM_INPUT,
-                    "ntasks": 2,
                 },
             },
         }
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+
         step_mmpbsa = StepGMXmmpbsa(**step_conf)
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.gro", file_data=self.structure)
-        )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="topol.top", file_data=self.topol)
-        )
+        step_mmpbsa.set_workflow_object(wf)
         step_mmpbsa.data.generic.add_file(
             GenericData(file_name="structure.xtc", file_data=self.xtc_file)
         )
@@ -123,18 +118,9 @@ class Test_MMPBSA(unittest.TestCase):
             GenericData(file_name="structure.tpr", file_data=self.tpr_file)
         )
         step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="posre.itp", file_data=self.posre)
-        )
-        step_mmpbsa.data.generic.add_file(
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="posre_DMP:100.itp", file_data=self.lig_posre)
-        )
-        t1 = time()
         step_mmpbsa.execute()
-        exec_time = time() - t1
-        print("single traj exec time, custom input", exec_time)
         out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
         step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
         stat_inf = os.stat(out_path)

@@ -1,6 +1,8 @@
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.utils.general.files_paths import attach_root_path
@@ -39,12 +41,17 @@ class Test_MDrun(unittest.TestCase):
         }
 
         step_mdrun = StepGMXMDrun(**step_conf)
+        topol = GromacsTopol()
+        step_mdrun = StepGMXMDrun(**step_conf)
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = topol
+        step_mdrun.set_workflow_object(wf)
         step_mdrun.data.generic.add_file(
             GenericData(file_name="structure.tpr", file_data=self.tpr, argument=True)
         )
         step_mdrun.execute()
 
-        out_path = os.path.join(self._test_dir, "structure.gro")
+        out_path = os.path.join(self._test_dir, "confout.gro")
         step_mdrun.write_generic_by_extension(self._test_dir, "gro")
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 3224400)
@@ -69,14 +76,17 @@ class Test_MDrun(unittest.TestCase):
                 }
             },
         }
-
         step_mdrun = StepGMXMDrun(**step_conf)
+        topol = GromacsTopol()
+        step_mdrun = StepGMXMDrun(**step_conf)
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = topol
+        step_mdrun.set_workflow_object(wf)
         step_mdrun.data.generic.add_file(
             GenericData(file_name="structure.tpr", file_data=self.tpr, argument=True)
         )
         step_mdrun.execute()
-
-        out_path = os.path.join(self._test_dir, "structure.gro")
+        out_path = os.path.join(self._test_dir, "confout.gro")
         step_mdrun.write_generic_by_extension(self._test_dir, "gro")
         stat_inf = os.stat(out_path)
         self.assertEqual(stat_inf.st_size, 3224484)

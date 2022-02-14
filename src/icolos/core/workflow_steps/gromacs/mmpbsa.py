@@ -86,10 +86,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         output = []
         pipe_input = self.settings.additional[_SGE.COUPLING_GROUPS]
 
-        structure = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
-        )
-        arguments = ["-f", structure]
+        arguments = ["-f", _SGE.STD_STRUCTURE]
         if [f for f in os.listdir(tmp_dir) if f.endswith("ndx")]:
             arguments.extend(["-n", "index.ndx"])
         else:
@@ -124,7 +121,9 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         tmp_dir = self._make_tmpdir()
 
         self._generate_amber_input_file()
-        self._write_input_files(tmp_dir)
+        self.get_topol().write_structure(tmp_dir)
+        self.get_topol().write_topol(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         # gmx_MMPBSA requires the coupling groups of the receptor and ligand
 
@@ -145,7 +144,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
             "-cg": self._parse_coupling_groups(tmp_dir),
             "-ci": self._get_file_from_dir(tmp_dir=tmp_dir, ext="ndx"),
             "-ct": self._get_arg("xtc"),
-            "-cp": self._get_arg("top"),
+            "-cp": _SGE.STD_TOPOL,
             # do not attempt to open the results in the GUI afterwards
             "-nogui": "",
         }

@@ -24,12 +24,14 @@ class StepGMXGenion(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
+        topol = self.get_topol()
+        topol.write_structure(tmp_dir)
+        topol.write_topol(tmp_dir)
+        self.write_input_files(tmp_dir)
         arguments = self._parse_arguments(
             {
-                # input file paths are handled internally
                 "-o": _SGE.STD_STRUCTURE,
-                "-p": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TOPOL),
+                "-p": _SGE.STD_TOPOL,
                 "-s": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR),
             }
         )
