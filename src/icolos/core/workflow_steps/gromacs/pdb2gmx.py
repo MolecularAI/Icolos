@@ -223,7 +223,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
 
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
         lig_ids = self._split_protein_ligand_complex(tmp_dir)
         self._logger.log(
             f"Parameters will be generated for the following components: {str(lig_ids)}",

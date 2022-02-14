@@ -19,7 +19,7 @@ class StepGromacsBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def _write_input_files(self, tmp_dir):
+    def write_input_files(self, tmp_dir):
         """
         Prepares the tmpdir.  Supports two modes of operation, depending on where the data has come from:
         1) If tmpdir is empty and generic data is not, dump generic data files into tmpdir

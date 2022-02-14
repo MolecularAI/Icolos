@@ -123,7 +123,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         self._generate_amber_input_file()
         self.get_topol().write_structure(tmp_dir)
         self.get_topol().write_topol(tmp_dir)
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         # gmx_MMPBSA requires the coupling groups of the receptor and ligand
 
