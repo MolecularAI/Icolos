@@ -298,7 +298,7 @@ class StepPMXBase(StepBase, BaseModel):
             # # TODO: find a reliable way to sort this, ideally by inspecting log files
             if result_checker is not None:
                 batch_results = result_checker(jobs)
-
+                good_results = 0
                 for task, result in zip(next_batch, batch_results):
                     for subtask, sub_result in zip(task, result):
                         if sub_result:
@@ -308,7 +308,17 @@ class StepPMXBase(StepBase, BaseModel):
                             )
                         else:
                             subtask.set_status_success()
+                            good_results += 1
+                self._logger.log(
+                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs)[0]} jobs for step {step_id}",
+                    _LE.INFO,
+                )
+
             else:
+                self._logger.log(
+                    f"Warning: Return codes for step {step_id} are not being checked!",
+                    _LE.WARNING,
+                )
                 for element in next_batch:
                     for subtask in element:
                         subtask.set_status_success()
