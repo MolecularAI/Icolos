@@ -25,6 +25,13 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
             citations.append("\nPMX: Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger and Bert L. de Groot. Accurate and Rigorous Large Scale Mutation Free Energy Prediction. Angewandte Chemie Int. Ed. 55: 7364-7368(2016)\nVytautas Gapsys, Servaas Michielssens, Daniel Seeliger, and Bert L. de Groot. pmx: Automated protein structure and topology generation for alchemical perturbations. J. Comput. Chem. 36:348-354 (2015\n")
         if "MMPBSA" in step.type:
             citations.append("\ngmx_MMPBSA: Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291\n")
+        if "turbomole" in step.type:
+            citations.append("\nTURBOMOLE: Modular program suite for ab initio quantum-chemical and condensed-matter simulations; J. Chem. Phys. 152, 184107 (2020); https://doi.org/10.1063/5.0004635\n")
+        if "espsim" in step.type:
+            citations.append("\nESPSim: https://doi.org/10.26434/chemrxiv-2021-sqvv9-v3")
+        if "vina" in step.type:
+            citations.append("\nAutoDock Vina: Eberhardt, J., Santos-Martins, D., Tillack, A.F., Forli, S. (2021). AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings. Journal of Chemical Information and Modeling.\nTrott, O., & Olson, A. J. (2010). AutoDock Vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading. Journal of computational chemistry, 31(2), 455-461.")
+            
     citations = list(set(citations))
     for c in citations:
         writeout_lines.append(c)
