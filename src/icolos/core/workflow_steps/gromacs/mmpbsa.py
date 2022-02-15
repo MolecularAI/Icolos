@@ -70,7 +70,12 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
 
     def _run_mmpbsa(self, args, tmp_dir) -> CompletedProcess:
         command = _GE.MMPBSA
-        self._logger.log(f"Executing mmgbsa calculation in dir {tmp_dir}", _LE.DEBUG)
+        threads = self.get_additional_setting(_SGE.THREADS, default=1)
+        if threads > 1:
+            command = f"mpirun -np {threads} " + command
+        self._logger.log(
+            f"Executing mmgbsa calculation with {threads} thread(s)", _LE.DEBUG
+        )
         result = self._backend_executor.execute(
             command=command, arguments=args, check=True, location=tmp_dir
         )

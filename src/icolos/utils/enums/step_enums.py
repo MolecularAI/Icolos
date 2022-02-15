@@ -742,6 +742,7 @@ class StepGromacsEnum:
     LIG_ID = "lig_id"
     COUPLING_GROUP = "Other"
     MMPBSA_IN = "mmpbsa.in"
+    THREADS = "threads"
     GROMACS_LOAD = "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
     AMBERTOOLS_PREFIX = "ambertools_prefix"
     WATER_AND_IONS = "Water_and_ions"
