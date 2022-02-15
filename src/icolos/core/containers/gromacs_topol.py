@@ -101,44 +101,44 @@ class GromacsTopol(BaseModel):
         if not self.top_lines:
             self.top_lines = self.generate_base_topol_file()
         with open(os.path.join(base_dir, file), "w") as f:
-            for line in self.top_lines:
-                f.write(line + "\n")
+            for l in self.top_lines:
+                f.write(l)
         for itp, lines in self.itps.items():
             if os.path.isfile(os.path.join(base_dir, itp)):
                 os.remove(os.path.join(base_dir, itp))
             with open(os.path.join(base_dir, itp), "w") as f:
-                for line in lines:
-                    f.write(line)
+                for l in lines:
+                    f.write(l)
         for itp, lines in self.posre.items():
             if os.path.isfile(os.path.join(base_dir, itp)):
                 os.remove(os.path.join(base_dir, itp))
             with open(os.path.join(base_dir, itp), "w") as f:
-                for line in lines:
-                    f.write(line)
+                for l in lines:
+                    f.write(l)
 
     def generate_base_topol_file(self) -> List[str]:
         """
         Generates the main topology file
         """
         top_lines = []
-        top_lines.append(f'#include "{self.forcefield}.ff/forcefield.itp"')
+        top_lines.append(f'#include "{self.forcefield}.ff/forcefield.itp"\n')
         # find any new atomtypes in the parametrised components, slot these in first
         new_atomtypes = self.collect_atomtypes()
         top_lines += new_atomtypes
 
         # now include the itp files
         for file in self.itps.keys():
-            top_lines.append(f'#include "{file}"')
+            top_lines.append(f'#include "{file}"\n')
             if "Protein" not in file:
                 # these are handled independently in the itp files
-                top_lines.append(f'#ifdef POSRES\n#include "posre_{file}"\n#endif')
+                top_lines.append(f'#ifdef POSRES\n#include "posre_{file}"\n#endif\n')
 
         # add water model
-        top_lines.append(f'#include "{self.forcefield}.ff/{self.water}.itp"')
+        top_lines.append(f'#include "{self.forcefield}.ff/{self.water}.itp"\n')
         top_lines.append(_SGE.WATER_POSRE)
 
         # add ions itp
-        top_lines.append(f'#include "{self.forcefield}.ff/ions.itp"')
+        top_lines.append(f'#include "{self.forcefield}.ff/ions.itp"\n')
 
         top_lines.extend(self._construct_block(_GE.SYSTEM, self.system))
         top_lines.extend(self._construct_block(_GE.MOLECULES, self.molecules))
@@ -202,13 +202,15 @@ class GromacsTopol(BaseModel):
         self.posre[posre] = written_lines
 
     def _construct_block(self, header, items) -> List:
+        if not header.endswith("\n"):
+            header += "\n"
         block = [header]
         if isinstance(items, dict):
             for key, value in items.items():
-                block.append(f"{key}   {value}")
+                block.append(f"{key}   {value}\n")
         else:
             for i in items:
-                block.append(i)
+                block.append(i + "\n")
         return block
 
     def collect_atomtypes(self) -> List:
