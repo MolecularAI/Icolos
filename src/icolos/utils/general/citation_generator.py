@@ -16,7 +16,7 @@ ooooo   .oooooo.     .oooooo.   ooooo          .oooooo.    .oooooo..o
 o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'  
 =====================================================================\n"""
     writeout_lines = header.split('\n')
-    writeout_lines.append("If you publish work using Icolos, please consider citing the following papers, generated based on the workflow steps...\n\n")
+    writeout_lines.append("If you publish work using Icolos, please consider citing the following papers, based on the workflow's steps...\n\n")
     citations = []
     for step in steps:
         if "gmx" in step.type:
@@ -28,21 +28,20 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         if "turbomole" in step.type:
             citations.append("\nTURBOMOLE: Modular program suite for ab initio quantum-chemical and condensed-matter simulations; J. Chem. Phys. 152, 184107 (2020); https://doi.org/10.1063/5.0004635\n")
         if "espsim" in step.type:
-            citations.append("\nESPSim: https://doi.org/10.26434/chemrxiv-2021-sqvv9-v3")
+            citations.append("\nESPSim: https://doi.org/10.26434/chemrxiv-2021-sqvv9-v3\n")
         if "vina" in step.type:
-            citations.append("\nAutoDock Vina: Eberhardt, J., Santos-Martins, D., Tillack, A.F., Forli, S. (2021). AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings. Journal of Chemical Information and Modeling.\nTrott, O., & Olson, A. J. (2010). AutoDock Vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading. Journal of computational chemistry, 31(2), 455-461.")
+            citations.append("\nAutoDock Vina: Eberhardt, J., Santos-Martins, D., Tillack, A.F., Forli, S. (2021). AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings. Journal of Chemical Information and Modeling.\nTrott, O., & Olson, A. J. (2010). AutoDock Vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading. Journal of computational chemistry, 31(2), 455-461.\n")
             
     citations = list(set(citations))
     for c in citations:
         writeout_lines.append(c)
+    writeout_lines.append("\n")
+    writeout_lines.append("=====================================================================\n")
         
         
             
     for line in writeout_lines:
         print(line.center(os.get_terminal_size().columns))
-    if logger is not None:
-        for line in header.split("\n"):
-            logger.log(line)
     
 
 
