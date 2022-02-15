@@ -19,6 +19,7 @@ from icolos.utils.entry_point_functions.logging_helper_functions import (
     initialize_logging,
 )
 from icolos.utils.entry_point_functions.parsing_functions import parse_header
+from icolos.utils.general.citation_generator import print_citations
 from icolos.utils.general.files_paths import attach_root_path
 
 
@@ -82,11 +83,11 @@ def main():
     conf = parse_header(
         conf=conf, args=args, entry_point_path=os.path.realpath(__file__), logger=logger
     )
-
     # generate workflow object
     workflow = WorkFlow(**conf[_WE.WORKFLOW])
     workflow.initialize()
 
+    print_citations(workflow._initialized_steps)
     # execute the whole workflow
     st_time = datetime.now()
     workflow.execute()
