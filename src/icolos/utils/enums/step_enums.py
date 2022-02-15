@@ -761,8 +761,7 @@ class StepGromacsEnum:
 [ position_restraints ]
 ;  i funct       fcx        fcy        fcz
    1    1       1000       1000       1000
-#endif
-    """
+#endif\n"""
 
     def __getattr__(self, name):
         if name in self:
