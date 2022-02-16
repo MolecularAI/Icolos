@@ -298,7 +298,7 @@ class StepPMXBase(StepBase, BaseModel):
 
             if result_checker is not None:
                 batch_results = result_checker(jobs)
-
+                good_results = 0
                 for task, result in zip(next_batch, batch_results):
                     # returns boolean arrays: False => failed job
                     for subtask, sub_result in zip(task, result):
@@ -319,6 +319,12 @@ class StepPMXBase(StepBase, BaseModel):
                                 print("setting status to failed!")
                         else:
                             subtask.set_status_success()
+                            good_results += 1
+                self._logger.log(
+                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs)[0]} jobs for step {step_id}",
+                    _LE.INFO,
+                )
+
             else:
                 self._logger.log(
                     f"Step {step_id} is running without a result checker - failed executions will be ignored!",
