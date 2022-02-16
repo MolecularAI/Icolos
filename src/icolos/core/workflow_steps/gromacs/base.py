@@ -1,4 +1,5 @@
 from icolos.core.containers.generic import GenericData
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from pydantic import BaseModel
 import os
@@ -18,7 +19,7 @@ class StepGromacsBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def _write_input_files(self, tmp_dir):
+    def write_input_files(self, tmp_dir):
         """
         Prepares the tmpdir.  Supports two modes of operation, depending on where the data has come from:
         1) If tmpdir is empty and generic data is not, dump generic data files into tmpdir
@@ -81,7 +82,7 @@ class StepGromacsBase(StepBase, BaseModel):
     ):
         file_data = config_file.get_data()
         for key, value in update_dict.items():
-            pattern = fr"({key})(\s*=\s*)[a-zA-Z0-9\s\_]*(\s*;)"
+            pattern = rf"({key})(\s*=\s*)[a-zA-Z0-9\s\_]*(\s*;)"
             pattern = re.compile(pattern)
             matches = re.findall(pattern, file_data)
             if len(matches) == 0:
@@ -91,7 +92,7 @@ class StepGromacsBase(StepBase, BaseModel):
                 )
             else:
 
-                file_data = re.sub(pattern, fr"\1\2 {value} \3", file_data)
+                file_data = re.sub(pattern, rf"\1\2 {value} \3", file_data)
                 self._logger.log(
                     f"Replaced field {key} of mdp file with value {value}", _LE.DEBUG
                 )
@@ -164,7 +165,7 @@ class StepGromacsBase(StepBase, BaseModel):
     def _add_index_group(self, tmp_dir, pipe_input):
         ndx_args_2 = [
             "-f",
-            self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_STRUCTURE),
+            os.path.join(tmp_dir, _SGE.STD_STRUCTURE),
             "-o",
             os.path.join(tmp_dir, _SGE.STD_INDEX),
         ]
@@ -181,3 +182,6 @@ class StepGromacsBase(StepBase, BaseModel):
         )
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
+
+    def get_topol(self) -> GromacsTopol:
+        return self.get_workflow_object().workflow_data.gmx_topol

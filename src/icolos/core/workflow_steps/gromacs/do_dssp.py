@@ -24,7 +24,7 @@ class StepGMXDoDSSP(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         structure_file = self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR)
         traj_file = self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_XTC)

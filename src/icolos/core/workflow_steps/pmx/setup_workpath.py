@@ -1,7 +1,7 @@
-from icolos.core.containers.perturbation_map import Node
 import os
-from typing import Dict
+from typing import List
 from pydantic import BaseModel
+from icolos.core.containers.perturbation_map import Node
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
@@ -83,6 +83,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         self._execute_pmx_step_parallel(
             run_func=self._parametrise_nodes,
             step_id="pmx_setup",
+            result_checker=self._check_results,
         )
 
         # create the output folder structure
@@ -113,3 +114,27 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                         for sim in self.sim_types:
                             simpath = f"{runpath}/{sim}".format(runpath, sim)
                             os.makedirs(simpath, exist_ok=True)
+
+    def _check_results(self, batch: List[List[Node]]) -> List[List[bool]]:
+        output_files = ["ffMOL.itp", "MOL.itp"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(
+                                    self.work_dir,
+                                    "input",
+                                    job.get_node_id(),
+                                    f,
+                                )
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

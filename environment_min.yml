@@ -19,6 +19,7 @@ dependencies:
   - openbabel>=3
   - rdkit>=2021.09.2
   - acpype>=2022
+  - openff-toolkit>= 0.10.2
   - pip:
     - black
     - regex

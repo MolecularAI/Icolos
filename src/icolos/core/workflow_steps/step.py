@@ -508,7 +508,7 @@ class StepBase(BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.DEBUG)
 
-    def get_additional_setting(self, key: str, default: str):
+    def get_additional_setting(self, key: str, default: str = None):
         """
         Query settings.additional with the key, if not set use the default
         """

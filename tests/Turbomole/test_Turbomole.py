@@ -80,7 +80,7 @@ class Test_Turbomole(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [5.3347, 12.9328, 24.6745],
+            [0.8785, 0.6004, -0.2173],
         )
         tm_step.execute()
         self.assertListEqual(
@@ -150,7 +150,7 @@ class Test_Turbomole(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         t1 = time.time()
         tm_step.execute()
@@ -237,7 +237,7 @@ class Test_Turbomole(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [-2.1919, -3.3229, 0.3518],
+            [-0.7887, -0.0618, 0.1129],
         )
         cosmofile = tm_step.get_compounds()[0][0][0].get_extra_data()[
             _COE.EXTRA_DATA_COSMOFILE

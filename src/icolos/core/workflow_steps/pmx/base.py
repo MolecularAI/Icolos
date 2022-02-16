@@ -3,10 +3,13 @@ from selectors import EpollSelector
 from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
+from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
 from rdkit.Chem import rdmolops
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
+from icolos.utils.enums.parallelization import ParallelizationEnum
 from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
@@ -16,10 +19,12 @@ from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
+from rdkit.Chem import rdmolops
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
+_PE = ParallelizationEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
@@ -196,7 +201,7 @@ class StepPMXBase(StepBase, BaseModel):
                 f.writelines(cleaned_lines)
 
     def _parametrisation_pipeline(
-        self, tmp_dir, conf: Conformer = None, include_top=False, include_gro=False
+        self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
     ):
         # main pipeline for producing GAFF parameters for a ligand
         charge_method = self.get_additional_setting(
@@ -204,10 +209,6 @@ class StepPMXBase(StepBase, BaseModel):
         )
         formal_charge = (
             rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
-        )
-        self._logger.log(
-            f"Formal charge for ligand {conf.get_compound_name()}: {formal_charge}",
-            _LE.DEBUG,
         )
         arguments_acpype = [
             "-di",
@@ -295,17 +296,27 @@ class StepPMXBase(StepBase, BaseModel):
 
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
-            # # TODO: find a reliable way to sort this, ideally by inspecting log files
             if result_checker is not None:
                 batch_results = result_checker(jobs)
                 good_results = 0
                 for task, result in zip(next_batch, batch_results):
+                    # returns boolean arrays: False => failed job
                     for subtask, sub_result in zip(task, result):
-                        if sub_result:
+                        if sub_result == False:
                             subtask.set_status_failed()
                             self._logger.log(
                                 f"Warning: job {subtask} failed!", _LE.WARNING
                             )
+                            if (
+                                self.get_perturbation_map().strict_execution
+                                and isinstance(subtask.data, str)
+                            ):
+                                edge = self.get_perturbation_map().get_edge_by_id(
+                                    subtask.data
+                                )
+                                print("got edge", edge)
+                                edge._set_status(_PE.STATUS_FAILED)
+                                print("setting status to failed!")
                         else:
                             subtask.set_status_success()
                             good_results += 1
@@ -316,7 +327,7 @@ class StepPMXBase(StepBase, BaseModel):
 
             else:
                 self._logger.log(
-                    f"Warning: Return codes for step {step_id} are not being checked!",
+                    f"Step {step_id} is running without a result checker - failed executions will be ignored!",
                     _LE.WARNING,
                 )
                 for element in next_batch:
@@ -413,6 +424,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
+            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
         )
         perturbation_map.parse_map_file(
             os.path.join(self.work_dir, log_file.get_file_name())

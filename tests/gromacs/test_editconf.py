@@ -1,6 +1,8 @@
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
+from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.gromacs.editconf import StepGMXEditConf
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
@@ -23,7 +25,9 @@ class Test_Editconf(unittest.TestCase):
         with open(
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
-            self.structure = f.read()
+            struct = f.readlines()
+        self.topol = GromacsTopol()
+        self.topol.structure = struct
 
     def test_editconf_run(self):
         step_conf = {
@@ -44,13 +48,13 @@ class Test_Editconf(unittest.TestCase):
         }
 
         step_editconf = StepGMXEditConf(**step_conf)
-        step_editconf.data.generic.add_file(
-            GenericData(
-                file_name="structure.gro", file_data=self.structure, argument=True
-            )
-        )
+
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+        step_editconf.set_workflow_object(wf)
+
         step_editconf.execute()
-        out_path = os.path.join(self._test_dir, "structure.gro")
-        step_editconf.write_generic_by_name(self._test_dir, "structure.gro")
+        out_path = os.path.join(self._test_dir, "confout.gro")
+        step_editconf.write_generic_by_name(self._test_dir, "confout.gro")
         stat_inf = os.stat(out_path)
         self.assertEqual(stat_inf.st_size, 2102964)

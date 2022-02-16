@@ -1,4 +1,5 @@
 __pycache__
+pip-wheel-metadata
 *.pyc
 package.json
 .vscode

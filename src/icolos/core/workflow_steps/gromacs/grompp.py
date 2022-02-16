@@ -75,8 +75,9 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         Note that any issues with your parametrisation or system building will normally cause grompp to panic
         """
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
-
+        topol = self.get_topol()
+        topol.write_structure(tmp_dir)
+        topol.write_topol(tmp_dir)
         # if make_ndx command has been specified in settings.additional,
         # add an index group here, commonly protein_ligand or protein_other
 
@@ -96,19 +97,18 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
                     tmp_dir, self.settings.additional[_SGE.MAKE_NDX_COMMAND]
                 )
 
-        structure_file = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
+        mdp_file = self.data.generic.get_argument_by_extension(
+            _SGE.FIELD_KEY_MDP, rtn_file_object=True
         )
-        mdp_file = self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_MDP)
-        topol_file = self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TOPOL)
+        mdp_file.write(tmp_dir)
 
-        args = ["-r", structure_file] if self.settings.additional["-r"] else []
+        args = ["-r", _SGE.STD_STRUCTURE] if self.settings.additional["-r"] else []
 
         arguments = self._parse_arguments(
             flag_dict={
-                "-f": mdp_file,
-                "-c": structure_file,
-                "-p": topol_file,
+                "-f": mdp_file.get_file_name(),
+                "-c": _SGE.STD_STRUCTURE,
+                "-p": _SGE.STD_TOPOL,
                 "-o": _SGE.STD_TPR,
             },
             args=args,

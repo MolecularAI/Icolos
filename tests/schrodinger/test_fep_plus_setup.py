@@ -89,4 +89,4 @@ class Test_FepPlusSetup(unittest.TestCase):
             path=os.path.join(self._test_dir, "test_out.fmp"), ext="fmp", join=False
         )
         stat_inf = os.stat(out_path)
-        self.assertAlmostEqual(stat_inf.st_size, 848697, delta=500)
+        self.assertAlmostEqual(stat_inf.st_size, 847971, delta=500)
