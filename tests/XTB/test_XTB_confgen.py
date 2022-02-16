@@ -76,7 +76,7 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         xtb_step.execute()
         self.assertListEqual(
@@ -149,7 +149,7 @@ class Test_XTB_confgen(unittest.TestCase):
         )
         xtb_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 6874)
+        self.assertEqual(stat_inf.st_size, 3967)
 
     def test_parallel_execution(self):
         step_conf = {
@@ -204,4 +204,4 @@ class Test_XTB_confgen(unittest.TestCase):
         )
         xtb_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 6874)
+        self.assertEqual(stat_inf.st_size, 3967)

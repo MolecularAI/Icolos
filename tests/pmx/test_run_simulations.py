@@ -80,7 +80,7 @@ class Test_PMXRunSimulations(unittest.TestCase):
             os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
         )
 
-        self.assertGreater(stat_inf.st_size, 1642900)
+        self.assertGreater(stat_inf.st_size, 1296303)
 
         stat_inf = os.stat(
             os.path.join(

@@ -302,4 +302,4 @@ class TestPMXrbfe(unittest.TestCase):
         wflow.execute()
         out_path = os.path.join(self._test_dir, "resultsAll.csv")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 100)
+        self.assertEqual(stat_inf.st_size, 223)

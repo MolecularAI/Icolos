@@ -72,7 +72,7 @@ class Test_CREST_confgen(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "CREST_conformers_paracetamol.sdf")
         crest_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 32000)
+        self.assertGreater(stat_inf.st_size, 28000)
 
     def test_coordinate_generation_charged(self):
         step_conf = {

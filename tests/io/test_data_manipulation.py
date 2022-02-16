@@ -224,7 +224,7 @@ class Test_DataManipulation(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "0:0:0.pdb")
         manip_step.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 279700)
+        self.assertGreater(stat_inf.st_size, 6600)
 
     def test_filtering(self):
         step_conf = {
