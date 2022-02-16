@@ -198,7 +198,8 @@ class SlurmExecutor(ExecutorBase):
             f"#SBATCH -p {self.partition}",
             f"#SBATCH --time={self.time}",
         ]
-        header.append(f"#SBATCH --gres={self.gres}")
+        if self.gres is not None:
+            header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
             header.append(f"#SBATCH {key}={value}")
 
