@@ -96,12 +96,18 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         return out
 
     def _fill_resultsAll(self, res, edge, wp, r):
-        rowName = "{0}_{1}_{2}".format(edge, wp, r)
-        self.results_all.loc[rowName, "val"] = res[2]
-        self.results_all.loc[rowName, "err_analyt"] = res[3]
-        self.results_all.loc[rowName, "err_boot"] = res[4]
-        self.results_all.loc[rowName, "framesA"] = res[0]
-        self.results_all.loc[rowName, "framesB"] = res[1]
+        try:
+            rowName = "{0}_{1}_{2}".format(edge, wp, r)
+            self.results_all.loc[rowName, "val"] = res[2]
+            self.results_all.loc[rowName, "err_analyt"] = res[3]
+            self.results_all.loc[rowName, "err_boot"] = res[4]
+            self.results_all.loc[rowName, "framesA"] = res[0]
+            self.results_all.loc[rowName, "framesB"] = res[1]
+        except IndexError:
+            self._logger.log(
+                f"Index Error encountered whilst parsing results to summary file for job {edge}/{wp}/{r}",
+                _LE.WARNING,
+            )
 
     def _summarize_results(self, edges):
         bootnum = 1000
