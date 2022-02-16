@@ -126,7 +126,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             f"Computed formal charge: {formal_charge} for structure {input_pdb}",
             _LE.DEBUG,
         )
-
+        ligand_stub = input_pdb.split(".")[0]
         # Step 4: run the acpype script to generate the ligand topology file for GAFF
         self._logger.log(
             f"Running acpype on structure:{input_pdb}, charge method: {charge_method}",
@@ -149,7 +149,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
             check=True,
         )
 
-        acpype_dir = [p for p in os.listdir(tmp_dir) if p.endswith(".acpype")][0]
+        acpype_dir = os.path.join(tmp_dir, f"{ligand_stub}.acpype")
         # TODO: refactor this
         lig_itp = [
             f
@@ -242,7 +242,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         ]
         topol.add_posre(tmp_dir, posre_files)
 
-        param_method = self.get_additional_setting(_SGE.PARAM_METHOD, default="gaff")
+        param_method = self.get_additional_setting(_SGE.PARAM_METHOD, default=_SGE.GAFF)
         for lig in lig_ids:
             input_file = lig + ".pdb"
             if param_method == _SGE.GAFF:
