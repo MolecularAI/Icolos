@@ -25,9 +25,7 @@ class SlurmExecutor(ExecutorBase):
         prefix_execution=None,
         binary_location=None,
     ):
-        super().__init__(
-            prefix_execution=prefix_execution, binary_location=binary_location
-        )
+        super().__init__()
 
         self.cores = cores
         self.partition = partition
@@ -36,6 +34,8 @@ class SlurmExecutor(ExecutorBase):
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
+        self._prefix_execution = prefix_execution
+        self._binary_location = binary_location
 
     def execute(
         self,
