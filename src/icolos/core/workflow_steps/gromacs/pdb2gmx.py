@@ -128,7 +128,10 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         )
 
         # Step 4: run the acpype script to generate the ligand topology file for GAFF
-        self._logger.log(f"Running acpype on structure {input_pdb}", _LE.DEBUG)
+        self._logger.log(
+            f"Running acpype on structure:{input_pdb}, charge method: {charge_method}",
+            _LE.DEBUG,
+        )
         acpype_args = [
             "-di",
             input_pdb,
