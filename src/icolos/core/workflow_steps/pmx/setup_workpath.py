@@ -127,7 +127,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                             os.path.isfile(
                                 os.path.join(
                                     self.work_dir,
-                                    "input",
+                                    "input/ligands",
                                     job.get_node_id(),
                                     f,
                                 )

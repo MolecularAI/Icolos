@@ -150,11 +150,6 @@ class PerturbationMap(BaseModel):
                     )
                     return enum.get_conformers()[0]
 
-        # TODO: Remove this before integration
-        print(
-            f"Compound with id {compound_id} was not found in the map - it may have been lost during map construction"
-        )
-
     def parse_map_file(self, file_path) -> None:
         # we need to do some format enforcement here (schrodinger or otherwise)
 
@@ -314,7 +309,6 @@ class PerturbationMap(BaseModel):
         #     #         if part == e:
         #     #             idx = part
         match = [e for e in self.edges if e.get_edge_id() == idx]
-        print("matches", match)
         if not match:
             return
         else:
