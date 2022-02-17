@@ -1,10 +1,8 @@
-from inspect import Attribute
-from selectors import EpollSelector
 from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
-from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
+from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from rdkit.Chem import rdmolops
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
@@ -19,7 +17,6 @@ from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
-from rdkit.Chem import rdmolops
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
