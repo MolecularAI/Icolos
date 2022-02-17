@@ -6,13 +6,26 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 _SBE = StepBaseEnum
 
 
+class ConsoleColours:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    RED = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BLINKING = '\33[5m'
+
+
 def add_citation(step_type: str, workflow_step_types: List[str], citations: List[str], citation_string: str):
     if step_type.upper() in workflow_step_types:
         citations.append(citation_string)
 
 
 def print_citations(steps: List[StepBase], logger=None):
-    header = """
+    header = f"""{ConsoleColours.GREEN}
 =====================================================================
 ooooo   .oooooo.     .oooooo.   ooooo          .oooooo.    .oooooo..o 
 `888'  d8P'  `Y8b   d8P'  `Y8b  `888'         d8P'  `Y8b  d8P'    `Y8 
@@ -21,7 +34,7 @@ ooooo   .oooooo.     .oooooo.   ooooo          .oooooo.    .oooooo..o
  888  888          888      888  888         888      888      `"Y88b 
  888  `88b    ooo  `88b    d88'  888       o `88b    d88' oo     .d8P 
 o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'  
-=====================================================================\n"""
+====================================================================={ConsoleColours.ENDC}\n"""
     writeout_lines = header.split('\n')
     writeout_lines.append("If you publish work using Icolos, please consider citing the following papers, based on the workflow's steps...\n\n")
     citations = []
