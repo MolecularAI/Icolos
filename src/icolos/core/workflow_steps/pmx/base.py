@@ -321,7 +321,7 @@ class StepPMXBase(StepBase, BaseModel):
                             subtask.set_status_success()
                             good_results += 1
                 self._logger.log(
-                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs)[0]} jobs for step {step_id}",
+                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs[0])} jobs for step {step_id}",
                     _LE.INFO,
                 )
 
