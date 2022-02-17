@@ -213,7 +213,7 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
             subjob_results = []
             for job in subjob:
                 subjob_results.append(
-                    all([os.path.isfile(os.path.join(job, f)) for f in output_files])
+                    all([os.path.isfile(os.path.join(self.work_dir, job, f)) for f in output_files])
                 )
             results.append(subjob_results)
         return results
