@@ -128,7 +128,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                                 os.path.join(
                                     self.work_dir,
                                     "input/ligands",
-                                    job.get_node_id(),
+                                    job.get_node_hash(),
                                     f,
                                 )
                             )
