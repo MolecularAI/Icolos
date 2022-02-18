@@ -10,7 +10,7 @@ _SGE = StepGromacsEnum()
 _SBE = StepBaseEnum
 
 
-class Test_Editconf(unittest.TestCase):
+class Test_do_dssp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._test_dir = attach_root_path("tests/junk/gromacs")

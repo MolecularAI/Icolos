@@ -23,11 +23,11 @@ class Test_Solvate(unittest.TestCase):
 
     def setUp(self):
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
-            self.structure = f.readlines()
+            data = f.readlines()
 
         self.topol = GromacsTopol()
         self.topol.parse(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
-        self.topol.structure = self.structure
+        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=data)]
 
     def test_solvate(self):
         step_conf = {
@@ -51,8 +51,6 @@ class Test_Solvate(unittest.TestCase):
         step_solvate.execute()
 
         out_path = os.path.join(self._test_dir, "confout.gro")
-        step_solvate.write_generic_by_extension(
-            self._test_dir, _SGE.FIELD_KEY_STRUCTURE
-        )
+        step_solvate.get_topol().write_structure(self._test_dir)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 650000)
+        self.assertGreater(stat_inf.st_size, 142800)

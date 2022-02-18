@@ -32,7 +32,7 @@ class Test_Grompp(unittest.TestCase):
             self.mdp = f.read()
 
         self.topol = GromacsTopol()
-        self.topol.structure = struct
+        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
         self.topol.top_lines = topol
         self.topol.add_itp(
             os.path.join(MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"),
@@ -74,7 +74,7 @@ class Test_Grompp(unittest.TestCase):
 
         step_grompp.execute()
 
-        out_path = os.path.join(self._test_dir, "structure.tpr")
-        step_grompp.write_generic_by_name(self._test_dir, "structure.tpr")
+        out_path = os.path.join(self._test_dir, _SGE.STD_TPR)
+        step_grompp.get_topol().write_tpr(self._test_dir)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 596160)
+        self.assertEqual(stat_inf.st_size, 1528248)

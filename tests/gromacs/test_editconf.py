@@ -27,7 +27,7 @@ class Test_Editconf(unittest.TestCase):
         ) as f:
             struct = f.readlines()
         self.topol = GromacsTopol()
-        self.topol.structure = struct
+        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
 
     def test_editconf_run(self):
         step_conf = {
@@ -55,6 +55,6 @@ class Test_Editconf(unittest.TestCase):
 
         step_editconf.execute()
         out_path = os.path.join(self._test_dir, "confout.gro")
-        step_editconf.write_generic_by_name(self._test_dir, "confout.gro")
+        step_editconf.get_topol().write_structure(self._test_dir)
         stat_inf = os.stat(out_path)
         self.assertEqual(stat_inf.st_size, 2102964)

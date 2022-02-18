@@ -42,11 +42,17 @@ class Test_MMPBSA(unittest.TestCase):
 
         self.topol = GromacsTopol()
         self.topol.parse(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
-        self.topol.structure = self.structure
+        self.topol.structures = [
+            GenericData(_SGE.STD_STRUCTURE, file_data=self.structure)
+        ]
         self.topol.add_itp(
             os.path.join(MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"),
             ["DMP:100.itp"],
         )
+        self.topol.trajectories = [
+            GenericData(file_name=_SGE.STD_XTC, file_data=self.xtc_file)
+        ]
+        self.topol.tprs = [GenericData(_SGE.STD_TPR, self.tpr_file)]
 
     def test_protein_lig_single_traj(self):
         step_conf = {
@@ -71,12 +77,6 @@ class Test_MMPBSA(unittest.TestCase):
 
         step_mmpbsa = StepGMXmmpbsa(**step_conf)
         step_mmpbsa.set_workflow_object(wf)
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.xtc", file_data=self.xtc_file)
-        )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.tpr", file_data=self.tpr_file)
-        )
         step_mmpbsa.data.generic.add_file(
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
@@ -111,12 +111,7 @@ class Test_MMPBSA(unittest.TestCase):
 
         step_mmpbsa = StepGMXmmpbsa(**step_conf)
         step_mmpbsa.set_workflow_object(wf)
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.xtc", file_data=self.xtc_file)
-        )
-        step_mmpbsa.data.generic.add_file(
-            GenericData(file_name="structure.tpr", file_data=self.tpr_file)
-        )
+
         step_mmpbsa.data.generic.add_file(
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
