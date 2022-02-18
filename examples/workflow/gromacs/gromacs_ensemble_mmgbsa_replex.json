@@ -1,0 +1,438 @@
+{
+	"workflow": {
+		"header": {
+			"workflow_id": "gromacs_ensemble_mmgbsa",
+			"description": "ensemble MMGBSA demonstration - step iteration + SLURM job control",
+			"environment": {
+				"export": [
+					{
+						"key": "GMX_GPU_DD_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_GPU_PME_PP_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
+						"value": "true"
+					}
+				]
+			},
+			"global_variables": {
+				"file_base": "{package_dir}/../IcolosData/gromacs/protein",
+				"output_dir": "{package_dir}/tests/junk/gromacs"
+			}
+		},
+		"steps": [
+			{
+				"step_id": "01_pdb2gmx",
+				"type": "pdb2gmx",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-ignh"
+						],
+						"parameters": {
+							"-water": "tip3p",
+							"-ff": "amber03"
+						}
+					},
+					"additional": {
+						"charge_method": "gas"
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/1BVG.pdb",
+							"extension": "pdb"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "02_editconf",
+				"type": "editconf",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-c"
+						],
+						"parameters": {
+							"-d": "1.2",
+							"-bt": "dodecahedron"
+						}
+					},
+					"additional": {}
+				}
+			},
+			{
+				"step_id": "03_solvate",
+				"type": "solvate",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-cs": "spc216.gro"
+						}
+					},
+					"additional": {}
+				}
+			},
+			{
+				"step_id": "04_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"-r": false
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/ions.mdp",
+							"extension": "mdp"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "05_genion",
+				"type": "genion",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-neutral"
+						],
+						"parameters": {
+							"-pname": "NA",
+							"-nname": "CL"
+						}
+					},
+					"additional": {
+						"pipe_input": "SOL"
+					}
+				}
+			},
+			{
+				"step_id": "06_grompp_eminim",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"-r": false,
+						"replicas": 4
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/minim.mdp",
+							"extension": "mdp"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "07_eminim_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"other_args": {
+							"--threads": 4
+						},
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"multidir": true
+					}
+				}
+			},
+			{
+				"step_id": "08_nvt_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"make_ndx_command": "auto",
+						"-r": true,
+						"replicas": 4
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/nvt_equil.mdp",
+							"extension": "mdp"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "09_nvt_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"other_args": {
+							"--threads": 4
+						},
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"multidir": true
+					}
+				}
+			},
+			{
+				"step_id": "10_npt_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"make_ndx_command": "auto",
+						"-r": true,
+						"replicas": 4
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/npt_equil.mdp",
+							"extension": "mdp"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "11_npt_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"other_args": {
+							"--threads": 4
+						},
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"multidir": true
+					}
+				}
+			},
+			{
+				"step_id": "12_prod_md_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"fields": {
+							"nsteps": "10000"
+						},
+						"make_ndx_command": "auto",
+						"-r": false,
+						"replicas": 4
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/md.mdp",
+							"extension": "mdp"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "13_prod_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"other_args": {
+							"--threads": 4
+						},
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-nb": "gpu",
+							"-bonded": "gpu",
+							"-pme": "gpu",
+							"-update": "gpu"
+						}
+					},
+					"additional": {
+						"multidir": true
+					}
+				}
+			},
+			{
+				"step_id": "14_trjconv",
+				"type": "trjconv",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-center"
+						],
+						"parameters": {
+							"-pbc": "mol",
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"pipe_input": "Protein_Other System"
+					}
+				}
+			},
+			{
+				"step_id": "14b_trjconv",
+				"type": "trjconv",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-fit": "rot+trans",
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"pipe_input": "Protein_Other System"
+					}
+				}
+			},
+			{
+				"step_id": "15_gmx_MMPBSA",
+				"type": "gmx_mmpbsa",
+				"execution": {
+					"prefix_execution": "module load gmx_MMPBSA/1.3.3-fosscuda-2019a-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"parameters": {}
+					},
+					"additional": {
+						"coupling groups": "Protein Other",
+						"forcefield": "<fill_path>/amber14sb.ff"
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "14b_trjconv",
+							"extension": "xtc"
+						},
+						{
+							"source": "13_prod_mdrun",
+							"extension": "tpr"
+						}
+					]
+				},
+				"writeout": [
+					{
+						"generic": {
+							"key": "dat"
+						},
+						"destination": {
+							"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
+						}
+					}
+				]
+			}
+		]
+	}
+}

@@ -2,6 +2,7 @@ import os
 from turtle import st
 from typing import AnyStr, Dict, List
 from pydantic import BaseModel
+from icolos.core.containers.generic import GenericData
 from icolos.utils.enums.program_parameters import GromacsEnum
 
 from icolos.utils.enums.step_enums import StepGromacsEnum
@@ -26,6 +27,9 @@ class AtomType(BaseModel):
 
 
 class GromacsTopol(BaseModel):
+    class Config:
+        arbitrary_types_allowed: True
+
     top_lines: List = []
     itps: Dict = {}
     posre: Dict = {}
@@ -35,8 +39,12 @@ class GromacsTopol(BaseModel):
     water: str = "tip3p"
     system: List = []
     molecules: Dict = {}
-    # TODO: we could make this a generic data object?
-    structure: List = []
+    structures: List = []
+    tprs: List = []
+    trajectories: List = []
+    ndx: List = []
+    # store computed properties on the topology
+    properties: Dict = {}
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -262,24 +270,78 @@ class GromacsTopol(BaseModel):
         with open(os.path.join(path, file), "r") as f:
             self.top_lines = f.readlines()
 
-    def set_structure(self, path: str, file: str = _SGE.STD_STRUCTURE, sanitize=False):
+    def set_structure(
+        self, path: str, file: str = _SGE.STD_STRUCTURE, sanitize=False, index: int = 0
+    ):
         with open(os.path.join(path, file), "r") as f:
             lines = f.readlines()
         if sanitize:
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
-        self.structure = lines
 
-    def write_structure(self, path: str, file: str = _SGE.STD_STRUCTURE):
+        struct = GenericData(file_name=_SGE.STD_STRUCTURE, file_data=lines)
+        try:
+            self.structures[index] = struct
+        except IndexError:
+            self.structures.append(struct)
+
+    def set_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
+        with open(os.path.join(path, file), "rb") as f:
+            data = f.read()
+        data = GenericData(file_name=file, file_data=data, file_id=index)
+        # either the object already exists, or we are creating it for the first time
+        try:
+            self.tprs[index] = data
+        except IndexError:
+            self.tprs.append(data)
+
+    def write_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
+        tpr = self.tprs[index]
+        tpr.write(os.path.join(path, file), join=False)
+
+    def set_ndx(self, path: str, file: str = _SGE.STD_INDEX):
+        with open(os.path.join(path, file), "r") as f:
+            self.ndx = f.readlines()
+
+    def write_ndx(self, path: str, file: str = _SGE.STD_INDEX):
         with open(os.path.join(path, file), "w") as f:
-            for line in self.structure:
-                f.write(line)
+            f.writelines(self.ndx)
 
-    def append_structure(self, path: str, file: str, sanitize=False) -> None:
+    def write_structure(
+        self, path: str, file: str = _SGE.STD_STRUCTURE, index: int = 0
+    ):
+        structure = self.structures[index]
+        path = os.path.join(path, file)
+        structure.write(path, join=False)
+
+    def set_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
+        # depending on mdp settings, some runs will not produce an xtc file, only trr
+        if not os.path.isfile(os.path.join(path, file)):
+            # avoid indexing errors
+            data = GenericData()
+        else:
+            with open(os.path.join(path, file), "rb") as f:
+                data = f.read()
+            data = GenericData(file_name=file, file_data=data, file_id=index)
+            # either the object already exists, or we are creating it for the first time
+            try:
+                self.trajectories[index] = data
+            except IndexError:
+                self.trajectories.append(data)
+
+    def write_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
+        traj = self.trajectories[index]
+        path = os.path.join(path, file)
+        traj.write(path, join=False)
+
+    def append_structure(
+        self, path: str, file: str, sanitize=False, index: int = 0
+    ) -> None:
         with open(os.path.join(path, file), "r") as f:
             lines = f.readlines()
         if sanitize:
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
-        self.structure.extend(lines)
+        data = self.structures[index].get_data() + lines
+        self.structures[index].set_data(data)
 
     def __str__(self) -> str:
         return f"Gromacs Topology object: System: {self.system} | Molecules: {[m for m in self.molecules]} | FF: {self.forcefield} | itp files: {[f for f in self.itps.keys()]} | posre files {[f for f in self.posre.keys()]}"

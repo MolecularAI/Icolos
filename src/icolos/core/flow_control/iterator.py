@@ -10,6 +10,7 @@ from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.step_enums import IteratorEnum
+from icolos.core.composite_agents.workflow import WorkflowHeaderParameters
 import os
 
 _IE = IteratorEnum
@@ -40,6 +41,8 @@ class IterSettings(BaseModel):
     settings: Dict[str, IterSettingsParameters] = {}
     iter_mode: _IE = _IE.N_ITERS
     n_iters: int = None
+    remove_temporary_files: bool = True
+    single_directory: bool = False
     parallelizer_settings: IterParallelizer = IterParallelizer()
 
 
@@ -101,9 +104,16 @@ class StepIterator(FlowControlBase, BaseModel):
                 _WE.HEADER: {
                     _WE.ID: f"workflow_{i}",
                     _WE.ENVIRONMENT: {_WE.ENVIRONMENT_EXPORT: []},
+                    _WE.GLOBAL_SETTINGS: {},
+                    _WE.GLOBAL_VARIABLES: {
+                        "remove_temporary_files": self.iter_settings.remove_temporary_files,
+                        "single_directory": self.iter_settings.single_directory,
+                    },
                 },
                 _WE.STEPS: workflow_steps,
             }
+            # manually set some things for these workflows
+
             workflows.append(WorkFlow(**wf_config))
         return workflows
 

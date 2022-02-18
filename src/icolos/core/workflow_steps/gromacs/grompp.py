@@ -1,3 +1,4 @@
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
@@ -14,6 +15,11 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
     Wraps gromacs preprocessor, produces tpr file preceeding mdrun step
     Automatically handles coupling group updates
     """
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    topol: GromacsTopol = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -76,8 +82,8 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         """
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
-        topol.write_structure(tmp_dir)
-        topol.write_topol(tmp_dir)
+
+        # do this bit once
         # if make_ndx command has been specified in settings.additional,
         # add an index group here, commonly protein_ligand or protein_other
 
@@ -102,24 +108,35 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         )
         mdp_file.write(tmp_dir)
 
-        args = ["-r", _SGE.STD_STRUCTURE] if self.settings.additional["-r"] else []
+        replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
+        topol.write_topol(tmp_dir)
+        init_struct = len(topol.structures)
 
-        arguments = self._parse_arguments(
-            flag_dict={
-                "-f": mdp_file.get_file_name(),
-                "-c": _SGE.STD_STRUCTURE,
-                "-p": _SGE.STD_TOPOL,
-                "-o": _SGE.STD_TPR,
-            },
-            args=args,
-        )
-        result = self._backend_executor.execute(
-            command=_GE.GROMPP, arguments=arguments, check=True, location=tmp_dir
-        )
-        for line in result.stdout.split("\n"):
-            self._logger_blank.log(line, _LE.DEBUG)
-        self._logger.log(
-            f"Completed execution for {self.step_id} successfully", _LE.INFO
-        )
-        self._parse_output(tmp_dir)
+        for i in range(replicas):
+            index = 0 if init_struct == 1 else i
+            # we are branching for the first time, just use this confout.gro as the starting point
+            topol.write_structure(tmp_dir, index=index)
+            args = ["-r", _SGE.STD_STRUCTURE] if self.settings.additional["-r"] else []
+
+            arguments = self._parse_arguments(
+                flag_dict={
+                    "-f": mdp_file.get_file_name(),
+                    "-c": _SGE.STD_STRUCTURE,
+                    "-p": _SGE.STD_TOPOL,
+                    "-o": _SGE.STD_TPR,
+                },
+                args=args,
+            )
+            result = self._backend_executor.execute(
+                command=_GE.GROMPP, arguments=arguments, check=True, location=tmp_dir
+            )
+            for line in result.stdout.split("\n"):
+                self._logger_blank.log(line, _LE.DEBUG)
+            self._logger.log(
+                f"Completed execution for {self.step_id} successfully for replica {i}",
+                _LE.INFO,
+            )
+
+            topol.set_tpr(tmp_dir, index=i)
+            topol.set_structure(tmp_dir, index=i)
         self._remove_temporary(tmp_dir)

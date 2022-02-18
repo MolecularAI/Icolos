@@ -102,21 +102,10 @@ class StepGromacsBase(StepBase, BaseModel):
         config_file.set_data(file_data)
         config_file.write(tmp_dir)
 
-    def _generate_index_groups(self, tmp_dir):
-        try:
-
-            structure = [
-                f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_STRUCTURE)
-            ]
-            assert len(structure) == 1
-            structure = structure[0]
-        except AssertionError:
-            structure = [
-                f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_TPR)
-            ]
-            structure = structure[0]
-
-        args = ["-f", structure]
+    def _generate_index_groups(self, tmp_dir: str):
+        # dump the first structure file to the tmpdir
+        self.get_topol().structures[0].write(tmp_dir)
+        args = ["-f", _SGE.STD_STRUCTURE]
         ndx_list = [f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_NDX)]
         if len(ndx_list) == 1:
             args.extend(["-n", ndx_list[0]])
@@ -127,6 +116,7 @@ class StepGromacsBase(StepBase, BaseModel):
             check=True,
             pipe_input='echo -e "q"',
         )
+        self.get_topol().set_ndx(tmp_dir)
         return result
 
     def construct_pipe_arguments(self, tmp_dir, params) -> str:
@@ -163,7 +153,7 @@ class StepGromacsBase(StepBase, BaseModel):
         return " ".join(output)
 
     def _add_index_group(self, tmp_dir, pipe_input):
-        ndx_args_2 = [
+        ndx_args = [
             "-f",
             os.path.join(tmp_dir, _SGE.STD_STRUCTURE),
             "-o",
@@ -175,13 +165,14 @@ class StepGromacsBase(StepBase, BaseModel):
         )
         result = self._backend_executor.execute(
             command=_GE.MAKE_NDX,
-            arguments=ndx_args_2,
+            arguments=ndx_args,
             location=tmp_dir,
             check=True,
             pipe_input=self.construct_pipe_arguments(tmp_dir, pipe_input),
         )
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
+        self.get_topol().set_ndx(tmp_dir)
 
     def get_topol(self) -> GromacsTopol:
         return self.get_workflow_object().workflow_data.gmx_topol

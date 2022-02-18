@@ -733,8 +733,9 @@ class StepGromacsEnum:
     LIGAND_MOL2 = "Ligand.mol2"
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
-    STD_TPR = "structure.tpr"
-    STD_XTC = "structure.xtc"
+    STD_TPR = "topol.tpr"
+    STD_XTC = "traj.xtc"
+    STD_TRR = "traj.trr"
     STD_STRUCTURE = "confout.gro"
     POSRE_LIG = "posre_lig.itp"
     CHARGE_METHOD = "charge_method"
@@ -765,8 +766,7 @@ class StepGromacsEnum:
 #endif\n"""
 
     MULTIDIR = "multidir"
-    SERIAL = "serial"
-    RUN_MODE = "run_mode"
+    REPLICAS = "replicas"
 
     def __getattr__(self, name):
         if name in self:
