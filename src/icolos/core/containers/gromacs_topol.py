@@ -317,7 +317,7 @@ class GromacsTopol(BaseModel):
         # depending on mdp settings, some runs will not produce an xtc file, only trr
         if not os.path.isfile(os.path.join(path, file)):
             # avoid indexing errors
-            data = GenericData()
+            data = GenericData(file_name="empty_traj.txt")
         else:
             with open(os.path.join(path, file), "rb") as f:
                 data = f.read()

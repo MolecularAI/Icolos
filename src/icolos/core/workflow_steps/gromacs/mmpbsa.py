@@ -119,18 +119,11 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         return file[0]
 
     def execute(self) -> None:
-        """
-        Execute gmx_MMPBSA
-        Note: execution using mpirun is not supported for stability reasons
-        """
         tmp_dir = self._make_tmpdir()
-
+        topol = self.get_topol()
         self._generate_amber_input_file()
-        self.get_topol().write_structure(tmp_dir)
-        self.get_topol().write_topol(tmp_dir)
-        self.write_input_files(tmp_dir)
-
-        # gmx_MMPBSA requires the coupling groups of the receptor and ligand
+        self.write_input_files()
+        topol.write_topol(tmp_dir)
 
         # form any required coupling groups with make_ndx_command before parsing coupling groups
         # e.g. combine protein + cofactor
@@ -143,20 +136,26 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
             # can run make_ndx multiple times for complex cases, each set of pipe imput must be separated by a semicolon
             for args in ndx_commands.split(";"):
                 self._add_index_group(tmp_dir=tmp_dir, pipe_input=args)
-        flag_dict = {
-            "-i": _SGE.MMPBSA_IN,
-            "-cs": self._get_arg("tpr"),
-            "-cg": self._parse_coupling_groups(tmp_dir),
-            "-ci": self._get_file_from_dir(tmp_dir=tmp_dir, ext="ndx"),
-            "-ct": self._get_arg("xtc"),
-            "-cp": _SGE.STD_TOPOL,
-            # do not attempt to open the results in the GUI afterwards
-            "-nogui": "",
-        }
 
-        flag_list = self._parse_arguments(flag_dict=flag_dict)
+        for i in range(len(topol.structures)):
+            topol.write_structure(tmp_dir, index=i)
+            topol.write_tpr(tmp_dir, index=i)
+            topol.write_trajectory(tmp_dir, index=i)
 
-        result = self._run_mmpbsa(flag_list, tmp_dir)
+            flag_dict = {
+                "-i": _SGE.MMPBSA_IN,
+                "-cs": _SGE.STD_TPR,
+                "-cg": self._parse_coupling_groups(tmp_dir),
+                "-ci": _SGE.STD_INDEX,
+                "-ct": _SGE.STD_XTC,
+                "-cp": _SGE.STD_TOPOL,
+                # do not attempt to open the results in the GUI afterwards
+                "-nogui": "",
+            }
+
+            flag_list = self._parse_arguments(flag_dict=flag_dict)
+
+            result = self._run_mmpbsa(flag_list, tmp_dir)
 
         # parse and delete generated output
         self._parse_output(tmp_dir)
