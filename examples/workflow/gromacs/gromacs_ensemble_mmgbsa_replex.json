@@ -406,21 +406,9 @@
 						"parameters": {}
 					},
 					"additional": {
-						"coupling groups": "Protein Other",
-						"forcefield": "<fill_path>/amber14sb.ff"
+						"coupling_groups": "Protein Other",
+						"forcefield": "/<fill_path>/forcefields/amber14sb.ff"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "14b_trjconv",
-							"extension": "xtc"
-						},
-						{
-							"source": "13_prod_mdrun",
-							"extension": "tpr"
-						}
-					]
 				},
 				"writeout": [
 					{

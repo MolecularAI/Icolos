@@ -473,7 +473,7 @@
 								"parameters": {}
 							},
 							"additional": {
-								"coupling groups": "Protein Other",
+								"coupling_groups": "Protein Other",
 								"forcefield": "<fill_path>/amber14sb.ff"
 							}
 						},
