@@ -1,4 +1,5 @@
-from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from pydantic import BaseModel
@@ -9,6 +10,7 @@ from icolos.utils.execute_external.gromacs import GromacsExecutor
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
+_SBE = StepBaseEnum
 
 
 class StepGMXMDrun(StepGromacsBase, BaseModel):
@@ -42,10 +44,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         for line in log_file[-50:]:
             self._logger_blank.log(line, _LE.INFO)
 
-    def execute(self):
-
-        tmp_dir = self._make_tmpdir()
-        topol = self.get_topol()
+    def run_single_tpr(self, tmp_dir: str, topol: GromacsTopol):
         # if we're simulating a protein, we need to modify the topol file to include the correct index groups \
         # to allow ligand restraint.  This means an ndx file must be specified in the json
         self.write_input_files(tmp_dir)
@@ -72,4 +71,37 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         else:
             topol.set_structure(tmp_dir)
 
+    def run_multidir_sim(self, tmp_dir, topol):
+        """
+        Runs a multidir simulation, allowing for replex simulations.  Several conditions are required for this running mode
+        1) the previous step in the workflow should have been an iterator to produce n tpr files.  This must have been run with single_dir mode ON and remove_temprorary_files OFF, so we can extract files from those workflows' tmpdirs
+
+        """
+        dispatcher_step = [
+            s
+            for s in self.get_workflow_object()._initialized_steps
+            if s.type == _SBE.DISPATCHER
+        ][-1]
+        workflows = dispatcher_step.workflows
+        # now we have the workdirs which should contain the final tprs from the production grompp step
+        work_dirs = [wf.work_dir for wf in workflows]
+        # note, this must be a multiple of the number of simulations
+        threads = self.execution.resources.other_args["threads"]
+        n_gpus = int(self.execution.resources.gres.split(":")[-1])
+        # map the PP and PME tasks to the GPUs
+        n_sims = len(work_dirs)
+        gputask_str = ""
+        for _ in n_sims:
+            gputask_str += "01"
+        command = f"mpirun -np {threads} gmx_mpi mdrun -multidir {' '.join(work_dirs)} --gputasks 0000011111"
+
+    def execute(self):
+
+        tmp_dir = self._make_tmpdir()
+        topol = self.get_topol()
+        run_mode = self.get_additional_setting(_SGE.RUN_MODE, default=_SGE.SERIAL)
+        if run_mode == _SGE.SERIAL:
+            self.run_single_tpr(tmp_dir, topol=topol)
+        elif run_mode == _SGE.MULTIDIR:
+            self.run_multidir_sim(tmp_dir)
         self._remove_temporary(tmp_dir)

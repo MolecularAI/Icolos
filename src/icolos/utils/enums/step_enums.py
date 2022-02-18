@@ -764,6 +764,10 @@ class StepGromacsEnum:
    1    1       1000       1000       1000
 #endif\n"""
 
+    MULTIDIR = "multidir"
+    SERIAL = "serial"
+    RUN_MODE = "run_mode"
+
     def __getattr__(self, name):
         if name in self:
             return name
