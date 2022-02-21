@@ -63,6 +63,7 @@ class StepExecutionResourceParameters(BaseModel):
     gres: str = None
     mem: str = "32g"
     cores: int = 8
+    tasks: int = 1
     modules: List = []
     other_args: dict = {}
 

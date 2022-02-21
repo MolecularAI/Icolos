@@ -98,10 +98,10 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             tpr.write(path)
 
         # note, this must be a multiple of the number of simulations
-        threads = self.execution.resources.other_args["--threads"]
+        tasks = self.execution.resources.tasks
         # map the PP and PME tasks to the GPUs
 
-        command = f"mpirun -np {threads} gmx_mpi mdrun -multidir {' '.join(work_dirs)}"
+        command = f"mpirun -np {tasks} gmx_mpi mdrun -multidir {' '.join(work_dirs)}"
         arguments = self._parse_arguments(flag_dict={"-x": _SGE.STD_XTC})
         self._backend_executor.execute(
             command=command, arguments=arguments, location=tmp_dir, check=True
