@@ -236,6 +236,7 @@ class StepBase(BaseModel):
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
+                tasks=self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
