@@ -58,9 +58,7 @@ class Test_MMPBSA(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA "
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load gmx_MMPBSA "},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
@@ -91,9 +89,7 @@ class Test_MMPBSA(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_gmmpbsa",
             _SBE.STEP_TYPE: "gmx_mmpbsa",
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load gmx_MMPBSA"},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
@@ -103,6 +99,41 @@ class Test_MMPBSA(unittest.TestCase):
                     _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
                     _SGE.COUPLING_GROUPS: "Protein Other",
                     _SGE.INPUT_FILE: PATHS_EXAMPLEDATA.MMPBSA_CUSTOM_INPUT,
+                },
+            },
+        }
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+
+        step_mmpbsa = StepGMXmmpbsa(**step_conf)
+        step_mmpbsa.set_workflow_object(wf)
+
+        step_mmpbsa.data.generic.add_file(
+            GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
+        )
+        step_mmpbsa.execute()
+        out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
+        step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
+        stat_inf = os.stat(out_path)
+
+        self.assertGreater(stat_inf.st_size, 4680)
+
+    def test_protein_lig_single_traj_MPI(self):
+
+        step_conf = {
+            _SBE.STEPID: "test_gmmpbsa",
+            _SBE.STEP_TYPE: "gmx_mmpbsa",
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load gmx_MMPBSA"},
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ARGUMENTS: {
+                    _SBE.SETTINGS_ARGUMENTS_FLAGS: ["MPI"],
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                },
+                _SBE.SETTINGS_ADDITIONAL: {
+                    _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
+                    _SGE.COUPLING_GROUPS: "Protein Other",
+                    _SGE.INPUT_FILE: PATHS_EXAMPLEDATA.MMPBSA_CUSTOM_INPUT,
+                    _SGE.THREADS: 4,
                 },
             },
         }
