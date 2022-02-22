@@ -7,6 +7,7 @@ channels:
 dependencies:
   - biopython>=1.79
   - ipython
+  - ipykernel
   - pip
   - python>=3.9
   - scikit-learn>=1.0.1
