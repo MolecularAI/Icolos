@@ -1,5 +1,4 @@
 import os
-from posixpath import dirname
 
 from icolos.loggers.base_logger import BaseLogger
 
@@ -75,7 +74,16 @@ def parse_header(conf: dict, args, entry_point_path: str, logger: BaseLogger) ->
     )
 
     # update global settings; if they are not supported, pydantic will complain later on
-    # TODO: at the moment the implementation ignores stuff that is not understood (e.g. when a typo occurs); this should fail
+    # TODO: at the moment this implementation ignores stuff that is not understood (e.g. when a typo occurs); this should fail
     global_settings_CLI = parse_global(g_input=args.global_settings, logger=logger)
     conf = add_global(conf, global_settings_CLI, _WE.GLOBAL_SETTINGS)
     return conf
+
+
+def log_version_number(logger: BaseLogger):
+    # this requires python >= 3.8
+    try:
+        from importlib import metadata
+        logger.log(f"Icolos version {metadata.version('icolos')}", _LE.INFO)
+    except:
+        logger.log(f"Could not obtain Icolos version.", _LE.WARNING)
