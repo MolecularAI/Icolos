@@ -14,7 +14,6 @@
         "debug": true,
         "values_key": "docking_score",
         "configuration_path": "/projects/tests/reinvent_icolos/docking.json",
-        "executor_script_path": "",
-        "environment_path": "/projects/icolos/miniconda3/envs/icolosprod/bin/icolos"
+        "executor_path": "/projects/icolos/miniconda3/envs/icolosprod/bin/icolos"
     }
 }
