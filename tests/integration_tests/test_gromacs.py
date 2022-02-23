@@ -890,7 +890,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
                             {
-                                _SBE.INPUT_SOURCE: "14b_trjconv",
+                                _SBE.INPUT_SOURCE: "14_trjconv",
                                 _SBE.INPUT_EXTENSION: "xtc",
                             },
                             {
