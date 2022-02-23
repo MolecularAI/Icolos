@@ -6,7 +6,7 @@ from icolos.core.workflow_steps.step import StepBase
 from pydantic import BaseModel
 
 try:
-    from espsim import EmbedAlignConstrainedScore
+    from espsim import GetEspSim, GetShapeSim
 except ImportError:
     print(
         "WARNING - Could not import module espsim, check it is installed in your environment"
@@ -15,6 +15,8 @@ except ImportError:
 from rdkit.Chem import AllChem, Mol
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
+from rdkit.Chem import AllChem
+from icolos.core.workflow_steps.step import _LE
 from icolos.utils.general.parallelization import SubtaskContainer, Parallelizer
 import os
 
@@ -34,39 +36,42 @@ class StepEspSim(StepBase, BaseModel):
         # housekeeping for data appending later
 
         trg_mol = Chem.AddHs(Chem.MolFromSmiles(trg.get_smile()))
+        AllChem.EmbedMolecule(ref, AllChem.ETKDG())
+        AllChem.EmbedMolecule(trg_mol, AllChem.ETKDG())
+        mols = [Chem.RemoveHs(x) for x in [ref, trg_mol]]
+        mcs = rdFMCS.FindMCS(
+            mols,
+            threshold=0.8,
+            completeRingsOnly=True,
+            ringMatchesRingOnly=True,
+        )
+        self._logger.log(
+            f"Computed mcs: {mcs} for enumeration {trg.get_smile()}", _LE.DEBUG
+        )
 
-        # get the mol object for the max common substructure
-        mcs = Chem.MolFromSmarts(rdFMCS.FindMCS([ref, trg_mol]).smartsString)
-        mcs = Chem.MolToSmiles(mcs)
+        patt = Chem.MolFromSmarts(mcs.smartsString)
+        refMol = mols[0]
+        refMatch = refMol.GetSubstructMatch(patt)
 
-        patt = Chem.MolFromSmiles(mcs, sanitize=False)
-        helper = Chem.AddHs(Chem.MolFromSmiles(mcs))
+        mv = trg_mol.GetSubstructMatch(patt)
+        AllChem.AlignMol(trg_mol, refMol, atomMap=list(zip(mv, refMatch)))
 
-        # Embed first reference molecule, create one conformer
-        AllChem.EmbedMolecule(helper, AllChem.ETKDG())
+        # Generate an single conformer for the reference
 
-        # Optimize the coordinates of the conformer
-        AllChem.UFFOptimizeMolecule(helper)
-        core = AllChem.DeleteSubstructs(
-            AllChem.ReplaceSidechains(helper, patt), Chem.MolFromSmiles("*")
-        )  # Create core molecule with 3D coordinates
-        core.UpdatePropertyCache()
+        # All atom alignment of the two
 
-        core = AllChem.DeleteSubstructs(
-            AllChem.ReplaceSidechains(helper, patt), Chem.MolFromSmiles("*")
-        )  # Create core molecule with 3D coordinates
-        core.UpdatePropertyCache()
-
-        args = [ref, trg_mol, core]
-
-        args = self._get_arguments(args)
-
-        simShape, simEsp = EmbedAlignConstrainedScore(*args)
+        charge_method = self.get_additional_setting("charge_method", default="resp")
+        esp_sim = GetEspSim(trg_mol, ref, partialCharges=charge_method)
+        shape_sim = GetShapeSim(trg_mol, ref)
+        self._logger.log(
+            f"Computed EspSim: {esp_sim}, ShapeSim: {shape_sim} for mol {trg.get_smile()}",
+            _LE.DEBUG,
+        )
 
         # now attach the mols as conformers attach the scores to the mol objects
         trg_conf = Conformer(conformer=trg_mol)
-        trg_conf.get_molecule().SetProp("shape_sim", str(simShape[0]))
-        trg_conf.get_molecule().SetProp("esp_sim", str(simEsp[0]))
+        trg_conf.get_molecule().SetProp("shape_sim", str(shape_sim))
+        trg_conf.get_molecule().SetProp("esp_sim", str(esp_sim))
 
         trg_conf.write(os.path.join(tmp_dir, "conformer.sdf"))
 
@@ -74,8 +79,8 @@ class StepEspSim(StepBase, BaseModel):
 
         for flag in self.settings.arguments.flags:
             std_args.append(flag)
-        for key, value in self.settings.arguments.parameters:
-            std_args.append(key)
+        for key, value in self.settings.arguments.parameters.items():
+            std_args.append(f"{key}=")
             std_args.append(value)
         return std_args
 
@@ -103,9 +108,6 @@ class StepEspSim(StepBase, BaseModel):
 
     def _execute_espsim_parallel(self):
         # embed the reference compound
-        ref_compound = Chem.AddHs(
-            Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
-        )
 
         parallelizer = Parallelizer(func=self._compute_esp_sim)
 
@@ -123,10 +125,13 @@ class StepEspSim(StepBase, BaseModel):
             # hand over the embedded reference (compute once) and target compound (smiles string to be embedded)
             self._parse_output(tmp_dirs=tmp_dirs, trgs=trgs)
 
-            for task in next_batch:
+            for task, tmp_dir in zip(next_batch, tmp_dirs):
                 for subtask in task:
                     # TODO: Check return codes
-                    subtask.set_status_success()
+                    if os.path.isfile(tmp_dir):
+                        subtask.set_status_success()
+                    else:
+                        subtask.set_status_failed()
 
     def execute(self):
         """
@@ -145,8 +150,14 @@ class StepEspSim(StepBase, BaseModel):
             for enumeration in compound:
                 all_enums.append(deepcopy(enumeration))
 
-        self.execution.parallelization.max_length_sublists = 1
-        # unroll the provided compounds,
-        self._subtask_container = SubtaskContainer(max_tries=3)
-        self._subtask_container.load_data(all_enums)
-        self._execute_espsim_parallel()
+        ref_compound = Chem.AddHs(
+            Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
+        )
+        tmp_dir = tempfile.mkdtemp()
+        for enum in all_enums:
+            self._compute_esp_sim(ref_compound, enum, tmp_dir=tmp_dir)
+        # self.execution.parallelization.max_length_sublists = 1
+        # # unroll the provided compounds,
+        # self._subtask_container = SubtaskContainer(max_tries=3)
+        # self._subtask_container.load_data(all_enums)
+        # self._execute_espsim_parallel()
