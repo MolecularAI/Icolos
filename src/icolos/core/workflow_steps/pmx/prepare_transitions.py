@@ -58,7 +58,8 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             "-pbc",
             "mol",
             "-b",
-            0,
+            # use the first 2ns as equilibration time
+            2000,
         ]
         self._gromacs_executor.execute(
             _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
