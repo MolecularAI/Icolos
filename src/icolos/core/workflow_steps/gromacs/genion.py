@@ -25,14 +25,12 @@ class StepGMXGenion(StepGromacsBase, BaseModel):
     def execute(self):
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
-        topol.write_structure(tmp_dir)
-        topol.write_topol(tmp_dir)
-        self.write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir, topol=topol)
         arguments = self._parse_arguments(
             {
                 "-o": _SGE.STD_STRUCTURE,
                 "-p": _SGE.STD_TOPOL,
-                "-s": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR),
+                "-s": _SGE.STD_TPR,
             }
         )
         result = self._backend_executor.execute(
@@ -69,5 +67,5 @@ class StepGMXGenion(StepGromacsBase, BaseModel):
         self._logger.log('Added index group to "index.ndx"', _LE.DEBUG)
         self._parse_output(tmp_dir)
         topol.set_structure(tmp_dir)
-        topol.set_topol(tmp_dir)
+        topol.parse(tmp_dir)
         self._remove_temporary(tmp_dir)

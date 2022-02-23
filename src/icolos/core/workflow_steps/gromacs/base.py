@@ -19,11 +19,9 @@ class StepGromacsBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def write_input_files(self, tmp_dir):
+    def write_input_files(self, tmp_dir: str, topol: GromacsTopol = None):
         """
-        Prepares the tmpdir.  Supports two modes of operation, depending on where the data has come from:
-        1) If tmpdir is empty and generic data is not, dump generic data files into tmpdir
-        2) if dir is not empty and generic data is (we run pmx abfe like this), parse the tmpdir
+        Defaults to writing all available data from the workflow's topology object, unless that file has been specified in generic data, which will be prioritised
         """
 
         # Normally this should be handled by setting GMXLIB env variable, but for some programs (gmx_MMPBSA), this doesn't work and non-standard forcefields
@@ -44,6 +42,25 @@ class StepGromacsBase(StepBase, BaseModel):
         self._logger.log(
             f"Writing input files to working directory at {tmp_dir}", _LE.DEBUG
         )
+        # if we have specified a topol object, write out these files unless overwritten by an argument from the config
+        if topol is not None:
+            # handle structure files
+            if not self.data.generic.get_files_by_extension("gro"):
+                if topol.structures:
+                    topol.write_structure(tmp_dir)
+            if not self.data.generic.get_files_by_extension("top"):
+                if topol.top_lines:
+                    topol.write_topol(tmp_dir)
+            if not self.data.generic.get_files_by_extension("tpr"):
+                if topol.tprs:
+                    topol.write_tpr(tmp_dir)
+            if not self.data.generic.get_files_by_extension("xtc"):
+                if topol.trajectories:
+                    topol.write_trajectory(tmp_dir)
+            if not self.data.generic.get_files_by_extension("ndx"):
+                if topol.ndx:
+                    topol.write_ndx(tmp_dir)
+
         for file in self.data.generic.get_flattened_files():
             file.write(tmp_dir)
 
@@ -102,21 +119,10 @@ class StepGromacsBase(StepBase, BaseModel):
         config_file.set_data(file_data)
         config_file.write(tmp_dir)
 
-    def _generate_index_groups(self, tmp_dir):
-        try:
-
-            structure = [
-                f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_STRUCTURE)
-            ]
-            assert len(structure) == 1
-            structure = structure[0]
-        except AssertionError:
-            structure = [
-                f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_TPR)
-            ]
-            structure = structure[0]
-
-        args = ["-f", structure]
+    def _generate_index_groups(self, tmp_dir: str):
+        # dump the first structure file to the tmpdir
+        self.get_topol().structures[0].write(tmp_dir)
+        args = ["-f", _SGE.STD_STRUCTURE]
         ndx_list = [f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_NDX)]
         if len(ndx_list) == 1:
             args.extend(["-n", ndx_list[0]])
@@ -127,6 +133,7 @@ class StepGromacsBase(StepBase, BaseModel):
             check=True,
             pipe_input='echo -e "q"',
         )
+        self.get_topol().set_ndx(tmp_dir)
         return result
 
     def construct_pipe_arguments(self, tmp_dir, params) -> str:
@@ -163,7 +170,7 @@ class StepGromacsBase(StepBase, BaseModel):
         return " ".join(output)
 
     def _add_index_group(self, tmp_dir, pipe_input):
-        ndx_args_2 = [
+        ndx_args = [
             "-f",
             os.path.join(tmp_dir, _SGE.STD_STRUCTURE),
             "-o",
@@ -175,13 +182,14 @@ class StepGromacsBase(StepBase, BaseModel):
         )
         result = self._backend_executor.execute(
             command=_GE.MAKE_NDX,
-            arguments=ndx_args_2,
+            arguments=ndx_args,
             location=tmp_dir,
             check=True,
             pipe_input=self.construct_pipe_arguments(tmp_dir, pipe_input),
         )
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
+        self.get_topol().set_ndx(tmp_dir)
 
     def get_topol(self) -> GromacsTopol:
         return self.get_workflow_object().workflow_data.gmx_topol

@@ -17,6 +17,7 @@ class SlurmExecutor(ExecutorBase):
         self,
         cores: int,
         partition: str,
+        tasks: int,
         time: str,
         mem: str,
         modules: List,
@@ -30,6 +31,7 @@ class SlurmExecutor(ExecutorBase):
         self.cores = cores
         self.partition = partition
         self.time = time
+        self.tasks = tasks
         self.mem = mem
         self.modules = modules
         self.other_args = other_args
@@ -194,8 +196,9 @@ class SlurmExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  -c{self.cores}",
-            f"#SBATCH -p {self.partition}",
+            f"#SBATCH  --cores={self.cores}",
+            f"#SBATCH --partition={self.partition}",
+            f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
         ]
         if self.gres is not None:

@@ -25,13 +25,14 @@ class Test_Genion(unittest.TestCase):
         with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP), "r") as f:
             topol = f.readlines()
         with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
-            self.tpr = f.read()
+            tpr = f.read()
         with open(
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
             struct = f.readlines()
         self.topol = GromacsTopol()
-        self.topol.structure = struct
+        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
+        self.topol.tprs = [GenericData(_SGE.STD_TPR, file_data=tpr)]
         self.topol.top_lines = topol
 
     def test_genion_run(self):
@@ -54,9 +55,7 @@ class Test_Genion(unittest.TestCase):
         }
 
         step_genion = StepGMXGenion(**step_conf)
-        step_genion.data.generic.add_file(
-            GenericData(file_name="structure.tpr", file_data=self.tpr, argument=True)
-        )
+
         wf = WorkFlow()
         wf.workflow_data.gmx_topol = self.topol
         step_genion.set_workflow_object(wf)

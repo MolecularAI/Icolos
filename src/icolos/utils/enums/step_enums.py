@@ -94,6 +94,7 @@ class StepBaseEnum(str, Enum):
     EXEC_RESOURCES = "resources"
     EXEC_RESOURCES_PARTITION = "partition"
     EXEC_RESOURCES_GRES = "gres"
+    EXEC_RESOURCES_TASKS = "tasks"
     EXEC_RESOURCES_MODULES = "modules"
     EXEC_RESOURCES_MEM = "mem"
     EXEC_RESOURCES_CORES = "cores"
@@ -733,8 +734,9 @@ class StepGromacsEnum:
     LIGAND_MOL2 = "Ligand.mol2"
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
-    STD_TPR = "structure.tpr"
-    STD_XTC = "structure.xtc"
+    STD_TPR = "topol.tpr"
+    STD_XTC = "traj.xtc"
+    STD_TRR = "traj.trr"
     STD_STRUCTURE = "confout.gro"
     POSRE_LIG = "posre_lig.itp"
     CHARGE_METHOD = "charge_method"
@@ -763,6 +765,9 @@ class StepGromacsEnum:
 ;  i funct       fcx        fcy        fcz
    1    1       1000       1000       1000
 #endif\n"""
+
+    MULTIDIR = "multidir"
+    REPLICAS = "replicas"
 
     def __getattr__(self, name):
         if name in self:

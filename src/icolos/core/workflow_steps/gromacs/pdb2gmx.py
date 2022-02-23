@@ -235,7 +235,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
 
         topol.forcefield = self.settings.arguments.parameters["-ff"]
         topol.water = self.settings.arguments.parameters["-water"]
-        topol.parse(os.path.join(tmp_dir, _SGE.PROTEIN_TOP))
+        topol.parse(tmp_dir, _SGE.PROTEIN_TOP)
         topol.set_structure(tmp_dir, _SGE.PROTEIN_PDB, sanitize=True)
         posre_files = [
             f for f in os.listdir(tmp_dir) if f.endswith(".itp") and "posre" in f
