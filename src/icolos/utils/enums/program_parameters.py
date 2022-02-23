@@ -1053,6 +1053,7 @@ class GromacsEnum:
     GROMPP = "gmx grompp"
     GENION = "gmx genion"
     MDRUN = "gmx mdrun"
+    MPI_MDRUN = "gmx_mpi mdrun"
     MAKE_NDX = "gmx make_ndx"
     GENRESTR = "gmx genrestr"
     TRJCAT = "gmx trjcat"

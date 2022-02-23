@@ -119,6 +119,7 @@ class PATHS_EXAMPLEDATA:
     GROMACS_IONS_MDP = expand_path("gromacs/protein/ions.mdp")
     GROMACS_MD_MDP = expand_path("gromacs/protein/md.mdp")
     GROMACS_HOLO_STRUCTURE = expand_path("gromacs/protein/1BVG.pdb")
+    GROMACS_DNA_STRUCTURE = expand_path("gromacs/cccc.pdb")
     GROMACS_HOLO_STRUCTURE_GRO = expand_path("gromacs/protein/1BVG.gro")
     GROMACS_DMP_LIGAND_TRJ = expand_path("gromacs/protein/DMP.xtc")
     GROMACS_DMP_LIGAND_SDF = expand_path("gromacs/protein/DMP.sdf")

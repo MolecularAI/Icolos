@@ -94,6 +94,7 @@ class StepBaseEnum(str, Enum):
     EXEC_RESOURCES = "resources"
     EXEC_RESOURCES_PARTITION = "partition"
     EXEC_RESOURCES_GRES = "gres"
+    EXEC_RESOURCES_TASKS = "tasks"
     EXEC_RESOURCES_MODULES = "modules"
     EXEC_RESOURCES_MEM = "mem"
     EXEC_RESOURCES_CORES = "cores"

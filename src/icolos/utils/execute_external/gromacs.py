@@ -19,6 +19,7 @@ class GromacsExecutor(ExecutorBase):
             _GE.GROMPP,
             _GE.SOLVATE,
             _GE.MDRUN,
+            _GE.MPI_MDRUN,
             _GE.PDB2GMX,
             _GE.MAKE_NDX,
             _GE.GENRESTR,

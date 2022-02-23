@@ -41,7 +41,9 @@ class Test_MMPBSA(unittest.TestCase):
             self.lig_posre = f.read()
 
         self.topol = GromacsTopol()
-        self.topol.set_topol("", PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        top_path = os.path.dirname(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        top_file = PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP.split("/")[-1]
+        self.topol.parse(top_path, top_file)
         self.topol.structures = [
             GenericData(_SGE.STD_STRUCTURE, file_data=self.structure)
         ]

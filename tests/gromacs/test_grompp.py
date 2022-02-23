@@ -22,8 +22,6 @@ class Test_Grompp(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP), "r") as f:
-            topol = f.readlines()
         with open(
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
@@ -33,11 +31,9 @@ class Test_Grompp(unittest.TestCase):
 
         self.topol = GromacsTopol()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
-        self.topol.top_lines = topol
-        self.topol.add_itp(
-            os.path.join(MAIN_CONFIG["ICOLOS_TEST_DATA"], "gromacs/protein"),
-            ["DMP:100.itp"],
-        )
+        top_path = os.path.dirname(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        top_file = PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP.split("/")[-1]
+        self.topol.parse(top_path, top_file)
 
     def test_grompp(self):
         step_conf = {
