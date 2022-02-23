@@ -80,10 +80,17 @@ def parse_header(conf: dict, args, entry_point_path: str, logger: BaseLogger) ->
     return conf
 
 
-def log_version_number(logger: BaseLogger):
-    # this requires python >= 3.8
+def get_version_number() -> str:
     try:
+        # this requires python >= 3.8
         from importlib import metadata
-        logger.log(f"Icolos version {metadata.version('icolos')}", _LE.INFO)
+        return metadata.version('icolos')
     except:
+        return "unknown"
+
+
+def log_version_number(logger: BaseLogger):
+    version = get_version_number()
+    if version == "unknown":
         logger.log(f"Could not obtain Icolos version.", _LE.WARNING)
+    logger.log(f"Icolos version {version} initialized.", _LE.INFO)
