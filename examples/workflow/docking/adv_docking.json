@@ -17,7 +17,7 @@
                 "type": "embedding",
                 "settings": {
                     "arguments": {
-                        "flags": ["-epik"],
+                        "flags": [],
                         "parameters": {
                             "protonate": true,
                             "method": "rdkit"
