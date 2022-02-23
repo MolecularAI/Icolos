@@ -196,7 +196,7 @@ class SlurmExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  --cores={self.cores}",
+            f"#SBATCH  -c{self.cores}",
             f"#SBATCH --partition={self.partition}",
             f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
