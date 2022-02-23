@@ -1,13 +1,20 @@
 # Update log
 
+### Version 1.7.1 | 2022-02-23
+#### Features
+- Added version logging.
+#### Internal
+- Update of environment specification.
+- Improvements to `ESPsim` integration.
+
 ### Version 1.7.0 | 2022-02-16
 #### Features
-- Added Gold docking backend
-- Added OpenFF parametrisation for GROMACS simulations
+- Added Gold docking backend.
+- Added OpenFF parametrisation for GROMACS simulations.
 #### Internal
-- Refactor MD system parametrisation and GROMACS topology handling
-- Refactor step dispatching to allow for cleaner parallelization
-- Various bug fixes and stability improvements
+- Refactor MD system parametrisation and GROMACS topology handling.
+- Refactor step dispatching to allow for cleaner parallelization.
+- Various bug fixes and stability improvements.
 
 ### Version 1.6.0 | 2022-02-04
 #### Internal
