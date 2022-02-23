@@ -1,5 +1,12 @@
 # Update log
 
+
+### Version 1.8.0 | 2022-02-23
+#### Features
+- Improved DNA support for `GROMACS` simulations.
+#### Internal
+- `GROMACS` unit test update.
+
 ### Version 1.7.1 | 2022-02-23
 #### Features
 - Added version logging.
