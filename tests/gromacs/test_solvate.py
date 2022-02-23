@@ -26,7 +26,7 @@ class Test_Solvate(unittest.TestCase):
             data = f.readlines()
 
         self.topol = GromacsTopol()
-        self.topol.parse(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        self.topol.set_topol("", PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=data)]
 
     def test_solvate(self):

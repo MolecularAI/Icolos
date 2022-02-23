@@ -24,12 +24,8 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self.write_input_files(tmp_dir)
         topol = self.get_topol()
-        topol.write_topol(tmp_dir)
-        topol.write_structure(tmp_dir)
-        topol.write_trajectory(tmp_dir)
-        topol.write_tpr(tmp_dir)
+        self.write_input_files(tmp_dir, topol=topol)
 
         # give the option to run a make_ndx step preceding clustering to facilitate clustering on custom groups
         if _SGE.INDEX_FLAG in self.settings.arguments.parameters.keys():

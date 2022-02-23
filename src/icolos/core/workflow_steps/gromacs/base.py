@@ -19,11 +19,9 @@ class StepGromacsBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def write_input_files(self, tmp_dir):
+    def write_input_files(self, tmp_dir: str, topol: GromacsTopol = None):
         """
-        Prepares the tmpdir.  Supports two modes of operation, depending on where the data has come from:
-        1) If tmpdir is empty and generic data is not, dump generic data files into tmpdir
-        2) if dir is not empty and generic data is (we run pmx abfe like this), parse the tmpdir
+        Defaults to writing all available data from the workflow's topology object, unless that file has been specified in generic data, which will be prioritised
         """
 
         # Normally this should be handled by setting GMXLIB env variable, but for some programs (gmx_MMPBSA), this doesn't work and non-standard forcefields
@@ -44,6 +42,25 @@ class StepGromacsBase(StepBase, BaseModel):
         self._logger.log(
             f"Writing input files to working directory at {tmp_dir}", _LE.DEBUG
         )
+        # if we have specified a topol object, write out these files unless overwritten by an argument from the config
+        if topol is not None:
+            # handle structure files
+            if not self.data.generic.get_files_by_extension("gro"):
+                if topol.structures:
+                    topol.write_structure(tmp_dir)
+            if not self.data.generic.get_files_by_extension("top"):
+                if topol.top_lines:
+                    topol.write_topol(tmp_dir)
+            if not self.data.generic.get_files_by_extension("tpr"):
+                if topol.tprs:
+                    topol.write_tpr(tmp_dir)
+            if not self.data.generic.get_files_by_extension("xtc"):
+                if topol.trajectories:
+                    topol.write_trajectory(tmp_dir)
+            if not self.data.generic.get_files_by_extension("ndx"):
+                if topol.ndx:
+                    topol.write_ndx(tmp_dir)
+
         for file in self.data.generic.get_flattened_files():
             file.write(tmp_dir)
 

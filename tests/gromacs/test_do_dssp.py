@@ -25,7 +25,7 @@ class Test_do_dssp(unittest.TestCase):
         with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC), "rb") as f:
             self.traj = f.read()
 
-    def test_editconf_run(self):
+    def test_dssp_run(self):
         step_conf = {
             _SBE.STEPID: "test_dssp",
             _SBE.STEP_TYPE: "dssp",

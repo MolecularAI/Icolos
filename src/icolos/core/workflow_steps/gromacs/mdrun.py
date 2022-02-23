@@ -50,14 +50,14 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
     def run_single_tpr(self, tmp_dir: str, topol: GromacsTopol):
         # if we're simulating a protein, we need to modify the topol file to include the correct index groups \
         # to allow ligand restraint.  This means an ndx file must be specified in the json
-        self.write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir, topol=topol)
         # append _out to the xtc file name
-        xtc_output_file = self.generate_output_file(_SGE.STD_XTC)
+
         arguments = self._parse_arguments(
             flag_dict={
-                "-s": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR),
+                "-s": _SGE.STD_TPR,
                 "-c": _SGE.STD_STRUCTURE,
-                "-x": xtc_output_file,
+                "-x": _SGE.STD_XTC,
             }
         )
         self._backend_executor.execute(
@@ -73,6 +73,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             topol.set_structure(tmp_dir, self.settings.arguments.parameters["-c"])
         else:
             topol.set_structure(tmp_dir)
+        topol.set_trajectory(tmp_dir)
 
     def run_multidir_sim(self, tmp_dir: str, topol: GromacsTopol):
         """
@@ -82,7 +83,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         """
         if not self.execution.platform == _ERE.SLURM:
             self._logger.log(
-                "WARNING: Running HREX simulation using workflow's resources! Normally this should be run as a separate batch job",
+                "WARNING: Running HREX simulation without external resources! Normally this should be run as a separate batch job",
                 _LE.WARNING,
             )
 

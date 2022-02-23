@@ -278,7 +278,7 @@ class GromacsTopol(BaseModel):
         if sanitize:
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
 
-        struct = GenericData(file_name=_SGE.STD_STRUCTURE, file_data=lines)
+        struct = GenericData(file_name=file, file_data=lines)
         try:
             self.structures[index] = struct
         except IndexError:
@@ -330,6 +330,7 @@ class GromacsTopol(BaseModel):
 
     def write_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
         traj = self.trajectories[index]
+
         path = os.path.join(path, file)
         traj.write(path, join=False)
 

@@ -25,9 +25,7 @@ class StepGMXGenion(StepGromacsBase, BaseModel):
     def execute(self):
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
-        topol.write_structure(tmp_dir)
-        topol.write_topol(tmp_dir)
-        topol.write_tpr(tmp_dir)
+        self.write_input_files(tmp_dir, topol=topol)
         arguments = self._parse_arguments(
             {
                 "-o": _SGE.STD_STRUCTURE,

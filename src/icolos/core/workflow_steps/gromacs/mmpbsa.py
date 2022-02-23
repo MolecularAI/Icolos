@@ -123,7 +123,6 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         topol = self.get_topol()
         self._generate_amber_input_file()
         self.write_input_files(tmp_dir)
-        topol.write_topol(tmp_dir)
 
         # form any required coupling groups with make_ndx_command before parsing coupling groups
         # e.g. combine protein + cofactor
