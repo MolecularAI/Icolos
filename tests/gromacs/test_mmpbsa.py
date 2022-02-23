@@ -41,7 +41,7 @@ class Test_MMPBSA(unittest.TestCase):
             self.lig_posre = f.read()
 
         self.topol = GromacsTopol()
-        self.topol.parse(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
+        self.topol.set_topol("", PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
         self.topol.structures = [
             GenericData(_SGE.STD_STRUCTURE, file_data=self.structure)
         ]
