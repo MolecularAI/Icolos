@@ -48,7 +48,7 @@ class StepPMXBase(StepBase, BaseModel):
         self._gromacs_executor = GromacsExecutor(
             prefix_execution=self.execution.prefix_execution
         )
-        self.sim_types = ["em", "eq", "transitions"]
+        self.sim_types = ["em", "nvt", "eq", "transitions"]
         self.states = ["stateA", "stateB"]
         # for a normal pmx run this would be "water" and "protein"
         # here we rename for compatibility across abfe/rbfe simulations

@@ -231,6 +231,51 @@
 				}
 			},
 			{
+				"step_id": "06c_prepare_simulations_nvt",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"cores": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
+				"step_id": "06d_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"cores": 16
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
 				"step_id": "07_prepare_simulations",
 				"type": "pmx_prepare_simulations",
 				"execution": {
