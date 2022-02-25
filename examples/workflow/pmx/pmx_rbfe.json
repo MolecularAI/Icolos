@@ -345,14 +345,16 @@
 				"execution": {
 					"platform": "slurm",
 					"resources": {
-						"partition": "gpu",
-						"gres": "gpu:1",
+						"partition": "core",
+						"cores": 16,
+						"mem": "8g",
+						"time": "8:00:00",
 						"modules": [
 							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
 						]
 					},
 					"parallelization": {
-						"cores": 16
+						"cores": 64
 					}
 				},
 				"settings": {
