@@ -108,8 +108,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     trr,
                     "-g",
                     mdlog,
-                    "-pme",
-                    "gpu",
                 ]
                 for flag in self.settings.arguments.flags:
                     single_command.append(flag)
