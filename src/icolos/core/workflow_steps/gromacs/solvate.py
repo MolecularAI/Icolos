@@ -1,3 +1,4 @@
+import os
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
@@ -22,15 +23,13 @@ class StepGMXSolvate(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
-        structure_file = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
-        )
+        topol = self.get_topol()
+        self.write_input_files(tmp_dir, topol=topol)
         arguments = self._parse_arguments(
             flag_dict={
-                "-cp": structure_file,
-                "-p": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TOPOL),
-                "-o": structure_file,
+                "-cp": _SGE.STD_STRUCTURE,
+                "-p": _SGE.STD_TOPOL,
+                "-o": _SGE.STD_STRUCTURE,
             }
         )
         result = self._backend_executor.execute(
@@ -42,4 +41,7 @@ class StepGMXSolvate(StepGromacsBase, BaseModel):
             f"Completed execution for {self.step_id} successfully.", _LE.INFO
         )
         self._parse_output(tmp_dir)
+        topol.set_structure(tmp_dir)
+        topol.parse(tmp_dir)
+
         self._remove_temporary(tmp_dir)

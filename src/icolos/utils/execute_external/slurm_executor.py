@@ -10,13 +10,14 @@ from tempfile import mkstemp
 _SE = SlurmEnum()
 
 
-class BatchExecutor(ExecutorBase):
-    """For execution of batch jobs using either Slurm or SGE scheduler."""
+class SlurmExecutor(ExecutorBase):
+    """For execution of batch jobs to a Slurm cluster."""
 
     def __init__(
         self,
         cores: int,
         partition: str,
+        tasks: int,
         time: str,
         mem: str,
         modules: List,
@@ -25,17 +26,18 @@ class BatchExecutor(ExecutorBase):
         prefix_execution=None,
         binary_location=None,
     ):
-        super().__init__(
-            prefix_execution=prefix_execution, binary_location=binary_location
-        )
+        super().__init__(prefix_execution=None, binary_location=None)
 
         self.cores = cores
         self.partition = partition
         self.time = time
+        self.tasks = tasks
         self.mem = mem
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
+        self._script_prefix_execution = prefix_execution
+        self._script_binary_location = binary_location
 
     def execute(
         self,
@@ -58,17 +60,20 @@ class BatchExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
+            print("Warning - Slurm was not found, falling back to local execution!")
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
             command=launch_command, arguments=[], location=location, check=check
         )
+
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
             state = self._wait_for_job_completion(job_id=job_id)
+        # if using local resources, bash call is blocking, no need to monitor, just wait for result to return
         else:
-            state = self._tail_log_file(location)
+            state = _SE.COMPLETED if result.returncode == 0 else _SE.FAILED
 
         # check the result from slurm
         if check == True:
@@ -116,12 +121,12 @@ class BatchExecutor(ExecutorBase):
             command = pipe_input + " | " + command
 
         # check, if command (binary) is to be found at a specific location (rather than in $PATH)
-        if self._binary_location is not None:
-            command = os.path.join(self._binary_location, command)
+        if self._script_binary_location is not None:
+            command = os.path.join(self._script_binary_location, command)
 
         # check, if the something needs to be added before the execution of the "rDock" command
         if self._prefix_execution is not None:
-            command = self._prefix_execution + " && " + command
+            command = self._script_prefix_execution + " && " + command
 
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
@@ -153,16 +158,20 @@ class BatchExecutor(ExecutorBase):
         completed = False
         state = None
         while not completed:
-            with open(os.path.join(location, "md.log"), "r") as f:
-                lines = f.readlines()
-            completed = any([completed_line in l for l in lines])
-            state = _SE.COMPLETED
-            failed = any([failed_line in l for l in lines])
-            if failed:
-                state = _SE.FAILED
-                for line in lines[-40:]:
-                    print(line)
-                completed = True
+            try:
+                with open(os.path.join(location, "md.log"), "r") as f:
+                    lines = f.readlines()
+                completed = any([completed_line in l for l in lines])
+                state = _SE.COMPLETED
+                failed = any([failed_line in l for l in lines])
+                if failed:
+                    state = _SE.FAILED
+                    for line in lines[-40:]:
+                        print(line)
+                    completed = True
+            except FileNotFoundError:
+                print("log file not found, sleeping")
+                time.sleep(10)
         return state
 
     def _check_job_status(self, job_id):
@@ -187,11 +196,13 @@ class BatchExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  -c{self.cores}",
-            f"#SBATCH -p {self.partition}",
+            f"#SBATCH  --cores={self.cores}",
+            f"#SBATCH --partition={self.partition}",
+            f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
         ]
-        header.append(f"#SBATCH --gres={self.gres}")
+        if self.gres is not None:
+            header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
             header.append(f"#SBATCH {key}={value}")
 

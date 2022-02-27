@@ -28,8 +28,11 @@ from icolos.core.step_utils.step_writeout import (
     WriteOutHandler,
     _SBE,
 )
-from icolos.utils.enums.execution_enums import ExecutionResourceEnum
+from icolos.utils.enums.execution_enums import (
+    ExecutionPlatformEnum,
+)
 from icolos.utils.execute_external.execute import Executor
+from icolos.utils.execute_external.slurm_executor import SlurmExecutor
 from icolos.utils.general.icolos_exceptions import StepFailed
 
 from icolos.utils.enums.compound_enums import CompoundTagsEnum
@@ -46,7 +49,7 @@ _LE = LoggingConfigEnum()
 _WE = WriteOutEnum()
 _CTE = CompoundTagsEnum()
 _SGE = StepGromacsEnum()
-_ERE = ExecutionResourceEnum
+_EPE = ExecutionPlatformEnum
 
 
 class StepFailurePolicyParameters(BaseModel):
@@ -55,11 +58,12 @@ class StepFailurePolicyParameters(BaseModel):
 
 
 class StepExecutionResourceParameters(BaseModel):
-    partition: _ERE = _ERE.CORE
+    partition: _EPE = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
-    mem: str = "64g"
+    mem: str = "32g"
     cores: int = 8
+    tasks: int = 1
     modules: List = []
     other_args: dict = {}
 
@@ -78,7 +82,7 @@ class StepExecutionParameters(BaseModel):
     failure_policy: StepFailurePolicyParameters = StepFailurePolicyParameters()
     check_backend_availability: bool = False
     resources: StepExecutionResourceParameters = StepExecutionResourceParameters()
-    resource: _ERE = _ERE.LOCAL
+    platform: _EPE = _EPE.LOCAL
 
 
 class StepSettingsArgsParameters(BaseModel):
@@ -227,11 +231,12 @@ class StepBase(BaseModel):
         self.step_id = step_id
 
     def _initialize_backend(self, executor: Callable):
-        if self.execution.resource == _ERE.SLURM:
-            self._backend_executor = executor(
+        if self.execution.platform == _EPE.SLURM:
+            self._backend_executor = SlurmExecutor(
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
+                tasks=self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
@@ -505,7 +510,7 @@ class StepBase(BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.DEBUG)
 
-    def get_additional_setting(self, key: str, default: str):
+    def get_additional_setting(self, key: str, default: str = None):
         """
         Query settings.additional with the key, if not set use the default
         """

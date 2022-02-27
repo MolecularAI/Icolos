@@ -37,57 +37,57 @@ class Test_PMXRunSimulations(unittest.TestCase):
         self.p_map = p_map
         export_unit_test_env_vars()
 
-    # def test_run_simulations_em(self):
-    #     pass
-    #     step_conf = {
-    #         _SBE.STEPID: "prepare_simulations",
-    #         _SBE.STEP_TYPE: "pmx_prepare_simulations",
-    #         _SBE.EXEC: {
-    #             "resource": "slurm",
-    #             "resources": {
-    #                 "partition": "gpu",
-    #                 "gres": "gpu:1",
-    #                 "modules": [
-    #                     "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
-    #                 ],
-    #             },
-    #         },
-    #         _SBE.SETTINGS: {
-    #             _SBE.SETTINGS_ARGUMENTS: {
-    #                 _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-    #                 _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
-    #             },
-    #             _SBE.SETTINGS_ADDITIONAL: {"sim_type": "em"},
-    #         },
-    #     }
+    def test_run_simulations_em(self):
+        pass
+        step_conf = {
+            _SBE.STEPID: "prepare_simulations",
+            _SBE.STEP_TYPE: "pmx_prepare_simulations",
+            _SBE.EXEC: {
+                "platform": "slurm",
+                "resources": {
+                    "partition": "gpu",
+                    "gres": "gpu:1",
+                    "modules": [
+                        "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                    ],
+                },
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ARGUMENTS: {
+                    _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                },
+                _SBE.SETTINGS_ADDITIONAL: {"sim_type": "em"},
+            },
+        }
 
-    #     step_run_simulations = StepPMXRunSimulations(**step_conf)
-    #     step_run_simulations.work_dir = self._test_dir
-    #     step_run_simulations._workflow_object = WorkFlow()
-    #     step_run_simulations.get_workflow_object().workflow_data.perturbation_map = (
-    #         self.p_map
-    #     )
-    #     step_run_simulations.execute()
+        step_run_simulations = StepPMXRunSimulations(**step_conf)
+        step_run_simulations.work_dir = self._test_dir
+        step_run_simulations._workflow_object = WorkFlow()
+        step_run_simulations.get_workflow_object().workflow_data.perturbation_map = (
+            self.p_map
+        )
+        step_run_simulations.execute()
 
-    #     stat_inf = os.stat(
-    #         os.path.join(
-    #             self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/md.log"
-    #         )
-    #     )
-    #     self.assertGreater(stat_inf.st_size, 2300000)
+        stat_inf = os.stat(
+            os.path.join(
+                self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/md.log"
+            )
+        )
+        self.assertGreater(stat_inf.st_size, 2000000)
 
-    #     stat_inf = os.stat(
-    #         os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
-    #     )
+        stat_inf = os.stat(
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
+        )
 
-    #     self.assertGreater(stat_inf.st_size, 1300000)
+        self.assertGreater(stat_inf.st_size, 1296303)
 
-    #     stat_inf = os.stat(
-    #         os.path.join(
-    #             self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
-    #         )
-    #     )
-    #     self.assertEqual(stat_inf.st_size, 72000)
+        stat_inf = os.stat(
+            os.path.join(
+                self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
+            )
+        )
+        self.assertEqual(stat_inf.st_size, 434940)
 
     def test_run_simulations_transitions(self):
         pass
@@ -95,7 +95,7 @@ class Test_PMXRunSimulations(unittest.TestCase):
             _SBE.STEPID: "prepare_simulations",
             _SBE.STEP_TYPE: "pmx_prepare_simulations",
             _SBE.EXEC: {
-                "resource": "slurm",
+                "platform": "slurm",
                 "resources": {
                     "partition": "gpu",
                     "gres": "gpu:1",
@@ -131,15 +131,15 @@ class Test_PMXRunSimulations(unittest.TestCase):
         )
         self.assertEqual(stat_inf.st_size, 43014)
 
-        # stat_inf = os.stat(
-        #     os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
-        # )
+        stat_inf = os.stat(
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
+        )
 
-        # self.assertGreater(stat_inf.st_size, 1339800)
+        self.assertGreater(stat_inf.st_size, 1339800)
 
-        # stat_inf = os.stat(
-        #     os.path.join(
-        #         self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
-        #     )
-        # )
-        # self.assertEqual(stat_inf.st_size, 72216)
+        stat_inf = os.stat(
+            os.path.join(
+                self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
+            )
+        )
+        self.assertEqual(stat_inf.st_size, 72216)

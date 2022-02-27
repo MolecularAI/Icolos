@@ -25,7 +25,7 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
 
         # get edges from the perturbation map attached to the step
-        edges = self.get_edges()
+        edges = [e.get_edge_id() for e in self.get_edges()]
 
         # enforce one edge per task list (results in multiple batches for large maps)
         self.execution.parallelization.max_length_sublists = 1
@@ -34,13 +34,15 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="pmx assemble_systems"
+            run_func=self._execute_command,
+            step_id="pmx assemble_systems",
+            result_checker=self._check_results,
         )
 
     def _execute_command(self, jobs: List):
 
         args = {
-            "-edges": '"' + " ".join([e.get_edge_id() for e in jobs]) + '"',
+            "-edges": '"' + " ".join([e for e in jobs]) + '"',
             "-ligand_path": os.path.join(self.work_dir, _PAE.LIGAND_DIR),
             "-workPath": self.work_dir,
         }
@@ -50,3 +52,22 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
             check=True,
             location=self.work_dir,
         )
+
+    def _check_results(self, batch: List[List[str]]) -> List[List[bool]]:
+        output_files = ["ffmerged.itp"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(self.work_dir, job, "hybridStrTop", f)
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

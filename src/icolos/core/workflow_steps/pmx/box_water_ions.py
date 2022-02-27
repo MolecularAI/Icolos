@@ -37,7 +37,9 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self.boxWaterIons, step_id="pmx boxWaterIons"
+            run_func=self.boxWaterIons,
+            step_id="pmx boxWaterIons",
+            result_checker=self._check_result,
         )
 
     def boxWaterIons(self, jobs: List[str]):
@@ -197,3 +199,21 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
             self._clean_backup_files(outLigPath)
 
             self._clean_backup_files(outProtPath)
+
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = [
+            "ligand/tpr.tpr",
+            "complex/tpr.tpr",
+        ]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all([os.path.isfile(os.path.join(self.work_dir, job, f)) for f in output_files])
+                )
+            results.append(subjob_results)
+        return results

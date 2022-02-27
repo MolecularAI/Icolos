@@ -1,0 +1,19 @@
+### add as scoring function component to REINVENT v3.0 or later
+
+{
+    "component_type": "icolos",
+    "name": "Docking",
+    "weight": 5,
+    "specific_parameters": {
+        "transformation": {
+            "transformation_type": "reverse_sigmoid",
+            "high": -7.5,
+            "low": -12.5,
+            "k": 0.2
+        },
+        "debug": true,
+        "values_key": "docking_score",
+        "configuration_path": "/projects/tests/reinvent_icolos/docking.json",
+        "executor_path": "/projects/icolos/miniconda3/envs/icolosprod/bin/icolos"
+    }
+}

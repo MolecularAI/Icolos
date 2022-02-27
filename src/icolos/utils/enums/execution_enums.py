@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ExecutionResourceEnum(str, Enum):
+class ExecutionPlatformEnum(str, Enum):
     LOCAL = "local"
     SLURM = "slurm"
     PARTITION = "partition"
@@ -11,3 +11,4 @@ class ExecutionResourceEnum(str, Enum):
     CORES = "cores"
     CORE = "core"
     GPU = "gpu"
+    SERIAL = "serial"

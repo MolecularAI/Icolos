@@ -35,11 +35,12 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(edges)
         self._execute_pmx_step_parallel(
-            run_func=self.prepare_transitions, step_id="pmx prepare_transitions"
+            run_func=self.prepare_transitions,
+            step_id="pmx prepare_transitions",
+            result_checker=self._check_result,
         )
 
     def _extract_snapshots(self, eqpath, tipath):
-        self._logger.log(f"Extracting frames for simulation path {eqpath}", _LE.DEBUG)
         tpr = "{0}/tpr.tpr".format(eqpath)
         trr = "{0}/traj.trr".format(eqpath)
         frame = "{0}/frame.gro".format(tipath)
@@ -96,11 +97,11 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                 frameNum=i,
             )
             if result.returncode != 0:
-                self._logger.log(f"Warning, grompp has failed in {tipath}", _LE.WARNING)
+                self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
                 for line in result.stderr.split("\n"):
                     self._logger.log(line, _LE.DEBUG)
 
-    def prepare_transitions(self, jobs: List[Edge]):
+    def prepare_transitions(self, jobs: List[str]):
         for edge in jobs:
             ligTopPath = self._get_specific_path(
                 workPath=self.work_dir, edge=edge, wp="ligand"
@@ -120,3 +121,28 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                     self._prepare_system(
                         edge=edge, state=state, wp="complex", r=r, toppath=protTopPath
                     )
+
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = [
+            f"ligand/stateA/run1/transitions/ti80.tpr",
+            f"ligand/stateB/run1/transitions/ti80.tpr",
+            f"complex/stateA/run1/transitions/ti80.tpr",
+            f"complex/stateB/run1/transitions/ti80.tpr",
+        ]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(os.path.join(self.work_dir, job, f))
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

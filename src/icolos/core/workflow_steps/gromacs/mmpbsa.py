@@ -7,6 +7,7 @@ from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.program_parameters import GromacsEnum
 import os
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.files_paths import attach_root_path
 
 _SGE = StepGromacsEnum()
@@ -23,7 +24,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(self._get_gromacs_executor())
+        self._initialize_backend(GromacsExecutor)
         self._check_backend_availability()
 
     def _get_arg(self, ext) -> AnyStr:
@@ -69,7 +70,12 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
 
     def _run_mmpbsa(self, args, tmp_dir) -> CompletedProcess:
         command = _GE.MMPBSA
-        self._logger.log(f"Executing mmgbsa calculation in dir {tmp_dir}", _LE.DEBUG)
+        threads = self.get_additional_setting(_SGE.THREADS, default=1)
+        if threads > 1:
+            command = f"mpirun -np {threads} " + command
+        self._logger.log(
+            f"Executing mmgbsa calculation with {threads} thread(s)", _LE.DEBUG
+        )
         result = self._backend_executor.execute(
             command=command, arguments=args, check=True, location=tmp_dir
         )
@@ -85,10 +91,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         output = []
         pipe_input = self.settings.additional[_SGE.COUPLING_GROUPS]
 
-        structure = self.data.generic.get_argument_by_extension(
-            _SGE.FIELD_KEY_STRUCTURE
-        )
-        arguments = ["-f", structure]
+        arguments = ["-f", _SGE.STD_STRUCTURE]
         if [f for f in os.listdir(tmp_dir) if f.endswith("ndx")]:
             arguments.extend(["-n", "index.ndx"])
         else:
@@ -116,16 +119,10 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         return file[0]
 
     def execute(self) -> None:
-        """
-        Execute gmx_MMPBSA
-        Note: execution using mpirun is not supported for stability reasons
-        """
         tmp_dir = self._make_tmpdir()
-
+        topol = self.get_topol()
         self._generate_amber_input_file()
-        self._write_input_files(tmp_dir)
-
-        # gmx_MMPBSA requires the coupling groups of the receptor and ligand
+        self.write_input_files(tmp_dir, topol=topol)
 
         # form any required coupling groups with make_ndx_command before parsing coupling groups
         # e.g. combine protein + cofactor
@@ -138,20 +135,26 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
             # can run make_ndx multiple times for complex cases, each set of pipe imput must be separated by a semicolon
             for args in ndx_commands.split(";"):
                 self._add_index_group(tmp_dir=tmp_dir, pipe_input=args)
-        flag_dict = {
-            "-i": _SGE.MMPBSA_IN,
-            "-cs": self._get_arg("tpr"),
-            "-cg": self._parse_coupling_groups(tmp_dir),
-            "-ci": self._get_file_from_dir(tmp_dir=tmp_dir, ext="ndx"),
-            "-ct": self._get_arg("xtc"),
-            "-cp": self._get_arg("top"),
-            # do not attempt to open the results in the GUI afterwards
-            "-nogui": "",
-        }
 
-        flag_list = self._parse_arguments(flag_dict=flag_dict)
+        for i in range(len(topol.structures)):
+            topol.write_structure(tmp_dir, index=i)
+            topol.write_tpr(tmp_dir, index=i)
+            topol.write_trajectory(tmp_dir, index=i)
 
-        result = self._run_mmpbsa(flag_list, tmp_dir)
+            flag_dict = {
+                "-i": _SGE.MMPBSA_IN,
+                "-cs": _SGE.STD_TPR,
+                "-cg": self._parse_coupling_groups(tmp_dir),
+                "-ci": _SGE.STD_INDEX,
+                "-ct": _SGE.STD_XTC,
+                "-cp": _SGE.STD_TOPOL,
+                # do not attempt to open the results in the GUI afterwards
+                "-nogui": "",
+            }
+
+            flag_list = self._parse_arguments(flag_dict=flag_dict)
+
+            result = self._run_mmpbsa(flag_list, tmp_dir)
 
         # parse and delete generated output
         self._parse_output(tmp_dir)

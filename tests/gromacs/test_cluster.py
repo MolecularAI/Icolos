@@ -1,12 +1,14 @@
 from icolos.core.containers.generic import GenericData
+from icolos.core.containers.gromacs_topol import GromacsTopol
 from icolos.core.workflow_steps.gromacs.cluster import StepGMXCluster
 import unittest
 import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.utils.general.files_paths import attach_root_path
 
-SGE = StepGromacsEnum()
+_SGE = StepGromacsEnum()
 SBE = StepBaseEnum
 
 
@@ -20,16 +22,18 @@ class Test_Cluster(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC), "rb") as f:
-            self.xtc = f.read()
-
-        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR), "rb") as f:
-            self.tpr = f.read()
-
+        with open(attach_root_path(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP), "r") as f:
+            topol = f.readlines()
         with open(
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
-            self.structure = f.read()
+            struct = f.readlines()
+
+        self.topol = GromacsTopol()
+        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
+        self.topol.top_lines = topol
+        self.topol.set_tpr(path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR)
+        self.topol.set_trajectory(path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC)
 
     def test_cluster(self):
         step_conf = {
@@ -48,23 +52,16 @@ class Test_Cluster(unittest.TestCase):
                 },
                 SBE.SETTINGS_ADDITIONAL: {
                     SBE.PIPE_INPUT: "2 System",
-                    SGE.MAKE_NDX_COMMAND: "1 & a P",
+                    _SGE.MAKE_NDX_COMMAND: "1 & a P",
                 },
             },
         }
 
         step_cluster = StepGMXCluster(**step_conf)
-        step_cluster.data.generic.add_file(
-            GenericData(file_name="tmp10249.xtc", file_data=self.xtc, argument=True)
-        )
-        step_cluster.data.generic.add_file(
-            GenericData(file_name="tmp03942.tpr", file_data=self.tpr, argument=True)
-        )
-        step_cluster.data.generic.add_file(
-            GenericData(
-                file_name="structure.gro", file_data=self.structure, argument=True
-            )
-        )
+        wf = WorkFlow()
+        wf.workflow_data.gmx_topol = self.topol
+        step_cluster.set_workflow_object(wf)
+
         step_cluster.execute()
         out_path = os.path.join(self._test_dir, "clusters.pdb")
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")

@@ -25,26 +25,29 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
     def execute(self):
 
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
+        topol = self.get_topol()
+        topol.write_ndx(tmp_dir)
+        replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
+        for i in range(replicas):
+            topol.write_tpr(tmp_dir, index=i)
+            topol.write_trajectory(tmp_dir, index=i)
+            flag_dict = {
+                "-s": _SGE.STD_TPR,
+                "-f": _SGE.STD_XTC,
+                "-o": _SGE.STD_XTC,
+            }
 
-        xtc_file = self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_XTC)
-        flag_dict = {
-            "-s": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR),
-            "-f": xtc_file,
-            "-o": xtc_file,
-        }
-
-        arguments = self._parse_arguments(flag_dict=flag_dict)
-        result = self._backend_executor.execute(
-            command=_GE.TRJCONV,
-            arguments=arguments,
-            location=tmp_dir,
-            check=True,
-            pipe_input=self.construct_pipe_arguments(
-                tmp_dir, self.settings.additional[_SBE.PIPE_INPUT]
-            ),
-        )
-        for line in result.stdout.split("\n"):
-            self._logger_blank.log(line, _LE.DEBUG)
-        self._parse_output(tmp_dir)
+            arguments = self._parse_arguments(flag_dict=flag_dict)
+            result = self._backend_executor.execute(
+                command=_GE.TRJCONV,
+                arguments=arguments,
+                location=tmp_dir,
+                check=True,
+                pipe_input=self.construct_pipe_arguments(
+                    tmp_dir, self.settings.additional[_SBE.PIPE_INPUT]
+                ),
+            )
+            for line in result.stdout.split("\n"):
+                self._logger_blank.log(line, _LE.DEBUG)
+            topol.set_trajectory(tmp_dir, index=i)
         self._remove_temporary(tmp_dir)

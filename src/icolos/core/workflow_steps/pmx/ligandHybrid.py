@@ -1,3 +1,5 @@
+from typing import List
+from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 import os
@@ -6,6 +8,7 @@ from icolos.core.workflow_steps.step import _LE
 import numpy as np
 
 from icolos.utils.execute_external.pmx import PMXExecutor
+from icolos.utils.general.parallelization import SubtaskContainer
 
 _PE = PMXEnum()
 _PAE = PMXAtomMappingEnum()
@@ -18,9 +21,36 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
         super().__init__(**data)
         self._initialize_backend(PMXExecutor)
 
-    def _execute_command(self, args):
+    def _execute_command(self, jobs: List[str]):
+        edge = jobs[0]
+        parts = edge.split("_")
+        lig1 = parts[0]
+        lig2 = parts[1]
+
+        arguments = {
+            "-i1": os.path.join(
+                self.work_dir,
+                _PAE.LIGAND_DIR,
+                lig1,
+                "MOL.pdb",
+            ),
+            "-i2": os.path.join(
+                self.work_dir,
+                _PAE.LIGAND_DIR,
+                lig2,
+                "MOL.pdb",
+            ),
+            "-itp1": os.path.join(self.work_dir, _PAE.LIGAND_DIR, lig1, "MOL.itp"),
+            "-itp2": os.path.join(self.work_dir, _PAE.LIGAND_DIR, lig2, "MOL.itp"),
+        }
+        # write output files the hybridStrTop directory for each edge
+        output_dir = os.path.join(self.work_dir, edge, _PE.HYBRID_STR_TOP)
+        arguments = self._prepare_arguments(args=arguments, output_dir=output_dir)
         self._backend_executor.execute(
-            command=_PE.LIGANDHYBRID, arguments=args, check=True, location=self.work_dir
+            command=_PE.LIGANDHYBRID,
+            arguments=arguments,
+            check=True,
+            location=self.work_dir,
         )
 
     def _prepare_arguments(self, args, output_dir):
@@ -53,40 +83,40 @@ class StepPMXligandHybrid(StepPMXBase, BaseModel):
     def execute(self):
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
 
-        edges = self.get_edges()
-        total_edges = len(edges)
-        for idx, edge in enumerate(edges):
-            progress = np.round(idx / total_edges * 100, 2)
-            self._logger.log(
-                f"Executing pmx ligandHybrid for edge {edge.get_edge_id()} - {progress}% complete",
-                _LE.DEBUG,
-            )
-            lig1 = edge.get_source_node_name()
-            lig2 = edge.get_destination_node_name()
+        edges = [e.get_edge_id() for e in self.get_edges()]
 
-            arguments = {
-                "-i1": os.path.join(
-                    self.work_dir,
-                    _PAE.LIGAND_DIR,
-                    lig1,
-                    "MOL.pdb",
-                ),
-                "-i2": os.path.join(
-                    self.work_dir,
-                    _PAE.LIGAND_DIR,
-                    lig2,
-                    "MOL.pdb",
-                ),
-                "-itp1": os.path.join(self.work_dir, _PAE.LIGAND_DIR, lig1, "MOL.itp"),
-                "-itp2": os.path.join(self.work_dir, _PAE.LIGAND_DIR, lig2, "MOL.itp"),
-            }
-            # write output files the hybrodStrTop directory for each edge
-            output_dir = os.path.join(
-                self.work_dir, edge.get_edge_id(), _PE.HYBRID_STR_TOP
-            )
-            arguments = self._prepare_arguments(args=arguments, output_dir=output_dir)
+        self.execution.parallelization.max_length_sublists = 1
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
+        )
+        self._subtask_container.load_data(edges)
+        self._execute_pmx_step_parallel(
+            run_func=self._execute_command,
+            step_id="ligandHybrid",
+            result_checker=self._check_result,
+        )
 
-            self._execute_command(arguments)
+    def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
+        """
+        Look in each hybridStrTop dir and check the output pdb files exist for the edges
+        """
+        output_files = ["ffmerged.itp", "mergedB.pdb", "mergedA.pdb"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(self.work_dir, job, "hybridStrTop", f)
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results
 
 
 help_string = """

@@ -1,4 +1,5 @@
 __pycache__
+pip-wheel-metadata
 *.pyc
 package.json
 .vscode
@@ -17,6 +18,6 @@ tests/junk
 *_cache
 *.ipynb_checkpoints
 output
-src/icolos/config/unit_tests_config/config.json
+config.json
 build
 {entrypoint_dir}

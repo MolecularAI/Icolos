@@ -276,7 +276,7 @@ class Test_workflow(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "02a_omega_confgen.sdf")
         wflow[2].write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertGreaterEqual(stat_inf.st_size, 4252)
+        self.assertGreaterEqual(stat_inf.st_size, 1800)
         out_path = os.path.join(self._test_dir, "02b_crest_confgen.sdf")
         wflow[3].write_conformers(out_path)
         stat_inf = os.stat(out_path)

@@ -1,9 +1,10 @@
 from typing import Dict, List, Optional
 from IPython.lib.display import IFrame
 import pandas as pd
-from icolos.core.containers.compound import Compound, Conformer, Enumeration
+from icolos.core.containers.compound import Compound, Conformer
 from pyvis.network import Network
 from icolos.core.containers.generic import GenericData
+from icolos.utils.enums.parallelization import ParallelizationEnum
 
 from icolos.utils.enums.step_enums import StepFepPlusEnum
 import os
@@ -11,6 +12,7 @@ from pydantic import BaseModel
 
 
 _SFE = StepFepPlusEnum()
+_PE = ParallelizationEnum
 
 
 class Node(BaseModel):
@@ -72,6 +74,7 @@ class Edge(BaseModel):
     min_no_atoms: str = None
     snapCoreRmsd: str = None
     bidirSnapCoreRmsd: str = None
+    status: _PE = _PE.STATUS_SUCCESS
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -85,6 +88,10 @@ class Edge(BaseModel):
     def get_edge_id(self) -> str:
         # construct the edge ID from the node hashes, separated by '_'
         return f"{self.node_from.get_node_hash()}_{self.node_to.get_node_hash()}"
+
+    def _set_status(self, status: str):
+        assert status in [_PE.STATUS_SUCCESS, _PE.STATUS_FAILED]
+        self.status = status
 
 
 class PerturbationMap(BaseModel):
@@ -101,6 +108,9 @@ class PerturbationMap(BaseModel):
     protein: GenericData = None
     vmap_output: IFrame = None
     replicas: int = 3
+    node_df: pd.DataFrame = None
+    # prune subsequent edge calculations on error
+    strict_execution: str = True
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -140,11 +150,6 @@ class PerturbationMap(BaseModel):
                     )
                     return enum.get_conformers()[0]
 
-        # TODO: Remove this before integration
-        print(
-            f"Compound with id {compound_id} was not found in the map - it may have been lost during map construction"
-        )
-
     def parse_map_file(self, file_path) -> None:
         # we need to do some format enforcement here (schrodinger or otherwise)
 
@@ -181,7 +186,7 @@ class PerturbationMap(BaseModel):
                 "Solvent dG",
             ],
         )
-        node_info = pd.DataFrame(
+        self.node_df = pd.DataFrame(
             data[start_node + 3 : stop_node - 1],
             index=None,
             columns=[
@@ -206,7 +211,7 @@ class PerturbationMap(BaseModel):
                 "BidirectionSnapCore",
             ],
         ).dropna()
-        for hash_id, node_id in zip(node_info["hash_id"], node_info["node_id"]):
+        for hash_id, node_id in zip(self.node_df["hash_id"], self.node_df["node_id"]):
             # map the hashes to the compound IDs
             self.hash_map[hash_id] = node_id
             node = Node(
@@ -255,8 +260,11 @@ class PerturbationMap(BaseModel):
             if node.node_hash == hash_id:
                 return node
 
-    def get_edges(self) -> List[Edge]:
-        return self.edges
+    def get_edges(self, alive_only=True) -> List[Edge]:
+        if alive_only:
+            return [e for e in self.edges if e.status == _PE.STATUS_SUCCESS]
+        else:
+            return self.edges
 
     def get_nodes(self) -> List[Node]:
         return self.nodes
@@ -286,6 +294,25 @@ class PerturbationMap(BaseModel):
 
     def get_protein(self) -> GenericData:
         return self.protein
+
+    def get_edge_by_id(self, idx: str) -> Optional[Edge]:
+        # handle case where the task is actually a path to a batch script
+        # print("idx is", idx)
+        # if not isinstance(idx, Edge):  #
+        #     parts = idx.split("/")
+        #     idx = [
+        #         part for part in parts if any([part in edge for edge in self.edges])
+        #     ][0]
+        #     print(idx)
+        #     # for part in parts:
+        #     #     for e in self.edges:
+        #     #         if part == e:
+        #     #             idx = part
+        match = [e for e in self.edges if e.get_edge_id() == idx]
+        if not match:
+            return
+        else:
+            return match[0]
 
     def __repr__(self) -> str:
         return f"Icolos Perturbation Map object containing {len(self.edges)} edges and {len(self.nodes)} nodes"

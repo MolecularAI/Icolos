@@ -9,11 +9,6 @@ from icolos.core.workflow_steps.step import (
     StepWriteoutParameters,
     StepExecutionParameters,
 )
-from icolos.utils.enums.step_enums import StepBaseEnum
-from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
-from icolos.utils.general.convenience_functions import nested_get
-
-_SIE = StepInitializationEnum()
 
 
 class BaseStepConfig(BaseModel):
@@ -30,7 +25,7 @@ class BaseStepConfig(BaseModel):
     execution: StepExecutionParameters = StepExecutionParameters()
     settings: StepSettingsParameters = StepSettingsParameters()
 
-    def _as_dict(self):
+    def as_dict(self):
         return {
             "step_id": self.step_id,
             "type": self.type,
@@ -52,16 +47,3 @@ class FlowControlBase(BaseModel):
     def __init__(self, **data) -> None:
         super().__init__(**data)
         self._logger = StepLogger()
-
-    def _initialize_step_from_dict(self, step_conf: dict):
-        # Require a separate initialisation method to avoid circular import
-        _STE = StepBaseEnum
-
-        step_type = nested_get(step_conf, _STE.STEP_TYPE, default=None)
-        step_type = None if step_type is None else step_type.upper()
-        if step_type in _SIE.STEP_INIT_DICT.keys():
-            return _SIE.STEP_INIT_DICT[step_type](**step_conf)
-        else:
-            raise ValueError(
-                f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
-            )

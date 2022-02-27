@@ -1,0 +1,207 @@
+{
+    "workflow": {
+        "header": {
+            "workflow_id": "Docking with Glide",
+            "description": "Docking a few compounds with Glide after Ligprep embedding.",
+            "environment": {
+                "export": [
+
+                ]
+            },
+            "global_variables": {
+                "step_id": "",
+                "input_dir": "/projects/tests/reinvent_icolos/input",
+                "writeout_dir": "/projects/tests/reinvent_icolos/output"
+            }
+        },
+        "steps": [{
+                "step_id": "Ligprep",
+                "type": "ligprep",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-2-js-aws",
+                    "parallelization": {
+                        "cores": 8
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": ["-epik"],
+                        "parameters": {
+                            "-ph": 7.0,
+                            "-pht": 2.0,
+                            "-s": 10,
+                            "-bff": 14,
+                            "-HOST": "cpu-only"
+                        }
+                    },
+                    "additional": {}
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "{input_json_path}",
+                            "source_type": "file",
+                            "format": "JSON"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Glide_receptor_const",
+                "type": "glide",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-2-js-aws",
+                    "parallelization": {
+                        "cores": 24
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-HOST": "cpu-only"
+                        }
+                    },
+                    "additional": {
+                        "configuration": {
+                            "AMIDE_MODE": "trans",
+                            "EXPANDED_SAMPLING": "True",
+                            "GRIDFILE": ["{input_dir}/1UYD_grid_constraints.zip"],
+                            "NENHANCED_SAMPLING": "1",
+                            "POSE_OUTTYPE": "ligandlib_sd",
+                            "POSES_PER_LIG": "3",
+                            "POSTDOCK_NPOSE": "25",
+                            "POSTDOCKSTRAIN": "True",
+                            "PRECISION": "SP",
+                            "REWARD_INTRA_HBONDS": "True"
+                        },
+                        "maestro_in_file": {
+                            "path": "{input_dir}/example.in"
+                        },
+                        "grid_ids": ["const"]
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "Ligprep",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "Glide_receptor_noconst",
+                "type": "glide",
+                "execution": {
+                    "prefix_execution": "module load schrodinger/2021-2-js-aws",
+                    "parallelization": {
+                        "cores": 24
+                    },
+                    "failure_policy": {
+                        "n_tries": 3
+                    }
+                },
+                "settings": {
+                    "arguments": {
+                        "flags": [],
+                        "parameters": {
+                            "-HOST": "cpu-only"
+                        }
+                    },
+                    "additional": {
+                        "configuration": {
+                            "AMIDE_MODE": "trans",
+                            "EXPANDED_SAMPLING": "True",
+                            "GRIDFILE": ["{input_dir}/1UYD_grid_constraints.zip"],
+                            "NENHANCED_SAMPLING": "1",
+                            "POSE_OUTTYPE": "ligandlib_sd",
+                            "POSES_PER_LIG": "3",
+                            "POSTDOCK_NPOSE": "25",
+                            "POSTDOCKSTRAIN": "True",
+                            "PRECISION": "SP",
+                            "REWARD_INTRA_HBONDS": "True"
+                        },
+                        "grid_ids": ["no_const"]
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "Ligprep",
+                            "source_type": "step"
+                        }
+                    ]
+                }
+            }, {
+                "step_id": "data_manipulation",
+                "type": "data_manipulation",
+                "settings": {
+                    "additional": {
+                        "action": "no_action"
+                    }
+                },
+                "input": {
+                    "compounds": [{
+                            "source": "Glide_receptor_const",
+                            "source_type": "step"
+                        }, {
+                            "source": "Glide_receptor_noconst",
+                            "source_type": "step"
+                        }
+                    ],
+                    "merge": {
+                        "compounds": true,
+                        "merge_compounds_by": "id",
+                        "enumerations": true,
+                        "merge_enumerations_by": "id"
+                    }
+                },
+                "writeout": [{
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["docking_score"],
+                            "aggregation": {
+                                "mode": "best_per_compound",
+                                "key": "docking_score",
+                                "highest_is_best": false
+                            }
+                        },
+                        "destination": {
+                            "resource": "{output_json_path}",
+                            "type": "file",
+                            "format": "JSON"
+                        }
+                    }, {
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["docking_score"],
+                            "aggregation": {
+                                "mode": "best_per_compound",
+                                "key": "docking_score",
+                                "highest_is_best": false
+                            }
+                        },
+                        "destination": {
+                            "resource": "{writeout_dir}/{step_id}_complete_output.json",
+                            "type": "file",
+                            "format": "JSON"
+                        }
+                    }, {
+                        "compounds": {
+                            "category": "conformers",
+                            "selected_tags": ["docking_score", "grid_id"]
+                        },
+                        "destination": {
+                            "resource": "{writeout_dir}/{step_id}_results.csv",
+                            "type": "file",
+                            "format": "CSV"
+                        }
+                    }
+                ]
+            }
+
+        ]
+    }
+}

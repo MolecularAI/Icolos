@@ -66,7 +66,7 @@ class TestDockingWorkflow(unittest.TestCase):
                     ]
                 },
                 _WE.GLOBAL_VARIABLES: {
-                    "smiles": "3,4-DIAMINOBENZOTRIFLUORIDE:Nc1ccc(cc1N)C(F)(F)F"
+                    "smiles": "3,4-DIAMINOBENZOTRIFLUORIDE:Nc1ccc(cc1N)C(F)(F)F;aspirin:O=C(C)Oc1ccccc1C(=O)O"
                 },
             },
             _WE.STEPS: [
@@ -86,8 +86,8 @@ class TestDockingWorkflow(unittest.TestCase):
                     _SBE.STEPID: "Ligprep",
                     _SBE.STEP_TYPE: "ligprep",
                     _SBE.EXEC: {
-                        "prefix_execution": "module load schrodinger/2020-4",
-                        "parallelization": {"cores": 2, "max_length_sublists": 1},
+                        "prefix_execution": "module load schrodinger/2021-2-js-aws",
+                        "parallelization": {"cores": 4, "max_length_sublists": 1},
                         "failure_policy": {"n_tries": 3},
                     },
                     _SBE.SETTINGS: {
@@ -98,6 +98,7 @@ class TestDockingWorkflow(unittest.TestCase):
                                 "-pht": 2.0,
                                 "-s": 10,
                                 "-bff": 14,
+                                "-HOST": "cpu-only",
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
@@ -117,14 +118,14 @@ class TestDockingWorkflow(unittest.TestCase):
                     _SBE.STEPID: "Glide",
                     _SBE.STEP_TYPE: "glide",
                     _SBE.EXEC: {
-                        "prefix_execution": "module load schrodinger/2020-4",
+                        "prefix_execution": "module load schrodinger/2021-2-js-aws",
                         "parallelization": {"cores": 4, "max_length_sublists": 1},
                         "failure_policy": {"n_tries": 3},
                     },
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-HOST": "cpu-only"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
                             "configuration": {
@@ -183,9 +184,10 @@ class TestDockingWorkflow(unittest.TestCase):
                 },
                 {
                     _SBE.STEPID: "compound_filter",
-                    _SBE.STEP_TYPE: "filter",
+                    _SBE.STEP_TYPE: "data_manipulation",
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ADDITIONAL: {
+                            "action": "filter",
                             "filter_level": _SBE.INPUT_COMPOUNDS,
                             "criteria": "docking_score",
                             "return_n": 1,
@@ -324,7 +326,7 @@ class TestDockingWorkflow(unittest.TestCase):
                         "iter_mode": "single",
                         "parallelizer_settings": {
                             "parallelize": True,
-                            "cores": 8,
+                            "cores": 4,
                             "max_length_sublists": 3,
                         },
                     },
@@ -341,4 +343,8 @@ class TestDockingWorkflow(unittest.TestCase):
 
         out_path = os.path.join(self._test_dir, "run_0/rmsd_rescoring.csv")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 82)
+        self.assertEqual(stat_inf.st_size, 100)
+
+        out_path = os.path.join(self._test_dir, "run_7/rmsd_rescoring.sdf")
+        stat_inf = os.stat(out_path)
+        self.assertEqual(stat_inf.st_size, 3893)
