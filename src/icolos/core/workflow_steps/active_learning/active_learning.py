@@ -10,6 +10,8 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.exceptions import NotFittedError
 
+from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
+
 try:
     import torch
     from torch import nn
@@ -40,7 +42,7 @@ import numpy as np
 _SALE = StepActiveLearningEnum()
 
 
-class StepActiveLearning(StepBase, BaseModel):
+class StepActiveLearning(ActiveLearningBase, BaseModel):
     """
     Class to run an active learning framework
     Primarily designed for building QSAR models using a physics based method (embedding + docking) as an oracle
@@ -152,6 +154,10 @@ class StepActiveLearning(StepBase, BaseModel):
                 dtype=np.float32,
             ),
             axis=1,
+        )
+        # construct the soap vector representation of that molecule
+        library[_SALE.SOAP_VECTOR] = library.apply(
+            lambda x: np.array(self.get_soap_vector(x[_SALE.MOLECULE]))
         )
         scores = (
             np.absolute(

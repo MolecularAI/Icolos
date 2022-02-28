@@ -1,3 +1,7 @@
+import multiprocessing
+import os
+import tempfile
+from typing import List
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
@@ -6,6 +10,11 @@ from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.utils.general.convenience_functions import nested_get
 from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
+from rdkit import Chem
+from dscribe.descriptors import SOAP
+from dscribe.kernels import REMatchKernel
+from sklearn.preprocessing import normalize
+from ase import io
 
 _IE = StepInitializationEnum()
 
@@ -51,3 +60,19 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise ValueError(
                 f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
             )
+
+    def compute_soap_vectors(self, mol: Chem.Mol) -> np.ndarray:
+        tmp_dir = tempfile.mkdtemp()
+        Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(tmp_dir, "mol.xyz"))
+
+        atoms = io.read(os.path.join(tmp_dir, "mol.XYZ"))
+
+        soap_desc = SOAP(
+            species=["C", "H", "O", "N", "F", "Cl"],
+            rcut=5,
+            nmax=8,
+            lmax=6,
+            crossover=True,
+        )
+
+        return soap_desc.create(atoms)
