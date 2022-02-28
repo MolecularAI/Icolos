@@ -10,6 +10,7 @@ import re
 from copy import deepcopy
 from distutils.dir_util import copy_tree
 from icolos.utils.enums.program_parameters import GromacsEnum
+import dill
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
@@ -63,6 +64,17 @@ class StepGromacsBase(StepBase, BaseModel):
 
         for file in self.data.generic.get_flattened_files():
             file.write(tmp_dir)
+
+    def pickle_topol(self, topol: GromacsTopol, tmp_dir: str):
+        """
+        Write the Icolos internal state to a pickled file in the tmpdir
+        """
+        with open(os.path.join(tmp_dir, "icolos_topol_state.pkl"), "wb") as f:
+            dill.dump(topol, f)
+
+    def load_topol(self, file: GenericData) -> GromacsTopol:
+        data = file.get_data()
+        return dill.load(data)
 
     def _parse_arguments(self, flag_dict: dict, args: list = None) -> List:
         arguments = args if args is not None else []
@@ -192,4 +204,9 @@ class StepGromacsBase(StepBase, BaseModel):
         self.get_topol().set_ndx(tmp_dir)
 
     def get_topol(self) -> GromacsTopol:
-        return self.get_workflow_object().workflow_data.gmx_topol
+        if not self.data.generic.get_file_names_by_extension("pkl"):
+            return self.get_workflow_object().workflow_data.gmx_topol
+        else:
+            return self.load_topol(
+                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
+            )

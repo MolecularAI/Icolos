@@ -21,6 +21,7 @@ dependencies:
   - rdkit>=2021.09.2
   - acpype>=2022
   - openff-toolkit>=0.10.2
+  - dill>=0.3.4
   - pip:
     - black
     - regex

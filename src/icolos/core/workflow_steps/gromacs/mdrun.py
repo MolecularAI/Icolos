@@ -51,15 +51,18 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         # if we're simulating a protein, we need to modify the topol file to include the correct index groups \
         # to allow ligand restraint.  This means an ndx file must be specified in the json
         self.write_input_files(tmp_dir, topol=topol)
-        # append _out to the xtc file name
 
-        arguments = self._parse_arguments(
-            flag_dict={
+        flag_dict = (
+            {
                 "-s": _SGE.STD_TPR,
                 "-c": _SGE.STD_STRUCTURE,
                 "-x": _SGE.STD_XTC,
             }
+            if not self.data.generic.get_files_by_extension("cpt")
+            else {"-cpi", self.data.generic.get_argument_by_extension("cpt")}
         )
+
+        arguments = self._parse_arguments(flag_dict)
         self._backend_executor.execute(
             command=_GE.MDRUN, arguments=arguments, location=tmp_dir, check=True
         )
@@ -117,6 +120,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
+        # pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object
+        self.pickle_topol(topol, tmp_dir)
         multidir = self.get_additional_setting(_SGE.MULTIDIR, default=False)
         if multidir:
             self.run_multidir_sim(tmp_dir, topol=topol)
