@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.exceptions import NotFittedError
 
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
+from icolos.core.workflow_steps.active_learning.models.gptorch import GPyTorchModel
 
 try:
     import torch
@@ -19,6 +20,7 @@ except:
     print("Warning: PyTorch is not installed in the environment!")
 try:
     from skorch.regressor import NeuralNetRegressor
+    from skorch.probabilistic import ExactGPRegressor
 except:
     print("Warning: skorch is not installed in the environment!")
 
@@ -28,7 +30,6 @@ from icolos.core.workflow_steps.active_learning.models.ffnn import FeedForwardNe
 from icolos.core.workflow_steps.step import StepBase
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import (
-    StepBaseEnum,
     StepActiveLearningEnum,
 )
 
@@ -201,6 +202,12 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 estimator=regressor,
                 query_strategy=self.greedy_acquisition,
             )
+        elif running_mode == "soap_gp":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            gpr = ExactGPRegressor(
+                GPyTorchModel)
+            learner = ActiveLearner(gpr,
+                                    query_strategy=self.greedy_acquisition)
         else:
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
