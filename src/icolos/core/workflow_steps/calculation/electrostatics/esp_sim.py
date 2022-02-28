@@ -60,7 +60,7 @@ class StepEspSim(StepBase, BaseModel):
 
         # All atom alignment of the two
 
-        charge_method = self.get_additional_setting("charge_method", default="resp")
+        charge_method = self.get_additional_setting("charge_method", default="am1-bcc")
         esp_sim = GetEspSim(trg_mol, ref, partialCharges=charge_method)
         shape_sim = GetShapeSim(trg_mol, ref)
         self._logger.log(
@@ -104,13 +104,13 @@ class StepEspSim(StepBase, BaseModel):
                 comp = self.get_compound_by_name(trg.get_compound_name())
                 comp.find_enumeration(trg.get_enumeration_id()).add_conformer(conf)
 
-        self._remove_temporary(tmp_dirs)
-
     def _execute_espsim_parallel(self):
         # embed the reference compound
 
         parallelizer = Parallelizer(func=self._compute_esp_sim)
-
+        ref_compound = Chem.AddHs(
+            Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
+        )
         while self._subtask_container.done() is False:
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
 
@@ -127,11 +127,12 @@ class StepEspSim(StepBase, BaseModel):
 
             for task, tmp_dir in zip(next_batch, tmp_dirs):
                 for subtask in task:
-                    # TODO: Check return codes
-                    if os.path.isfile(tmp_dir):
+                    if os.path.isfile(os.path.join(tmp_dir, "conformer.sdf")):
                         subtask.set_status_success()
                     else:
                         subtask.set_status_failed()
+
+            self._remove_temporary(tmp_dirs)
 
     def execute(self):
         """
@@ -149,15 +150,22 @@ class StepEspSim(StepBase, BaseModel):
         for compound in self.get_compounds():
             for enumeration in compound:
                 all_enums.append(deepcopy(enumeration))
-
-        ref_compound = Chem.AddHs(
-            Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
-        )
-        tmp_dir = tempfile.mkdtemp()
-        for enum in all_enums:
-            self._compute_esp_sim(ref_compound, enum, tmp_dir=tmp_dir)
-        # self.execution.parallelization.max_length_sublists = 1
-        # # unroll the provided compounds,
-        # self._subtask_container = SubtaskContainer(max_tries=3)
-        # self._subtask_container.load_data(all_enums)
-        # self._execute_espsim_parallel()
+        if self.get_additional_setting("charge_method", default="am1-bcc") == "resp":
+            # resp doesn#t play well with Icolos parallelization
+            ref_compound = Chem.AddHs(
+                Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
+            )
+            tmp_dir = tempfile.mkdtemp()
+            tmp_dirs = []
+            for enum in all_enums:
+                tmp_dir = tempfile.mkdtemp()
+                tmp_dirs.append(tmp_dir)
+                self._compute_esp_sim(ref_compound, enum, tmp_dir=tmp_dir)
+            self._parse_output(all_enums, tmp_dirs=tmp_dirs)
+            self._remove_temporary(tmp_dirs)
+        else:
+            self.execution.parallelization.max_length_sublists = 1
+            # unroll the provided compounds,
+            self._subtask_container = SubtaskContainer(max_tries=3)
+            self._subtask_container.load_data(all_enums)
+            self._execute_espsim_parallel()
