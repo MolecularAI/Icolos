@@ -11,3 +11,4 @@ class ExecutionPlatformEnum(str, Enum):
     CORES = "cores"
     CORE = "core"
     GPU = "gpu"
+    SERIAL = "serial"

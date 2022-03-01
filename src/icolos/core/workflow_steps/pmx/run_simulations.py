@@ -1,7 +1,4 @@
-from importlib.resources import path
-from subprocess import CompletedProcess
-from typing import Dict, List
-from icolos.core.containers.perturbation_map import Edge
+from typing import List
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
@@ -57,7 +54,9 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(job_pool)
         self._execute_pmx_step_parallel(
-            run_func=self._execute_command, step_id="pmx_run_simulations"
+            run_func=self._execute_command,
+            step_id="pmx_run_simulations",
+            result_checker=self._inspect_log_files,
         )
 =======
         # run in two separate batches, job times will be equal and we won't have a mismatch between short ligand jobs and longer protein jobs
@@ -215,7 +214,23 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 _LE.DEBUG,
             )
             self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
-            location = "/".join(job.split("/")[:-1])
+            location = os.path.dirname(job)
             self._backend_executor.execute(tmpfile=job, location=location, check=False)
 
-    # def _inspect_log_files()
+    def _inspect_log_files(self, jobs: List[str]) -> List[List[bool]]:
+        """
+        Check the md.log files in the edge's job dir, return
+        :param jobs: list of paths to the batch scripts
+        """
+        results = []
+        for subtask in jobs:
+            subtask_results = []
+            for sim in subtask:
+                location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
+                with open(location, "r") as f:
+                    lines = f.readlines()
+                subtask_results.append(
+                    any(["Finished mdrun" in l for l in lines[-20:]])
+                )
+            results.append(subtask_results)
+        return results

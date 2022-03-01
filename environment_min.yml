@@ -7,6 +7,7 @@ channels:
 dependencies:
   - biopython>=1.79
   - ipython
+  - ipykernel
   - pip
   - python>=3.9
   - scikit-learn>=1.0.1
@@ -19,6 +20,8 @@ dependencies:
   - openbabel>=3
   - rdkit>=2021.09.2
   - acpype>=2022
+  - openff-toolkit>=0.10.2
+  - dill>=0.3.4
   - pip:
     - black
     - regex

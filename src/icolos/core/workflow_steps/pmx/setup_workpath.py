@@ -1,7 +1,7 @@
-from icolos.core.containers.perturbation_map import Node
 import os
-from typing import Dict
+from typing import List
 from pydantic import BaseModel
+from icolos.core.containers.perturbation_map import Node
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
@@ -12,7 +12,7 @@ from icolos.utils.general.parallelization import SubtaskContainer
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 
-# These classes were inspired by the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
+# These classes are based on the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
 class StepPMXSetup(StepPMXBase, BaseModel):
     """
     Create the directory tree structure.
@@ -81,7 +81,9 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(nodes)
         self._execute_pmx_step_parallel(
-            run_func=self._parametrise_nodes, step_id="pmx_setup"
+            run_func=self._parametrise_nodes,
+            step_id="pmx_setup",
+            result_checker=self._check_results,
         )
 
         # create the output folder structure
@@ -112,3 +114,27 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                         for sim in self.sim_types:
                             simpath = f"{runpath}/{sim}".format(runpath, sim)
                             os.makedirs(simpath, exist_ok=True)
+
+    def _check_results(self, batch: List[List[Node]]) -> List[List[bool]]:
+        output_files = ["ffMOL.itp", "MOL.itp"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(
+                                    self.work_dir,
+                                    "input/ligands",
+                                    job.get_node_hash(),
+                                    f,
+                                )
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

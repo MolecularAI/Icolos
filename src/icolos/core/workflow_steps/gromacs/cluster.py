@@ -24,7 +24,8 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        self._write_input_files(tmp_dir)
+        topol = self.get_topol()
+        self.write_input_files(tmp_dir, topol=topol)
 
         # give the option to run a make_ndx step preceding clustering to facilitate clustering on custom groups
         if _SGE.INDEX_FLAG in self.settings.arguments.parameters.keys():
@@ -36,9 +37,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
                 try:
                     ndx_arguments = [
                         "-f",
-                        self.data.generic.get_argument_by_extension(
-                            _SGE.FIELD_KEY_STRUCTURE
-                        ),
+                        _SGE.STD_STRUCTURE,
                         "-o",
                         _SGE.STD_INDEX,
                     ]
@@ -59,8 +58,8 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
                     )
 
         flag_dict = {
-            "-s": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_TPR),
-            "-f": self.data.generic.get_argument_by_extension(_SGE.FIELD_KEY_XTC),
+            "-s": _SGE.STD_TPR,
+            "-f": _SGE.STD_XTC,
             "-cl": "clusters.pdb",
         }
         arguments = self._parse_arguments(flag_dict=flag_dict)

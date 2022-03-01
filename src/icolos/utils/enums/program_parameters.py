@@ -77,7 +77,7 @@ class TurbomoleEnum:
     CT_COSMOTHERM_TAB_ENDING = "cosmother.tab"
 
     CT_CONFIG = "cosmotherm_config"
-    CT_CONFIG_DEFAULTPATH = "icolos/config/cosmo/default_cosmo.config"
+    CT_CONFIG_DEFAULTPATH = "src/icolos/config/cosmo/default_cosmo.config"
 
     # control script fields
     # ---------
@@ -336,6 +336,39 @@ class AutoDockVinaEnum:
     RESULT_LINE_POS_SCORE = 2
     RESULT_LINE_POS_RMSDTOBEST_LB = 3
     RESULT_LINE_POS_RMSDTOBEST_UB = 4
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class GoldEnum:
+
+    GOLD_CALL = "gold_auto"
+    GOLD_HELP = "-h"
+    GOLD_HELP_IDENTIFICATION_STRING = "Usage: gold_auto"
+    GOLD_QUIET = "-q"
+
+    REMARK_TAG = "REMARK"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class GoldOutputEnum:
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -1020,6 +1053,7 @@ class GromacsEnum:
     GROMPP = "gmx grompp"
     GENION = "gmx genion"
     MDRUN = "gmx mdrun"
+    MPI_MDRUN = "gmx_mpi mdrun"
     MAKE_NDX = "gmx make_ndx"
     GENRESTR = "gmx genrestr"
     TRJCAT = "gmx trjcat"
@@ -1247,11 +1281,15 @@ class GromacsEnum:
     LIG_ID = "lig_id.lig"
     LIG_EXT = "lig"
     ATOMS = ["HETATM", "ATOM"]
+    ATOMS_DIRECTIVE = "[ atoms ]"
+    BONDS = "[ bonds ]"
     ATOMTYPES = "[ atomtypes ]"
     MOLECULETYPES = "[ moleculetype ]"
-    MOLECULES = "[ molecules ]\n"
+    MOLECULES = "[ molecules ]"
     SOLVENTS = ["HOH ", "SOL", "WAT"]
     TERMINATIONS = ["ENDMDL", "END"]
+    SYSTEM = "[ system ]"
+    DEFAULTS = "[ defaults ]"
 
     def __getattr__(self, name):
         if name in self:
@@ -1317,6 +1355,8 @@ class StepPMXEnum:
 
     ABFE = "abfe"
     RBFE = "rbfe"
+
+    STRICT = "strict"
 
 
 class PMXAtomMappingEnum:

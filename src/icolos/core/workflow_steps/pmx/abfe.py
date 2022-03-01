@@ -1,5 +1,6 @@
 import shutil
 from typing import List
+from icolos.core.containers.compound import Compound
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 import os
@@ -30,28 +31,6 @@ class StepPMXabfe(StepPMXBase, BaseModel):
         self._initialize_backend(PMXExecutor)
         self._check_backend_availability()
         self._gromacs_executor = GromacsExecutor(prefix_execution=_SGE.GROMACS_LOAD)
-
-    # def _separate_protein_ligand(self):
-    #     # separate out protein and ligand lines from the written complex.pdb
-
-    #     with open(os.path.join(self.work_dir, "complex.pdb"), "r") as f:
-    #         lines = f.readlines()
-    #     protein_lines = []
-    #     ligand_lines = []
-    #     # TODO: tighten up the logic for identifying the ligand here
-    #     for line in lines:
-    #         if "ATOM" in line:
-    #             protein_lines.append(line)
-    #         elif "HETATM" in line and "HOH" not in line:
-    #             ligand_lines.append(line)
-
-    #     with open(os.path.join(self.work_dir, "protein.pdb"), "w") as f:
-    #         f.writelines(protein_lines)
-
-    #     with open(os.path.join(self.work_dir, "MOL.pdb"), "w") as f:
-    #         f.writelines(ligand_lines)
-
-    #     os.remove(os.path.join(self.work_dir, "complex.pdb"))
 
     def execute(self):
         """
@@ -103,7 +82,9 @@ class StepPMXabfe(StepPMXBase, BaseModel):
         )
         self._subtask_container.load_data(self.get_compounds())
         self._execute_pmx_step_parallel(
-            run_func=self._parametrise_nodes, step_id="parametrize ligands"
+            run_func=self._parametrise_nodes,
+            step_id="parametrize ligands",
+            result_checker=self._check_params,
         )
 
         # now
@@ -174,7 +155,7 @@ class StepPMXabfe(StepPMXBase, BaseModel):
         # note that this is stochastic, and sometimes it generates bad restraaints/nan values
         # we will simply resubmit n times
 
-    def _find_nan_vals(self, next_batch: List[str]):
+    def _find_nan_vals(self, next_batch: List[str]) -> List[List[bool]]:
         """
         Looks throuh the dirs specified in jobs, reads restraints.info
         """
@@ -194,3 +175,25 @@ class StepPMXabfe(StepPMXBase, BaseModel):
                 subtask_results.append(any(["nan" in l for l in lines]))
             batch_results.append(subtask_results)
         return batch_results
+
+    def _check_params(self, batch: List[List[Compound]]) -> List[List[bool]]:
+        """
+        check ligand parameters have been generated properly
+        """
+        output_files = ["MOL.itp", "MOL.mol2"]
+        results = []
+        for subjob in batch:
+            subjob_results = []
+            for job in subjob:
+                subjob_results.append(
+                    all(
+                        [
+                            os.path.isfile(
+                                os.path.join(self.work_dir, job.get_index_string(), f)
+                            )
+                            for f in output_files
+                        ]
+                    )
+                )
+            results.append(subjob_results)
+        return results

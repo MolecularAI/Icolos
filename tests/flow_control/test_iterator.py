@@ -1,7 +1,12 @@
 import unittest
 from icolos.core.flow_control.iterator import StepIterator
+from icolos.core.step_dispatch.dispatcher import StepDispatcher
 from icolos.core.workflow_steps.step import StepBase
-from icolos.utils.enums.step_enums import StepBaseEnum, StepTurbomoleEnum
+from icolos.utils.enums.step_enums import (
+    StepBaseEnum,
+    StepGromacsEnum,
+    StepTurbomoleEnum,
+)
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.utils.enums.program_parameters import TurbomoleEnum
 import os
@@ -13,6 +18,7 @@ from tests.tests_paths import (
 _SBE = StepBaseEnum
 _TE = TurbomoleEnum()
 _STE = StepTurbomoleEnum()
+_SGE = StepGromacsEnum()
 
 
 class TestIterator(unittest.TestCase):
@@ -26,84 +32,167 @@ class TestIterator(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO, "r") as f:
             self.structure = f.read()
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP, "r") as f:
-            self.topol = f.read()
+        # def test_single_initialization(self):
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR, "rb") as f:
-            self.tpr_file = f.read()
+        #     full_conf = {
+        #         "base_config": [
+        #             {
+        #                 _SBE.STEPID: "01_turbomole",
+        #                 _SBE.STEP_TYPE: _SBE.STEP_TURBOMOLE,
+        #                 _SBE.EXEC: {
+        #                     _SBE.EXEC_PREFIXEXECUTION: "module load turbomole/73",
+        #                     _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 1},
+        #                 },
+        #                 _SBE.SETTINGS: {
+        #                     _SBE.SETTINGS_ARGUMENTS: {
+        #                         _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+        #                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+        #                     },
+        #                     _SBE.SETTINGS_ADDITIONAL: {
+        #                         _TE.TM_CONFIG_DIR: MAIN_CONFIG["TURBOMOLE_CONFIG"],
+        #                         _TE.TM_CONFIG_COSMO: os.path.join(
+        #                             MAIN_CONFIG["TURBOMOLE_CONFIG"], "cosmoprep_eps80.tm"
+        #                         ),
+        #                         _STE.EXECUTION_MODE: _TE.TM_RIDFT,
+        #                     },
+        #                 },
+        #             }
+        #         ],
+        #         "iter_settings": {
+        #             "settings": {
+        #                 "01_turbomole": {
+        #                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+        #                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+        #                     _SBE.SETTINGS_ADDITIONAL: {
+        #                         _TE.TM_CONFIG_BASENAME: [
+        #                             "b97-3c-ri-d3-def2-mtzvp-int-nosym-charge",
+        #                             "blyp-ri-d3-def2-svp-int-coarse-charge2",
+        #                             "some_other_spicy_functional",
+        #                         ]
+        #                     },
+        #                 }
+        #             },
+        #             "iter_mode": "single",
+        #             "n_iters": 3,  # for now this is manual, should match the number of settings to iterate over
+        #         },
+        #     }
 
-        with open(PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC, "rb") as f:
-            self.xtc_file = f.read()
+        #     step_iterator = StepIterator(**full_conf)
+        #     self.assertEqual(len(step_iterator.initialized_steps), 3)
+        #     for i in step_iterator.initialized_steps:
+        #         assert isinstance(i, StepBase)
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_POSRE, "r") as f:
-            self.posre = f.read()
+        # def test_multi_iter_initialization(self):
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_ITP, "r") as f:
-            self.lig_itp = f.read()
+        #     full_conf = {
+        #         "base_config": [
+        #             {
+        #                 _SBE.STEPID: "01_turbomole",
+        #                 _SBE.STEP_TYPE: _SBE.STEP_TURBOMOLE,
+        #                 _SBE.EXEC: {
+        #                     _SBE.EXEC_PREFIXEXECUTION: "module load turbomole/73",
+        #                     _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 1},
+        #                 },
+        #                 _SBE.SETTINGS: {
+        #                     _SBE.SETTINGS_ARGUMENTS: {
+        #                         _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+        #                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+        #                     },
+        #                     _SBE.SETTINGS_ADDITIONAL: {
+        #                         _TE.TM_CONFIG_DIR: MAIN_CONFIG["TURBOMOLE_CONFIG"],
+        #                         _TE.TM_CONFIG_COSMO: os.path.join(
+        #                             MAIN_CONFIG["TURBOMOLE_CONFIG"], "cosmoprep_eps80.tm"
+        #                         ),
+        #                         _TE.TM_CONFIG_BASENAME: "b97-3c-ri-d3-def2-mtzvp-int-nosym-charge",
+        #                         _STE.EXECUTION_MODE: _TE.TM_RIDFT,
+        #                     },
+        #                 },
+        #             }
+        #         ],
+        #         "iter_settings": {
+        #             # no changes in config, just run the same step through multiple times
+        #             "iter_mode": "n_iters",
+        #             "n_iters": 5,  # for now this is manual, should match the number of settings to iterate over
+        #         },
+        #     }
 
-        with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_POSRE, "r") as f:
-            self.lig_posre = f.read()
+        # step_iterator = StepIterator(**full_conf)
+        # self.assertEqual(len(step_iterator.initialized_steps), 5)
+        # for i in step_iterator.initialized_steps:
+        #     assert isinstance(i, StepBase)
 
-    def test_single_initialization(self):
+    def test_n_iters_4_cores_gromacs(self):
+        """
+        Initialize 4 pdb2gmx jobs in separate workflows,
+        """
 
         full_conf = {
             "base_config": [
                 {
-                    _SBE.STEPID: "01_turbomole",
-                    _SBE.STEP_TYPE: _SBE.STEP_TURBOMOLE,
+                    _SBE.STEPID: "01_pdb2gmx",
+                    _SBE.STEP_TYPE: "pdb2gmx",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PREFIXEXECUTION: "module load turbomole/73",
-                        _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 1},
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
                     },
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
-                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-ignh"],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                                "-water": "tip3p",
+                                "-ff": "amber03",
+                            },
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {
-                            _TE.TM_CONFIG_DIR: MAIN_CONFIG["TURBOMOLE_CONFIG"],
-                            _TE.TM_CONFIG_COSMO: os.path.join(
-                                MAIN_CONFIG["TURBOMOLE_CONFIG"], "cosmoprep_eps80.tm"
-                            ),
-                            _STE.EXECUTION_MODE: _TE.TM_RIDFT,
-                        },
+                        _SBE.SETTINGS_ADDITIONAL: {_SGE.CHARGE_METHOD: "gas"},
                     },
-                }
-            ],
-            "iter_settings": {
-                "settings": {
-                    "01_turbomole": {
-                        _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                        _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
-                        _SBE.SETTINGS_ADDITIONAL: {
-                            _TE.TM_CONFIG_BASENAME: [
-                                "b97-3c-ri-d3-def2-mtzvp-int-nosym-charge",
-                                "blyp-ri-d3-def2-svp-int-coarse-charge2",
-                                "some_other_spicy_functional",
-                            ]
-                        },
-                    }
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GENERIC: [
+                            {
+                                _SBE.INPUT_SOURCE: attach_root_path(
+                                    PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE
+                                ),
+                                _SBE.INPUT_EXTENSION: "pdb",
+                            }
+                        ]
+                    },
                 },
-                "iter_mode": "single",
-                "n_iters": 3,  # for now this is manual, should match the number of settings to iterate over
-            },
-        }
-
-        step_iterator = StepIterator(**full_conf)
-        self.assertEqual(len(step_iterator.initialized_steps), 3)
-        for i in step_iterator.initialized_steps:
-            assert isinstance(i, StepBase)
-
-    def test_multi_iter_initialization(self):
-
-        full_conf = {
-            "base_config": [
                 {
-                    _SBE.STEPID: "01_turbomole",
-                    _SBE.STEP_TYPE: _SBE.STEP_TURBOMOLE,
+                    _SBE.STEPID: "02_editconf",
+                    _SBE.STEP_TYPE: "editconf",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PREFIXEXECUTION: "module load turbomole/73",
-                        _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 1},
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                    },
+                    _SBE.SETTINGS: {
+                        _SBE.SETTINGS_ARGUMENTS: {
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                                "-d": "1.2",
+                                "-bt": "dodecahedron",
+                            },
+                        },
+                        _SBE.SETTINGS_ADDITIONAL: {},
+                    },
+                    _SBE.INPUT: {},
+                },
+                {
+                    _SBE.STEPID: "03_solvate",
+                    _SBE.STEP_TYPE: "solvate",
+                    _SBE.EXEC: {
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
+                    },
+                    _SBE.SETTINGS: {
+                        _SBE.SETTINGS_ARGUMENTS: {
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-cs": "spc216"},
+                        },
+                        _SBE.SETTINGS_ADDITIONAL: {},
+                    },
+                    _SBE.INPUT: {_SBE.INPUT_GENERIC: []},
+                },
+                {
+                    _SBE.STEPID: "04_grompp",
+                    _SBE.STEP_TYPE: "grompp",
+                    _SBE.EXEC: {
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
                     },
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
@@ -111,87 +200,73 @@ class TestIterator(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            _TE.TM_CONFIG_DIR: MAIN_CONFIG["TURBOMOLE_CONFIG"],
-                            _TE.TM_CONFIG_COSMO: os.path.join(
-                                MAIN_CONFIG["TURBOMOLE_CONFIG"], "cosmoprep_eps80.tm"
-                            ),
-                            _TE.TM_CONFIG_BASENAME: "b97-3c-ri-d3-def2-mtzvp-int-nosym-charge",
-                            _STE.EXECUTION_MODE: _TE.TM_RIDFT,
+                            "-r": False,
                         },
                     },
-                }
-            ],
-            "iter_settings": {
-                # no changes in config, just run the same step through multiple times
-                "iter_mode": "n_iters",
-                "n_iters": 5,  # for now this is manual, should match the number of settings to iterate over
-            },
-        }
-
-        step_iterator = StepIterator(**full_conf)
-        self.assertEqual(len(step_iterator.initialized_steps), 5)
-        for i in step_iterator.initialized_steps:
-            assert isinstance(i, StepBase)
-
-    def test_single_initialization_parallel_execution(self):
-        """
-        Test running multiple steps in parallel
-        """
-
-        full_conf = {
-            "base_config": [
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GENERIC: [
+                            {
+                                _SBE.INPUT_SOURCE: os.path.join(
+                                    MAIN_CONFIG["ICOLOS_TEST_DATA"],
+                                    "gromacs/protein/ions.mdp",
+                                ),
+                                _SBE.INPUT_EXTENSION: "mdp",
+                            },
+                        ]
+                    },
+                },
                 {
-                    _SBE.STEPID: "test_mmgbsa",
-                    _SBE.STEP_TYPE: _SBE.STEP_GMX_MMPBSA,
+                    _SBE.STEPID: "05_genion",
+                    _SBE.STEP_TYPE: "genion",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA/1.3.3-fosscuda-2019a-Python-3.7.2"
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2020.3-fosscuda-2019a"
                     },
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
-                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-neutral"],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                                "-pname": "NA",
+                                "-nname": "CL",
+                            },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "make_ndx_command": "Protein Other",
-                            "pipe_input": "Protein Other",
+                            "pipe_input": "SOL",
                         },
                     },
-                }
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GENERIC: [
+                            {
+                                _SBE.INPUT_SOURCE: "04_grompp",
+                                _SBE.INPUT_EXTENSION: "tpr",
+                            },
+                        ]
+                    },
+                    _SBE.WRITEOUT: [
+                        {
+                            _SBE.INPUT_GENERIC: {_SBE.WRITEOUT_GENERIC_KEY: "top"},
+                            _SBE.WRITEOUT_DESTINATION: {
+                                _SBE.WRITEOUT_DESTINATION_RESOURCE: f"{self._test_dir}/topol_out.top",
+                            },
+                        }
+                    ],
+                },
             ],
             "iter_settings": {
                 "n_iters": 4,  # for now this is manual, should match the number of settings to iterate over
                 "parallelizer_settings": {
-                    "parallelize": True,
                     "cores": 4,
-                    "max_lenth_sublists": 1,
                 },
             },
         }
 
-        step_mmpbsa_job_control = StepIterator(**full_conf)
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="structure.gro", file_data=self.structure)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="topol.top", file_data=self.topol)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="structure.xtc", file_data=self.xtc_file)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="structure.tpr", file_data=self.tpr_file)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="posre.itp", file_data=self.posre)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
-        # )
-        # step_mmpbsa.data.generic.add_file(
-        #     GenericData(file_name="posre_DMP:100.itp", file_data=self.lig_posre)
-        # )
+        step_gromacs_preprocess = StepIterator(**full_conf)
 
         # should return JobControl object
-        assert isinstance(step_mmpbsa_job_control.initialized_steps, StepBase)
-        # TODO: there isn't really a good way to unit test this, it is a pain to load the data in to the individual steps
-        # step_mmpbsa_job_control.initialized_steps.execute()
+        assert isinstance(step_gromacs_preprocess.dispatcher, StepDispatcher)
+        assert len(step_gromacs_preprocess.dispatcher.workflows) == 4
+
+        # instantiate the Dispatcher object
+        step_gromacs_preprocess.dispatcher.execute()
+        out_path = os.path.join(self._test_dir, "run_3", "topol_out_0.top")
+        stat_inf = os.stat(out_path)
+        self.assertGreater(stat_inf.st_size, 1560)

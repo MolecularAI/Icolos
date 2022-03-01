@@ -1,6 +1,6 @@
 from typing import List
 from pydantic.main import BaseModel
-
+from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 from icolos.core.workflow_steps.step import _LE
@@ -23,7 +23,7 @@ class StepDispatcher(StepBase, BaseModel):
     Step-type class for disaptching multiple steps in parallel, useful for executing multiple batch jobs simultaneously
     """
 
-    initialized_steps: List = []
+    workflows: List = []
     # expect the parallel execution block to be handed over from flow control
     parallel_execution: IterParallelizer = IterParallelizer()
 
@@ -44,19 +44,14 @@ class StepDispatcher(StepBase, BaseModel):
         """
         Execute multiple steps in parallel
         """
-        # Spin up multiple processes
+        # Spin up multiple processes.
         self.execution.parallelization.cores = self.parallel_execution.cores
-        # each subtask needs to contain an entire mini workflow to be executed sequentially,
-        self.execution.parallelization.max_length_sublists = (
-            self.parallel_execution.dependent_steps
-        )
 
-        # if we try steps multiple times, we have steps fail depending on its dependency on a
-        # previous step - too complicated
+        # TODO, we can repeat entire workflows if we want, I'm not sure this makes sense though
         self._subtask_container = SubtaskContainer(max_tries=1)
-        self._subtask_container.load_data(self.initialized_steps)
+        self._subtask_container.load_data(self.workflows)
 
-        parallelizer = Parallelizer(func=self._run_step)
+        parallelizer = Parallelizer(func=self.execute_workflow)
         n = 1
 
         while self._subtask_container.done() is False:
@@ -72,9 +67,9 @@ class StepDispatcher(StepBase, BaseModel):
                 _LE.INFO,
             )
 
-            steps = self._prepare_batch(next_batch)
+            jobs = self._prepare_batch(next_batch)
 
-            result = parallelizer.execute_parallel(steps=steps)
+            result = parallelizer.execute_parallel(jobs=jobs)
 
             # TODO: sucessful execution of each step is not explicitly checked,
             # the step is responsible for throwing errors if something has gone wrong
@@ -82,10 +77,12 @@ class StepDispatcher(StepBase, BaseModel):
                 for subtask in task:
                     subtask.set_status_success()
 
-    def _run_step(self, steps: List[StepBase]):
+    def execute_workflow(self, jobs):
         # submits then monitors the step
-        for step in steps:  # length max_len_sublist
-            # at this point the internal steps don't have their data initialised
-            step.generate_input()
-            step.execute()
-            step.process_write_out()
+        wf_data = self.get_workflow_object().workflow_data
+        for idx, job in enumerate(jobs):
+            # copy existing wf data up to this point int othe new wf object
+            job.initialize()
+            job.workflow_data = wf_data
+            self._logger.log(f"Executing workflow {idx} of {len(jobs)}", _LE.DEBUG)
+            job.execute()

@@ -66,13 +66,13 @@ class Test_CREST_confgen(unittest.TestCase):
         crest_step.execute()
 
         # check number of conformers returned (only one Compound with only one Enumeration)
-        self.assertGreaterEqual(len(crest_step.get_compounds()[0][0]), 15)
+        self.assertGreaterEqual(len(crest_step.get_compounds()[0][0]), 14)
 
         # check SDF write-out (including energy-as-tag annotation)
         out_path = os.path.join(self._test_dir, "CREST_conformers_paracetamol.sdf")
         crest_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 32000)
+        self.assertGreater(stat_inf.st_size, 28000)
 
     def test_coordinate_generation_charged(self):
         step_conf = {

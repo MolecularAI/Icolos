@@ -27,7 +27,7 @@ class StepGMXrmsd(StepGromacsBase, BaseModel):
         # compare against. rmsd is computed for every step of the trj file
 
         # write out generic files
-        self._write_input_files(tmp_dir)
+        self.write_input_files(tmp_dir)
 
         # conformer coming from a Compound object
         conf = self._unroll_compounds(self.data.compounds)

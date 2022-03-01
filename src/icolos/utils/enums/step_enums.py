@@ -17,6 +17,7 @@ class StepBaseEnum(str, Enum):
     STEP_EMBEDDING = "EMBEDDING"
     STEP_PREDICTION = "PREDICTION"
     STEP_MODEL_BUILDING = "MODEL_BUILDING"
+    STEP_FEATURE_COUNTER = "FEATURE_COUNTER"
     STEP_BOLTZMANN_WEIGHTING = "BOLTZMANN_WEIGHTING"
     STEP_PKA_PREDICTION = "PKA_PREDICTION"
     STEP_PRIME = "PRIME"
@@ -30,13 +31,11 @@ class StepBaseEnum(str, Enum):
     STEP_PANTHER = "PANTHER"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
-    STEP_PDB2GMX_LIG = "PDB2GMX_LIG"
     STEP_EDITCONF = "EDITCONF"
     STEP_SOLVATE = "SOLVATE"
     STEP_GENION = "GENION"
     STEP_GROMPP = "GROMPP"
     STEP_MDRUN = "MDRUN"
-    STEP_FEATURE_COUNTER = "FEATURE_COUNTER"
     STEP_TRJCONV = "TRJCONV"
     STEP_TRJCAT = "TRJCAT"
     STEP_GMX_RMSD = "GMX_RMSD"
@@ -46,6 +45,7 @@ class StepBaseEnum(str, Enum):
     STEP_GLIDE = "GLIDE"
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
+    STEP_GOLD_DOCKING = "GOLD_DOCKING"
     STEP_FEP_PLUS_SETUP = "FEP_PLUS_SETUP"
     STEP_FEP_PLUS_EXEC = "FEP_PLUS_EXEC"
     STEP_FEP_PLUS_ANALYSIS = "FEP_PLUS_ANALYSIS"
@@ -94,6 +94,7 @@ class StepBaseEnum(str, Enum):
     EXEC_RESOURCES = "resources"
     EXEC_RESOURCES_PARTITION = "partition"
     EXEC_RESOURCES_GRES = "gres"
+    EXEC_RESOURCES_TASKS = "tasks"
     EXEC_RESOURCES_MODULES = "modules"
     EXEC_RESOURCES_MEM = "mem"
     EXEC_RESOURCES_CORES = "cores"
@@ -389,6 +390,41 @@ class StepPredictorEnum:
     FEATURES = "features"
     NAME_PREDICTED = "name_predicted"
     NAME_PREDICTED_DEFAULT = "pred_value"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepGoldEnum:
+
+    CONFIGURATION = "configuration"
+    GOLD_CONFIG_FILE = "gold_config_file"
+    BLOCK_INDENT = "  "
+    CONFIGURATION_START = "GOLD CONFIGURATION FILE"
+    AUTOMATIC_SETTINGS = "AUTOMATIC SETTINGS"
+    AUTOSCALE = "autoscale"
+    POPULATION = "POPULATION"
+    GENETIC_OPERATORS = "GENETIC OPERATORS"
+    FLOOD_FILL = "FLOOD FILL"
+    CAVITY_FILE = "cavity_file"
+    DATA_FILES = "DATA FILES"
+    LIGAND_DATA_FILE = "ligand_data_file"
+    FLAGS = "FLAGS"
+    TERMINATION = "TERMINATION"
+    CONSTRAINTS = "CONSTRAINTS"
+    COVALENT_BONDING = "COVALENT BONDING"
+    SAVE_OPTIONS = "SAVE OPTIONS"
+    FITNESS_FUNCTION_SETTINGS = "FITNESS FUNCTION SETTINGS"
+    GOLD_FITFUNC_PATH = "gold_fitfunc_path"
+    PROTEIN_DATA = "PROTEIN DATA"
+    PROTEIN_DATAFILE = "protein_datafile"
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -698,18 +734,19 @@ class StepGromacsEnum:
     LIGAND_MOL2 = "Ligand.mol2"
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
-    STD_TPR = "structure.tpr"
-    STD_XTC = "structure.xtc"
-    STD_STRUCTURE = "structure.gro"
+    STD_TPR = "topol.tpr"
+    STD_XTC = "traj.xtc"
+    STD_TRR = "traj.trr"
+    STD_STRUCTURE = "confout.gro"
     POSRE_LIG = "posre_lig.itp"
     CHARGE_METHOD = "charge_method"
     FORCE_CONSTANTS = "1000 1000 1000"
     LIG_ID = "lig_id"
     COUPLING_GROUP = "Other"
     MMPBSA_IN = "mmpbsa.in"
+    THREADS = "threads"
     GROMACS_LOAD = "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
     AMBERTOOLS_PREFIX = "ambertools_prefix"
-    AMBERTOOLS_LOAD = "module load AmberTools/21-fosscuda-2019a-Python-3.7.2"
     WATER_AND_IONS = "Water_and_ions"
     PROTEIN_OTHER = "Protein_Other"
     SIM_COMPLETE = "Finished mdrun"
@@ -719,6 +756,18 @@ class StepGromacsEnum:
     LENGTHS = "lengths"
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
+    PARAM_METHOD = "param_method"
+    GAFF = "gaff"
+    OPENFF = "openff"
+    WATER_POSRE = """
+#ifdef POSRES_WATER
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif\n"""
+
+    MULTIDIR = "multidir"
+    REPLICAS = "replicas"
 
     def __getattr__(self, name):
         if name in self:
@@ -728,6 +777,14 @@ class StepGromacsEnum:
     # prohibit any attempt to set any values
     def __setattr__(self, key, value):
         raise ValueError("No changes allowed.")
+
+
+class StepOpenFFEnum:
+    UNIQUE_MOLS = "unique_molecules"
+    METHOD = "method"
+    PARMED = "parmed"
+    INTERCHANGE = "interchange"
+    FORCEFIELD = "off_forcefield"
 
 
 class StepCavExploreEnum:
@@ -900,6 +957,19 @@ class StepAutoDockVinaTargetPreparationEnum:
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT = "reference_ligand_format"
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_PDB = "PDB"
     EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_SDF = "SDF"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepGoldTargetPreparationEnum:
 
     # try to find the internal value and return
     def __getattr__(self, name):

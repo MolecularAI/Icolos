@@ -19,7 +19,8 @@ try:
         attach_root_path("src/icolos/config/unit_tests_config/config.json"), "r"
     ) as f:
         MAIN_CONFIG = json.load(f)
-except:
+except Exception as e:
+    print(e)
     MAIN_CONFIG = {}
 
 
@@ -57,8 +58,11 @@ class PATHS_1UYD:
     GRID_CONSTRAINTS_PATH = expand_path("Glide/1UYD_grid_constraints.zip")
     PDBQT_PATH = expand_path("AutoDockVina/1UYD_fixed.pdbqt")
     PDB_PATH = expand_path("molecules/1UYD/1UYD_apo.pdb")
+    HOLO_PDB = expand_path("molecules/1UYD/1UYD_holo.pdb")
     APO_MAE = expand_path("molecules/1UYD/1UYD_apo.mae")
     LIGANDS = expand_path("molecules/1UYD/1UYD_ligands.sdf")
+    GOLD_MOL2_PROTEIN = "Gold/1UYD_protein.mol2"
+    GOLD_CAVITY_MOL2 = "molecules/1UYD/PU8_reference_ligand.mol2"
     NATIVE_LIGAND_SDF = expand_path("molecules/1UYD/PU8_native_ligand.sdf")
     NATIVE_LIGAND_PDB = expand_path("molecules/1UYD/PU8_native_ligand.pdb")
     LIG4_POSES = expand_path("fep_plus/1UYD_ligand_subset.sdf")
@@ -98,6 +102,7 @@ class PATHS_EXAMPLEDATA:
         "models/ePSA_Boltzmann_weighting.sdf"
     )
     GLIDE_EXAMPLE_IN = expand_path("Glide/example.in")
+    GOLD_EXAMPLE_CONFIG = "Gold/gold.conf"
     EPSA_EXAMPLE_MOLECULE = expand_path("models/ePSA_example_mol.sdf")
     PRIME_RECEPTOR_COX2 = expand_path("prime/cox2_receptor.mae")
     PRIME_COX2_GRID = expand_path("molecules/1CX2/1cx2_GridGen.zip")
@@ -114,6 +119,7 @@ class PATHS_EXAMPLEDATA:
     GROMACS_IONS_MDP = expand_path("gromacs/protein/ions.mdp")
     GROMACS_MD_MDP = expand_path("gromacs/protein/md.mdp")
     GROMACS_HOLO_STRUCTURE = expand_path("gromacs/protein/1BVG.pdb")
+    GROMACS_DNA_STRUCTURE = expand_path("gromacs/cccc.pdb")
     GROMACS_HOLO_STRUCTURE_GRO = expand_path("gromacs/protein/1BVG.gro")
     GROMACS_DMP_LIGAND_TRJ = expand_path("gromacs/protein/DMP.xtc")
     GROMACS_DMP_LIGAND_SDF = expand_path("gromacs/protein/DMP.sdf")
@@ -173,6 +179,7 @@ class PATHS_EXAMPLEDATA:
     PMX_TNKS_MAP = expand_path("pmx/fep_mapper.log")
     PMX_TNKS_LIGANDS = expand_path("pmx/ligands.sdf")
     PMX_TNKS_PROTEIN = expand_path("pmx/4ui5.pdb")
+    PMX_ABFE_PROTEIN = expand_path("pmx/5tbm.pdb")
     DSSP_PDB_1 = expand_path("structure_prediction/1e0n.pdb")
     DSSP_PDB_2 = expand_path("structure_prediction/1jbf.pdb")
     DSSP_PDB_3 = expand_path("structure_prediction/6nox.pdb")

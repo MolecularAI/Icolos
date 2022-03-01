@@ -17,6 +17,7 @@ class SlurmExecutor(ExecutorBase):
         self,
         cores: int,
         partition: str,
+        tasks: int,
         time: str,
         mem: str,
         modules: List,
@@ -25,17 +26,18 @@ class SlurmExecutor(ExecutorBase):
         prefix_execution=None,
         binary_location=None,
     ):
-        super().__init__(
-            prefix_execution=prefix_execution, binary_location=binary_location
-        )
+        super().__init__(prefix_execution=None, binary_location=None)
 
         self.cores = cores
         self.partition = partition
         self.time = time
+        self.tasks = tasks
         self.mem = mem
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
+        self._script_prefix_execution = prefix_execution
+        self._script_binary_location = binary_location
 
     def execute(
         self,
@@ -119,12 +121,12 @@ class SlurmExecutor(ExecutorBase):
             command = pipe_input + " | " + command
 
         # check, if command (binary) is to be found at a specific location (rather than in $PATH)
-        if self._binary_location is not None:
-            command = os.path.join(self._binary_location, command)
+        if self._script_binary_location is not None:
+            command = os.path.join(self._script_binary_location, command)
 
         # check, if the something needs to be added before the execution of the "rDock" command
         if self._prefix_execution is not None:
-            command = self._prefix_execution + " && " + command
+            command = self._script_prefix_execution + " && " + command
 
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
@@ -194,11 +196,13 @@ class SlurmExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  -c{self.cores}",
-            f"#SBATCH -p {self.partition}",
+            f"#SBATCH  --cores={self.cores}",
+            f"#SBATCH --partition={self.partition}",
+            f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
         ]
-        header.append(f"#SBATCH --gres={self.gres}")
+        if self.gres is not None:
+            header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
             header.append(f"#SBATCH {key}={value}")
 

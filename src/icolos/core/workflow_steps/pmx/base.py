@@ -1,11 +1,13 @@
-from inspect import Attribute
-from selectors import EpollSelector
 from subprocess import CompletedProcess
 from typing import Callable, Dict, List
 from pydantic import BaseModel
-from icolos.core.containers.compound import Compound
+from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.perturbation_map import Node, PerturbationMap
+from rdkit.Chem import rdmolops
+from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
+from icolos.utils.enums.parallelization import ParallelizationEnum
 from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
@@ -19,6 +21,7 @@ import glob
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
+_PE = ParallelizationEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
@@ -194,38 +197,29 @@ class StepPMXBase(StepBase, BaseModel):
             with open(os.path.join(tmp_dir, file), "w") as f:
                 f.writelines(cleaned_lines)
 
-    def _parametrisation_pipeline(self, tmp_dir, include_top=False, include_gro=False):
+    def _parametrisation_pipeline(
+        self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
+    ):
         # main pipeline for producing GAFF parameters for a ligand
-        arguments_antechamber = [
-            "-i",
-            "MOL.pdb",
-            "-o",
-            "MOL.mol2",
-            "-fi",
-            "pdb",
-            "-fo",
-            "mol2",
-            "-c",
-            "gas",
-        ]
-        self._logger.log(
-            f"Running antechamber on structure {tmp_dir.split('/')[-1]}", _LE.DEBUG
-        )
-        self._antechamber_executor.execute(
-            command=_GE.ANTECHAMBER,
-            arguments=arguments_antechamber,
-            check=True,
-            location=tmp_dir,
-        )
         charge_method = self.get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
+        formal_charge = (
+            rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
+        )
         arguments_acpype = [
             "-di",
-            "MOL.mol2",
+            "MOL.pdb",
             "-c",
             charge_method,
+            "-a",
+            "gaff2",
+            "-o",
+            "gmx",
+            "-n",
+            formal_charge,
         ]
+        self._logger.log("Generating ligand parameters...", _LE.DEBUG)
         self._antechamber_executor.execute(
             command=_GE.ACPYPE_BINARY,
             arguments=arguments_acpype,
@@ -278,6 +272,7 @@ class StepPMXBase(StepBase, BaseModel):
         Instantiates Icolos's parallelizer object,
         runs the step's execute method,
         passes any kwargs straight to the run_func
+        If result_checker is provided,
 
 
         """
@@ -298,22 +293,40 @@ class StepPMXBase(StepBase, BaseModel):
 
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
-            # # TODO: find a reliable way to sort this, ideally by inspecting log files
-
             if result_checker is not None:
                 batch_results = result_checker(jobs)
-
+                good_results = 0
                 for task, result in zip(next_batch, batch_results):
+                    # returns boolean arrays: False => failed job
                     for subtask, sub_result in zip(task, result):
-                        if sub_result:
+                        if sub_result == False:
                             subtask.set_status_failed()
                             self._logger.log(
                                 f"Warning: job {subtask} failed!", _LE.WARNING
                             )
+                            if (
+                                self.get_perturbation_map().strict_execution
+                                and isinstance(subtask.data, str)
+                            ):
+                                edge = self.get_perturbation_map().get_edge_by_id(
+                                    subtask.data
+                                )
+                                print("got edge", edge)
+                                edge._set_status(_PE.STATUS_FAILED)
+                                print("setting status to failed!")
                         else:
                             subtask.set_status_success()
+                            good_results += 1
+                self._logger.log(
+                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs[0])} jobs for step {step_id}",
+                    _LE.INFO,
+                )
 
             else:
+                self._logger.log(
+                    f"Step {step_id} is running without a result checker - failed executions will be ignored!",
+                    _LE.WARNING,
+                )
                 for element in next_batch:
                     for subtask in element:
                         subtask.set_status_success()
@@ -408,6 +421,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
+            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
         )
         perturbation_map.parse_map_file(
             os.path.join(self.work_dir, log_file.get_file_name())
@@ -419,7 +433,7 @@ class StepPMXBase(StepBase, BaseModel):
         )
         self.get_workflow_object().set_perturbation_map(perturbation_map)
 
-    def _prepare_edges(self, batch):
+    def _prepare_edges(self, batch) -> List[str]:
         edges = []
 
         for task in batch:
@@ -482,7 +496,7 @@ class StepPMXBase(StepBase, BaseModel):
         # clean the written pdb, remove anything except hetatm/atom lines
         self._clean_pdb_structure(lig_path)
         # now run ACPYPE on the ligand to produce the topology file
-        self._parametrisation_pipeline(lig_path)
+        self._parametrisation_pipeline(lig_path, conf=conf)
 
         # produces MOL.itp, need to separate the atomtypes directive out into ffMOL.itp for pmx
         # to generate the forcefield later
