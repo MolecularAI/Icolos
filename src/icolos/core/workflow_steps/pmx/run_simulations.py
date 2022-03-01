@@ -39,26 +39,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
 
-<<<<<<< Updated upstream
-        # prepare and pool jobscripts, unroll replicas, states etc
-        job_pool = self._prepare_job_pool(edges)
-        self._logger.log(
-            f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations", _LE.DEBUG
-        )
-        # run everything through in one batch, with multiple edges per call
-        self.execution.parallelization.max_length_sublists = int(
-            np.ceil(len(job_pool) / self._get_number_cores())
-        )
-        self._subtask_container = SubtaskContainer(
-            max_tries=self.execution.failure_policy.n_tries
-        )
-        self._subtask_container.load_data(job_pool)
-        self._execute_pmx_step_parallel(
-            run_func=self._execute_command,
-            step_id="pmx_run_simulations",
-            result_checker=self._inspect_log_files,
-        )
-=======
         # run in two separate batches, job times will be equal and we won't have a mismatch between short ligand jobs and longer protein jobs
         for state in self.states:
             # prepare and pool jobscripts, unroll replicas,  etc
@@ -80,7 +60,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 step_id="pmx_run_simulations",
                 result_checker=self._inspect_log_files,
             )
->>>>>>> Stashed changes
 
     def get_mdrun_command(
         self,
