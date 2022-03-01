@@ -93,8 +93,8 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         Works out where to get starting structure from based on the current run and simulation type
         """
         if self.get_additional_setting(_PSE.PREV_STEP) is not None:
-            self.get_additional_setting(_PSE.PREV_STEP)
-        if self.run_type == _PSE.RBFE:
+            return self.get_additional_setting(_PSE.PREV_STEP)
+        elif self.run_type == _PSE.RBFE:
             if sim_type == "nvt":
                 return "em"
             elif sim_type == "eq":
