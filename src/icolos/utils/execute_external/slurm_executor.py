@@ -139,7 +139,7 @@ class SlurmExecutor(ExecutorBase):
         while completed is False:
             state = self._check_job_status(job_id)
             if state in [_SE.PENDING, _SE.RUNNING]:
-                time.sleep(5)
+                time.sleep(60)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True

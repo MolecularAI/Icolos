@@ -110,10 +110,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     mdlog,
                 ]
                 for flag in self.settings.arguments.flags:
-                    single_command.append(flag)
+                    single_command.append(str(flag))
                 for key, value in self.settings.arguments.parameters.items():
-                    single_command.append(key)
-                    single_command.append(value)
+                    single_command.append(str(key))
+                    single_command.append(str(value))
                 single_command.append("\n\n")
                 job_command += single_command
 
