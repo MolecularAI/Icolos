@@ -8,23 +8,18 @@ from pydantic.main import BaseModel
 from sklearn.gaussian_process.kernels import DotProduct
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.exceptions import NotFittedError
-
+from skorch.probabilistic import ExactGPRegressor
+from icolos.core.workflow_steps.active_learning.al_utils import greedy_acquisition
+from gpytorch.likelihoods import GaussianLikelihood
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
-from icolos.core.workflow_steps.active_learning.models.gptorch import GPyTorchModel
 
-try:
-    import torch
-    from torch import nn
-except:
-    print("Warning: PyTorch is not installed in the environment!")
-try:
-    from skorch.regressor import NeuralNetRegressor
-    from skorch.probabilistic import ExactGPRegressor
-except:
-    print("Warning: skorch is not installed in the environment!")
-
-
+from icolos.core.workflow_steps.active_learning.models.soap_gp import (
+    SOAP_GP,
+    SOAP_Kernel,
+)
+import torch
+from torch import nn
+from skorch.regressor import NeuralNetRegressor
 from icolos.core.containers.compound import Compound, Enumeration
 from icolos.core.workflow_steps.active_learning.models.ffnn import FeedForwardNet
 from icolos.core.workflow_steps.step import StepBase
@@ -32,8 +27,6 @@ from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import (
     StepActiveLearningEnum,
 )
-
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 from rdkit.Chem import PandasTools, Mol
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -135,6 +128,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         """
         Loads the library file from disk
         This should be a .sdf file containing the compounds to be screened
+        # TODO Handle smiles directly, with embedding step in oracle
         """
         lib_path = self.settings.additional[_SALE.VIRTUAL_LIB]
         assert lib_path.endswith(".sdf")
@@ -148,18 +142,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             removeHs=False,
             embedProps=True,
         )
-        # need the morgan fingerprints in the df
-        library[_SALE.MORGAN_FP] = library.apply(
-            lambda x: np.array(
-                GetMorganFingerprintAsBitVect(x[_SALE.MOLECULE], 2, nBits=2048),
-                dtype=np.float32,
-            ),
-            axis=1,
-        )
-        # construct the soap vector representation of that molecule
-        library[_SALE.SOAP_VECTOR] = library.apply(
-            lambda x: np.array(self.get_soap_vector(x[_SALE.MOLECULE]))
-        )
+        library = self.construct_fingerprints(library)
+        print(library.head())
         scores = (
             np.absolute(
                 pd.to_numeric(
@@ -173,18 +157,21 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         return library, scores
 
     def _initialize_learner(self):
-        running_mode = self.settings.additional["running_mode"]
+        """
+        Initializes a range of surrogate models
+        """
+        running_mode = self.settings.additional[_SALE.RUNNING_MODE]
         if running_mode == "gpr":
             learner = BayesianOptimizer(
                 estimator=GaussianProcessRegressor(
                     kernel=DotProduct(), normalize_y=True
                 ),
-                query_strategy=self.greedy_acquisition,
+                query_strategy=greedy_acquisition,
             )
         elif running_mode == "random_forest":
             learner = ActiveLearner(
                 estimator=RandomForestRegressor(n_estimators=100),
-                query_strategy=self.greedy_acquisition,
+                query_strategy=greedy_acquisition,
             )
         elif running_mode == "ffnn":
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -200,27 +187,36 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
             learner = ActiveLearner(
                 estimator=regressor,
-                query_strategy=self.greedy_acquisition,
+                query_strategy=greedy_acquisition,
             )
-        elif running_mode == "soap_gp":
+        elif running_mode == "soap_gpr":
             device = "cuda" if torch.cuda.is_available() else "cpu"
             gpr = ExactGPRegressor(
-                GPyTorchModel)
-            learner = ActiveLearner(gpr,
-                                    query_strategy=self.greedy_acquisition)
+                SOAP_GP,
+                optimizer=torch.optim.Adam,
+                lr=0.1,
+                max_epochs=40,
+                device=device,
+                batch_size=-1,
+            )
+            gpr.initialize()
+            learner = ActiveLearner(
+                gpr, query_strategy=self.greedy_acquisition, force_all_finite=False
+            )
         else:
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
     def _run_learning_loop(
-        self, learner, lib, debug: bool = False, top_1_idx: list = None
+        self, learner: ActiveLearner, lib, debug: bool = False, top_1_idx: list = None
     ):
-        rounds = self.settings.additional[_SALE.N_ROUNDS]
-        n_instances = self.settings.additional[_SALE.BATCH_SIZE]
+        rounds = int(self.settings.additional[_SALE.N_ROUNDS])
+        n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
+        running_mode = self.settings.additional[_SALE.RUNNING_MODE]
         queried_compound_idx = []
         fraction_top1_hits = []
-        X = np.array(list(lib[_SALE.MORGAN_FP]))
-        print(X.shape)
+        key = _SALE.SOAP_VECTOR if running_mode == "soap_gpr" else _SALE.MORGAN_FP
+        X = np.array(list(lib[key]))
         for idx in range(rounds):
             query_idx, _ = learner.query(
                 X,
@@ -232,6 +228,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             if not debug:
+                # get scores from oracle
                 self._logger.log(
                     f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
                 )
@@ -254,16 +251,13 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 )
                 if self.settings.additional["running_mode"] == "ffnn":
                     scores = scores.reshape(-1, 1)
+
             self._logger.log("Fitting with new data...", _LE.INFO)
-            new_data = np.array(
-                [compound[_SALE.MORGAN_FP] for compound in query_compounds],
-                dtype=np.float32,
-            )
-            print(new_data.shape)
-            learner.teach(
-                new_data,
-                scores,
-            )
+            new_data = np.array([compound[key] for compound in query_compounds])
+            #
+            for compound in query_compounds:
+                print(compound[key].shape)
+            learner.teach(new_data, scores, only_new=True)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
                 # what fraction of top1% compoudnds has the model requested to evaluate
@@ -291,13 +285,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         # if we are using a pre-calculated dataset for evaluation
         if self.check_additional("debug"):
-            # (val_lib, val_docking_scores) = self._parse_library(
-            #     extract_property=True
-            # )
-
-            # top_1_val = int(0.01 * len(val_docking_scores))
-            # # extract indices of top1% of compounds
-            # top_1_val = np.argpartition(scores, -top_1_val)[-top_1_val:]
             self._logger.log("Starting debug run...", _LE.DEBUG)
             self._run_learning_loop(
                 learner=learner, lib=lib, debug=True, top_1_idx=list(top_1_idx)

@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 # RDkit
@@ -8,6 +9,8 @@ from rdkit.Chem.rdmolops import GetAdjacencyMatrix
 import torch
 from torch_geometric.data import Data
 from torch.utils.data import DataLoader
+
+# functions adapted from https://www.blopig.com/blog/2022/02/how-to-turn-a-smiles-string-into-a-molecular-graph-for-pytorch-geometric/
 
 
 def one_hot_encoding(x, permitted_list):
@@ -167,7 +170,7 @@ def get_bond_features(bond, use_stereochemistry=True):
     return np.array(bond_feature_vector)
 
 
-def create_pytorch_geometric_graph_data_list_from_smiles_and_labels(x_smiles, y):
+def create_graph(mol: Chem.Mol, y):
     """
     Inputs:
 
@@ -182,44 +185,62 @@ def create_pytorch_geometric_graph_data_list_from_smiles_and_labels(x_smiles, y)
 
     data_list = []
 
-    for (smiles, y_val) in zip(x_smiles, y):
+    # convert SMILES to RDKit mol object
 
-        # convert SMILES to RDKit mol object
-        mol = Chem.MolFromSmiles(smiles)
-        # get feature dimensions
-        n_nodes = mol.GetNumAtoms()
-        n_edges = 2 * mol.GetNumBonds()
-        unrelated_smiles = "O=O"
-        unrelated_mol = Chem.MolFromSmiles(unrelated_smiles)
-        n_node_features = len(get_atom_features(unrelated_mol.GetAtomWithIdx(0)))
-        n_edge_features = len(
-            get_bond_features(unrelated_mol.GetBondBetweenAtoms(0, 1))
-        )
-        # construct node feature matrix X of shape (n_nodes, n_node_features)
-        X = np.zeros((n_nodes, n_node_features))
-        for atom in mol.GetAtoms():
-            X[atom.GetIdx(), :] = get_atom_features(atom)
+    # get feature dimensions
+    n_nodes = mol.GetNumAtoms()
+    n_edges = 2 * mol.GetNumBonds()
+    unrelated_smiles = "O=O"
+    unrelated_mol = Chem.MolFromSmiles(unrelated_smiles)
+    n_node_features = len(get_atom_features(unrelated_mol.GetAtomWithIdx(0)))
+    n_edge_features = len(get_bond_features(unrelated_mol.GetBondBetweenAtoms(0, 1)))
+    # construct node feature matrix X of shape (n_nodes, n_node_features)
+    X = np.zeros((n_nodes, n_node_features))
+    for atom in mol.GetAtoms():
+        X[atom.GetIdx(), :] = get_atom_features(atom)
 
-        X = torch.tensor(X, dtype=torch.float)
+    X = torch.tensor(X, dtype=torch.float)
 
-        # construct edge index array E of shape (2, n_edges)
-        (rows, cols) = np.nonzero(GetAdjacencyMatrix(mol))
-        torch_rows = torch.from_numpy(rows.astype(np.int64)).to(torch.long)
-        torch_cols = torch.from_numpy(cols.astype(np.int64)).to(torch.long)
-        E = torch.stack([torch_rows, torch_cols], dim=0)
+    # construct edge index array E of shape (2, n_edges)
+    (rows, cols) = np.nonzero(GetAdjacencyMatrix(mol))
+    torch_rows = torch.from_numpy(rows.astype(np.int64)).to(torch.long)
+    torch_cols = torch.from_numpy(cols.astype(np.int64)).to(torch.long)
+    E = torch.stack([torch_rows, torch_cols], dim=0)
 
-        # construct edge feature array EF of shape (n_edges, n_edge_features)
-        EF = np.zeros((n_edges, n_edge_features))
+    # construct edge feature array EF of shape (n_edges, n_edge_features)
+    EF = np.zeros((n_edges, n_edge_features))
 
-        for (k, (i, j)) in enumerate(zip(rows, cols)):
+    for (k, (i, j)) in enumerate(zip(rows, cols)):
 
-            EF[k] = get_bond_features(mol.GetBondBetweenAtoms(int(i), int(j)))
+        EF[k] = get_bond_features(mol.GetBondBetweenAtoms(int(i), int(j)))
 
-        EF = torch.tensor(EF, dtype=torch.float)
+    EF = torch.tensor(EF, dtype=torch.float)
 
-        # construct label tensor
-        y_tensor = torch.tensor(np.array([y_val]), dtype=torch.float)
+    # construct label tensor
+    y_tensor = torch.tensor(np.array([y]), dtype=torch.float)
 
-        # construct Pytorch Geometric data object and append to data list
-        data_list.append(Data(x=X, edge_index=E, edge_attr=EF, y=y_tensor))
+    # construct Pytorch Geometric data object and append to data list
+    data_list.append(Data(x=X, edge_index=E, edge_attr=EF, y=y_tensor))
     return DataLoader(data_list, batch_size=32)
+
+
+def greedy_acquisition(
+    estimator,
+    X: np.ndarray,
+    previous_idx,
+    n_instances: int,
+) -> np.ndarray:
+    """
+    Implement greedy acquisition strategy, return the n_samples best scores
+    """
+    try:
+        predictions = estimator.predict(X)
+    except:
+        predictions = np.random.uniform(12, 0, len(X))
+
+    # zero those predictions we've seen before
+    for idx in previous_idx:
+        predictions[idx] = 0
+    # smaller before n_instances, largest after
+    sorted_preds = np.argpartition(predictions, -n_instances, axis=0)[-n_instances:]
+    return sorted_preds
