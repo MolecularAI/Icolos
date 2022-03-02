@@ -1,4 +1,5 @@
 import os
+from time import time
 import gpytorch
 from dscribe.kernels import REMatchKernel
 import torch
@@ -25,10 +26,10 @@ class SOAP_Kernel(gpytorch.kernels.Kernel):
     def forward(self, x1: torch.Tensor, x2: torch.Tensor = None, **kwargs):
         # x1 and x2 are the identifiers for the two compounds.  need to compute the descriptor matrices first, then run thorugh the kernel, return elementwise K_xx where x is # mols
         atoms = []
+        print("working in dir", self.tmp_dir)
         for i in x1.flatten():
-            print(i)
             mol = Chem.SDMolSupplier(
-                os.path.join(self.tmp_dir, f"{i}.sdf"), removeHs=False
+                os.path.join(self.tmp_dir, f"{i}.sdf"), removeHs=True
             )[0]
             atoms.append(convert_mol_to_ase_atoms(mol))
         soap = SOAP(
@@ -37,14 +38,18 @@ class SOAP_Kernel(gpytorch.kernels.Kernel):
             nmax=8,
             lmax=6,
             crossover=True,
+            sparse=True,
+            dtype="float32",
         )
+
         soap_descriptors = []
         for sys in atoms:
-            soap_descriptors.append(normalize(soap.create(sys)))
-
+            desc = soap.create(sys).to_scipy_sparse()
+            soap_descriptors.append(normalize(desc, copy=False, axis=1))
+        # TODO: this kernel computation needs to be parallelized
         soap_k = REMatchKernel(
             # TODO: integration is much slower than the gaussian radial functions, switch if performance becomes an issue
-            metric="polynomial",
+            metric="rbf",
             degree=3,
             gamma=1,
             coef0=0,
@@ -68,5 +73,4 @@ class SOAP_GP(gpytorch.models.ExactGP):
         # x is a matrix of identifiers for the compounds being passed, let the kernel compute these on the fly, should of of shape (n_compounds, 1), where the last dim is the identifier or something
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
-        print(mean_x.shape, covar_x.shape)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)

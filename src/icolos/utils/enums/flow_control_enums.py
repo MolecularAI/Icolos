@@ -1,5 +1,7 @@
 from icolos.core.flow_control.iterator import StepIterator
-from icolos.core.workflow_steps.prediction.active_learning import StepActiveLearning
+from icolos.core.workflow_steps.active_learning.active_learning import (
+    StepActiveLearning,
+)
 from icolos.utils.enums.step_enums import StepBaseEnum
 
 _SBE = StepBaseEnum

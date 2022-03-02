@@ -10,7 +10,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
 from skorch.probabilistic import ExactGPRegressor
 from icolos.core.workflow_steps.active_learning.al_utils import greedy_acquisition
-import scipy
+from rdkit import Chem
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
 
 from icolos.core.workflow_steps.active_learning.models.soap_gp import (
@@ -143,6 +143,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             embedProps=True,
         )
         library = self.construct_fingerprints(library)
+        print(library.head())
         scores = (
             np.absolute(
                 pd.to_numeric(
@@ -194,7 +195,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 SOAP_GP,
                 optimizer=torch.optim.Adam,
                 lr=0.1,
-                max_epochs=40,
+                max_epochs=100,
                 device=device,
                 batch_size=-1,
                 module__tmp_dir=self._make_tmpdir(),
@@ -217,7 +218,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         fraction_top1_hits = []
         key = _SALE.SOAP_VECTOR if running_mode == "soap_gpr" else _SALE.MORGAN_FP
         X = np.array(list(lib[key]))
-        for idx in range(rounds):
+        for rnd in range(rounds):
             query_idx, _ = learner.query(
                 X,
                 n_instances=n_instances,
@@ -253,9 +254,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
             self._logger.log("Fitting with new data...", _LE.INFO)
             new_data = np.array([compound[key] for compound in query_compounds])
-            #
-            for compound in query_compounds:
-                print(compound[key].shape)
             learner.teach(new_data, scores, only_new=True)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
@@ -265,7 +263,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     / len(top_1_idx)
                 ) * 100
                 self._logger.log(
-                    f"Fraction of top 1% hits queries by round {idx}: {hits_queried}%",
+                    f"Fraction of top 1% hits queries by round {rnd}: {hits_queried}%",
                     _LE.INFO,
                 )
                 fraction_top1_hits.append(hits_queried)
@@ -284,7 +282,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         fraction_top1_hits = []
         key = _SALE.IDX
         X = np.array(list(lib[key]))
-        for idx in range(rounds):
+        for rnd in range(rounds):
             query_idx, _ = learner.query(
                 X,
                 n_instances=n_instances,
@@ -314,6 +312,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             else:
                 # retrieve precalculated scores instead of docking
                 self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
+                compounds = [lib.iloc[int(idx)][_SALE.MOLECULE] for idx in query_idx]
+                for comp, idx in zip(compounds, query_idx):
+                    writer = Chem.SDWriter(os.path.join(tmp_dir, f"{str(idx)}.sdf"))
+                    writer.write(comp)
                 scores = np.absolute(
                     [
                         float(
@@ -338,7 +340,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     / len(top_1_idx)
                 ) * 100
                 self._logger.log(
-                    f"Fraction of top 1% hits queries by round {idx}: {hits_queried}%",
+                    f"Fraction of top 1% hits queries by round {rnd}: {hits_queried}%",
                     _LE.INFO,
                 )
                 fraction_top1_hits.append(hits_queried)
@@ -346,6 +348,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
+        print(tmp_dir)
         lib, scores = self._parse_library(
             extract_property=self.settings.additional["evaluate"]
         )
@@ -356,12 +359,13 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         learner = self._initialize_learner()
 
         # if we are using a pre-calculated dataset for evaluation
-        if self.check_additional("debug"):
-            self._logger.log("Starting debug run...", _LE.DEBUG)
-            self._run_learning_loop(
+        if self.check_additional("evaluate"):
+            self._logger.log("Starting virtual library run...", _LE.DEBUG)
+            self.run_soap_learning_loop(
                 learner=learner, lib=lib, debug=True, top_1_idx=list(top_1_idx)
             )
         else:
+            self._logger.log("Starting on-the-fly run", _LE.DEBUG)
             self.run_soap_learning_loop(
                 learner=learner,
                 lib=lib,

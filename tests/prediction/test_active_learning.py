@@ -109,7 +109,7 @@ class TestActiveLearning(unittest.TestCase):
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SALE.VIRTUAL_LIB: self.ligands,
-                    _SALE.N_ROUNDS: "2",
+                    _SALE.N_ROUNDS: "4",
                     _SALE.INIT_SAMPLES: "2",
                     _SALE.BATCH_SIZE: "4",
                     _SALE.CRITERIA: _SGE.GLIDE_DOCKING_SCORE,
