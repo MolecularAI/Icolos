@@ -991,6 +991,8 @@ class StepActiveLearningEnum:
     INIT_SAMPLES = "init_samples"
     MORGAN_FP = "MorganFP"
     SOAP_VECTOR = "soap_vector"
+    ID = "ID"
+    IDX = "IDX"
     GRAPH = "graph"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"

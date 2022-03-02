@@ -2,7 +2,6 @@ import os
 import tempfile
 from pydantic import BaseModel
 import pandas as pd
-from icolos.core.workflow_steps.active_learning.al_utils import create_graph
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -10,10 +9,7 @@ from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import StepActiveLearningEnum, StepBaseEnum
 from icolos.utils.general.convenience_functions import nested_get
 from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
-from rdkit import Chem
-from dscribe.descriptors import SOAP
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
-from ase import io
 
 _IE = StepInitializationEnum()
 _SALE = StepActiveLearningEnum()
@@ -61,23 +57,6 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
             )
 
-    def get_soap_vector(self, mol: Chem.Mol) -> np.ndarray:
-        tmp_dir = tempfile.mkdtemp()
-        Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(tmp_dir, "mol.xyz"))
-        print(Chem.MolToSmiles(mol))
-        atoms = io.read(os.path.join(tmp_dir, "mol.xyz"))
-        print(atoms)
-        soap_desc = SOAP(
-            species=["C", "H", "O", "N", "F", "Cl", "I", "Br", "S"],
-            rcut=5,
-            nmax=8,
-            lmax=6,
-            crossover=True,
-        )
-        soap_vec = soap_desc.create(atoms)
-        print(soap_vec.shape)
-        return soap_vec
-
     def construct_fingerprints(self, library: pd.DataFrame):
         # add morgan FPs
         library[_SALE.MORGAN_FP] = library.apply(
@@ -87,10 +66,13 @@ class ActiveLearningBase(StepBase, BaseModel):
             ),
             axis=1,
         )
-        # construct the soap vector representation of that molecule
-        library[_SALE.SOAP_VECTOR] = library.apply(
-            lambda x: self.get_soap_vector(x[_SALE.MOLECULE]), axis=1
-        )
+
+        library[_SALE.IDX] = [i for i in range(len(library))]
+
+        # library[_SALE.SOAP_VECTOR] = library.apply(
+        #     lambda x: get_soap_vector(x[_SALE.MOLECULE], max_length=max_atom_count),
+        #     axis=1,
+        # )
         # construct pytorch_geomtetric Graph object based on some hand-computed descriptors
         # library[_SALE.GRAPH] = library.apply(
         #     lambda x: create_graph(

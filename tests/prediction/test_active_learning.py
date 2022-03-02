@@ -134,7 +134,7 @@ class TestActiveLearning(unittest.TestCase):
                                 _SBE.SETTINGS_ARGUMENTS: {
                                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                                        _EE.GLIDE_HOST: "cpu-only"
+                                        _EE.GLIDE_HOST: "localhost"
                                     },
                                 },
                                 _SBE.SETTINGS_ADDITIONAL: {

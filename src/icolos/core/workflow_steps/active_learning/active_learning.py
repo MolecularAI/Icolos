@@ -10,7 +10,7 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
 from skorch.probabilistic import ExactGPRegressor
 from icolos.core.workflow_steps.active_learning.al_utils import greedy_acquisition
-from gpytorch.likelihoods import GaussianLikelihood
+import scipy
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
 
 from icolos.core.workflow_steps.active_learning.models.soap_gp import (
@@ -78,7 +78,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         return oracle_steps
 
-    def query_oracle(self, compound_list: List[Mol]) -> List:
+    def query_oracle(self, compound_list: List[Mol]) -> List[Compound]:
         """
         Interface function with the oracle method, in the most likely case this is ligprep + docking
 
@@ -143,7 +143,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             embedProps=True,
         )
         library = self.construct_fingerprints(library)
-        print(library.head())
         scores = (
             np.absolute(
                 pd.to_numeric(
@@ -198,8 +197,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 max_epochs=40,
                 device=device,
                 batch_size=-1,
+                module__tmp_dir=self._make_tmpdir(),
+                module__device=device,
             )
-            gpr.initialize()
             learner = ActiveLearner(
                 gpr, query_strategy=self.greedy_acquisition, force_all_finite=False
             )
@@ -223,7 +223,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 n_instances=n_instances,
                 previous_idx=queried_compound_idx,
             )
-
             queried_compound_idx += list(query_idx)
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
@@ -272,6 +271,79 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 fraction_top1_hits.append(hits_queried)
         self._logger.log(f"Hits queried at each epoch:\n{fraction_top1_hits}", _LE.INFO)
 
+    def run_soap_learning_loop(
+        self, learner: ActiveLearner, lib, debug: bool = False, top_1_idx: list = None
+    ):
+        """
+        Learning loop specifically for soap descriptors
+        """
+        tmp_dir = self._make_tmpdir()
+        rounds = int(self.settings.additional[_SALE.N_ROUNDS])
+        n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
+        queried_compound_idx = []
+        fraction_top1_hits = []
+        key = _SALE.IDX
+        X = np.array(list(lib[key]))
+        for idx in range(rounds):
+            query_idx, _ = learner.query(
+                X,
+                n_instances=n_instances,
+                previous_idx=queried_compound_idx,
+            )
+            print(query_idx)
+            queried_compound_idx += list(query_idx)
+            query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
+
+            if not debug:
+                # get scores from oracle
+                self._logger.log(
+                    f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
+                )
+
+                compounds = self.query_oracle(query_compounds)
+                # also need to write the conformers to a tmpdir, use these shapes for soap descriptors
+                for compound, idx in zip(compounds, query_idx):
+                    # TODO: implement filtering step down to best per enumeration here
+                    enumeration = compound.get_enumerations()[0]
+                    conformer = enumeration.get_conformers()[0]
+                    conformer.write(os.path.join(tmp_dir, f"{str(idx)}.sdf"))
+                os.listdir(tmp_dir)
+                scores = self._extract_final_scores(
+                    compounds, self.settings.additional[_SALE.CRITERIA]
+                )
+            else:
+                # retrieve precalculated scores instead of docking
+                self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
+                scores = np.absolute(
+                    [
+                        float(
+                            lib.iloc[int(idx)][self.settings.additional[_SALE.CRITERIA]]
+                        )
+                        for idx in query_idx
+                    ],
+                    dtype=np.float32,
+                )
+                print(scores.shape)
+            self._logger.log("Fitting with new data...", _LE.INFO)
+            new_data = np.array([int(compound[key]) for compound in query_compounds])
+            print("new data shape", new_data.shape)
+            #
+
+            learner.teach(new_data, scores, only_new=True)
+            # calculate percentage of top-1% compounds queried
+            if top_1_idx is not None:
+                # what fraction of top1% compoudnds has the model requested to evaluate
+                hits_queried = (
+                    np.in1d(np.unique(np.array(queried_compound_idx)), top_1_idx).sum()
+                    / len(top_1_idx)
+                ) * 100
+                self._logger.log(
+                    f"Fraction of top 1% hits queries by round {idx}: {hits_queried}%",
+                    _LE.INFO,
+                )
+                fraction_top1_hits.append(hits_queried)
+        self._logger.log(f"Hits queried at each epoch:\n{fraction_top1_hits}", _LE.INFO)
+
     def execute(self):
         tmp_dir = self._make_tmpdir()
         lib, scores = self._parse_library(
@@ -290,7 +362,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 learner=learner, lib=lib, debug=True, top_1_idx=list(top_1_idx)
             )
         else:
-            self._run_learning_loop(
+            self.run_soap_learning_loop(
                 learner=learner,
                 lib=lib,
                 debug=False,
@@ -298,7 +370,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
 
         # pickle the final model
-        with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
-            pickle.dump(learner, f)
+        # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
+        #     pickle.dump(learner, f)
 
         self._parse_output(tmp_dir)
