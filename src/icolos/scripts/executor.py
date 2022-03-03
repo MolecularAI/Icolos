@@ -16,7 +16,11 @@ from icolos.utils.enums.entry_points import ExecutorEnum
 from icolos.utils.entry_point_functions.logging_helper_functions import (
     initialize_logging,
 )
-from icolos.utils.entry_point_functions.parsing_functions import parse_header, log_version_number, get_version_number
+from icolos.utils.entry_point_functions.parsing_functions import (
+    parse_header,
+    log_version_number,
+    get_version_number,
+)
 from icolos.utils.general.citation_generator import print_citations
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -30,7 +34,7 @@ def main():
     # get the input parameters and parse them
     parser = argparse.ArgumentParser(
         description='Implements entry point for the "Icolos" workflow class.',
-        epilog=f"Icolos version: {get_version_number()}"
+        epilog=f"Icolos version: {get_version_number()}",
     )
     parser.add_argument(
         "-conf",

@@ -84,7 +84,8 @@ def get_version_number() -> str:
     try:
         # this requires python >= 3.8
         from importlib import metadata
-        return metadata.version('icolos')
+
+        return metadata.version("icolos")
     except:
         return "unknown"
 

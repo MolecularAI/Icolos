@@ -8,7 +8,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepGoldEnum
 from tests.tests_paths import (
     get_1UYD_ligands_as_Compounds,
     PATHS_1UYD,
-    PATHS_EXAMPLEDATA
+    PATHS_EXAMPLEDATA,
 )
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -27,17 +27,21 @@ class Test_Gold_docking(unittest.TestCase):
         self._1UYD_compounds = get_1UYD_ligands_as_Compounds(
             abs_path=PATHS_1UYD.LIGANDS
         )[:3]
-        self.cavity_file = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_CAVITY_MOL2))
-        self.receptor_path = attach_root_path(os.path.join("../IcolosData", PATHS_1UYD.GOLD_MOL2_PROTEIN))
-        self.config_file_path = attach_root_path(os.path.join("../IcolosData", PATHS_EXAMPLEDATA.GOLD_EXAMPLE_CONFIG))
+        self.cavity_file = attach_root_path(
+            os.path.join("../IcolosData", PATHS_1UYD.GOLD_CAVITY_MOL2)
+        )
+        self.receptor_path = attach_root_path(
+            os.path.join("../IcolosData", PATHS_1UYD.GOLD_MOL2_PROTEIN)
+        )
+        self.config_file_path = attach_root_path(
+            os.path.join("../IcolosData", PATHS_EXAMPLEDATA.GOLD_EXAMPLE_CONFIG)
+        )
 
     def test_config_generation(self):
         step_conf = {
             _SBE.STEPID: "01_Gold",
             _SBE.STEP_TYPE: _SBE.STEP_GOLD_DOCKING,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load ccdc"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load ccdc"},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
@@ -45,15 +49,9 @@ class Test_Gold_docking(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SGE.CONFIGURATION: {
-                        _SGE.AUTOMATIC_SETTINGS: {
-                            _SGE.AUTOSCALE: 0.5
-                        },
-                        _SGE.FLOOD_FILL: {
-                            _SGE.CAVITY_FILE: "whatever"
-                        },
-                        _SGE.PROTEIN_DATA: {
-                            _SGE.PROTEIN_DATAFILE: "string"
-                        }
+                        _SGE.AUTOMATIC_SETTINGS: {_SGE.AUTOSCALE: 0.5},
+                        _SGE.FLOOD_FILL: {_SGE.CAVITY_FILE: "whatever"},
+                        _SGE.PROTEIN_DATA: {_SGE.PROTEIN_DATAFILE: "string"},
                     }
                 },
             },
@@ -62,15 +60,22 @@ class Test_Gold_docking(unittest.TestCase):
         gold_step = StepGold(**step_conf)
 
         # check the two mandatory settings and one "overwrite"
-        self.assertEqual(gold_step.gold_additional.configuration.flood_fill.cavity_file, "whatever")
-        self.assertEqual(gold_step.gold_additional.configuration.protein_data.protein_datafile, "string")
-        self.assertEqual(gold_step.gold_additional.configuration.automatic_settings.autoscale, 0.5)
+        self.assertEqual(
+            gold_step.gold_additional.configuration.flood_fill.cavity_file, "whatever"
+        )
+        self.assertEqual(
+            gold_step.gold_additional.configuration.protein_data.protein_datafile,
+            "string",
+        )
+        self.assertEqual(
+            gold_step.gold_additional.configuration.automatic_settings.autoscale, 0.5
+        )
 
         # check config file size
         config_path = os.path.join(self._test_dir, "test_config.cfg")
-        gold_step.generate_config_file(config_path,
-                                       ["/a/path/to/an/SDF/with/a/compound.sdf",
-                                        "/another/path.sdf"])
+        gold_step.generate_config_file(
+            config_path, ["/a/path/to/an/SDF/with/a/compound.sdf", "/another/path.sdf"]
+        )
         stat_inf = os.stat(config_path)
         self.assertGreater(stat_inf.st_size, 1400)
 
@@ -78,9 +83,7 @@ class Test_Gold_docking(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "01_Gold",
             _SBE.STEP_TYPE: _SBE.STEP_GOLD_DOCKING,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load ccdc"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load ccdc"},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
@@ -88,15 +91,9 @@ class Test_Gold_docking(unittest.TestCase):
                 },
                 _SBE.SETTINGS_ADDITIONAL: {
                     _SGE.CONFIGURATION: {
-                        _SGE.AUTOMATIC_SETTINGS: {
-                            _SGE.AUTOSCALE: 0.5
-                        },
-                        _SGE.FLOOD_FILL: {
-                            _SGE.CAVITY_FILE: self.cavity_file
-                        },
-                        _SGE.PROTEIN_DATA: {
-                            _SGE.PROTEIN_DATAFILE: self.receptor_path
-                        }
+                        _SGE.AUTOMATIC_SETTINGS: {_SGE.AUTOSCALE: 0.5},
+                        _SGE.FLOOD_FILL: {_SGE.CAVITY_FILE: self.cavity_file},
+                        _SGE.PROTEIN_DATA: {_SGE.PROTEIN_DATAFILE: self.receptor_path},
                     }
                 },
             },
@@ -107,12 +104,17 @@ class Test_Gold_docking(unittest.TestCase):
         gold_step.execute()
 
         self.assertEqual(len(gold_step.get_compounds()), 3)
-        self.assertEqual(len(list(
-                gold_step.get_compounds()[0][0][0]
-                .get_molecule()
-                .GetConformer(0)
-                .GetPositions()[0]
-            )), 3)
+        self.assertEqual(
+            len(
+                list(
+                    gold_step.get_compounds()[0][0][0]
+                    .get_molecule()
+                    .GetConformer(0)
+                    .GetPositions()[0]
+                )
+            ),
+            3,
+        )
 
         # check SDF write-out
         out_path = os.path.join(self._test_dir, "gold_docked.sdf")
@@ -124,9 +126,7 @@ class Test_Gold_docking(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "01_Gold",
             _SBE.STEP_TYPE: _SBE.STEP_GOLD_DOCKING,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load ccdc"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load ccdc"},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
@@ -142,16 +142,19 @@ class Test_Gold_docking(unittest.TestCase):
 
         # check config file size
         config_path = os.path.join(self._test_dir, "test_config_file.cfg")
-        gold_step.generate_config_file(config_path,
-                                       ["/another/file1/whatever_1.sdf",
-                                        "/another/file1/whatever_111.sdf",
-                                        "/another/file1/whatever_1982734.sdf",
-                                        "/another/file1/whatever_1356638975934.sdf",
-                                        "/another/file1/whatever_33331.sdf",
-                                        "/another/file1/whatever_14642.sdf",
-                                        "/another/file1/whatever_1098604.sdf",
-                                        "/another/file1/whatever_2563241.sdf",
-                                        "/another/file1/whatever_1999374.sdf"])
+        gold_step.generate_config_file(
+            config_path,
+            [
+                "/another/file1/whatever_1.sdf",
+                "/another/file1/whatever_111.sdf",
+                "/another/file1/whatever_1982734.sdf",
+                "/another/file1/whatever_1356638975934.sdf",
+                "/another/file1/whatever_33331.sdf",
+                "/another/file1/whatever_14642.sdf",
+                "/another/file1/whatever_1098604.sdf",
+                "/another/file1/whatever_2563241.sdf",
+                "/another/file1/whatever_1999374.sdf",
+            ],
+        )
         stat_inf = os.stat(config_path)
         self.assertGreater(stat_inf.st_size, 1400)
-

@@ -39,24 +39,27 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
 
-        # prepare and pool jobscripts, unroll replicas, states etc
-        job_pool = self._prepare_job_pool(edges)
-        self._logger.log(
-            f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations", _LE.DEBUG
-        )
-        # run everything through in one batch, with multiple edges per call
-        self.execution.parallelization.max_length_sublists = int(
-            np.ceil(len(job_pool) / self._get_number_cores())
-        )
-        self._subtask_container = SubtaskContainer(
-            max_tries=self.execution.failure_policy.n_tries
-        )
-        self._subtask_container.load_data(job_pool)
-        self._execute_pmx_step_parallel(
-            run_func=self._execute_command,
-            step_id="pmx_run_simulations",
-            result_checker=self._inspect_log_files,
-        )
+        # run in two separate batches, job times will be equal and we won't have a mismatch between short ligand jobs and longer protein jobs
+        for branch in self.therm_cycle_branches:
+            # prepare and pool jobscripts, unroll replicas,  etc
+            job_pool = self._prepare_job_pool(edges, branch=branch)
+            self._logger.log(
+                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
+                _LE.DEBUG,
+            )
+            # run everything through in one batch, with multiple edges per call
+            self.execution.parallelization.max_length_sublists = int(
+                np.ceil(len(job_pool) / self._get_number_cores())
+            )
+            self._subtask_container = SubtaskContainer(
+                max_tries=self.execution.failure_policy.n_tries
+            )
+            self._subtask_container.load_data(job_pool)
+            self._execute_pmx_step_parallel(
+                run_func=self._execute_command,
+                step_id="pmx_run_simulations",
+                result_checker=self._inspect_log_files,
+            )
 
     def get_mdrun_command(
         self,
@@ -162,7 +165,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str]):
+    def _prepare_job_pool(self, edges: List[str], branch: str):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -170,14 +173,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         batch_script_paths = []
         for edge in edges:
-            for state in self.states:
-                for r in range(1, replicas + 1):
-                    for wp in self.therm_cycle_branches:
-                        path = self._prepare_single_job(
-                            edge=edge, wp=wp, state=state, r=r
-                        )
-                        if path is not None:
-                            batch_script_paths.append(path)
+            # for state in self.states:
+            for r in range(1, replicas + 1):
+                for state in self.states:
+                    path = self._prepare_single_job(
+                        edge=edge, wp=branch, state=state, r=r
+                    )
+                    if path is not None:
+                        batch_script_paths.append(path)
         return batch_script_paths
 
     def _execute_command(self, jobs: List[str]):
