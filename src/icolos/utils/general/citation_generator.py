@@ -25,7 +25,7 @@ def add_citation(
     citations: List[str],
     citation_string: str,
 ):
-    if step_type.upper() in workflow_step_types:
+    if any([True for w_step_type in workflow_step_types if step_type.upper() in w_step_type]):
         citations.append(citation_string)
 
 
