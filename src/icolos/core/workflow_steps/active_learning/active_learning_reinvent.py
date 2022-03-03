@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 from skorch.probabilistic import ExactGPRegressor
 from icolos.core.workflow_steps.active_learning.al_utils import greedy_acquisition
 from rdkit import Chem
+from rdkit.Chem import AllChem
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
 
 from icolos.core.workflow_steps.active_learning.models.soap_gp import (
@@ -191,6 +192,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
         elif running_mode == "soap_gpr":
             device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(device)
             gpr = ExactGPRegressor(
                 SOAP_GP,
                 optimizer=torch.optim.Adam,
@@ -303,7 +305,12 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 for compound, idx in zip(compounds, query_idx):
                     # TODO: implement filtering step down to best per enumeration here
                     enumeration = compound.get_enumerations()[0]
-                    conformer = enumeration.get_conformers()[0]
+                    try:
+                        conformer = enumeration.get_conformers()[0]
+                    except:
+                        # conformer wasn't found, docking failed, use a UFF minimization on the embedding
+                        conformer = AllChem.EmbedMolecule(enumeration.get_molecule())
+                        AllChem.UFFOptimizeMolecule(conformer)
                     conformer.write(os.path.join(tmp_dir, f"{str(idx)}.sdf"))
                 os.listdir(tmp_dir)
                 scores = self._extract_final_scores(
@@ -331,9 +338,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             print("new data shape", new_data.shape)
             #
 
-            learner.teach(new_data, scores, only_new=True)
+            learner.teach(new_data, scores)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
+                print(queried_compound_idx)
                 # what fraction of top1% compoudnds has the model requested to evaluate
                 hits_queried = (
                     np.in1d(np.unique(np.array(queried_compound_idx)), top_1_idx).sum()

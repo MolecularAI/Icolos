@@ -1,10 +1,7 @@
 import os
-from time import time
 import gpytorch
 from dscribe.kernels import REMatchKernel
 import torch
-import numpy as np
-import pandas as pd
 from rdkit import Chem
 from dscribe.descriptors import SOAP
 from sklearn.preprocessing import normalize
@@ -24,9 +21,8 @@ class SOAP_Kernel(gpytorch.kernels.Kernel):
         is_stationary = True
 
     def forward(self, x1: torch.Tensor, x2: torch.Tensor = None, **kwargs):
-        # x1 and x2 are the identifiers for the two compounds.  need to compute the descriptor matrices first, then run thorugh the kernel, return elementwise K_xx where x is # mols
+
         atoms = []
-        print("working in dir", self.tmp_dir)
         for i in x1.flatten():
             mol = Chem.SDMolSupplier(
                 os.path.join(self.tmp_dir, f"{i}.sdf"), removeHs=True
@@ -49,7 +45,7 @@ class SOAP_Kernel(gpytorch.kernels.Kernel):
         # TODO: this kernel computation needs to be parallelized
         soap_k = REMatchKernel(
             # TODO: integration is much slower than the gaussian radial functions, switch if performance becomes an issue
-            metric="rbf",
+            metric="polynomial",
             degree=3,
             gamma=1,
             coef0=0,
