@@ -62,9 +62,7 @@ class GoldConfiguration(BaseModel):
     fitness_function_settings: ConfigFitnessFunctionSettings = Field(
         alias="FITNESS FUNCTION SETTINGS", default=ConfigFitnessFunctionSettings()
     )
-    protein_data: ConfigProteinData = Field(
-        alias="PROTEIN DATA", default=None
-    )
+    protein_data: ConfigProteinData = Field(alias="PROTEIN DATA", default=None)
 
 
 class GoldAdditional(BaseModel):
@@ -94,14 +92,16 @@ class StepGold(StepBase, BaseModel):
         try:
             docking_score = conformer.GetProp(tag)
         except KeyError:
-            self._logger.log(f"Could not find tag \"{tag}\" in conformer, use \"docking_score_tag\" to adjust.",
-                             _LE.DEBUG)
+            self._logger.log(
+                f'Could not find tag "{tag}" in conformer, use "docking_score_tag" to adjust.',
+                _LE.DEBUG,
+            )
             return False
         conformer.SetProp(_SBE.ANNOTATION_TAG_DOCKING_SCORE, str(docking_score))
         return True
 
     def _generate_temporary_input_output_files(
-            self, batch: List[List[Subtask]]
+        self, batch: List[List[Subtask]]
     ) -> Tuple[List[str], List[List[str]], List[List[str]]]:
         tmp_output_dirs = []
         tmp_input_sdf_paths = []
@@ -132,9 +132,12 @@ class StepGold(StepBase, BaseModel):
                     #        (4) followed by the pose # and finally (5) the ".sdf" ending
                     # use '*' for getting all files
                     basename_filepart = os.path.basename(cur_tmp_sdf).rstrip(".sdf")
-                    list_output_files.append(os.path.join(cur_tmp_output_dir, "".join(["ranked_",
-                                                                                       basename_filepart,
-                                                                                       "_m1_*.sdf"])))
+                    list_output_files.append(
+                        os.path.join(
+                            cur_tmp_output_dir,
+                            "".join(["ranked_", basename_filepart, "_m1_*.sdf"]),
+                        )
+                    )
                     one_written = True
             if one_written is False:
                 # no compound left from this batch: remove the temporary folder and skip this one
@@ -145,11 +148,7 @@ class StepGold(StepBase, BaseModel):
             tmp_input_sdf_paths.append(list_input_files)
             tmp_output_sdf_paths.append(list_output_files)
             tmp_output_dirs.append(cur_tmp_output_dir)
-        return (
-            tmp_output_dirs,
-            tmp_input_sdf_paths,
-            tmp_output_sdf_paths
-        )
+        return (tmp_output_dirs, tmp_input_sdf_paths, tmp_output_sdf_paths)
 
     def _execute_gold(self):
         # get number of sublists in batch and initialize Parallelizer
@@ -163,7 +162,7 @@ class StepGold(StepBase, BaseModel):
             (
                 tmp_output_dirs,
                 tmp_input_sdf_paths,
-                tmp_output_sdf_paths
+                tmp_output_sdf_paths,
             ) = self._generate_temporary_input_output_files(next_batch)
 
             # execute the current batch in parallel; hand over lists of parameters (will be handled by Parallelizer)
@@ -177,8 +176,7 @@ class StepGold(StepBase, BaseModel):
 
             # parse the output of that particular batch and remove temporary files
             self._parse_gold_output(
-                tmp_output_paths=tmp_output_sdf_paths,
-                batch=next_batch
+                tmp_output_paths=tmp_output_sdf_paths, batch=next_batch
             )
 
             # clean-up
@@ -188,9 +186,7 @@ class StepGold(StepBase, BaseModel):
             self._log_execution_progress()
 
     def _parse_gold_output(
-        self,
-        tmp_output_paths: List[List[str]],
-        batch: List[List[Subtask]]
+        self, tmp_output_paths: List[List[str]], batch: List[List[Subtask]]
     ):
         def _update_subtask(sublist: List[Subtask], enum_identifier: str):
             for task in sublist:
@@ -215,8 +211,8 @@ class StepGold(StepBase, BaseModel):
                     # this is a protection against the case where empty (file size == 0 bytes) files
                     # are generated due to a failure during docking
                     if (
-                            not os.path.isfile(comp_output)
-                            or os.path.getsize(comp_output) == 0
+                        not os.path.isfile(comp_output)
+                        or os.path.getsize(comp_output) == 0
                     ):
                         continue
 
@@ -226,12 +222,14 @@ class StepGold(StepBase, BaseModel):
                             continue
 
                         # The name is something like: 10:0|tmp8x3rtg4d|sdf|1|dock7
-                        cur_enumeration_name = str(mol.GetProp("_Name")).split('|')[0]
+                        cur_enumeration_name = str(mol.GetProp("_Name")).split("|")[0]
 
                         # add the information on the actual grid used
                         mol.SetProp(_SBE.ANNOTATION_GRID_ID, str(grid_id))
                         mol.SetProp(_SBE.ANNOTATION_GRID_PATH, str(grid_path))
-                        mol.SetProp(_SBE.ANNOTATION_GRID_FILENAME, os.path.basename(grid_path))
+                        mol.SetProp(
+                            _SBE.ANNOTATION_GRID_FILENAME, os.path.basename(grid_path)
+                        )
 
                         # if no docking score is attached (i.e. the molecule is a receptor or so, skip it)
                         if self._set_docking_score(mol) is not True:
@@ -240,15 +238,21 @@ class StepGold(StepBase, BaseModel):
                         # add molecule to the appropriate ligand
                         for compound in self.get_compounds():
                             for enumeration in compound:
-                                if enumeration.get_index_string() == cur_enumeration_name:
+                                if (
+                                    enumeration.get_index_string()
+                                    == cur_enumeration_name
+                                ):
                                     new_conformer = Conformer(
                                         conformer=mol,
                                         conformer_id=None,
                                         enumeration_object=enumeration,
-                                )
-                                    enumeration.add_conformer(new_conformer, auto_update=True)
+                                    )
+                                    enumeration.add_conformer(
+                                        new_conformer, auto_update=True
+                                    )
                                     _update_subtask(
-                                        cur_sublist, enum_identifier=cur_enumeration_name
+                                        cur_sublist,
+                                        enum_identifier=cur_enumeration_name,
                                     )
                                     break
 
@@ -258,9 +262,7 @@ class StepGold(StepBase, BaseModel):
         self.generate_config_file(path=config_path, ligand_files=input_paths)
 
         # set up arguments list and execute; change path to temporary sub-folder to avoid cluttering with files
-        arguments = [
-            config_path
-        ]
+        arguments = [config_path]
         old_dir = os.getcwd()
         os.chdir(output_dir)
         execution_result = self._backend_executor.execute(
@@ -271,22 +273,26 @@ class StepGold(StepBase, BaseModel):
 
     def _config_from_file(self, ligand_files: List[str]) -> List[str]:
         config = []
-        with open(self.gold_additional.gold_config_file, 'r') as f:
+        with open(self.gold_additional.gold_config_file, "r") as f:
             buffer = f.readlines()
             idx = 0
             while idx < len(buffer):
-                line = buffer[idx].rstrip('\n')
+                line = buffer[idx].rstrip("\n")
                 config.append(line)
                 if _SGE.DATA_FILES in line:
                     # skip over all defined ligand files
-                    while _SGE.LIGAND_DATA_FILE in buffer[idx+1]:
-                        self._logger.log("Skipping pre-defined ligand in configuration file (remove lines starting with \"ligand_data_file\" to suppress this information).",
-                                         _LE.DEBUG)
+                    while _SGE.LIGAND_DATA_FILE in buffer[idx + 1]:
+                        self._logger.log(
+                            'Skipping pre-defined ligand in configuration file (remove lines starting with "ligand_data_file" to suppress this information).',
+                            _LE.DEBUG,
+                        )
                         idx = idx + 1
 
                     # add ligand files as required
                     for ligand_file in ligand_files:
-                        config.append(' '.join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
+                        config.append(
+                            " ".join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"])
+                        )
                 idx = idx + 1
         return config
 
@@ -301,10 +307,12 @@ class StepGold(StepBase, BaseModel):
             for key, value in block.items():
                 if key == _SGE.LIGAND_DATA_FILE:
                     # this needs to be overwritten by the actual compound collection
-                    self._logger.log(f"Do not set ligand data files explicitly, use the compound handover - skipping.",
-                                     _LE.WARNING)
+                    self._logger.log(
+                        f"Do not set ligand data files explicitly, use the compound handover - skipping.",
+                        _LE.WARNING,
+                    )
                     continue
-                list_lines.append(' '.join([key, '=', str(value)]))
+                list_lines.append(" ".join([key, "=", str(value)]))
             list_lines.append(empty_line())
 
         config = [block_indent(_SGE.CONFIGURATION_START), empty_line()]
@@ -328,7 +336,7 @@ class StepGold(StepBase, BaseModel):
         # data files
         config.append(block_indent(_SGE.DATA_FILES))
         for ligand_file in ligand_files:
-            config.append(' '.join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
+            config.append(" ".join([_SGE.LIGAND_DATA_FILE, ligand_file, "10"]))
         add_block(config, self.gold_additional.configuration.data_files.dict())
 
         # flags
@@ -353,12 +361,14 @@ class StepGold(StepBase, BaseModel):
 
         # fitness function settings
         config.append(block_indent(_SGE.FITNESS_FUNCTION_SETTINGS))
-        add_block(config, self.gold_additional.configuration.fitness_function_settings.dict())
+        add_block(
+            config, self.gold_additional.configuration.fitness_function_settings.dict()
+        )
 
         # protein data
         config.append(block_indent(_SGE.PROTEIN_DATA))
         add_block(config, self.gold_additional.configuration.protein_data.dict())
-        
+
         return config
 
     def generate_config_file(self, path: str, ligand_files: List[str]):
@@ -372,12 +382,14 @@ class StepGold(StepBase, BaseModel):
             # load path to config file and replace "ligand_files" as required; as configuration element is ignored in
             # this mode, check that it is not set
             if _SGE.CONFIGURATION in self.gold_additional.dict().keys():
-                self._logger.log("The \"configuration\" elements are ignored when a config file path is specified.",
-                                 _LE.WARNING)
+                self._logger.log(
+                    'The "configuration" elements are ignored when a config file path is specified.',
+                    _LE.WARNING,
+                )
             config = self._config_from_file(ligand_files=ligand_files)
 
         # write out
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             for line in config:
                 f.write(line + "\n")
 

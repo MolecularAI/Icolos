@@ -178,7 +178,9 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             # for state in self.states:
             for r in range(1, replicas + 1):
                 for state in self.states:
-                    path = self._prepare_single_job(edge=edge, wp=branch, state=state, r=r)
+                    path = self._prepare_single_job(
+                        edge=edge, wp=branch, state=state, r=r
+                    )
                     if path is not None:
                         batch_script_paths.append(path)
         return batch_script_paths
