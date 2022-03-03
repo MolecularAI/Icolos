@@ -40,11 +40,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         ), f"sim type {self.sim_type} not recognised!"
 
         # run in two separate batches, job times will be equal and we won't have a mismatch between short ligand jobs and longer protein jobs
-        for state in self.states:
+        for branch in self.therm_cycle_branches:
             # prepare and pool jobscripts, unroll replicas,  etc
-            job_pool = self._prepare_job_pool(edges, state=state)
+            job_pool = self._prepare_job_pool(edges, branch=branch)
             self._logger.log(
-                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, state {state}",
+                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
                 _LE.DEBUG,
             )
             # run everything through in one batch, with multiple edges per call
@@ -167,7 +167,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str], state: str):
+    def _prepare_job_pool(self, edges: List[str], branch: str):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -177,8 +177,8 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         for edge in edges:
             # for state in self.states:
             for r in range(1, replicas + 1):
-                for wp in self.therm_cycle_branches:
-                    path = self._prepare_single_job(edge=edge, wp=wp, state=state, r=r)
+                for state in self.states:
+                    path = self._prepare_single_job(edge=edge, wp=branch, state=state, r=r)
                     if path is not None:
                         batch_script_paths.append(path)
         return batch_script_paths
