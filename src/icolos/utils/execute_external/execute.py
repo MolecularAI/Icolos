@@ -3,8 +3,10 @@ import abc
 import subprocess
 from shlex import quote
 
-from icolos.core.workflow_steps.step import _LE
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from icolos.loggers.steplogger import StepLogger
+
+_LE = LoggingConfigEnum()
 
 
 class ExecutorBase(metaclass=abc.ABCMeta):
@@ -52,7 +54,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         result = subprocess.run(
             complete_command,
             check=False,  # use the manual check to provide better debugginf information than subprocess
-                          # convert output to string (instead of byte array)
+            # convert output to string (instead of byte array)
             universal_newlines=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
