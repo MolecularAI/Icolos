@@ -48,7 +48,7 @@ class StepPMXBase(StepBase, BaseModel):
         self._gromacs_executor = GromacsExecutor(
             prefix_execution=self.execution.prefix_execution
         )
-        self.sim_types = ["em", "eq", "transitions"]
+        self.sim_types = ["em", "nvt", "eq", "transitions"]
         self.states = ["stateA", "stateB"]
         # for a normal pmx run this would be "water" and "protein"
         # here we rename for compatibility across abfe/rbfe simulations
@@ -135,7 +135,7 @@ class StepPMXBase(StepBase, BaseModel):
         )
 
     def _prepare_single_tpr(
-        self, simpath, toppath, state, sim_type, empath=None, frameNum=0
+        self, simpath, toppath, state, sim_type, empath=None, framestart=0, framestop=1
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -151,37 +151,65 @@ class StepPMXBase(StepBase, BaseModel):
             mdp = "{0}/{1}_l1.mdp".format(mdp_path, mdp_prefix)
         # TODO: deal with nvt/npt for abfe
         # str
-        if sim_type == "em":
-            if self.run_type == "rbfe":
-                inStr = f"{toppath}/ions.pdb"
-            elif self.run_type == "abfe":
-                inStr = f"{toppath}/genion.gro"
-        elif sim_type in ("eq", "nvt", "npt"):
-            inStr = "{0}/confout.gro".format(empath)
+        if not sim_type == "transitions":
+            if sim_type == "em":
+                if self.run_type == "rbfe":
+                    inStr = f"{toppath}/ions.pdb"
+                elif self.run_type == "abfe":
+                    inStr = f"{toppath}/genion.gro"
+            elif sim_type in ("eq", "nvt", "npt"):
+                inStr = "{0}/confout.gro".format(empath)
+
+            grompp_args = [
+                "-f",
+                mdp,
+                "-c",
+                inStr,
+                "-r",
+                inStr,
+                "-p",
+                top,
+                "-o",
+                tpr,
+                "-maxwarn",
+                4,
+                "-po",
+                mdout,
+            ]
+            result = self._gromacs_executor.execute(
+                command=_GE.GROMPP, arguments=grompp_args, check=True
+            )
         elif sim_type == "transitions":
-            inStr = "{0}/frame{1}.gro".format(simpath, frameNum)
-            tpr = "{0}/ti{1}.tpr".format(simpath, frameNum)
+            # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
+            grompp_full_cmd = []
+            for frame in range(framestart, framestop):
+                inStr = "{0}/frame{1}.gro".format(simpath, frame)
+                tpr = "{0}/ti{1}.tpr".format(simpath, frame)
 
-        grompp_args = [
-            "-f",
-            mdp,
-            "-c",
-            inStr,
-            "-r",
-            inStr,
-            "-p",
-            top,
-            "-o",
-            tpr,
-            "-maxwarn",
-            4,
-            "-po",
-            mdout,
-        ]
-        result = self._gromacs_executor.execute(
-            command=_GE.GROMPP, arguments=grompp_args, check=True
-        )
+                grompp_args = [
+                    "gmx grompp",
+                    "-f",
+                    mdp,
+                    "-c",
+                    inStr,
+                    "-r",
+                    inStr,
+                    "-p",
+                    top,
+                    "-o",
+                    tpr,
+                    "-maxwarn",
+                    "4",
+                    "-po",
+                    mdout,
+                    "&&",
+                ]
 
+                grompp_full_cmd += grompp_args
+            grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
+            result = self._gromacs_executor.execute(
+                command=grompp_full_cmd, arguments=[], check=True
+            )
         self._clean_backup_files(simpath)
         return result
 

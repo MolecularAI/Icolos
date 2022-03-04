@@ -90,6 +90,6 @@ For GROMACS workflows requiring the GPU partition, you will need to adapt the he
 ```
 
 ## Developers
-- Christian Margreitter <christian.margreitter@astrazeneca.com>
-- J. Harry Moore <harry.moore@astrazeneca.com>
+- Christian Margreitter [@cmargreitter](https://github.com/CMargreitter)
+- J. Harry Moore [@jharrymoore](https://github.com/jharrymoore)
 - Matthias R. Bauer <mattias.r.b@gmail.com>

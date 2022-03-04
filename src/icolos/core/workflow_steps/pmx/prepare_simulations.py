@@ -43,9 +43,7 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
 
-    def prepare_simulation(
-        self, jobs: List[Union[Edge, Compound]], bLig=True, bProt=True
-    ):
+    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]):
         # define some constants that depend on whether this is rbfe/abfe
         # for abfe, edge refers to the ligand index
         # mdp_path = os.path.join(self.work_dir, "input/mdp")
@@ -94,8 +92,13 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         """
         Works out where to get starting structure from based on the current run and simulation type
         """
-        if self.run_type == _PSE.RBFE:
-            return "em"
+        if self.get_additional_setting(_PSE.PREV_STEP) is not None:
+            return self.get_additional_setting(_PSE.PREV_STEP)
+        elif self.run_type == _PSE.RBFE:
+            if sim_type == "nvt":
+                return "em"
+            elif sim_type == "eq":
+                return "nvt"
         elif self.run_type == _PSE.ABFE:
             if sim_type in ("em", "nvt"):
                 return "em"

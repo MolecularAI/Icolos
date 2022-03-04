@@ -111,5 +111,4 @@ class Test_CREST_confgen(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "CREST_conformers_aspirin.sdf")
         crest_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        print(stat_inf.st_size)
         self.assertGreater(stat_inf.st_size, 3200)

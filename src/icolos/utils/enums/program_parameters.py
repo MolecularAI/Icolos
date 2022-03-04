@@ -1356,6 +1356,7 @@ class StepPMXEnum:
     ABFE = "abfe"
     RBFE = "rbfe"
 
+    PREV_STEP = "previous_step"
     STRICT = "strict"
 
 
