@@ -3,6 +3,9 @@ import abc
 import subprocess
 from shlex import quote
 
+from icolos.core.workflow_steps.step import _LE
+from icolos.loggers.steplogger import StepLogger
+
 
 class ExecutorBase(metaclass=abc.ABCMeta):
     """Virtual base class for the general and program-specific executors."""
@@ -36,7 +39,11 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
         complete_command = [complete_command.replace("'", "")]
-        # print(complete_command)
+
+        # log complete command for inspection and reproducibility (if in DEBUG mode)
+        logger = StepLogger()
+        logger.log(f"Complete command: {complete_command}", _LE.DEBUG)
+
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
@@ -45,7 +52,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         result = subprocess.run(
             complete_command,
             check=False,  # use the manual check to provide better debugginf information than subprocess
-            # convert output to string (instead of byte array)
+                          # convert output to string (instead of byte array)
             universal_newlines=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
