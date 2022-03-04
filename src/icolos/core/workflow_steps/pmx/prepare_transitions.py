@@ -58,7 +58,8 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             "-pbc",
             "mol",
             "-b",
-            0,
+            # use the first 2ns as equilibration time
+            2000,
         ]
         self._gromacs_executor.execute(
             _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
@@ -88,18 +89,18 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             sim="transitions",
         )
         self._extract_snapshots(eqpath, tipath)
-        for i in range(1, 81):
-            result = self._prepare_single_tpr(
-                simpath=tipath,
-                toppath=toppath,
-                state=state,
-                sim_type="transitions",
-                frameNum=i,
-            )
-            if result.returncode != 0:
-                self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
-                for line in result.stderr.split("\n"):
-                    self._logger.log(line, _LE.DEBUG)
+        result = self._prepare_single_tpr(
+            simpath=tipath,
+            toppath=toppath,
+            state=state,
+            sim_type="transitions",
+            framestart=1,
+            framestop=81
+        )
+        if result.returncode != 0:
+            self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
+            for line in result.stderr.split("\n"):
+                self._logger.log(line, _LE.DEBUG)
 
     def prepare_transitions(self, jobs: List[str]):
         for edge in jobs:

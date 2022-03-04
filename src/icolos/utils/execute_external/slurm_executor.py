@@ -139,7 +139,7 @@ class SlurmExecutor(ExecutorBase):
         while completed is False:
             state = self._check_job_status(job_id)
             if state in [_SE.PENDING, _SE.RUNNING]:
-                time.sleep(5)
+                time.sleep(60)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True
@@ -196,7 +196,7 @@ class SlurmExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  --cores={self.cores}",
+            f"#SBATCH  -c{self.cores}",
             f"#SBATCH --partition={self.partition}",
             f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
