@@ -25,7 +25,7 @@ You are welcome to clone the repository and use a local version, and in particul
 in contact with us.
 
 ## Installation
-After cloning, first install and activate the `icolosprod` `conda` environment:
+After cloning, first install and activate the `icolosprod` `conda` environment. To ensure the right installation directory is used, you can add the `--prefix` parameter to the `create` call, specifying the location of the `conda` environments.
 ```
 conda create -f environment_min.yml
 conda activate icolosprod
