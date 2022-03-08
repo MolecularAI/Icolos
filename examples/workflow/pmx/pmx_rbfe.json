@@ -57,14 +57,14 @@
 				"input": {
 					"compounds": [
 						{
-							"source": "{file_path}/compounds.sdf",
+							"source": "{file_path}/ligands.sdf",
 							"source_type": "file",
 							"format": "SDF"
 						}
 					],
 					"generic": [
 						{
-							"source": "{file_path}/receptor.pdb",
+							"source": "{file_path}/4ui5.pdb",
 							"extension": "pdb"
 						}
 					]
@@ -96,11 +96,11 @@
 							"extension": "log"
 						},
 						{
-							"source": "{file_path}/receptor.pdb",
+							"source": "{file_path}/4ui5.pdb",
 							"extension": "pdb"
 						},
 						{
-							"source": "{file_path}/mdppath/",
+							"source": "{file_path}/pmx/run_simulations/input/mdp/",
 							"extension": "mdp"
 						}
 					],
@@ -255,20 +255,24 @@
 				"execution": {
 					"platform": "slurm",
 					"resources": {
-						"partition": "gpu",
-						"gres": "gpu:1",
+						"partition": "core",
+						"cores": 16,
+						"memory": "8g",
 						"modules": [
 							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
 						]
 					},
 					"parallelization": {
-						"cores": 16
+						"cores": 96
 					}
 				},
 				"settings": {
 					"arguments": {
 						"flags": [],
-						"parameters": {}
+						"parameters": {
+							"-ntomp": 16,
+							"-ntmpi": 1
+						}
 					},
 					"additional": {
 						"sim_type": "nvt"
@@ -347,14 +351,14 @@
 					"resources": {
 						"partition": "core",
 						"cores": 16,
-						"mem": "8g",
-						"time": "8:00:00",
+						"memory": "8g",
+						"time": "48:00:00",
 						"modules": [
 							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
 						]
 					},
 					"parallelization": {
-						"cores": 64
+						"cores": 96
 					}
 				},
 				"settings": {

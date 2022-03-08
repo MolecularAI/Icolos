@@ -3,6 +3,11 @@ import abc
 import subprocess
 from shlex import quote
 
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
+from icolos.loggers.steplogger import StepLogger
+
+_LE = LoggingConfigEnum()
+
 
 class ExecutorBase(metaclass=abc.ABCMeta):
     """Virtual base class for the general and program-specific executors."""
@@ -36,7 +41,11 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
         complete_command = [complete_command.replace("'", "")]
-        # print(complete_command)
+
+        # log complete command for inspection and reproducibility (if in DEBUG mode)
+        logger = StepLogger()
+        logger.log(f"Complete command: {complete_command}", _LE.DEBUG)
+
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
