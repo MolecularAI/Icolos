@@ -296,18 +296,19 @@ class PerturbationMap(BaseModel):
         return self.protein
 
     def get_edge_by_id(self, idx: str) -> Optional[Edge]:
+        """
+        Performs a look up to return the edge.
+        If the idx is a path to a batch file (e.g. for run_simulations), edge is extracted from the filepath
+        """
         # handle case where the task is actually a path to a batch script
-        # print("idx is", idx)
-        # if not isinstance(idx, Edge):  #
-        #     parts = idx.split("/")
-        #     idx = [
-        #         part for part in parts if any([part in edge for edge in self.edges])
-        #     ][0]
-        #     print(idx)
-        #     # for part in parts:
-        #     #     for e in self.edges:
-        #     #         if part == e:
-        #     #             idx = part
+        if not isinstance(idx, Edge):
+            parts = idx.split("/")
+
+            for part in parts:
+                for e in self.edges:
+                    if part == e:
+                        idx = e
+
         match = [e for e in self.edges if e.get_edge_id() == idx]
         if not match:
             return

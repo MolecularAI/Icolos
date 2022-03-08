@@ -339,9 +339,8 @@ class StepPMXBase(StepBase, BaseModel):
                                 edge = self.get_perturbation_map().get_edge_by_id(
                                     subtask.data
                                 )
-                                print("got edge", edge)
-                                edge._set_status(_PE.STATUS_FAILED)
-                                print("setting status to failed!")
+                                if edge is not None:
+                                    edge._set_status(_PE.STATUS_FAILED)
                         else:
                             subtask.set_status_success()
                             good_results += 1
