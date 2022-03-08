@@ -104,8 +104,8 @@ class StepIterator(FlowControlBase, BaseModel):
                 _WE.HEADER: {
                     _WE.ID: f"workflow_{i}",
                     _WE.ENVIRONMENT: {_WE.ENVIRONMENT_EXPORT: []},
-                    _WE.GLOBAL_SETTINGS: {},
-                    _WE.GLOBAL_VARIABLES: {
+                    _WE.GLOBAL_VARIABLES: {},
+                    _WE.GLOBAL_SETTINGS: {
                         "remove_temporary_files": self.iter_settings.remove_temporary_files,
                         "single_directory": self.iter_settings.single_directory,
                     },

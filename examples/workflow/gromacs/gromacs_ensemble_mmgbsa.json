@@ -41,7 +41,10 @@
 							"-ff": "amber03"
 						}
 					},
-					"additional": {}
+					"additional": {
+						"charge_method": "gas"
+					}
+
 				},
 				"input": {
 					"generic": [
