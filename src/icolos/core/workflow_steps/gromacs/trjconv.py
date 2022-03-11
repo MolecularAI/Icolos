@@ -49,5 +49,7 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
             )
             for line in result.stdout.split("\n"):
                 self._logger_blank.log(line, _LE.DEBUG)
-            topol.set_trajectory(tmp_dir, index=i)
+        topol.set_trajectory(tmp_dir, index=i)
+        # TODO: for now this doesn't manage multiple files if processing a replex job.
+        self.parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)
