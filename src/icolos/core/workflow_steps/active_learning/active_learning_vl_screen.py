@@ -71,7 +71,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def _run_learning_loop_virtual_lib(
         self, learner: ActiveLearner, lib: pd.DataFrame, top_1_idx: list = None
-    ) -> pd.DataFrame:
+    ) -> tuple[pd.DataFrame, List]:
         rounds = int(self.settings.additional[_SALE.N_ROUNDS])
         n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
         queried_compound_idx = []
@@ -163,7 +163,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         print(lib[criteria].head())
         print(lib[criteria].astype(float).describe())
         print(enriched_lib[criteria].astype(float).describe())
-
+        enriched_lib.to_csv(os.path.join(tmp_dir, "enriched_lib.csv"))
         bins = np.linspace(-12, -9, 30)
         fig, axs = plt.subplots(
             len(queried_compound_idx_by_batch) + 1,
