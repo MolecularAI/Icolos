@@ -50,5 +50,5 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
             for line in result.stdout.split("\n"):
                 self._logger_blank.log(line, _LE.DEBUG)
         topol.set_trajectory(tmp_dir, index=i)
-        self.parse_output(tmp_dir)
+        self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)
