@@ -4,6 +4,7 @@ from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
+import os
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -34,9 +35,8 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
             flag_dict = {
                 "-s": _SGE.STD_TPR,
                 "-f": _SGE.STD_XTC,
-                "-o": _SGE.STD_XTC + f"_{i}",
+                "-o": f"traj_{i}.xtc",
             }
-
             arguments = self._parse_arguments(flag_dict=flag_dict)
             result = self._backend_executor.execute(
                 command=_GE.TRJCONV,
@@ -47,6 +47,8 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
                     tmp_dir, self.settings.additional[_SBE.PIPE_INPUT]
                 ),
             )
+            # ensure the old trajectories are not parsed for writeout
+            os.remove(os.path.join(tmp_dir, _SGE.STD_XTC))
             for line in result.stdout.split("\n"):
                 self._logger_blank.log(line, _LE.DEBUG)
         topol.set_trajectory(tmp_dir, index=i)
