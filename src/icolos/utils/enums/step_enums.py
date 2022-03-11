@@ -996,7 +996,7 @@ class StepActiveLearningEnum:
     GRAPH = "graph"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"
-    RUNNING_MODE = "running_mode"
+    MODEL = "model"
     EVALUATE = "evaluate"
     CRITERIA = "criteria"
     VALIDATION_LIB = "validation_lib"

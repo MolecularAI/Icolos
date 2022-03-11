@@ -259,14 +259,4 @@ def convert_mol_to_ase_atoms(mol: Chem.Mol) -> ase.Atoms:
     Chem.rdmolfiles.MolToXYZFile(mol, os.path.join(tmp_dir, "mol.xyz"))
     atoms = io.read(os.path.join(tmp_dir, "mol.xyz"))
     shutil.rmtree(tmp_dir)
-    # return soap_desc.create(atoms)
     return atoms
-
-    # now had the matrix with additional rows of zeroes up to the max_length
-    # n_atoms, n_features = soap_mat.shape
-    # # TODO: confirm this does not have an impact on kernel simialrity
-    # if n_atoms < max_length:
-    #     pad = np.zeros((max_length - n_atoms, n_features))
-    #     soap_mat = np.concatenate((soap_mat, pad), axis=0)
-    # print(soap_mat.shape)
-    # return soap_mat

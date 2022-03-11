@@ -1,5 +1,5 @@
 import unittest
-from icolos.core.workflow_steps.active_learning.active_learning_reinvent import (
+from icolos.core.workflow_steps.active_learning.active_learning_vl_screen import (
     StepActiveLearning,
 )
 from icolos.utils.enums.program_parameters import GlideEnum

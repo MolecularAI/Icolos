@@ -30,6 +30,4 @@ dependencies:
     - peptidebuilder>=1.1
     - pytest
     - pytest-xdist
-    - dscribe>=1.2.1
     - skorch>=0.11
-    - gpytorch>=1.6.0
