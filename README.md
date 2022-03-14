@@ -27,7 +27,7 @@ in contact with us.
 ## Installation
 After cloning, first install and activate the `icolosprod` `conda` environment:
 ```
-conda create -f environment_min.yml
+conda env create -f environment_min.yml
 conda activate icolosprod
 ```
 Then install the package:
