@@ -70,6 +70,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "01_pmx_setup",
                     _SBE.STEP_TYPE: "pmx_setup",
                     _SBE.EXEC: {
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                         "parallelization": {"cores": 8},
                     },
                     _SBE.SETTINGS: {

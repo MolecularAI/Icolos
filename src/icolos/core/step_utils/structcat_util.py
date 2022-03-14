@@ -22,7 +22,7 @@ class StructcatUtil:
         self,
         prefix_execution: str = None,
         binary_location: str = None,
-        backend: str = _SEE.STRUCTCAT,
+        backend: str = _OE.OBABEL,
     ):
         self._logger = StepLogger()
         self._backend = backend
@@ -42,7 +42,6 @@ class StructcatUtil:
         input_files: List[str],
         output_file: str,
         location: str = None,
-        backend=_SEE.STRUCTCAT,
     ):
         if self._backend == _SEE.STRUCTCAT:
             arguments = []
