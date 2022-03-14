@@ -32,11 +32,8 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
         for i in range(replicas):
             topol.write_tpr(tmp_dir, index=i)
             topol.write_trajectory(tmp_dir, index=i)
-            flag_dict = {
-                "-s": _SGE.STD_TPR,
-                "-f": _SGE.STD_XTC,
-                "-o": f"traj_{i}.xtc",
-            }
+            fitted_traj = f"traj_{i}.xtc"
+            flag_dict = {"-s": _SGE.STD_TPR, "-f": _SGE.STD_XTC, "-o": fitted_traj}
             arguments = self._parse_arguments(flag_dict=flag_dict)
             result = self._backend_executor.execute(
                 command=_GE.TRJCONV,
@@ -51,6 +48,6 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
             os.remove(os.path.join(tmp_dir, _SGE.STD_XTC))
             for line in result.stdout.split("\n"):
                 self._logger_blank.log(line, _LE.DEBUG)
-        topol.set_trajectory(tmp_dir, index=i)
+            topol.set_trajectory(path=tmp_dir, file=fitted_traj, index=i)
         self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)
