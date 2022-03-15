@@ -156,9 +156,6 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Processing write-out blocks for {step.step_id}.", _LE.DEBUG
             )
             step.process_write_out()
-        self._logger.log(
-            f"Execution of {len(self._initialized_steps)} steps completed.", _LE.INFO
-        )
 
         # retrieve compounds from the final step
         final_compounds = oracle_wf.steps[-1].data.compounds
