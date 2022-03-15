@@ -14,6 +14,7 @@ class ConsoleColours:
     RED = "\033[93m"
     FAIL = "\033[91m"
     ENDC = "\033[0m"
+    ORANGE = '\033[0;33m'
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
     BLINKING = "\33[5m"
