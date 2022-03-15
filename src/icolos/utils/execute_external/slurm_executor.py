@@ -178,7 +178,7 @@ class SlurmExecutor(ExecutorBase):
         """
         Monitor the status of a previously submitted job, return the result
         """
-        command = f"module load slurmtools && jobinfo {job_id}"
+        command = f"jobinfo {job_id}"
         result = subprocess.run(
             command,
             shell=True,
