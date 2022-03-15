@@ -1,7 +1,7 @@
 {
     "workflow": {
         "header": {
-            "id": "rescoss",
+            "workflow_id": "rescoss",
             "description": "Full ReSCoSS configuration (version 1.0).",
             "environment": {
                 "export": [{

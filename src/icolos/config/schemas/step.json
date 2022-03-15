@@ -14,6 +14,54 @@
       "type": "object",
       "$ref": "step_execution.json"
     },
+    "token_guard": {
+      "type": "object",
+      "properties": {
+        "prefix_execution": {
+          "type": "string"
+        },
+        "token_pools": {
+          "type": "object"
+        },
+        "wait_interval_seconds": {
+          "type": "number"
+        },
+        "wait_limit_seconds": {
+          "type": "number"
+        }
+      }
+    },
+    "base_config": {
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    },
+    "iter_settings": {
+      "type": "object",
+      "properties": {
+        "iter_mode": {
+          "type": "string"
+        },
+        "n_iters": {
+          "type": "number"
+        },
+        "parallelizer_settings": {
+          "type": "object",
+          "properties": {
+            "parallelize": {
+              "type": "boolean"
+            },
+            "dependent_steps": {
+              "type": "number"
+            },
+            "cores": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
     "settings": {
       "type": "object",
       "additionalProperties": false,
@@ -35,10 +83,10 @@
       }
     },
     "input": {
-
+      "$ref": "step_input.json"
     },
     "writeout": {
-
+      "$ref": "step_writeout.json"
     }
   },
   "required": ["step_id", "type"]

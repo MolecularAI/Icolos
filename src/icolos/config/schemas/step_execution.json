@@ -32,7 +32,26 @@
                 "other_args": {}
             }
         },
-        "parallelization": {},
-        "failure_policy": {}
+        "parallelization": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "cores": {
+                    "type": "number"
+                },
+                "max_length_sublists": {
+                    "type": "number"
+                }
+            }
+        },
+        "failure_policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "n_tries": {
+                    "type": "number"
+                }
+            }
+        }
     }
 }

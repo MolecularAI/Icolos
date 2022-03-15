@@ -10,6 +10,14 @@
     "description": {
       "type": "string"
     },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "logfile": {
+          "type": "string"
+        }
+      }
+    },
     "environment": {
       "type": "object",
       "additionalProperties": false,

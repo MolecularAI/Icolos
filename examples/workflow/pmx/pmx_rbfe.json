@@ -257,7 +257,7 @@
 					"resources": {
 						"partition": "core",
 						"cores": 16,
-						"memory": "8g",
+						"mem": "8g",
 						"modules": [
 							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
 						]
@@ -351,7 +351,7 @@
 					"resources": {
 						"partition": "core",
 						"cores": 16,
-						"memory": "8g",
+						"mem": "8g",
 						"time": "48:00:00",
 						"modules": [
 							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
