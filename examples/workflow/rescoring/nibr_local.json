@@ -121,7 +121,6 @@
                         }],
                     "compounds": [{
                             "source": "Glide",
-                            "target_field": "compounds",
                             "source_type": "step"
                         }
                     ]
