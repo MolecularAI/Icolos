@@ -15,6 +15,7 @@ dependencies:
   - psi4>=1.4
   - pdbfixer
   - pydantic>=1.8
+  - jsonschema
   - pyvis
   - requests
   - openbabel>=3

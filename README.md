@@ -60,6 +60,12 @@ conda activate icolosprod
 icolos -conf workflow.json
 ```
 
+We usually advise to check the validity of your configuration file before you try to execute it. There is a bespoke `validator` entry point to facilitate this:
+
+```
+validator -conf workflow.json
+```
+
 ## `SLURM` Execution
 Once specified, a workflow can be called like this in a `bash` script:
 

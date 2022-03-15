@@ -1,7 +1,7 @@
 {
     "workflow": {
         "header": {
-            "id": "ePSA_permeability_example",
+            "workflow_id": "ePSA_permeability_example",
             "description": "A shortened, simplified version of the ReSCoSS workflow to calculate descriptors for molecules to predict ePSA and permeability values.",
             "environment": {
                 "export": [{

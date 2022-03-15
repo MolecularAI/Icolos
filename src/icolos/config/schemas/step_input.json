@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Step - input block",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "work_dir": {
+      "type": "string"
+    },
+    "compounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "names": {
+                "type": "string"
+              },
+              "smiles": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "merge": {
+      "type": "object",
+      "properties": {
+        "compounds": {
+          "type": "boolean"
+        },
+        "merge_compounds_by": {
+          "type": "string"
+        },
+        "enumerations": {
+          "type": "boolean"
+        },
+        "merge_enumerations_by": {
+          "type": "string"
+        }
+      }
+    },
+    "generic": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "extension": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
