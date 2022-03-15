@@ -193,7 +193,6 @@ class SlurmExecutor(ExecutorBase):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            check=True,
         )
 
         state = None
