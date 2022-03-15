@@ -6,14 +6,22 @@
   "properties": {
     "workflow": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "properties": {
         "header": {
           "type": "object",
           "$ref": "header.json"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "step.json"
+          },
+          "minItems": 1
         }
       },
-      "required": ["header"]
+      "required": ["header", "steps"]
     }
   },
   "required": ["workflow"]

@@ -24,12 +24,6 @@ def _construct_absolute_path(sub_schema: str) -> str:
     return attach_root_path(os.path.join(rel_path, "".join([sub_schema, ".json"])))
 
 
-def get_sub_schemas() -> dict:
-    return {
-        _JSE.HEADER_SCHEMA: _load_schema(_construct_absolute_path(_JSE.HEADER_SCHEMA))
-    }
-
-
 def construct_workflow_schema() -> Tuple[dict, str]:
     path = _construct_absolute_path(_JSE.WORKFLOW_SCHEMA)
     return _load_schema(path), os.path.dirname(path)

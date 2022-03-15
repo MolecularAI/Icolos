@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Step block",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "step_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "execution": {
+      "type": "object",
+      "$ref": "step_execution.json"
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "type": "object",
+          "properties": {
+            "flags": {
+              "type": "array"
+            },
+            "parameters": {
+              "type": "object"
+            }
+          }
+        },
+        "additional": {
+          "type": "object"
+        }
+      }
+    },
+    "input": {
+
+    },
+    "writeout": {
+
+    }
+  },
+  "required": ["step_id", "type"]
+}
