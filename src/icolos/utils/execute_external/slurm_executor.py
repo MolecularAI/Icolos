@@ -195,7 +195,6 @@ class SlurmExecutor(ExecutorBase):
             universal_newlines=True,
             check=True,
         )
-        print(result)
 
         state = None
         for line in result.stdout.split("\n"):
