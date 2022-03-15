@@ -74,6 +74,8 @@
 				"step_id": "01_pmx_setup",
 				"type": "pmx_setup",
 				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+
 					"parallelization": {
 						"cores": 24
 					}
