@@ -99,6 +99,7 @@ class StepBaseEnum(str, Enum):
     EXEC_RESOURCES_MEM = "mem"
     EXEC_RESOURCES_CORES = "cores"
     EXEC_RESOURCES_OTHER_ARGS = "other_args"
+    EXEC_RESOURCES_ADDITIONAL_LINES = "additional_lines"
 
     # settings
     SETTINGS = "settings"

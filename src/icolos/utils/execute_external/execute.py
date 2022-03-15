@@ -44,7 +44,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
 
         # log complete command for inspection and reproducibility (if in DEBUG mode)
         logger = StepLogger()
-        logger.log(f"Complete command: {complete_command}", _LE.DEBUG)
+        # logger.log(f"Complete command: {complete_command}", _LE.DEBUG)
 
         old_cwd = os.getcwd()
         if location is not None:

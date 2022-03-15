@@ -66,6 +66,7 @@ class StepExecutionResourceParameters(BaseModel):
     tasks: int = 1
     modules: List = []
     other_args: dict = {}
+    additional_lines: List = []
 
 
 class StepExecutionParameters(BaseModel):
@@ -242,6 +243,7 @@ class StepBase(BaseModel):
                 mem=self.execution.resources.mem,
                 modules=self.execution.resources.modules,
                 other_args=self.execution.resources.other_args,
+                additional_lines=self.execution.resources.additional_lines,
                 gres=self.execution.resources.gres,
             )
         else:

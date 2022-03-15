@@ -23,6 +23,7 @@ class SlurmExecutor(ExecutorBase):
         modules: List,
         other_args: dict,
         gres: str,
+        additional_lines: List,
         prefix_execution=None,
         binary_location=None,
     ):
@@ -36,6 +37,7 @@ class SlurmExecutor(ExecutorBase):
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
+        self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
 
@@ -209,5 +211,10 @@ class SlurmExecutor(ExecutorBase):
 
         for module in self.modules:
             header.append(f"module load {module}")
+
+        # add any other specified lines
+        for line in self.additional_lines:
+            header.append(line)
+
 
         return header
