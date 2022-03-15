@@ -29,7 +29,13 @@
                 "time": {},
                 "tasks": {},
                 "mem": {},
-                "other_args": {}
+                "other_args": {},
+				"additional_lines": {
+					"type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+				}
             }
         },
         "parallelization": {
