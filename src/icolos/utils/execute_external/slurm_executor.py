@@ -178,6 +178,7 @@ class SlurmExecutor(ExecutorBase):
         """
         Monitor the status of a previously submitted job, return the result
         """
+        # use the entrypoint included in the Icolos install
         command = f"jobinfo {job_id}"
         result = subprocess.run(
             command,
