@@ -58,7 +58,7 @@ class StepFailurePolicyParameters(BaseModel):
 
 
 class StepExecutionResourceParameters(BaseModel):
-    partition: _EPE = _EPE.CORE
+    partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
     mem: str = "32g"
