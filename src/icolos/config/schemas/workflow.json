@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Workflow schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workflow": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "header": {
+          "type": "object",
+          "$ref": "header.json"
+        }
+      },
+      "required": ["header"]
+    }
+  },
+  "required": ["workflow"]
+}

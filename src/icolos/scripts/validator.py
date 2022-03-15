@@ -4,8 +4,12 @@
 import os
 import sys
 import json
+import jsonschema
 import argparse
 
+from jsonschema import RefResolver
+
+from icolos.config.schemas.schemas import get_sub_schemas, construct_workflow_schema
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from icolos.utils.enums.entry_points import ExecutorEnum
@@ -82,7 +86,16 @@ def main():
             _report(f"Formatting error (missing quotation marks, invalid values, ...) in JSON, error message:\n{str(e)}. Aborting.", _LE.ERROR)
             return _summary()
 
-    # TODO: add json schema validation
+    # load the sub-schemas (e.g. for the header region and the steps etc.), construct a schema for the entire workflow
+    # and validate the input JSON against it
+    # TODO: extend json schema validation
+    workflow_schema, schema_dir = construct_workflow_schema()
+    schema_path = 'file:///{0}/'.format(schema_dir.replace("\\", "/"))
+    resolver = RefResolver(schema_path, workflow_schema)
+    validator = jsonschema.Draft7Validator(workflow_schema, resolver)
+    for e in validator.iter_errors(conf):
+        _report(str(e), level=_LE.ERROR)
+
     # TODO: add checks on specified paths (if not matched, give warning)
     # TODO: check global variables and settings (if not provided, give warning)
 
