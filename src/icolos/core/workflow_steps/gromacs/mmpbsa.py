@@ -1,4 +1,6 @@
+import numpy as np
 from subprocess import CompletedProcess
+import tempfile
 from icolos.core.containers.generic import GenericData
 from typing import AnyStr, List
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
@@ -118,6 +120,26 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         assert len(file) == 1
         return file[0]
 
+    def parse_results(self, wkdirs: List[str]):
+        for wkdir in wkdirs:
+            results_file = os.path.join(wkdir, "FINAL_RESULTS_MMPBSA.dat")
+            with open(results_file, "r") as f:
+                lines = f.readlines()
+            # for now just parse the final energy value
+            result = float([l for l in lines if "DELTA TOTAL" in l][0].split()[2])
+            print(result)
+            try:
+                self.get_topol().properties[_SGE.MMGBSA_DG].append(result)
+            except KeyError:
+                self.get_topol().properties[_SGE.MMGBSA_DG] = [result]
+        avg_dG = np.mean(self.get_topol().properties[_SGE.MMGBSA_DG])
+        self._logger.log(f"Average dG = {avg_dG}", _LE.INFO)
+        # write the invididual lines to the tmpdir
+        parent_dir = os.path.dirname(wkdirs[0])
+        with open(os.path.join(parent_dir, "results_summary.dat"), "w") as f:
+            for idx, val in enumerate(self.get_topol().properties[_SGE.MMGBSA_DG]):
+                f.write(str(idx) + "," + str(val))
+
     def execute(self) -> None:
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
@@ -135,26 +157,33 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
             # can run make_ndx multiple times for complex cases, each set of pipe imput must be separated by a semicolon
             for args in ndx_commands.split(";"):
                 self._add_index_group(tmp_dir=tmp_dir, pipe_input=args)
+        wkdirs = [
+            tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(topol.trajectories.keys()))
+        ]
 
-        for i in range(len(topol.structures)):
-            topol.write_structure(tmp_dir, index=i)
-            topol.write_tpr(tmp_dir, index=i)
-            topol.write_trajectory(tmp_dir, index=i)
+        for i, wkdir in enumerate(wkdirs):
+            self._logger.log(
+                f"Running MMGBSA on trajectory {i+1} (of {len(wkdirs)})", _LE.DEBUG
+            )
+            topol.write_structure(wkdir, index=i)
+            topol.write_tpr(wkdir, index=i)
+            topol.write_trajectory(wkdir, index=i)
 
             flag_dict = {
-                "-i": _SGE.MMPBSA_IN,
+                "-i": os.path.join(tmp_dir, _SGE.MMPBSA_IN),
                 "-cs": _SGE.STD_TPR,
                 "-cg": self._parse_coupling_groups(tmp_dir),
-                "-ci": _SGE.STD_INDEX,
+                "-ci": os.path.join(tmp_dir, _SGE.STD_INDEX),
                 "-ct": _SGE.STD_XTC,
-                "-cp": _SGE.STD_TOPOL,
+                "-cp": os.path.join(tmp_dir, _SGE.STD_TOPOL),
                 # do not attempt to open the results in the GUI afterwards
                 "-nogui": "",
             }
 
             flag_list = self._parse_arguments(flag_dict=flag_dict)
 
-            result = self._run_mmpbsa(flag_list, tmp_dir)
+            result = self._run_mmpbsa(flag_list, wkdir)
+        self.parse_results(wkdirs)
 
         # parse and delete generated output
         self._parse_output(tmp_dir)

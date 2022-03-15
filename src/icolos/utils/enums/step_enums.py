@@ -757,6 +757,7 @@ class StepGromacsEnum:
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
     PARAM_METHOD = "param_method"
+    MMGBSA_DG = "MMGBSA_DG"
     GAFF = "gaff"
     OPENFF = "openff"
     WATER_POSRE = """

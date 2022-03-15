@@ -7,10 +7,6 @@ from icolos.utils.enums.program_parameters import GromacsEnum
 
 from icolos.utils.enums.step_enums import StepGromacsEnum
 
-# acpype and pdb2gmx both do a job of handling posre creation etc
-
-# this should be a singular object tacked on to the workflow that gets updated as the workflow progresses.
-
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
 
@@ -39,12 +35,14 @@ class GromacsTopol(BaseModel):
     water: str = "tip3p"
     system: List = []
     molecules: Dict = {}
-    structures: List = []
-    tprs: List = []
-    trajectories: List = []
+    # hold the files as generic data objects, keyed by the index
+    structures: Dict = {}
+    tprs: Dict = {}
+    trajectories: Dict = {}
     ndx: List = []
     # store computed properties on the topology
-    properties: Dict = {}
+    # {property: [val1, val2, val3]}
+    properties: Dict[str, List] = {}
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -287,20 +285,13 @@ class GromacsTopol(BaseModel):
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
 
         struct = GenericData(file_name=file, file_data=lines)
-        try:
-            self.structures[index] = struct
-        except IndexError:
-            self.structures.append(struct)
+        self.structures[index] = struct
 
     def set_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         with open(os.path.join(path, file), "rb") as f:
             data = f.read()
         data = GenericData(file_name=file, file_data=data, file_id=index)
-        # either the object already exists, or we are creating it for the first time
-        try:
-            self.tprs[index] = data
-        except IndexError:
-            self.tprs.append(data)
+        self.tprs[index] = data
 
     def write_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         tpr = self.tprs[index]
@@ -323,18 +314,11 @@ class GromacsTopol(BaseModel):
 
     def set_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
         # depending on mdp settings, some runs will not produce an xtc file, only trr
-        if not os.path.isfile(os.path.join(path, file)):
-            # avoid indexing errors
-            data = GenericData(file_name="empty_traj.txt")
-        else:
+        if os.path.isfile(os.path.join(path, file)):
             with open(os.path.join(path, file), "rb") as f:
                 data = f.read()
             data = GenericData(file_name=file, file_data=data, file_id=index)
-            # either the object already exists, or we are creating it for the first time
-            try:
-                self.trajectories[index] = data
-            except IndexError:
-                self.trajectories.append(data)
+            self.trajectories[index] = data
 
     def write_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
         traj = self.trajectories[index]

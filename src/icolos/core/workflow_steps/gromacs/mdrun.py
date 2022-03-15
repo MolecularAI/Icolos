@@ -10,7 +10,7 @@ from icolos.core.workflow_steps.step import _LE
 import os
 
 from icolos.utils.execute_external.gromacs import GromacsExecutor
-from icolos.utils.general.parallelization import Parallelizer
+from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -70,16 +70,12 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             command=_GE.MDRUN, arguments=arguments, location=path, check=True
         )
 
-        if "-c" in self.settings.arguments.parameters.keys():
-            self.topol.set_structure(
-                path, self.settings.arguments.parameters["-c"], index=index
-            )
-        else:
-            self.topol.set_structure(path, index=index)
-
     def execute_parallel_simulations(self, work_dirs):
         # attach the index of the workdir
         work_dirs = [(idx, wkdir) for idx, wkdir in enumerate(work_dirs)]
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
+        )
         self._subtask_container.load_data(work_dirs)
         parallelizer = Parallelizer(func=self.execute_mdrun)
         n = 1
@@ -87,20 +83,18 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
-            jobs = self.prepare_jobs(next_batch)
-
-            parallelizer.execute_parallel(jobs)
+            paths, indices = self.prepare_jobs(next_batch)
+            parallelizer.execute_parallel(path=paths, index=indices)
             n += 1
 
-    def prepare_jobs(self, batch) -> List[str]:
-        jobs = []
+    def prepare_jobs(self, batch) -> List[tuple]:
+        paths, indices = [], []
         for task in batch:
-            task_edges = []
             for element in task:
                 # tuple of (idx, dirpath)
-                task_edges.append(element.data)
-            jobs.append(task_edges)
-        return jobs
+                paths.append(element.data[1])
+                indices.append(element.data[0])
+        return paths, indices
 
     def run_single_tpr(self, tmp_dir: str, topol: GromacsTopol):
         """
@@ -109,40 +103,33 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         # self.write_input_files(tmp_dir, topol=topol)
         # if we have multiple structures, run the simulations externally, in parallel
         work_dirs = [tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(topol.tprs))]
+
         # prepare tmpdirs with tpr files
-        for path, tpr in zip(work_dirs, topol.tprs):
+        for path, tpr in zip(work_dirs, topol.tprs.values()):
             tpr.write(path)
 
         # if > 1, instantiate a parallelizer, load the paths in and execute in parallel, user should be using the slurm/SGE interface to request extern resources
         if len(work_dirs) > 1:
             self.execute_parallel_simulations(work_dirs)
-
-            for idx, wkdir in enumerate(work_dirs):
-                self.topol.set_trajectory(wkdir, index=idx)
-                self.topol.set_structure(wkdir, index=idx)
-
         else:
-            # TODO: clean this up
             tmp_dir = work_dirs[0]
             self.execute_mdrun(tmp_dir, index=0)
 
-            # self._tail_log_file(tmp_dir)
-            # self._logger.log(
-            #     f"Completed execution for {self.step_id} successfully", _LE.INFO
-            # )
-            # TODO: remove calls to parse_output, the topology should capture this (we need to build in history here, otherwise can't access previous trajectories that get updated)
-            # self._parse_output(tmp_dir)
+        # now parse the outputs
+        for index, path in enumerate(work_dirs):
+            # set a structure other than confout.gro e.g. if a pdb output has been set
             if "-c" in self.settings.arguments.parameters.keys():
-                topol.set_structure(tmp_dir, self.settings.arguments.parameters["-c"])
+                self.topol.set_structure(
+                    path, self.settings.arguments.parameters["-c"], index=index
+                )
             else:
-                topol.set_structure(tmp_dir)
-            topol.set_trajectory(tmp_dir)
+                self.topol.set_structure(path, index=index)
+            self.topol.set_trajectory(path, index=index)
 
     def run_multidir_sim(self, tmp_dir: str, topol: GromacsTopol):
         """
         Runs a multidir simulation, allowing for replex simulations.  Several conditions are required for this running mode
         1) the previous step in the workflow should have been an iterator to produce n tpr files.  This must have been run with single_dir mode ON and remove_temprorary_files OFF, so we can extract files from those workflows' tmpdirs
-
         """
         if not self.execution.platform == _ERE.SLURM:
             self._logger.log(
@@ -158,7 +145,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             f"Initiating gmx multidir run in directories {', '.join(work_dirs)}",
             _LE.DEBUG,
         )
-        for path, tpr in zip(work_dirs, topol.tprs):
+        for path, tpr in zip(work_dirs, topol.tprs.values()):
             tpr.write(path)
 
         # note, this must be a multiple of the number of simulations
@@ -180,6 +167,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
         tmp_dir = self._make_tmpdir()
         self.topol = self.get_topol()
+        self.execution.parallelization.max_length_sublists = 1
         # pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object
         self.pickle_topol(self.topol, tmp_dir)
         multidir = self.get_additional_setting(_SGE.MULTIDIR, default=False)
@@ -187,4 +175,4 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             self.run_multidir_sim(tmp_dir, topol=self.topol)
         else:
             self.run_single_tpr(tmp_dir, topol=self.topol)
-        self._remove_temporary(tmp_dir)
+        # self._remove_temporary(tmp_dir)
