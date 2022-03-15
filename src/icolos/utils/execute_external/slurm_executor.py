@@ -6,6 +6,7 @@ import subprocess
 from typing import List
 import time
 from tempfile import mkstemp
+from distutils.spawn import find_executable
 
 _SE = SlurmEnum()
 
@@ -181,7 +182,11 @@ class SlurmExecutor(ExecutorBase):
         Monitor the status of a previously submitted job, return the result
         """
         # use the entrypoint included in the Icolos install
-        command = f"jobinfo {job_id}"
+        jobinfo_script = os.path.join(
+            os.path.dirname(__file__), "../../scripts/jobinfo.py"
+        )
+        python2 = find_executable("python2")
+        command = f"{python2} {jobinfo_script} {job_id}"
         result = subprocess.run(
             command,
             shell=True,
@@ -215,6 +220,5 @@ class SlurmExecutor(ExecutorBase):
         # add any other specified lines
         for line in self.additional_lines:
             header.append(line)
-
 
         return header
