@@ -9,6 +9,7 @@ class BaseAgentEnum:
     DESCRIPTION = "description"
     GLOBAL_VARIABLES = "global_variables"
     GLOBAL_SETTINGS = "global_settings"
+    VERSION = "version"
     LOGGING = "logging"
     LOGGING_LOGFILE = "logfile"
 

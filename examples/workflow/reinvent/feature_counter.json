@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "Feature counting",
             "description": "Feature counting - number of rings.",
             "environment": {

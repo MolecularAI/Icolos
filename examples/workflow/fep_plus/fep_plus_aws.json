@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "Docking/FEP+ combined workflow",
             "description": "Test setup for FEP+ integration being run in the cloud (AWS).",
             "environment": {

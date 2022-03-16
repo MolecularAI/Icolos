@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "NIBR",
             "description": "NIBR (local) workflow - no use of cloud computing such as AWS.",
             "environment": {
