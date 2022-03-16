@@ -17,6 +17,8 @@ setup(
     entry_points={
         "console_scripts": [
             "icolos = icolos.scripts.executor:main",
+            "validator = icolos.scripts.validator:main",
+            "jobinfo = icolos.scripts.jobinfo:main",
         ]
     },
 )
