@@ -195,7 +195,7 @@ def get_values(jobid):
         fields = line.strip().split('|')
         xs.append([ctor(s) for ctor, s in zip(FIELD_CTORS, fields)])
     if len(xs) == 0:
-        print >>sys.stderr, "No such job"
+        print("No such job", file=sys.stderr)
         sys.exit(1)
     return xs
 
@@ -237,11 +237,10 @@ def main(jobid):
     for i,(name,parse,comb,show,prefer_sstat,format,desc) in enumerate(FIELDS):
         val = y[i]
         if show:
-            print "%-20s: %s" % (desc, format(val, meta))
+            print("%-20s: %s" % (desc, format(val, meta)))
 
 def usage(pipe):
-    print >>pipe, \
-"""jobinfo - collates job information from the 'sstat', 'sacct' and
+    print("""jobinfo - collates job information from the 'sstat', 'sacct' and
 'squeue' SLURM commands to give a uniform interface for both current
 and historical jobs.
 
@@ -249,7 +248,7 @@ Usage:
     jobinfo <job id>
 
 Report bugs to Anders Halager <aeh@birc.au.dk>
-  or on GitHub (https://github.com/birc-aeh/slurm-utils)"""
+  or on GitHub (https://github.com/birc-aeh/slurm-utils)""", file=pipe)
 
 if __name__ == "__main__":
     if "-h" in sys.argv or "--help" in sys.argv:
@@ -260,7 +259,7 @@ if __name__ == "__main__":
         sys.exit(1)
     jobid = sys.argv[1]
     if len(set(jobid) - set("0123456789_.")) > 0:
-        print >>sys.stderr, "The argument does not look like a valid job id"
+        print("The argument does not look like a valid job id", file=sys.stderr)
         usage(sys.stderr)
         sys.exit(1)
     main(jobid)
