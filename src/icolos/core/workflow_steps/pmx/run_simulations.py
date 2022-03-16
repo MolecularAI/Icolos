@@ -70,11 +70,15 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         trr=None,
     ):
 
+        mdrun_binary = self.get_additional_setting(
+            _PSE.MDRUN_EXECUTABLE, default="mdrun"
+        )
         # EM
         if self.sim_type in ("em", "eq", "npt", "nvt"):
+
             job_command = [
                 "gmx",
-                "mdrun",
+                mdrun_binary,
                 "-s",
                 tpr,
                 "-e",
@@ -98,7 +102,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             for i in range(1, 81):
                 single_command = [
                     "gmx",
-                    "mdrun",
+                    mdrun_binary,
                     "-s",
                     f"ti{i}.tpr",
                     "-e",

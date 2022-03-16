@@ -18,7 +18,6 @@ class SlurmExecutor(ExecutorBase):
         self,
         cores: int,
         partition: str,
-        tasks: int,
         time: str,
         mem: str,
         modules: List,
@@ -33,7 +32,6 @@ class SlurmExecutor(ExecutorBase):
         self.cores = cores
         self.partition = partition
         self.time = time
-        self.tasks = tasks
         self.mem = mem
         self.modules = modules
         self.other_args = other_args
@@ -141,14 +139,13 @@ class SlurmExecutor(ExecutorBase):
         state = None
         while completed is False:
             state = self._check_job_status(job_id)
-            if state in [_SE.PENDING, _SE.RUNNING]:
+            if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True
             elif state == _SE.FAILED:
                 completed = True
-
         return state
 
     def _tail_log_file(
@@ -206,7 +203,6 @@ class SlurmExecutor(ExecutorBase):
             "#!/bin/bash",
             f"#SBATCH  -c{self.cores}",
             f"#SBATCH --partition={self.partition}",
-            f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
         ]
         if self.gres is not None:
