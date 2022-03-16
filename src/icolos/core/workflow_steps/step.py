@@ -70,7 +70,7 @@ class StepExecutionResourceParameters(BaseModel):
 
 class StepExecutionParameters(BaseModel):
     class StepExecutionParallelizationParameters(BaseModel):
-        cores: int = 1
+        jobs: int = 1
         max_length_sublists: int = None
 
     prefix_execution: str = None
@@ -371,7 +371,7 @@ class StepBase(BaseModel):
 
     def _get_number_cores(self):
         # prepare the parallelization and set the number of cores to be used
-        cores = self.execution.parallelization.cores
+        cores = self.execution.parallelization.jobs
         if cores == 0:
             cores = 1
         elif cores < 0:

@@ -511,7 +511,7 @@
 					"parallelizer_settings": {
 						"parallelize": true,
 						"dependent_steps": 11,
-						"cores": 14
+						"jobs": 14
 					}
 				}
 			}

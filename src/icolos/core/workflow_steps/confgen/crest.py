@@ -65,7 +65,7 @@ class StepCREST(StepConfgenBase, BaseModel):
 
     def _set_number_cores(self, parameters: dict) -> dict:
         """Function for parallelization of task, setting the number of cores to be used."""
-        parameters[_EE.CREST_T] = int(self.execution.parallelization.cores)
+        parameters[_EE.CREST_T] = int(self.execution.parallelization.jobs)
         return parameters
 
     def _prepare_settings(self, tmp_dir: str, enumeration: Enumeration) -> list:

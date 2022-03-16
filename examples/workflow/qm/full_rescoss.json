@@ -131,7 +131,7 @@
                 "execution": {
                     "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
                     "parallelization": {
-                        "cores": 10
+                        "jobs": 10
                     }
                 },
                 "settings": {

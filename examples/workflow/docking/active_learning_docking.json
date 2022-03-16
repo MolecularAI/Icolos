@@ -30,7 +30,7 @@
 						  "execution": {
 							  "prefix_execution": "module load schrodinger/2021-2-js-aws",
 							  "parallelization": {
-								  "cores": 128,
+								  "jobs": 128,
 								  "max_length_sublists": 1
 							  },
 							  "failure_policy": {
