@@ -20,7 +20,7 @@ from icolos.utils.entry_point_functions.parsing_functions import (
     parse_header,
     log_version_number,
     get_version_number,
-)
+    version_match, get_versions_as_strings)
 from icolos.utils.general.citation_generator import print_citations
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -32,9 +32,10 @@ def main():
     _WE = WorkflowEnum()
 
     # get the input parameters and parse them
+    version = get_version_number()
     parser = argparse.ArgumentParser(
-        description='Implements entry point for the "Icolos" workflow class.',
-        epilog=f"Icolos version: {get_version_number()}",
+        description='Implements entry point for "Icolos" workflow execution.',
+        epilog=f"Icolos version: {'unknown' if version is None else version}",
     )
     parser.add_argument(
         "-conf",
@@ -79,8 +80,11 @@ def main():
         log_conf = attach_root_path(_LE.PATH_CONFIG_DEBUG)
     logger = initialize_logging(log_conf_path=log_conf, workflow_conf=conf)
 
-    # write the version of the installation used to the logfile
+    # write the version of the installation used to the logfile and check match with configuration
     log_version_number(logger)
+    if not version_match(conf):
+        version_config, version_installation = get_versions_as_strings(conf)
+        logger.log(f"Version of configuration file ({version_config}) and installation ({version_installation}) do not match or are not defined, proceed with caution.", _LE.WARNING)
 
     # update global variables and settings
     conf = parse_header(

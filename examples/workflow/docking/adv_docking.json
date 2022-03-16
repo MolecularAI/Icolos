@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "AutoDock Vina docking",
             "description": "Runs docking using AutoDock Vina and a predefined receptor file.",
             "environment": {
