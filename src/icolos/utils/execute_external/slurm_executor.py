@@ -196,6 +196,7 @@ class SlurmExecutor(ExecutorBase):
         )
         python2 = find_executable("python2")
         command = f"{python2} {jobinfo_script} {job_id}"
+        logger.log(f"Checking status of job {job_id}...", _LE.DEBUG)
         result = subprocess.run(
             command,
             shell=True,
@@ -203,9 +204,11 @@ class SlurmExecutor(ExecutorBase):
             stderr=subprocess.PIPE,
             universal_newlines=True,
         )
+        logger.log(f"Got result {result} for job {job_id}", _LE.DEBUG)
 
         state = None
         for line in result.stdout.split("\n"):
+            logger.log(f"{line}", _LE.DEBUG)
             if _SE.STATE in line:
                 state = line.split(":")[-1].split()[0]
         return state
