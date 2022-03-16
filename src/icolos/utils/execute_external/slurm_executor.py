@@ -149,7 +149,7 @@ class SlurmExecutor(ExecutorBase):
         logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
         while completed is False:
             state = self._check_job_status(job_id)
-            logger.log(f"Got slurm state {state} for job {job_id}")
+            logger.log(f"Got slurm state {state} for job {job_id}", _LE.DEBUG)
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
