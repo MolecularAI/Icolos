@@ -196,7 +196,7 @@ class SlurmExecutor(ExecutorBase):
         )
         python2 = find_executable("python2")
         command = f"{python2} {jobinfo_script} {job_id}"
-        logger.log(f"Checking status of job {job_id}...", _LE.DEBUG)
+        logger.log(f"Checking status of job {job_id}...with command {command}", _LE.DEBUG)
         result = subprocess.run(
             command,
             shell=True,
