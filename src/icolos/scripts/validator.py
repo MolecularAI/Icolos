@@ -28,19 +28,14 @@ _CC = ConsoleColours()
 
 
 def main():
-    reports = {
-        _LE.INFO: 0,
-        _LE.WARNING: 0,
-        _LE.DEBUG: 0,
-        _LE.ERROR: 0
-    }
+    reports = {_LE.INFO: 0, _LE.WARNING: 0, _LE.DEBUG: 0, _LE.ERROR: 0}
 
     def _report(message: str, level: str = _LE.INFO):
         levels_prefix = {
             _LE.INFO: f"{ConsoleColours.GREEN}INFO:{ConsoleColours.ENDC}",
             _LE.WARNING: f"{ConsoleColours.ORANGE}WARNING:{ConsoleColours.ENDC}",
             _LE.ERROR: f"{ConsoleColours.FAIL}{ConsoleColours.BOLD}ERROR:{ConsoleColours.ENDC}",
-            _LE.DEBUG: f"{ConsoleColours.HEADER}DEBUG:{ConsoleColours.ENDC}"
+            _LE.DEBUG: f"{ConsoleColours.HEADER}DEBUG:{ConsoleColours.ENDC}",
         }
         reports[level] += 1
         print(levels_prefix[level], message, "\n")
@@ -53,10 +48,14 @@ def main():
 
         # if an error occurred, return a failure code (otherwise, even if warnings happened, return 0)
         if reports[_LE.ERROR] > 0:
-            print(f"\nJSON status: {ConsoleColours.FAIL}{ConsoleColours.BOLD}INVALID{ConsoleColours.ENDC}")
+            print(
+                f"\nJSON status: {ConsoleColours.FAIL}{ConsoleColours.BOLD}INVALID{ConsoleColours.ENDC}"
+            )
             return 1
         else:
-            print(f"\nJSON status: {ConsoleColours.GREEN}{ConsoleColours.BOLD}VALID{ConsoleColours.ENDC}")
+            print(
+                f"\nJSON status: {ConsoleColours.GREEN}{ConsoleColours.BOLD}VALID{ConsoleColours.ENDC}"
+            )
             return 0
 
     # get the input parameters and parse them
@@ -83,14 +82,16 @@ def main():
         try:
             conf = json.loads(conf)
         except json.decoder.JSONDecodeError as e:
-            _report(f"Formatting error (missing quotation marks, invalid values, ...) in JSON, error message:\n{str(e)}. Aborting.", _LE.ERROR)
+            _report(
+                f"Formatting error (missing quotation marks, invalid values, ...) in JSON, error message:\n{str(e)}. Aborting.",
+                _LE.ERROR,
+            )
             return _summary()
 
     # load the sub-schemas (e.g. for the header region and the steps etc.), construct a schema for the entire workflow
     # and validate the input JSON against it
-    # TODO: extend json schema validation
     workflow_schema, schema_dir = construct_workflow_schema()
-    schema_path = 'file:///{0}/'.format(schema_dir.replace("\\", "/"))
+    schema_path = "file:///{0}/".format(schema_dir.replace("\\", "/"))
     resolver = RefResolver(schema_path, workflow_schema)
     validator = jsonschema.Draft7Validator(workflow_schema, resolver)
     for e in validator.iter_errors(conf):
