@@ -146,7 +146,7 @@ class SlurmExecutor(ExecutorBase):
     def _wait_for_job_completion(self, job_id: str):
         completed = False
         state = None
-        self._logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
+        logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
         while completed is False:
             state = self._check_job_status(job_id)
             logger.log(f"Got slurm state {state} for job {job_id}")
