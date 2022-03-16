@@ -42,7 +42,7 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "cores": {
+                "jobs": {
                     "type": "number"
                 },
                 "max_length_sublists": {

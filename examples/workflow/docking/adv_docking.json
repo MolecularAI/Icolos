@@ -40,7 +40,7 @@
                 "execution": {
                     "prefix_execution": "module load AutoDock_Vina",
                     "parallelization": {
-                        "cores": 4
+                        "jobs": 4
                     },
                     "failure_policy": {
                         "n_tries": 3

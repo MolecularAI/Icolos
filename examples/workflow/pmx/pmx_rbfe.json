@@ -77,7 +77,7 @@
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -120,7 +120,7 @@
 				"type": "pmx_atomMapping",
 				"execution": {
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -157,7 +157,7 @@
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"binary_location": "$PMX_PYTHON <fill_pmx_path>/src/pmx/scripts/icolos_entrypoints/",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -176,7 +176,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -193,7 +193,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -220,7 +220,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 16
+						"jobs": 16
 					}
 				},
 				"settings": {
@@ -239,7 +239,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -266,7 +266,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 96
+						"jobs": 96
 					}
 				},
 				"settings": {
@@ -288,7 +288,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -314,7 +314,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 16
+						"jobs": 16
 					}
 				},
 				"settings": {
@@ -333,7 +333,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {
@@ -361,7 +361,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 96
+						"jobs": 96
 					}
 				},
 				"settings": {
@@ -382,7 +382,7 @@
 				"type": "pmx_run_analysis",
 				"execution": {
 					"parallelization": {
-						"cores": 24
+						"jobs": 24
 					}
 				},
 				"settings": {

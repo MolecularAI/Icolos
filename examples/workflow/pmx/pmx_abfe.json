@@ -51,7 +51,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 8
+						"jobs": 8
 					},
 					"failure_policy": {
 						"n_tries": 10
@@ -101,7 +101,7 @@
 				"execution": {
 					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
 					"parallelization": {
-						"cores": 8
+						"jobs": 8
 					}
 
 				},
@@ -137,7 +137,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 1
+						"jobs": 1
 					}
 				},
 				"settings": {
@@ -198,7 +198,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 1
+						"jobs": 1
 					}
 				},
 				"settings": {
@@ -260,7 +260,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 1
+						"jobs": 1
 					}
 				},
 				"settings": {
@@ -323,7 +323,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 1
+						"jobs": 1
 					}
 				},
 				"settings": {
@@ -384,7 +384,7 @@
 						]
 					},
 					"parallelization": {
-						"cores": 16
+						"jobs": 16
 					}
 				},
 				"settings": {

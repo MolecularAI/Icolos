@@ -219,7 +219,7 @@ class SlurmExecutor(ExecutorBase):
         if self.mem is not None:
             header.append(f"#SBATCH --mem={self.mem}")
         if self.cores is not None:
-            header.append(f"#SBATCH  -c{self.cores}")
+            header.append(f"#SBATCH -c{self.cores}")
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():

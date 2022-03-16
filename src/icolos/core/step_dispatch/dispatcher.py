@@ -11,7 +11,7 @@ class IterParallelizer(BaseModel):
     # if you are executing a 5 step workflow with 10 repeats, dependent_steps = 5, cores = 10
     # this will allow each independent replica to be allocated to a single job queue, retaining step order
     parallelize: bool = False
-    cores: int = 1
+    jobs: int = 1
     dependent_steps: int = None
 
 
@@ -45,7 +45,7 @@ class StepDispatcher(StepBase, BaseModel):
         Execute multiple steps in parallel
         """
         # Spin up multiple processes.
-        self.execution.parallelization.cores = self.parallel_execution.cores
+        self.execution.parallelization.jobs = self.parallel_execution.cores
 
         # TODO, we can repeat entire workflows if we want, I'm not sure this makes sense though
         self._subtask_container = SubtaskContainer(max_tries=1)

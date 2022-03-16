@@ -86,7 +86,7 @@ class StepBaseEnum(str, Enum):
     EXEC_PREFIXEXECUTION = "prefix_execution"
     EXEC_BINARYLOCATION = "binary_location"
     EXEC_PARALLELIZATION = "parallelization"
-    EXEC_PARALLELIZATION_CORES = "cores"
+    EXEC_PARALLELIZATION_CORES = "jobs"
     EXEC_PARALLELIZATION_MAXLENSUBLIST = "max_length_sublists"
     EXEC_FAILUREPOLICY = "failure_policy"
     EXEC_FAILUREPOLICY_NTRIES = "n_tries"
