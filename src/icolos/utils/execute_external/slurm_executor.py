@@ -157,7 +157,7 @@ class SlurmExecutor(ExecutorBase):
                 completed = True
             elif state == _SE.FAILED:
                 completed = True
-        logger.log(f"Final state for job {job_id}: {state}")
+        logger.log(f"Final state for job {job_id}: {state}", _LE.DEBUG)
         return state
 
     def _tail_log_file(
