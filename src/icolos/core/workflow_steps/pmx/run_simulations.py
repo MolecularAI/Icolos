@@ -196,7 +196,12 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             )
             self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
             location = os.path.dirname(job)
-            self._backend_executor.execute(tmpfile=job, location=location, check=False)
+            result = self._backend_executor.execute(
+                tmpfile=job, location=location, check=False
+            )
+            self._logger.log(
+                f"Execution for job {job} completed with status: {result}", _LE.DEBUG
+            )
 
     def _inspect_log_files(self, jobs: List[str]) -> List[List[bool]]:
         """

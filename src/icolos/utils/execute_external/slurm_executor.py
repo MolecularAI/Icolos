@@ -1,5 +1,7 @@
 import os
 from shlex import quote
+from icolos.loggers.steplogger import StepLogger
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from icolos.utils.execute_external.execute import ExecutorBase
 from icolos.utils.enums.program_parameters import SlurmEnum
 import subprocess
@@ -9,6 +11,8 @@ from tempfile import mkstemp
 from distutils.spawn import find_executable
 
 _SE = SlurmEnum()
+logger = StepLogger()
+_LE = LoggingConfigEnum()
 
 
 class SlurmExecutor(ExecutorBase):
@@ -61,7 +65,10 @@ class SlurmExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
-            print("Warning - Slurm was not found, falling back to local execution!")
+            logger.log(
+                "Warning - Slurm was not found, falling back to local execution!",
+                _LE.WARNING,
+            )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
@@ -108,7 +115,9 @@ class SlurmExecutor(ExecutorBase):
         command = "sbatch -h"
         result = super().execute(command=command, arguments=[], check=False)
         if any(["Usage: sbatch" in l for l in result.stdout.split("\n")]):
+            logger.log("Found slurm API", _LE.DEBUG)
             return True
+        logger.log("Slurm not found on this machine", _LE.WARNING)
         return False
 
     def _prepare_command(
@@ -118,7 +127,7 @@ class SlurmExecutor(ExecutorBase):
 
         # allow for piped input to be passed to binaries
         if pipe_input is not None:
-            # pipe_input = self._par/se_pipe_input(pipe_input)
+            # pipe_input = self._parse_pipe_input(pipe_input)
             command = pipe_input + " | " + command
 
         # check, if command (binary) is to be found at a specific location (rather than in $PATH)
@@ -137,8 +146,10 @@ class SlurmExecutor(ExecutorBase):
     def _wait_for_job_completion(self, job_id: str):
         completed = False
         state = None
+        self._logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
         while completed is False:
             state = self._check_job_status(job_id)
+            logger.log(f"Got slurm state {state} for job {job_id}")
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
@@ -146,6 +157,7 @@ class SlurmExecutor(ExecutorBase):
                 completed = True
             elif state == _SE.FAILED:
                 completed = True
+        logger.log(f"Final state for job {job_id}: {state}")
         return state
 
     def _tail_log_file(
