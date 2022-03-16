@@ -10,7 +10,7 @@ _JSE = JSONSchemasEnum()
 
 def _load_schema(path: str) -> dict:
     try:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             schema_data = f.read()
         schema = json.loads(schema_data)
     except:

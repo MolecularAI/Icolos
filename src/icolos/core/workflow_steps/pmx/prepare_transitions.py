@@ -95,7 +95,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             state=state,
             sim_type="transitions",
             framestart=1,
-            framestop=81
+            framestop=81,
         )
         if result.returncode != 0:
             self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
