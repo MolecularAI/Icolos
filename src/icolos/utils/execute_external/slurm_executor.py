@@ -115,9 +115,7 @@ class SlurmExecutor(ExecutorBase):
         command = "sbatch -h"
         result = super().execute(command=command, arguments=[], check=False)
         if any(["Usage: sbatch" in l for l in result.stdout.split("\n")]):
-            logger.log("Found slurm API", _LE.DEBUG)
             return True
-        logger.log("Slurm not found on this machine", _LE.WARNING)
         return False
 
     def _prepare_command(
@@ -149,7 +147,6 @@ class SlurmExecutor(ExecutorBase):
         logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
         while completed is False:
             state = self._check_job_status(job_id)
-            logger.log(f"Got slurm state {state} for job {job_id}", _LE.DEBUG)
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
@@ -157,7 +154,6 @@ class SlurmExecutor(ExecutorBase):
                 completed = True
             elif state == _SE.FAILED:
                 completed = True
-        logger.log(f"Final state for job {job_id}: {state}", _LE.DEBUG)
         return state
 
     def _tail_log_file(
@@ -182,7 +178,7 @@ class SlurmExecutor(ExecutorBase):
                         print(line)
                     completed = True
             except FileNotFoundError:
-                print("log file not found, sleeping")
+                logger.log("log file not found, sleeping", _LE.DEBUG)
                 time.sleep(10)
         return state
 
@@ -193,9 +189,6 @@ class SlurmExecutor(ExecutorBase):
         # use the entrypoint included in the Icolos install
 
         command = f"sacct -j {job_id} --parsable --noheader -a"
-        logger.log(
-            f"Checking status of job {job_id}...with command {command}", _LE.DEBUG
-        )
         result = subprocess.run(
             command,
             shell=True,
@@ -203,7 +196,6 @@ class SlurmExecutor(ExecutorBase):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        logger.log(f"Got result {result} for job {job_id}", _LE.DEBUG)
         if result.stdout:
             state = result.stdout.split("\n")[0].split("|")[5]
         else:
