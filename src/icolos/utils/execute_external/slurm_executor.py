@@ -191,26 +191,23 @@ class SlurmExecutor(ExecutorBase):
         Monitor the status of a previously submitted job, return the result
         """
         # use the entrypoint included in the Icolos install
-        jobinfo_script = os.path.join(
-            os.path.dirname(__file__), "../../scripts/jobinfo.py"
+
+        command = f"sacct -j {job_id} --parsable --noheader -a"
+        logger.log(
+            f"Checking status of job {job_id}...with command {command}", _LE.DEBUG
         )
-        python2 = find_executable("python2")
-        command = f"{python2} {jobinfo_script} {job_id}"
-        logger.log(f"Checking status of job {job_id}...with command {command}", _LE.DEBUG)
         result = subprocess.run(
             command,
             shell=True,
+            universal_newlines=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True,
         )
         logger.log(f"Got result {result} for job {job_id}", _LE.DEBUG)
-
-        state = None
-        for line in result.stdout.split("\n"):
-            logger.log(f"{line}", _LE.DEBUG)
-            if _SE.STATE in line:
-                state = line.split(":")[-1].split()[0]
+        if result.stdout:
+            state = result.stdout.split("\n")[0].split("|")[5]
+        else:
+            state = None
         return state
 
     def _construct_slurm_header(self):
