@@ -1352,6 +1352,7 @@ class StepPMXEnum:
     RUN_TYPE = "run_type"
     SIM_TYPES = "sim_types"
     EXEC_MODE = "exec_mode"
+    MDRUN_EXECUTABLE = "mdrun_executable"
 
     ABFE = "abfe"
     RBFE = "rbfe"
