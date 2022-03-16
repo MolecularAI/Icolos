@@ -90,7 +90,6 @@ def main():
 
     # load the sub-schemas (e.g. for the header region and the steps etc.), construct a schema for the entire workflow
     # and validate the input JSON against it
-    # TODO: extend json schema validation
     workflow_schema, schema_dir = construct_workflow_schema()
     schema_path = "file:///{0}/".format(schema_dir.replace("\\", "/"))
     resolver = RefResolver(schema_path, workflow_schema)
