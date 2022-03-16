@@ -18,7 +18,7 @@ setup(
         "console_scripts": [
             "icolos = icolos.scripts.executor:main",
             "validator = icolos.scripts.validator:main",
-            "jobinfo = icolos.scripts.jobinfo:main",
+            "sdf2smi = icolos.scripts.sdf2smi:main",
         ]
     },
 )
