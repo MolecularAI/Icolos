@@ -1,6 +1,7 @@
 {
 	"workflow": {
 		"header": {
+			"version": "1.8.1",
 			"workflow_id": "gromacs_md_fpocket",
 			"description": "full md run with gromacs, with MDpocket run to extract descriptors for binding pockets",
 			"environment": {

@@ -1,6 +1,7 @@
 {
 	"workflow": {
 		"header": {
+			"version": "1.8.1",
 			"workflow_id": "gromacs_ensemble_mmgbsa",
 			"description": "ensemble MMGBSA demonstration - step iteration + SLURM job control",
 			"environment": {
