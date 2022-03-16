@@ -213,10 +213,11 @@ class SlurmExecutor(ExecutorBase):
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  -c{self.cores}",
             f"#SBATCH --partition={self.partition}",
             f"#SBATCH --time={self.time}",
         ]
+        if self.cores is not None:
+            header.append(f"#SBATCH  -c{self.cores}")
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():

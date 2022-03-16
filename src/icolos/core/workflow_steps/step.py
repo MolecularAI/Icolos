@@ -62,7 +62,7 @@ class StepExecutionResourceParameters(BaseModel):
     time: str = "12:00:00"
     gres: str = None
     mem: str = "32g"
-    cores: int = 8
+    cores: int = None
     modules: List = []
     other_args: dict = {}
     additional_lines: List = []
