@@ -61,7 +61,7 @@ class StepExecutionResourceParameters(BaseModel):
     partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
-    mem: str = "32g"
+    mem: str = None
     cores: int = None
     modules: List = []
     other_args: dict = {}

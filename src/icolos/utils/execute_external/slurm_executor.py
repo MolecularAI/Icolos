@@ -215,8 +215,9 @@ class SlurmExecutor(ExecutorBase):
             "#!/bin/bash",
             f"#SBATCH --partition={self.partition}",
             f"#SBATCH --time={self.time}",
-            f"#SBATCH --mem={self.mem}",
         ]
+        if self.mem is not None:
+            header.append(f"#SBATCH --mem={self.mem}")
         if self.cores is not None:
             header.append(f"#SBATCH  -c{self.cores}")
         if self.gres is not None:
