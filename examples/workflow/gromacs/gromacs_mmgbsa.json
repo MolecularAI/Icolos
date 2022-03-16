@@ -1,6 +1,7 @@
 {
 	"workflow": {
 		"header": {
+			"version": "1.8.1",
 			"workflow_id": "gromacs_test",
 			"description": "full md run with gromacs with ligand parametrisation and mmgbsa calculation",
 			"environment": {

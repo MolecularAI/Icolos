@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "RMSD_rescoring",
             "description": "Run RMSD rescoring on docking poses.",
             "environment": {
