@@ -212,6 +212,7 @@
 				"execution": {
 					"platform": "slurm",
 					"resources": {
+						"cores": "8",
 						"partition": "gpu",
 						"gres": "gpu:1",
 						"modules": [

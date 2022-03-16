@@ -197,6 +197,7 @@ class TestPMXrbfe(unittest.TestCase):
                             ],
                             _SBE.EXEC_RESOURCES_PARTITION: "gpu",
                             _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
                             _SBE.EXEC_RESOURCES_ADDITIONAL_LINES: [
                                 'echo "hello, world!"'
                             ],
@@ -239,6 +240,7 @@ class TestPMXrbfe(unittest.TestCase):
                             ],
                             _SBE.EXEC_RESOURCES_PARTITION: "gpu",
                             _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
                         },
                     },
                     _SBE.SETTINGS: {
