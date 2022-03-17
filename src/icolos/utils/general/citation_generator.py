@@ -14,6 +14,7 @@ class ConsoleColours:
     RED = "\033[93m"
     FAIL = "\033[91m"
     ENDC = "\033[0m"
+    ORANGE = "\033[0;33m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
     BLINKING = "\33[5m"
@@ -25,7 +26,13 @@ def add_citation(
     citations: List[str],
     citation_string: str,
 ):
-    if any([True for w_step_type in workflow_step_types if step_type.upper() in w_step_type]):
+    if any(
+        [
+            True
+            for w_step_type in workflow_step_types
+            if step_type.upper() in w_step_type
+        ]
+    ):
         citations.append(citation_string)
 
 
@@ -71,6 +78,12 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         step_types,
         citations,
         "\nFEP+: R. Abel, L. Wang, E.D. Harder, B.J. Berne, R.A. Friesner. Advancing Drug Discovery through Enhanced Free Energy Calculations. Acc. Chem. Res., 2017 50 (7), 1625-1632\n",
+    )
+    add_citation(
+        _SBE.STEP_KALLISTO,
+        step_types,
+        citations,
+        "\nKallisto: Caldeweyher, E., Kallisto: A command-line interface to simplify computational modelling and the generation of atomic features. Journal of Open Source Software, 6(60), 3050, https://doi.org/10.21105/joss.03050. 2021\n",
     )
     add_citation(
         _SBE.STEP_TURBOMOLE,

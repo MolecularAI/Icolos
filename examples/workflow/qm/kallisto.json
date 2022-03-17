@@ -1,0 +1,59 @@
+{
+  "workflow": {
+    "header": {
+      "version": "1.8.1",
+      "workflow_id": "Example using kallisto",
+      "description": "Details, code base etc.: https://github.com/AstraZeneca/kallisto",
+      "logging": {
+        "logfile": "tests/junk/kallisto.log"
+      },
+      "environment": {
+        "export": [
+        ]
+      },
+      "global_variables": {
+        "kallisto_location": "~/miniconda3/envs/kallisto/bin"
+      }
+    },
+    "steps": [
+      {
+        "step_id": "calculating_kallisto_features",
+        "type": "kallisto",
+        "execution": {
+          "binary_location": "{kallisto_location}"
+        },
+        "settings": {
+          "arguments": {
+            "flags": [],
+            "parameters": {
+            }
+          },
+          "additional": {
+            "features": ["vdw"]
+          }
+        },
+        "input": {
+          "compounds": [
+            {
+              "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
+              "source_type": "file",
+              "format": "SDF"
+            }
+          ]
+        },
+        "writeout": [
+          {
+            "compounds": {
+              "category": "conformers"
+            },
+            "destination": {
+              "resource": "{package_dir}/tests/junk/kallisto_result.sdf",
+              "type": "file",
+              "format": "SDF"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

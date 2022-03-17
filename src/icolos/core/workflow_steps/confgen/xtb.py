@@ -34,10 +34,10 @@ class StepXTB(StepConfgenBase, BaseModel):
         for dir_path, conformer in zip(tmp_dirs, conformers):
             optimized_conformer_sdf = os.path.join(dir_path, _COE.XTBOPT_SDF)
             enum = conformer.get_enumeration_object()
+
             # as the energies are added as a tag, but we will use ours
             # note, that XTB is called to operate on one conformer at a time (which we will return here)
             mol_supplier = Chem.SDMolSupplier(optimized_conformer_sdf, removeHs=False)
-            mol = None
             try:
                 for mol in mol_supplier:
                     mol.SetProp(
@@ -49,10 +49,9 @@ class StepXTB(StepConfgenBase, BaseModel):
                     )
                     enum.add_conformer(Conformer(conformer=mol), auto_update=True)
                 results.append(_COE.SUCCESS)
-
             except:
                 self._logger.log(
-                    f"Failed to parse XTB results for conformer {conformer.get_index_string()}",
+                    f"Failed to parse XTB results for conformer {conformer.get_index_string()}.",
                     _LE.WARNING,
                 )
                 results.append(_COE.FAILURE)
@@ -129,7 +128,7 @@ class StepXTB(StepConfgenBase, BaseModel):
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
-            self._logger.log(f"Executing xtb for batch {n}", _LE.DEBUG)
+            self._logger.log(f"Executing xtb for batch {n}.", _LE.DEBUG)
 
             xtb_parallelizer.execute_parallel(
                 tmp_dir=tmp_dirs,
@@ -165,6 +164,6 @@ class StepXTB(StepConfgenBase, BaseModel):
         self._subtask_container.load_data(all_conformers)
         self._execute_xtb()
         self._logger.log(
-            f"Completed execution of XTB for {len(all_conformers)} conformers",
-            _LE.DEBUG,
+            f"Completed execution of XTB for {len(all_conformers)} conformers.",
+            _LE.INFO,
         )

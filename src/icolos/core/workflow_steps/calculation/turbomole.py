@@ -99,7 +99,7 @@ class StepTurbomole(StepCalculationBase, BaseModel):
                     arguments=[
                         _OE.OBABEL_INPUTFORMAT_SDF,
                         path_input_sdf,
-                        _OE.OBABEL_OUTPUTFORMAT_XYZ,
+                        _OE.OBABEL_OUTPUT_FORMAT_XYZ,
                         "".join([_OE.OBABEL_O, path_input_xyz]),
                     ],
                     check=True,

@@ -58,19 +58,19 @@ class StepFailurePolicyParameters(BaseModel):
 
 
 class StepExecutionResourceParameters(BaseModel):
-    partition: _EPE = _EPE.CORE
+    partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
-    mem: str = "32g"
-    cores: int = 8
-    tasks: int = 1
+    mem: str = None
+    cores: int = None
     modules: List = []
     other_args: dict = {}
+    additional_lines: List = []
 
 
 class StepExecutionParameters(BaseModel):
     class StepExecutionParallelizationParameters(BaseModel):
-        cores: int = 1
+        jobs: int = 1
         max_length_sublists: int = None
 
     prefix_execution: str = None
@@ -236,16 +236,15 @@ class StepBase(BaseModel):
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
-                tasks=self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
                 modules=self.execution.resources.modules,
                 other_args=self.execution.resources.other_args,
+                additional_lines=self.execution.resources.additional_lines,
                 gres=self.execution.resources.gres,
             )
         else:
-
             self._backend_executor = executor(
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
@@ -371,7 +370,7 @@ class StepBase(BaseModel):
 
     def _get_number_cores(self):
         # prepare the parallelization and set the number of cores to be used
-        cores = self.execution.parallelization.cores
+        cores = self.execution.parallelization.jobs
         if cores == 0:
             cores = 1
         elif cores < 0:

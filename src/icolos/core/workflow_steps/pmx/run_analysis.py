@@ -318,7 +318,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(self.work_dir, job, "analyse1", f)
+                                os.path.join(
+                                    self.work_dir, job, "complex", "analyse1", f
+                                )
                             )
                             for f in output_files
                         ]

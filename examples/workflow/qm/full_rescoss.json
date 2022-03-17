@@ -1,7 +1,8 @@
 {
     "workflow": {
         "header": {
-            "id": "rescoss",
+            "version": "1.8.1",
+            "workflow_id": "rescoss",
             "description": "Full ReSCoSS configuration (version 1.0).",
             "environment": {
                 "export": [{
@@ -131,7 +132,7 @@
                 "execution": {
                     "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
                     "parallelization": {
-                        "cores": 10
+                        "jobs": 10
                     }
                 },
                 "settings": {

@@ -86,18 +86,19 @@ class Test_XTB_confgen(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8852, 0.6805, -0.1339],
+            [5.4367, 13.0798, 24.5152],
         )
 
         # check number of conformers returned (only one Compound with only one Enumeration)
-        self.assertEqual(len(xtb_step.get_compounds()[0][0]), 2)
+        self.assertEqual(len(xtb_step.get_compounds()[0][0]), 11)
+
         # check SDF write-out (including energy-as-tag annotation)
         out_path = os.path.join(
             self._test_dir, "XTB_conformers_from_OMEGA_paracetamol.sdf"
         )
         xtb_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 4414)
+        self.assertEqual(stat_inf.st_size, 17768)
 
     def test_single_core_execution(self):
         step_conf = {

@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.8.1",
             "workflow_id": "RMSD_rescoring",
             "description": "Run RMSD rescoring on docking poses.",
             "environment": {
@@ -36,7 +37,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2020-4",
                     "parallelization": {
-                        "cores": 2,
+                        "jobs": 2,
                         "max_length_sublists": 1
                     },
                     "failure_policy": {
@@ -68,7 +69,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2021-1-js-aws",
                     "parallelization": {
-                        "cores": 4,
+                        "jobs": 4,
                         "max_length_sublists": 1
                     },
                     "failure_policy": {
@@ -131,7 +132,7 @@
                 "execution": {
                     "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
                     "parallelization": {
-                        "cores": 4
+                        "jobs": 4
                     }
                 },
                 "settings": {

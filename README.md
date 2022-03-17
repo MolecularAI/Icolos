@@ -25,7 +25,7 @@ You are welcome to clone the repository and use a local version, and in particul
 in contact with us.
 
 ## Installation
-After cloning, first install and activate the `icolosprod` `conda` environment:
+After cloning, first install and activate the `icolosprod` `conda` environment. To ensure the right installation directory is used, you can add the `--prefix` parameter to the `create` call, specifying the location of the `conda` environments.
 ```
 conda env create -f environment_min.yml
 conda activate icolosprod
@@ -58,6 +58,12 @@ Once a `JSON` is specified, the workflow can be executed like so:
 ```
 conda activate icolosprod
 icolos -conf workflow.json
+```
+
+We usually advise to check the validity of your configuration file before you try to execute it. There is a bespoke `validator` entry point to facilitate this:
+
+```
+validator -conf workflow.json
 ```
 
 ## `SLURM` Execution

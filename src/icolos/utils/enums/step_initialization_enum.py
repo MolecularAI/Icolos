@@ -3,6 +3,7 @@ from icolos.core.workflow_steps.autodockvina.docking import StepAutoDockVina
 from icolos.core.workflow_steps.autodockvina.target_preparation import (
     StepAutoDockVinaTargetPreparation,
 )
+from icolos.core.workflow_steps.calculation.kallisto import StepKallisto
 from icolos.core.workflow_steps.ccdc.docking import StepGold
 from icolos.core.workflow_steps.calculation.electrostatics.esp_sim import StepEspSim
 from icolos.core.workflow_steps.calculation.feature_counter import StepFeatureCounter
@@ -63,6 +64,7 @@ class StepInitializationEnum:
         _SBE.STEP_CLUSTERING: StepClustering,
         _SBE.STEP_RMSFILTER: StepRMSFilter,
         _SBE.STEP_PANTHER: StepPanther,
+        _SBE.STEP_KALLISTO: StepKallisto,
         _SBE.STEP_SHAEP: StepShaep,
         _SBE.STEP_PDB2GMX: StepGMXPdb2gmx,
         _SBE.STEP_EDITCONF: StepGMXEditConf,
