@@ -29,6 +29,7 @@
             }
           },
           "additional": {
+            "features": ["vdw"]
           }
         },
         "input": {
