@@ -104,11 +104,12 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 )
             else:
                 # get scores from oracle
-                self._logger.log(
+                print(
                     f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
                 )
 
                 compounds = self.query_oracle(query_compounds)
+                print("recovered compounds of length ", len(compounds), compounds)
                 scores = self._extract_final_scores(
                     compounds, self.settings.additional[_SALE.CRITERIA]
                 )
@@ -118,6 +119,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
             self._logger.log("Fitting with new data...", _LE.INFO)
             new_data = np.array([compound[key] for compound in query_compounds])
+            print(new_data.shape, scores.shape)
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
