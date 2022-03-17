@@ -2,7 +2,10 @@
 
 ### Version 1.9.0 | 2022-XX-XX
 #### Features
+- Added `Kallisto` step (fast featurizer).
 - Added `validator` entry point that allows to check configuration JSONs against a JSON Schema.
+#### Internal
+- Added version check between configuration files and installation.
 
 ### Version 1.8.0 | 2022-02-23
 #### Features
