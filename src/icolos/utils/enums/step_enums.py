@@ -690,6 +690,8 @@ class StepPantherEnum:
 class StepKallistoEnum:
 
     FEATURES = "features"
+    SUCCESS = "success"
+    FAILURE = "failure"
 
     # try to find the internal value and return
     def __getattr__(self, name):

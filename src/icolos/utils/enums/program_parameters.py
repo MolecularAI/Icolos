@@ -431,7 +431,7 @@ class OpenBabelEnum:
         "-opdbqt"
     )
     OBABEL_OUTPUT_FORMAT_SDF = "-osdf"  # sets the output format to "SDF"
-    OBABEL_OUTPUTFORMAT_XYZ = (
+    OBABEL_OUTPUT_FORMAT_XYZ = (
         "-oxyz"  # sets the output format to "XYZ" (format in XTB/TM)
     )
     OBABEL_X = "-x"  # specifies generation options

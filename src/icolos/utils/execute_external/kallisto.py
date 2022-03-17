@@ -31,7 +31,6 @@ class KallistoExecutor(ExecutorBase):
         )
 
     def is_available(self):
-        print("lasjdfklajsdfkjaslkdjflkasdjflkajsdlkfj")
         try:
             result = self.execute(
                 command=EE.KALLISTO, arguments=[EE.HELP], check=True
