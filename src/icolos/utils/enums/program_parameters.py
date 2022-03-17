@@ -1025,6 +1025,40 @@ class PantherEnum:
         raise ValueError("No changes allowed.")
 
 
+class KallistoEnum:
+
+    KALLISTO = "kallisto"   # Binary name.
+
+    # OPTIONS
+    SILENT = "--silent"
+    SHIFT = "--shift"       # INTEGER argument
+    HELP = "--help"         # Show this message and exit
+    HELP_IDENTIFICATION_STRING = "Show this message"
+
+    # COMMANDS
+    ALP = "alp"             # Static atomic polarizabilities in Bohr^3.
+    BONDS = "bonds"         # Get information about covalent bonding partner.
+    CNS = "cns"             # Atomic coordination numbers.
+    EEQ = "eeq"             # Electronegativity equilibration atomic partial charges.
+    EXS = "exs"             # Exchange a substrate within a transition metal complex with another...
+    LIG = "lig"             # Get all substructures (or ligands) that are bound to the center...
+    PROX = "prox"           # Atomic proximity shells.
+    RMS = "rms"             # Calculate the root mean squared deviation between two structures...
+    SORT = "sort"           # Sort input geoemtry according to connectivity.
+    STM = "stm"             # Calculate sterimol descriptors using kallisto van der Waals radii.
+    VDW = "vdw"             # Charge-dependent atomic van der Waals radii in Bohr.
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
 class ShaepEnum:
 
     SHAEP_EXECUTABLE = "shaep"

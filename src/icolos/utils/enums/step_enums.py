@@ -29,6 +29,7 @@ class StepBaseEnum(str, Enum):
     STEP_DESMOND_SETUP = "DESMOND_SETUP"
     STEP_FILTER = "FILTER"
     STEP_PANTHER = "PANTHER"
+    STEP_KALLISTO = "KALLISTO"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
     STEP_EDITCONF = "EDITCONF"
@@ -674,6 +675,21 @@ class StepPantherEnum:
         "3-Angle": "angles.lib",
         "4-Charge": "charges.lib",
     }
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepKallistoEnum:
+
+    FEATURES = "features"
 
     # try to find the internal value and return
     def __getattr__(self, name):
