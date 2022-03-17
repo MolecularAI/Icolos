@@ -47,9 +47,13 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                        "-b": "2100",
+                    },
                 },
-                _SBE.SETTINGS_ADDITIONAL: {"sim_type": "transitions"},
+                _SBE.SETTINGS_ADDITIONAL: {
+                    "sim_type": "transitions",
+                },
             },
         }
 
