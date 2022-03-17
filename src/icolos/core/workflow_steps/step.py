@@ -245,7 +245,6 @@ class StepBase(BaseModel):
                 gres=self.execution.resources.gres,
             )
         else:
-
             self._backend_executor = executor(
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,

@@ -80,6 +80,12 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         "\nFEP+: R. Abel, L. Wang, E.D. Harder, B.J. Berne, R.A. Friesner. Advancing Drug Discovery through Enhanced Free Energy Calculations. Acc. Chem. Res., 2017 50 (7), 1625-1632\n",
     )
     add_citation(
+        _SBE.STEP_KALLISTO,
+        step_types,
+        citations,
+        "\nKallisto: Caldeweyher, E., Kallisto: A command-line interface to simplify computational modelling and the generation of atomic features. Journal of Open Source Software, 6(60), 3050, https://doi.org/10.21105/joss.03050. 2021\n",
+    )
+    add_citation(
         _SBE.STEP_TURBOMOLE,
         step_types,
         citations,
