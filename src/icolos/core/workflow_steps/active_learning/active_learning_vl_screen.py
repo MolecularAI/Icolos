@@ -70,7 +70,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         return library, scores
 
     def _run_learning_loop_virtual_lib(
-        self, learner: ActiveLearner, lib: pd.DataFrame, top_1_idx: list = None
+        self, learner: ActiveLearner, lib: pd.DataFrame, tmp_dir: str, top_1_idx: list = None, 
     ) -> tuple[pd.DataFrame, List]:
         rounds = int(self.settings.additional[_SALE.N_ROUNDS])
         n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
@@ -104,12 +104,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 )
             else:
                 # get scores from oracle
-                print(
+                self._logger.log(
                     f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
                 )
 
                 compounds = self.query_oracle(query_compounds)
-                print("recovered compounds of length ", len(compounds), compounds)
                 scores = self._extract_final_scores(
                     compounds, self.settings.additional[_SALE.CRITERIA]
                 )
@@ -119,7 +118,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
             self._logger.log("Fitting with new data...", _LE.INFO)
             new_data = np.array([compound[key] for compound in query_compounds])
-            print(new_data.shape, scores.shape)
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
@@ -133,6 +131,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     _LE.INFO,
                 )
                 fraction_top1_hits.append(hits_queried)
+            df = lib.iloc[queried_compound_idx]
+            df.to_csv(os.path.join(tmp_dir, f"enriched_lib_round_{rnd+1}.csv"))
         self._logger.log(f"Hits queried at each epoch:\n{fraction_top1_hits}", _LE.INFO)
 
         # return the enriched df
@@ -158,11 +158,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             enriched_lib,
             queried_compound_idx_by_batch,
         ) = self._run_learning_loop_virtual_lib(
-            learner=learner, lib=lib, top_1_idx=list(top_1_idx)
+            learner=learner, lib=lib, tmp_dir = tmp_dir, top_1_idx=list(top_1_idx)
         )
 
         # compare distributions
-        print(lib[criteria].head())
         print(lib[criteria].astype(float).describe())
         print(enriched_lib[criteria].astype(float).describe())
         enriched_lib.to_csv(os.path.join(tmp_dir, "enriched_lib.csv"))
@@ -223,6 +222,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             axs[idx + 1].legend()
             # axs[idx + 1].set_title(f"enriched lib batch {(idx + 1) * 5}")
         fig.savefig(os.path.join(tmp_dir, "dist.png"), dpi=300)
+        
+        
 
         # pickle the final model
         # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:

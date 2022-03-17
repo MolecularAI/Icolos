@@ -182,7 +182,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
 
-        return np.absolute(top_scores)
+        return np.absolute(top_scores, dtype=np.float32)
 
     def check_additional(self, key, val=True) -> bool:
 
