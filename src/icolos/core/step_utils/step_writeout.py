@@ -89,6 +89,7 @@ class WriteOutHandler(BaseModel):
         if self.config.destination.type.lower() in (
             _SBE.WRITEOUT_DESTINATION_TYPE_FILE,
             _SBE.WRITEOUT_DESTINATION_TYPE_REINVENT,
+            _SBE.WRITEOUT_DESTINATION_DIR,
         ):
             return self.config.destination.resource
         elif (
@@ -254,7 +255,7 @@ class WriteOutHandler(BaseModel):
         self.config.destination.format = _SBE.FORMAT_TXT
         self.config.destination.type = _SBE.WRITEOUT_DESTINATION_DIR
         resource = self._handle_destination_type()
-        writeout_keys = self.config.gmx_state.key.split(",")
+        writeout_keys = map(lambda s: s.strip(), self.config.gmx_state.key.split(","))
         for key in writeout_keys:
             if key == _SGE.FIELD_KEY_TOPOL:
                 self.workflow_data.gmx_state.write_topol(resource)
@@ -266,13 +267,29 @@ class WriteOutHandler(BaseModel):
                 # if we have multiple trajectories, write them out sequentially, with index attached
                 if len(self.workflow_data.gmx_state.trajectories.keys()) > 1:
                     for k, v in self.workflow_data.gmx_state.trajectories.items():
-                        file_name = v.get_file_name() + "_" + str(k)
+                        parts = v.get_file_name().split(".")
+                        file_name = parts[0] + "_" + str(k) + "." + parts[1]
                         self.workflow_data.gmx_state.write_trajectory(
                             resource, file=file_name, index=k
                         )
 
                 else:
                     self.workflow_data.gmx_state.write_trajectory(resource)
+            elif key == _SGE.FIELD_KEY_STRUCTURE:
+                if len(self.workflow_data.gmx_state.structures.keys()) > 1:
+                    for k, v in self.workflow_data.gmx_state.structures.items():
+                        parts = v.get_file_name().split(".")
+                        file_name = parts[0] + "_" + str(k) + "." + parts[1]
+                        self.workflow_data.gmx_state.write_structure(
+                            resource, file=file_name, index=k
+                        )
+
+                else:
+                    self.workflow_data.gmx_state.write_structure(resource)
+            else:
+                raise ValueError(
+                    f"Gromacs file of type {key} is not supported for writeout"
+                )
 
     def write(self):
         if (
@@ -286,7 +303,7 @@ class WriteOutHandler(BaseModel):
             self._write_compounds()
         elif self.config.generic is not None:
             self._write_generic_data()
-        elif self.config.gromacs_state is not None:
+        elif self.config.gmx_state is not None:
             self._write_gromacs_data()
         else:
             raise ValueError("Either compounds or generic data has to be specified.")

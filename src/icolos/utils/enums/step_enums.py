@@ -201,6 +201,8 @@ class StepBaseEnum(str, Enum):
     WRITEOUT_GENERIC = "generic"
     WRITEOUT_GENERIC_KEY = "key"
 
+    WRITEOUT_GMX = "gmx_state"
+
     WRITEOUT_DESTINATION = "destination"
     WRITEOUT_DESTINATION_RESOURCE = "resource"
     WRITEOUT_DESTINATION_TYPE = "type"

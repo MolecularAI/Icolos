@@ -320,7 +320,9 @@ class GromacsState(BaseModel):
             data = GenericData(file_name=file, file_data=data, file_id=index)
             self.trajectories[index] = data
 
-    def write_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
+    def write_trajectory(
+        self, path: str, file: str = _SGE.STD_XTC, index: int = 0
+    ):
         traj = self.trajectories[index]
 
         path = os.path.join(path, file)

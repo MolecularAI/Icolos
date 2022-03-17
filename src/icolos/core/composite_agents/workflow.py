@@ -11,9 +11,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.utils.general.icolos_exceptions import get_exception_message
 
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
-from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 
-_WE = WorkflowEnum()
 _LE = LoggingConfigEnum()
 _SBE = StepBaseEnum
 
