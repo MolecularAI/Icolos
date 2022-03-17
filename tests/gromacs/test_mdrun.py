@@ -2,7 +2,7 @@ from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.utils.general.files_paths import attach_root_path
@@ -71,13 +71,13 @@ class Test_MDrun(unittest.TestCase):
         }
 
         step_mdrun = StepGMXMDrun(**step_conf)
-        topol = GromacsTopol()
+        topol = GromacsState()
         topol.tprs = [
             GenericData(file_name=_SGE.STD_TPR, file_data=self.tpr, argument=True)
         ]
         step_mdrun = StepGMXMDrun(**step_conf)
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = topol
+        wf.workflow_data.gmx_state = topol
 
         step_mdrun.set_workflow_object(wf)
         step_mdrun.execute()

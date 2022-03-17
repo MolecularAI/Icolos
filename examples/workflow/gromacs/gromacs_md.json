@@ -402,13 +402,12 @@
                 },
                 "writeout":[
                     {
-                        "generic": {
+                        "gromacs_state": {
                             "key": "xtc"
                         },
                         "destination": {
-                            "resource": "{output_dir}/md_0_1_trjconv.xtc",
-                            "type": "file",
-                            "format": "TXT"
+                            "resource": "{output_dir}"
+                            
                         }
                     }
                 ]

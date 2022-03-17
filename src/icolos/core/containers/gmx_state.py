@@ -22,7 +22,7 @@ class AtomType(BaseModel):
     mass: float
 
 
-class GromacsTopol(BaseModel):
+class GromacsState(BaseModel):
     class Config:
         arbitrary_types_allowed: True
 

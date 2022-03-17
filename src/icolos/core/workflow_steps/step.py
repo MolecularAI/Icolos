@@ -189,10 +189,11 @@ class StepBase(BaseModel):
         return [deepcopy(comp) for comp in self.data.compounds]
 
     def process_write_out(self):
-        # TODO: process generic data write-out
         for writeout in self.writeout:
             writeout_handler = WriteOutHandler(config=writeout)
             writeout_handler.set_data(self.data)
+            # attach workflow data at this point
+            writeout_handler.set_data(self.get_workflow_object().workflow_data)
             writeout_handler.write()
 
     def get_compound_stats(self) -> Tuple[int, int, int]:

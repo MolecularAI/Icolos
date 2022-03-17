@@ -1,5 +1,5 @@
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.workflow_steps.gromacs.mmpbsa import StepGMXmmpbsa
 from icolos.core.containers.generic import GenericData
 import unittest
@@ -40,7 +40,7 @@ class Test_MMPBSA(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.MMPBSA_LIG_POSRE, "rb") as f:
             self.lig_posre = f.read()
 
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         top_path = os.path.dirname(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
         top_file = PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP.split("/")[-1]
         self.topol.parse(top_path, top_file)
@@ -189,7 +189,7 @@ class Test_MMPBSA(unittest.TestCase):
         topol.tprs[1] = GenericData(_SGE.STD_TPR, self.tpr_file)
         topol.tprs[2] = GenericData(_SGE.STD_TPR, self.tpr_file)
         topol.tprs[3] = GenericData(_SGE.STD_TPR, self.tpr_file)
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
 
         step_mmpbsa = StepGMXmmpbsa(**step_conf)
         step_mmpbsa.set_workflow_object(wf)

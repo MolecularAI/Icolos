@@ -1,6 +1,6 @@
 import tempfile
 from typing import List
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
@@ -23,7 +23,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
     Launch gmx mdrun
     """
 
-    topol: GromacsTopol = None
+    topol: GromacsState = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -96,7 +96,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
                 indices.append(element.data[0])
         return paths, indices
 
-    def run_single_tpr(self, tmp_dir: str, topol: GromacsTopol):
+    def run_single_tpr(self, tmp_dir: str, topol: GromacsState):
         """
         Normal gmx mdrun call, if multiple structures are loaded into the topology, run them in parallel according to the parallelizer settings
         """
@@ -126,7 +126,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
                 self.topol.set_structure(path, index=index)
             self.topol.set_trajectory(path, index=index)
 
-    def run_multidir_sim(self, tmp_dir: str, topol: GromacsTopol):
+    def run_multidir_sim(self, tmp_dir: str, topol: GromacsState):
         """
         Runs a multidir simulation, allowing for replex simulations.  Several conditions are required for this running mode
         1) the previous step in the workflow should have been an iterator to produce n tpr files.  This must have been run with single_dir mode ON and remove_temprorary_files OFF, so we can extract files from those workflows' tmpdirs

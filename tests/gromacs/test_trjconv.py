@@ -2,7 +2,7 @@ from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.utils.general.files_paths import attach_root_path
@@ -32,7 +32,7 @@ class Test_Trjconv(unittest.TestCase):
         ) as f:
             struct = f.readlines()
 
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.tprs = [GenericData(_SGE.STD_TPR, file_data=tpr)]
         self.topol.trajectories = [GenericData(_SGE.STD_XTC, file_data=xtc)]
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, struct)]
@@ -52,7 +52,7 @@ class Test_Trjconv(unittest.TestCase):
 
         step_trjconv = StepGMXTrjconv(**step_conf)
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
         step_trjconv.set_workflow_object(wf)
         step_trjconv.execute()
         out_path = os.path.join(self._test_dir, "traj.xtc")

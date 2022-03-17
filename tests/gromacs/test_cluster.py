@@ -1,5 +1,5 @@
 from icolos.core.containers.generic import GenericData
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.workflow_steps.gromacs.cluster import StepGMXCluster
 import unittest
 import os
@@ -29,7 +29,7 @@ class Test_Cluster(unittest.TestCase):
         ) as f:
             struct = f.readlines()
 
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
         self.topol.top_lines = topol
         self.topol.set_tpr(path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR)
@@ -59,7 +59,7 @@ class Test_Cluster(unittest.TestCase):
 
         step_cluster = StepGMXCluster(**step_conf)
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
         step_cluster.set_workflow_object(wf)
 
         step_cluster.execute()

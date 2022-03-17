@@ -1,4 +1,4 @@
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
@@ -19,7 +19,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    topol: GromacsTopol = None
+    topol: GromacsState = None
 
     def __init__(self, **data):
         super().__init__(**data)

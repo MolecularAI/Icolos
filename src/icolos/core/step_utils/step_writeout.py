@@ -10,37 +10,30 @@ from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
 from pathlib import Path
 
+# from icolos.core.composite_agents.workflow import WorkflowData
+
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.step_utils.input_preparator import StepData
 from icolos.core.step_utils.run_variables_resolver import RunVariablesResolver
 from icolos.loggers.steplogger import StepLogger
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
-from icolos.utils.enums.step_enums import StepBaseEnum
+from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.write_out_enums import WriteOutEnum
 
 _WE = WriteOutEnum()
 _LE = LoggingConfigEnum()
 _SBE = StepBaseEnum
+_SGE = StepGromacsEnum()
 
 
 class StepWriteoutCompoundAggregationParameters(BaseModel):
     mode: _SBE = _SBE.WRITEOUT_COMP_AGGREGATION_MODE_ALL
-    #     Union[
-    #     _SBE.WRITEOUT_COMP_AGGREGATION_MODE_ALL,
-    #     _SBE.WRITEOUT_COMP_AGGREGATION_MODE_BESTPERCOMPOUND,
-    #     _SBE.WRITEOUT_COMP_AGGREGATION_MODE_BESTPERENUMERATION,
-    # ] = _SBE.WRITEOUT_COMP_AGGREGATION_MODE_ALL
     highest_is_best: bool = True
     key: str = None
 
 
 class StepWriteoutCompoundParameters(BaseModel):
     category: _SBE
-    #     Union[
-    #     _SBE.WRITEOUT_COMP_CATEGORY_CONFORMERS,
-    #     _SBE.WRITEOUT_COMP_CATEGORY_ENUMERATIONS,
-    #     _SBE.WRITEOUT_COMP_CATEGORY_EXTRADATA,
-    # ]
     aggregation: StepWriteoutCompoundAggregationParameters = (
         StepWriteoutCompoundAggregationParameters()
     )
@@ -52,10 +45,13 @@ class StepWriteoutGenericParameters(BaseModel):
     key: str
 
 
+class StepWriteoutGromacsParameters(BaseModel):
+    key: str
+
+
 class StepWriteoutDestinationParameters(BaseModel):
     resource: str = None
     type: _SBE = _SBE.WRITEOUT_DESTINATION_TYPE_FILE
-
     format: _SBE = _SBE.FORMAT_TXT
     merge: bool = True
     mode: _SBE = _SBE.WRITEOUT_DESTINATION_BASE_NAME
@@ -64,6 +60,7 @@ class StepWriteoutDestinationParameters(BaseModel):
 class StepWriteoutParameters(BaseModel):
     compounds: StepWriteoutCompoundParameters = None
     generic: StepWriteoutGenericParameters = None
+    gmx_state: StepWriteoutGromacsParameters = None
     destination: StepWriteoutDestinationParameters = None
 
 
@@ -71,6 +68,7 @@ class WriteOutHandler(BaseModel):
 
     config: StepWriteoutParameters
     data: StepData = None
+    workflow_data: BaseModel = None
 
     class Config:
         underscore_attrs_are_private = True
@@ -221,7 +219,7 @@ class WriteOutHandler(BaseModel):
             raise ValueError(f"{self.config.compounds.category} not supported.")
 
     def _write_generic_data(self):
-        # type and format do not apply here, simply overwrite
+        # type and format do not apply here, simply overwrite defaults
         self.config.destination.type = _SBE.WRITEOUT_DESTINATION_TYPE_FILE
         self.config.destination.format = _SBE.FORMAT_TXT
         resource = self._handle_destination_type()
@@ -248,14 +246,48 @@ class WriteOutHandler(BaseModel):
                 assert os.path.isdir(resource)
                 file.write(resource, join=True, final_writeout=True)
 
+    def _write_gromacs_data(self):
+        """
+        Handle writeout from gromacs topology state
+        """
+        self.config.destination.type = _SBE.WRITEOUT_DESTINATION_TYPE_FILE
+        self.config.destination.format = _SBE.FORMAT_TXT
+        self.config.destination.type = _SBE.WRITEOUT_DESTINATION_DIR
+        resource = self._handle_destination_type()
+        writeout_keys = self.config.gmx_state.key.split(",")
+        for key in writeout_keys:
+            if key == _SGE.FIELD_KEY_TOPOL:
+                self.workflow_data.gmx_state.write_topol(resource)
+            elif key == _SGE.FIELD_KEY_NDX:
+                self.workflow_data.gmx_state.write_ndx(resource)
+            elif key == _SGE.FIELD_KEY_TPR:
+                self.workflow_data.gmx_state.write_tpr(resource)
+            elif key == _SGE.FIELD_KEY_XTC:
+                # if we have multiple trajectories, write them out sequentially, with index attached
+                if len(self.workflow_data.gmx_state.trajectories.keys()) > 1:
+                    for k, v in self.workflow_data.gmx_state.trajectories.items():
+                        file_name = v.get_file_name() + "_" + str(k)
+                        self.workflow_data.gmx_state.write_trajectory(
+                            resource, file=file_name, index=k
+                        )
+
+                else:
+                    self.workflow_data.gmx_state.write_trajectory(resource)
+
     def write(self):
-        if self.config.compounds is not None and self.config.generic is not None:
-            raise ValueError("Only specify either compounds or generic data, not both.")
+        if (
+            self.config.compounds is not None
+            and self.config.generic is not None
+            and self.config.gromacs_state is not None
+        ):
+            raise ValueError("Only specify one type of writeout per block!")
 
         if self.config.compounds is not None:
             self._write_compounds()
         elif self.config.generic is not None:
             self._write_generic_data()
+        elif self.config.gromacs_state is not None:
+            self._write_gromacs_data()
         else:
             raise ValueError("Either compounds or generic data has to be specified.")
 
