@@ -138,9 +138,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             )
 
         # extract the tprs from the topol object, write to separate tmpdirs
-        work_dirs = [
-            tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(topol.structures))
-        ]
+        work_dirs = [tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(topol.tprs))]
         self._logger.log(
             f"Initiating gmx multidir run in directories {', '.join(work_dirs)}",
             _LE.DEBUG,

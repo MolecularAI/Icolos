@@ -20,14 +20,23 @@ _SKE = StepKallistoEnum()
 _KE = KallistoEnum()
 _OBE = OpenBabelEnum()
 
-_all_kallisto_commands = [_KE.ALP, _KE.BONDS, _KE.CNS,
-                          _KE.EEQ, _KE.EXS, _KE.LIG,
-                          _KE.PROX, _KE.RMS, _KE.SORT,
-                          _KE.STM, _KE.VDW]
+_all_kallisto_commands = [
+    _KE.ALP,
+    _KE.BONDS,
+    _KE.CNS,
+    _KE.EEQ,
+    _KE.EXS,
+    _KE.LIG,
+    _KE.PROX,
+    _KE.RMS,
+    _KE.SORT,
+    _KE.STM,
+    _KE.VDW,
+]
 
 
 class KallistoAdditional(BaseModel):
-    features: List[str] = [_KE.ALP, _KE.BONDS]        # list of features to be obtained
+    features: List[str] = [_KE.ALP, _KE.BONDS]  # list of features to be obtained
 
 
 class StepKallisto(StepCalculationBase, BaseModel):
@@ -68,7 +77,9 @@ class StepKallisto(StepCalculationBase, BaseModel):
             command=_OBE.OBABEL, arguments=arguments, check=False
         )
 
-        self._logger.log(f"Translated input molecule to file {tmp_xyz_path}.", _LE.DEBUG)
+        self._logger.log(
+            f"Translated input molecule to file {tmp_xyz_path}.", _LE.DEBUG
+        )
         return tmp_xyz_path
 
     def _prepare_batch(self, batch) -> Tuple:
@@ -79,16 +90,14 @@ class StepKallisto(StepCalculationBase, BaseModel):
         for next_subtask_list in batch:
             tmp_dir = mkdtemp()
             tmp_dirs.append(tmp_dir)
-            for (
-                subtask
-            ) in (
-                next_subtask_list
-            ):
+            for subtask in next_subtask_list:
                 _, tmp_out_path = gen_tmp_file(suffix=".out", dir=tmp_dir)
                 output_files.append(tmp_out_path)
                 conformer = subtask.data
                 conformers.append(conformer)
-                input_xyz_file = self._prepare_temp_input(tmp_dir, conformer.get_molecule())
+                input_xyz_file = self._prepare_temp_input(
+                    tmp_dir, conformer.get_molecule()
+                )
                 input_files.append(input_xyz_file)
         return tmp_dirs, input_files, output_files, conformers
 
@@ -104,8 +113,10 @@ class StepKallisto(StepCalculationBase, BaseModel):
         # flatten the dictionary into a list for command-line execution
         for key in parameters.keys():
             if key in _all_kallisto_commands:
-                self._logger.log(f"Use the additional block to specify Kallisto commands, parameter {key} ignored.",
-                                 _LE.WARNING)
+                self._logger.log(
+                    f"Use the additional block to specify Kallisto commands, parameter {key} ignored.",
+                    _LE.WARNING,
+                )
                 continue
             settings.append(key)
             settings.append(parameters[key])
@@ -119,7 +130,10 @@ class StepKallisto(StepCalculationBase, BaseModel):
         arguments = []
         for feature in self.kallisto_additional.features:
             if feature not in _all_kallisto_commands:
-                self._logger.log(f"Kallisto feature {feature} not supported, will be ignored.", _LE.WARNING)
+                self._logger.log(
+                    f"Kallisto feature {feature} not supported, will be ignored.",
+                    _LE.WARNING,
+                )
                 continue
             arguments.append(feature)
             arguments.append(input_file)
@@ -130,15 +144,19 @@ class StepKallisto(StepCalculationBase, BaseModel):
         )
 
         # Kallisto prints the result to stdout -> store it in a temporary file
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             f.writelines(result.stdout)
 
         os.chdir(work_dir)
 
-    def _parse_kallisto_result(self, output_files: List[str], conformers: List[Conformer]) -> List:
+    def _parse_kallisto_result(
+        self, output_files: List[str], conformers: List[Conformer]
+    ) -> List:
         def _split_list(inp: List, chunk_size: int) -> List[List[str]]:
             assert len(inp) % chunk_size == 0
-            return [inp[idx: idx + chunk_size] for idx in range(0, len(inp), chunk_size)]
+            return [
+                inp[idx : idx + chunk_size] for idx in range(0, len(inp), chunk_size)
+            ]
 
         results = []
         number_features = len(self.kallisto_additional.features)
@@ -147,22 +165,24 @@ class StepKallisto(StepCalculationBase, BaseModel):
             number_atoms = conformer.get_molecule().GetNumAtoms()
 
             # load features from output file
-            with open(output_file, 'r') as f:
+            with open(output_file, "r") as f:
                 features_lines = f.readlines()
             features_lines = [line.lstrip().rstrip() for line in features_lines]
 
             # check, that all features could be calculated for all atoms
             expected_lines = number_features * number_atoms
             if expected_lines != len(features_lines):
-                self._logger.log(f"Kallisto result for conformer {conformer.get_index_string()} incomplete ({len(features_lines)} lines instead of the expected {expected_lines}), check {output_file} - proceeding.",
-                                 _LE.WARNING)
+                self._logger.log(
+                    f"Kallisto result for conformer {conformer.get_index_string()} incomplete ({len(features_lines)} lines instead of the expected {expected_lines}), check {output_file} - proceeding.",
+                    _LE.WARNING,
+                )
                 results.append(_SKE.FAILURE)
                 continue
 
             # group the features and add them to the conformers
             sublists = _split_list(features_lines, number_atoms)
             for feature, sublist in zip(self.kallisto_additional.features, sublists):
-                conformer.get_molecule().SetProp(feature, '|'.join(sublist))
+                conformer.get_molecule().SetProp(feature, "|".join(sublist))
             results.append(_SKE.SUCCESS)
         return results
 
@@ -171,7 +191,9 @@ class StepKallisto(StepCalculationBase, BaseModel):
         n = 1
         while self._subtask_container.done() is False:
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
-            tmp_dirs, input_files, output_files, conformers = self._prepare_batch(next_batch)
+            tmp_dirs, input_files, output_files, conformers = self._prepare_batch(
+                next_batch
+            )
 
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
@@ -179,9 +201,7 @@ class StepKallisto(StepCalculationBase, BaseModel):
             self._logger.log(f"Executing Kallisto for batch {n}.", _LE.DEBUG)
 
             kallisto_parallelizer.execute_parallel(
-                tmp_dir=tmp_dirs,
-                input_file=input_files,
-                output_file=output_files
+                tmp_dir=tmp_dirs, input_file=input_files, output_file=output_files
             )
 
             results = self._parse_kallisto_result(output_files, conformers)

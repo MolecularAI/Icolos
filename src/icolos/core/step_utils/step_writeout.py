@@ -82,6 +82,9 @@ class WriteOutHandler(BaseModel):
     def set_data(self, data: StepData):
         self.data = deepcopy(data)
 
+    def set_workflow_data(self, data):
+        self.workflow_data = data
+
     def get_data(self) -> StepData:
         return self.data
 
@@ -227,7 +230,8 @@ class WriteOutHandler(BaseModel):
         self._make_folder(resource)
         if self.config.destination.mode == _SBE.WRITEOUT_DESTINATION_DIR:
             # The output path should be a directory only
-            assert os.path.isdir(resource), f"The path: {resource} is not a directory!"
+            assert not os.path.isfile(resource)
+            os.makedirs(resource, exist_ok=True)
         # write out all files from that step with the required extension
         for idx, file in enumerate(
             self.data.generic.get_files_by_extension(self.config.generic.key)

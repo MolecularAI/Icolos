@@ -49,5 +49,6 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
             for line in result.stdout.split("\n"):
                 self._logger_blank.log(line, _LE.DEBUG)
             topol.set_trajectory(path=tmp_dir, file=fitted_traj, index=i)
+            topol.set_structure(path=tmp_dir, index=i)
         self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)

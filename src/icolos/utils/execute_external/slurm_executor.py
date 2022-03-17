@@ -8,7 +8,6 @@ import subprocess
 from typing import List
 import time
 from tempfile import mkstemp
-from distutils.spawn import find_executable
 
 _SE = SlurmEnum()
 logger = StepLogger()
@@ -24,6 +23,7 @@ class SlurmExecutor(ExecutorBase):
         partition: str,
         time: str,
         mem: str,
+        tasks: str,
         modules: List,
         other_args: dict,
         gres: str,
@@ -37,6 +37,7 @@ class SlurmExecutor(ExecutorBase):
         self.partition = partition
         self.time = time
         self.mem = mem
+        self.tasks = tasks
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
@@ -212,6 +213,8 @@ class SlurmExecutor(ExecutorBase):
             header.append(f"#SBATCH --mem={self.mem}")
         if self.cores is not None:
             header.append(f"#SBATCH -c{self.cores}")
+        if self.tasks is not None:
+            header.append(f"#SBATCH --tasks={self.tasks}")
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():

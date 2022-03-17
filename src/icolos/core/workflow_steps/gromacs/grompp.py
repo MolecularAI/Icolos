@@ -137,7 +137,6 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
                 f"Completed execution for {self.step_id} successfully for replica {i}",
                 _LE.INFO,
             )
-
             topol.set_tpr(tmp_dir, index=i)
             # topol.set_structure(tmp_dir, index=i)
         self._parse_output(tmp_dir)

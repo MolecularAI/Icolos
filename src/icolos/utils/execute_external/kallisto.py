@@ -1,5 +1,4 @@
-from icolos.utils.enums.program_parameters import (
-    KallistoEnum)
+from icolos.utils.enums.program_parameters import KallistoEnum
 from icolos.utils.execute_external.execute import ExecutorBase
 
 EE = KallistoEnum()
@@ -32,9 +31,7 @@ class KallistoExecutor(ExecutorBase):
 
     def is_available(self):
         try:
-            result = self.execute(
-                command=EE.KALLISTO, arguments=[EE.HELP], check=True
-            )
+            result = self.execute(command=EE.KALLISTO, arguments=[EE.HELP], check=True)
 
             if EE.KALLISTO in result.stdout:
                 return True

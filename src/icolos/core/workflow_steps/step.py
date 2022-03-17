@@ -61,6 +61,7 @@ class StepExecutionResourceParameters(BaseModel):
     partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
+    tasks: str = None
     mem: str = None
     cores: int = None
     modules: List = []
@@ -193,7 +194,7 @@ class StepBase(BaseModel):
             writeout_handler = WriteOutHandler(config=writeout)
             writeout_handler.set_data(self.data)
             # attach workflow data at this point
-            writeout_handler.set_data(self.get_workflow_object().workflow_data)
+            writeout_handler.set_workflow_data(self.get_workflow_object().workflow_data)
             writeout_handler.write()
 
     def get_compound_stats(self) -> Tuple[int, int, int]:
@@ -237,6 +238,7 @@ class StepBase(BaseModel):
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
+                tasks = self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
