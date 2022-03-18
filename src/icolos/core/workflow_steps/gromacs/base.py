@@ -133,8 +133,9 @@ class StepGromacsBase(StepBase, BaseModel):
 
     def _generate_index_groups(self, tmp_dir: str):
         # dump the first structure file to the tmpdir
-        self.get_topol().structures[0].write(tmp_dir)
-        args = ["-f", _SGE.STD_STRUCTURE]
+        structure = self.get_topol().structures[0]
+        structure.write(tmp_dir)
+        args = ["-f", structure.get_file_name()]
         ndx_list = [f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_NDX)]
         if len(ndx_list) == 1:
             args.extend(["-n", ndx_list[0]])
@@ -202,11 +203,3 @@ class StepGromacsBase(StepBase, BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
         self.get_topol().set_ndx(tmp_dir)
-
-    def get_topol(self) -> GromacsState:
-        if not self.data.generic.get_file_names_by_extension("pkl"):
-            return self.get_workflow_object().workflow_data.gmx_state
-        else:
-            return self.load_topol(
-                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
-            )

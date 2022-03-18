@@ -413,11 +413,11 @@
 				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "dat"
+						"gmx_state": {
+							"key": "props"
 						},
 						"destination": {
-							"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
+							"resource": "{output_dir}"
 						}
 					}
 				]

@@ -1,3 +1,4 @@
+import numpy as np
 import os
 from turtle import st
 from typing import AnyStr, Dict, List
@@ -39,6 +40,7 @@ class GromacsState(BaseModel):
     structures: Dict = {}
     tprs: Dict = {}
     trajectories: Dict = {}
+    log: Dict = {}
     ndx: List = []
     # store computed properties on the topology
     # {property: [val1, val2, val3]}
@@ -287,6 +289,12 @@ class GromacsState(BaseModel):
         struct = GenericData(file_name=file, file_data=lines)
         self.structures[index] = struct
 
+    def set_log(self, path: str, file: str = _SGE.STD_LOG, index: int = 0):
+        with open(os.path.join(path, file), "r") as f:
+            lines = f.readlines()
+        log = GenericData(file_name=file, file_data=lines)
+        self.log[index] = log
+
     def set_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         with open(os.path.join(path, file), "rb") as f:
             data = f.read()
@@ -296,6 +304,10 @@ class GromacsState(BaseModel):
     def write_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         tpr = self.tprs[index]
         tpr.write(os.path.join(path, file), join=False)
+
+    def write_log(self, path: str, file: str = _SGE.STD_LOG, index: int = 0):
+        log = self.log[index]
+        log.write(os.path.join(path, file), join=False)
 
     def set_ndx(self, path: str, file: str = _SGE.STD_INDEX):
         with open(os.path.join(path, file), "r") as f:
@@ -335,6 +347,30 @@ class GromacsState(BaseModel):
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
         data = self.structures[index].get_data() + lines
         self.structures[index].set_data(data)
+
+    def write_props(self, path: str):
+        """
+        writes summary of properties for all trajectories to a file
+        """
+        prop_string = [f"{key}: {value}" for key, value in self.properties.items()]
+        avg_prop_string = [
+            f"{key}: {np.mean(value)}" for key, value in self.properties.items()
+        ]
+
+        output_string = f"""
+ICOLOS PROPERTY SUMMARY
+### Computed properties properties: {self.properties.keys()}
+
+### Properties
+{prop_string}
+
+
+### Average Properties
+{avg_prop_string} 
+        """
+
+        with open(os.path.join(path, "ICOLOS_PROPS.dat"), "w") as f:
+            f.write(output_string)
 
     def __str__(self) -> str:
         return f"Gromacs Topology object: System: {self.system} | Molecules: {[m for m in self.molecules]} | FF: {self.forcefield} | itp files: {[f for f in self.itps.keys()]} | posre files {[f for f in self.posre.keys()]}"

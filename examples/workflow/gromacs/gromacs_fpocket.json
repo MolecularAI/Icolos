@@ -358,13 +358,12 @@
 				},
 				"writeout": [
 					{
-						"generic": {
+						"gmx_satate": {
 							"key": "xtc"
 						},
 						"destination": {
-							"resource": "{output_dir}/md_0_1.xtc",
-							"type": "file",
-							"format": "txt"
+							"resource": "{output_dir}"
+							
 						}
 					},
 					{

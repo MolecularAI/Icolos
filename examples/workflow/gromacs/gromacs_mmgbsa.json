@@ -183,14 +183,6 @@
 						"parameters": {}
 					},
 					"additional": {}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "06_grompp_eminim",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{
@@ -233,14 +225,6 @@
 						"parameters": {}
 					},
 					"additional": {}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "08_nvt_grompp",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{
@@ -283,14 +267,6 @@
 						"parameters": {}
 					},
 					"additional": {}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "10_npt_grompp",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{

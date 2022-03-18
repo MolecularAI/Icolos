@@ -737,6 +737,7 @@ class StepGromacsEnum:
     FIELD_KEY_LOG = "log"
     FIELD_KEY_EDR = "edr"
     FIELD_KEY_NDX = "ndx"
+    PROPS = "props"
     FILE_SIZE_THRESHOLD = 2000000000
 
     MAKE_NDX_COMMAND = "make_ndx_command"
@@ -756,6 +757,7 @@ class StepGromacsEnum:
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
     STD_TPR = "topol.tpr"
+    STD_LOG = "md.log"
     STD_XTC = "traj.xtc"
     STD_TRR = "traj.trr"
     STD_STRUCTURE = "confout.gro"

@@ -259,12 +259,17 @@ class WriteOutHandler(BaseModel):
         self.config.destination.format = _SBE.FORMAT_TXT
         self.config.destination.type = _SBE.WRITEOUT_DESTINATION_DIR
         resource = self._handle_destination_type()
+        os.makedirs(resource, exist_ok=True)
         writeout_keys = map(lambda s: s.strip(), self.config.gmx_state.key.split(","))
         for key in writeout_keys:
             if key == _SGE.FIELD_KEY_TOPOL:
                 self.workflow_data.gmx_state.write_topol(resource)
             elif key == _SGE.FIELD_KEY_NDX:
                 self.workflow_data.gmx_state.write_ndx(resource)
+            elif key == _SGE.PROPS:
+                self.workflow_data.gmx_state.write_props(resource)
+            elif key == _SGE.FIELD_KEY_LOG:
+                self.workflow_data.gmx_state.write_log(resource)
             elif key == _SGE.FIELD_KEY_TPR:
                 self.workflow_data.gmx_state.write_tpr(resource)
             elif key == _SGE.FIELD_KEY_XTC:

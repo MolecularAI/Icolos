@@ -127,14 +127,7 @@
                     "additional": {
                         "pipe_input": "SOL"
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "04_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
 
             },{
                 "step_id": "06_grompp_eminim",
@@ -176,14 +169,7 @@
                     },
                     "additional": {
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "06_grompp_eminim",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
             },{
                 "step_id": "08_nvt_grompp",
                 "type": "grompp",
@@ -223,14 +209,7 @@
                     },
                     "additional": {
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "08_nvt_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
             },{
                 "step_id": "10_npt_grompp",
                 "type": "grompp",
@@ -271,15 +250,7 @@
                     "additional": {
                         "make_ndx_command": "auto"
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "10_npt_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
-
+                }
             },{
                 "step_id": "12_prod_md_grompp",
                 "type": "grompp",
@@ -324,23 +295,13 @@
                         }
                     }
                 },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "12_prod_md_grompp",
-                            "extension": "tpr"
-                        }
-                    ]
-                },
                 "writeout": [
                     {
-                        "generic": {
-                            "key": "xtc"
+                        "gmx_state": {
+                            "key": "xtc, gro, tpr, log"
                         },
                         "destination": {
-                            "resource": "{output_dir}/md_0_1.xtc",
-                            "type": "file",
-                            "format": "TXT"
+                            "resource": "{output_dir}"
                         }
                     },
                     {
@@ -348,31 +309,10 @@
                             "key": "log"
                         },
                         "destination": {
-                            "resource": "{output_dir}/md_0_1.log",
-                            "type": "file",
-                            "format": "TXT"
-                        }
-                    },
-                    {
-                        "generic": {
-                            "key": "gro"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.gro",
-                            "type": "file",
-                            "format": "TXT"
-                        }
-                    },
-                    {
-                        "generic": {
-                            "key": "tpr"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.tpr",
-                            "type": "file",
-                            "format": "TXT"
+                            "resource": "{output_dir}/md_0_1.log"
                         }
                     }
+                    
                 ]
             },{
                 "step_id": "14_trjconv",

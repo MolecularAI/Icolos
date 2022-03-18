@@ -11,6 +11,7 @@ from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
 from copy import deepcopy
 import os
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.containers.perturbation_map import PerturbationMap
 
 
@@ -238,7 +239,7 @@ class StepBase(BaseModel):
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
-                tasks = self.execution.resources.tasks,
+                tasks=self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
@@ -521,3 +522,11 @@ class StepBase(BaseModel):
             if key in self.settings.additional.keys()
             else default
         )
+
+    def get_topol(self) -> GromacsState:
+        if not self.data.generic.get_file_names_by_extension("pkl"):
+            return self.get_workflow_object().workflow_data.gmx_state
+        else:
+            return self.load_topol(
+                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
+            )

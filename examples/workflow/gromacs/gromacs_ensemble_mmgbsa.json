@@ -136,14 +136,6 @@
 					"additional": {
 						"pipe_input": "SOL"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "04_grompp",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{
@@ -194,14 +186,6 @@
 								"parameters": {}
 							},
 							"additional": {}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "06_grompp_eminim",
-									"extension": "tpr"
-								}
-							]
 						}
 					},
 					{
@@ -251,14 +235,6 @@
 								"parameters": {}
 							},
 							"additional": {}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "08_nvt_grompp",
-									"extension": "tpr"
-								}
-							]
 						}
 					},
 					{
@@ -309,14 +285,6 @@
 								"parameters": {}
 							},
 							"additional": {}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "10_npt_grompp",
-									"extension": "tpr"
-								}
-							]
 						}
 					},
 					{
@@ -372,14 +340,6 @@
 									"-pme": "gpu"
 								}
 							}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "12_prod_md_grompp",
-									"extension": "tpr"
-								}
-							]
 						}
 					},
 					{
@@ -401,35 +361,7 @@
 							"additional": {
 								"pipe_input": "Protein_Other System"
 							}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "13_prod_mdrun",
-									"extension": "xtc"
-								},
-								{
-									"source": "12_prod_md_grompp",
-									"extension": "tpr"
-								},
-								{
-									"source": "12_prod_md_grompp",
-									"extension": "ndx"
-								}
-							]
-						},
-						"writeout": [
-							{
-								"generic": {
-									"key": "xtc"
-								},
-								"destination": {
-									"resource": "{output_dir}/md_0_1_trjconv.xtc",
-									"type": "file",
-									"format": "TXT"
-								}
-							}
-						]
+						}
 					},
 					{
 						"step_id": "14b_trjconv",
@@ -448,22 +380,6 @@
 							"additional": {
 								"pipe_input": "Protein_Other System"
 							}
-						},
-						"input": {
-							"generic": [
-								{
-									"source": "14_trjconv",
-									"extension": "xtc"
-								},
-								{
-									"source": "12_prod_md_grompp",
-									"extension": "tpr"
-								},
-								{
-									"source": "12_prod_md_grompp",
-									"extension": "ndx"
-								}
-							]
 						}
 					},
 					{
@@ -481,26 +397,13 @@
 								"forcefield": "<fill_path>/amber14sb.ff"
 							}
 						},
-						"input": {
-							"generic": [
-								{
-									"source": "14b_trjconv",
-									"extension": "xtc"
-								},
-								{
-									"source": "13_prod_mdrun",
-									"extension": "tpr"
-								}
-								
-							]
-						},
 						"writeout": [
 							{
-								"generic": {
+								"gmx_state": {
 									"key": "dat"
 								},
 								"destination": {
-									"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
+									"resource": "{output_dir}"
 								}
 							}
 						]
