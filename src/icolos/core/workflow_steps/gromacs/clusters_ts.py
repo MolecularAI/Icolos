@@ -66,7 +66,9 @@ class StepClusterTS(StepGromacsBase, BaseModel):
         """
 
         tmp_dir = self._make_tmpdir()
-        self.data.generic.write_out_all_files(tmp_dir)
+        topol = self.get_topol()
+        self.write_input_files(tmp_dir, topol=topol)
+        # self.data.generic.write_out_all_files(tmp_dir)
         xvg_file = self.data.generic.get_argument_by_extension(ext="xvg")
 
         arguments = self._construct_args(

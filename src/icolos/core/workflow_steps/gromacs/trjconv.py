@@ -28,8 +28,7 @@ class StepGMXTrjconv(StepGromacsBase, BaseModel):
         tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
         topol.write_ndx(tmp_dir)
-        replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
-        for i in range(replicas):
+        for i in range(len(topol.trajectories.keys())):
             topol.write_tpr(tmp_dir, index=i)
             topol.write_trajectory(tmp_dir, index=i)
             fitted_traj = f"traj_{i}.xtc"

@@ -127,7 +127,6 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
                 lines = f.readlines()
             # for now just parse the final energy value
             result = float([l for l in lines if "DELTA TOTAL" in l][0].split()[2])
-            print(result)
             try:
                 self.get_topol().properties[_SGE.MMGBSA_DG].append(result)
             except KeyError:

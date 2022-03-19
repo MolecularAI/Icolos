@@ -303,16 +303,7 @@
                         "destination": {
                             "resource": "{output_dir}"
                         }
-                    },
-                    {
-                        "generic": {
-                            "key": "log"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.log"
-                        }
                     }
-                    
                 ]
             },{
                 "step_id": "14_trjconv",
@@ -328,25 +319,13 @@
                         "pipe_input": "Protein System"
                     }
                 },
-                "input":{
-                    "generic":[
-                        {
-                            "source": "13_prod_mdrun",
-                            "extension": "xtc"
-                        },
-                        {
-                            "source": "13_prod_mdrun",
-                            "extension": "tpr"
-                        }
-                    ]
-                },
                 "writeout":[
                     {
                         "gromacs_state": {
-                            "key": "xtc"
+                            "key": "xtc, gro, top"
                         },
                         "destination": {
-                            "resource": "{output_dir}"
+                            "resource": "{output_dir}/processed"
                             
                         }
                     }
