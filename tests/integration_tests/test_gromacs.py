@@ -1475,7 +1475,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-center"],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
                             "pipe_input": "Protein_Other System",
@@ -1493,7 +1493,6 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
                                 "-fit": "rot+trans",
-                                "-n": "index.ndx",
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
@@ -1519,7 +1518,6 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {_SBE.SETTINGS_ARGUMENTS_FLAGS: []},
                         _SBE.SETTINGS_ADDITIONAL: {
                             "coupling_groups": "Protein Other",
-                            "pipe_input": "Protein Other",
                         },
                     },
                     _SBE.WRITEOUT: [
@@ -1879,7 +1877,6 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-center"],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
                                 "-pbc": "mol",
-                                "-n": "index.ndx",
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
@@ -1905,7 +1902,6 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
                                 "-fit": "rot+trans",
-                                "-n": "index.ndx",
                             }
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
@@ -1931,7 +1927,6 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {_SBE.SETTINGS_ARGUMENTS_FLAGS: []},
                         _SBE.SETTINGS_ADDITIONAL: {
                             "coupling_groups": "Protein Other",
-                            "pipe_input": "Protein Other",
                         },
                     },
                     _SBE.WRITEOUT: [

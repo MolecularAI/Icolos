@@ -29,11 +29,9 @@ class StepClusterTS(StepGromacsBase, BaseModel):
         args = []
         for key, value in self.settings.arguments.parameters.items():
             args.append("".join([key, "=", value]))
-            print(args)
 
         for value in self.settings.arguments.flags:
             args.append(value)
-        print(args)
         for key, value in defaults.items():
             if key not in self.settings.arguments.parameters.keys():
                 args.append("".join([key, "=", value]))
@@ -66,9 +64,7 @@ class StepClusterTS(StepGromacsBase, BaseModel):
         """
 
         tmp_dir = self._make_tmpdir()
-        topol = self.get_topol()
-        self.write_input_files(tmp_dir, topol=topol)
-        # self.data.generic.write_out_all_files(tmp_dir)
+        self.data.generic.write_out_all_files(tmp_dir)
         xvg_file = self.data.generic.get_argument_by_extension(ext="xvg")
 
         arguments = self._construct_args(

@@ -46,7 +46,7 @@ class Test_Cluster(unittest.TestCase):
                 SBE.SETTINGS_ARGUMENTS: {
                     SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                     SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                        "-dt": "1000",
+                        "-dt": "10",
                         "-n": "index.ndx",
                     },
                 },
@@ -67,3 +67,7 @@ class Test_Cluster(unittest.TestCase):
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 7383600)
+        out_path = os.path.join(self._test_dir, "cluster_id.xvg")
+        step_cluster.write_generic_by_extension(self._test_dir, "xvg")
+        stat_inf = os.stat(out_path)
+        self.assertGreater(stat_inf.st_size, 700)

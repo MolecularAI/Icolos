@@ -408,7 +408,7 @@
 					},
 					"additional": {
 						"coupling_groups": "Protein Other",
-						"forcefield": "/<fill_path>/forcefields/amber14sb.ff"
+						"forcefield": "{GMXLIB}/amber14sb.ff"
 					}
 				},
 				"writeout": [

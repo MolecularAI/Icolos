@@ -38,6 +38,7 @@
                     }
                 },
                 "additional": {
+					"charge_method": "gas"
                 }
             },
             "input": {
@@ -321,7 +322,7 @@
                 },
                 "writeout":[
                     {
-                        "gromacs_state": {
+                        "gmx_state": {
                             "key": "xtc, gro, top"
                         },
                         "destination": {

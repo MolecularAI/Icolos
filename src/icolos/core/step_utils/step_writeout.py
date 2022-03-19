@@ -315,7 +315,9 @@ class WriteOutHandler(BaseModel):
         elif self.config.gmx_state is not None:
             self._write_gromacs_data()
         else:
-            raise ValueError("Either compounds or generic data has to be specified.")
+            raise ValueError(
+                "Either compounds, generic or gromacs data has to be specified."
+            )
 
     def _writeout_reinvent(self):
         def _get_conf_by_comp_name(confs: List[Conformer], comp_name: str) -> Conformer:

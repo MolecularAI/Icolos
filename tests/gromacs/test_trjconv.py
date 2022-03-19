@@ -33,9 +33,9 @@ class Test_Trjconv(unittest.TestCase):
             struct = f.readlines()
 
         self.topol = GromacsState()
-        self.topol.tprs = [GenericData(_SGE.STD_TPR, file_data=tpr)]
-        self.topol.trajectories = [GenericData(_SGE.STD_XTC, file_data=xtc)]
-        self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, struct)]
+        self.topol.tprs = {0: GenericData(_SGE.STD_TPR, file_data=tpr)}
+        self.topol.trajectories = {0: GenericData(_SGE.STD_XTC, file_data=xtc)}
+        self.topol.structures = {0: GenericData(_SGE.STD_STRUCTURE, struct)}
 
     def test_trjconv(self):
         step_conf = {
