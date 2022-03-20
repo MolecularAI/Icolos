@@ -117,7 +117,11 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
             index = 0 if init_struct == 1 else i
             # we are branching for the first time, just use this confout.gro as the starting point
             topol.write_structure(tmp_dir, index=index)
-            args = ["-r", _SGE.STD_STRUCTURE] if self.settings.additional["-r"] else []
+            args = (
+                ["-r", _SGE.STD_STRUCTURE]
+                if self.settings.additional[_SGE.RESTRAINTS]
+                else []
+            )
 
             arguments = self._parse_arguments(
                 flag_dict={

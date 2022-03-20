@@ -367,6 +367,35 @@
                         "pipe_input": "Protein System"
                     }
                 }
+            },
+			{
+                "step_id": "17_cluster_ts",
+                "type": "cluster_ts",
+                "execution":{
+                    "prefix_execution": "module load R"
+                },
+                "settings":{
+                    "arguments":{
+                        "flags":[],
+						"parameters": {
+							"lengths": "101",
+							"clustersNumber": "20",
+							"mdEngine": "GROMACS"
+						}
+                    }
+                },
+
+                "writeout":[
+                    {
+                        "generic": {
+                            "key": "png"
+                        },
+                        "destination": {
+                            "resource": "{output_dir}/cluster.png"
+                            
+                        }
+                    }
+                ]
             }
         ]
     }

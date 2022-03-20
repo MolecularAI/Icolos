@@ -783,6 +783,7 @@ class StepGromacsEnum:
     MMGBSA_DG = "MMGBSA_DG"
     GAFF = "gaff"
     OPENFF = "openff"
+    RESTRAINTS = "restraints"
     WATER_POSRE = """
 #ifdef POSRES_WATER
 [ position_restraints ]

@@ -112,7 +112,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -166,7 +166,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -216,7 +216,7 @@
 						}
 					},
 					"additional": {
-						"-r": true,
+						"restraints": true,
 						"make_ndx_command": "auto"
 					}
 				},
@@ -266,7 +266,7 @@
 						}
 					},
 					"additional": {
-						"-r": true,
+						"restraints": true,
 						"make_ndx_command": "auto"
 					}
 				},
@@ -315,7 +315,7 @@
 						}
 					},
 					"additional": {
-						"-r": false,
+						"restraints": false,
 						"fields": {
 							"nsteps": "500"
 						},
