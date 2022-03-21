@@ -137,14 +137,6 @@
 					"additional": {
 						"pipe_input": "SOL"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "04_grompp",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{
@@ -317,14 +309,6 @@
 						}
 					}
 				},
-				"input": {
-					"generic": [
-						{
-							"source": "12_prod_md_grompp",
-							"extension": "tpr"
-						}
-					]
-				},
 				"writeout": [
 					{
 						"gmx_state": {
@@ -384,7 +368,7 @@
 				]
 			},
 			{
-				"step_id": "15_gmx_MMPBSA",
+				"step_id": "16_gmx_MMPBSA",
 				"type": "gmx_mmpbsa",
 				"execution": {
 					"prefix_execution": "module load gmx_MMPBSA/1.4.3-foss-2021a-CUDA-11.3.1"
