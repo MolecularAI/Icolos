@@ -58,10 +58,7 @@ class Test_Cluster(unittest.TestCase):
         }
 
         step_cluster = StepGMXCluster(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_cluster.set_workflow_object(wf)
-
+        step_cluster.data.gmx_state = self.topol
         step_cluster.execute()
         out_path = os.path.join(self._test_dir, "clusters.pdb")
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")

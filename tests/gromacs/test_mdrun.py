@@ -41,11 +41,8 @@ class Test_MDrun(unittest.TestCase):
         }
 
         step_mdrun = StepGMXMDrun(**step_conf)
-        topol = GromacsState()
+        step_mdrun.data.gmx_state = GromacsState()
         step_mdrun = StepGMXMDrun(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = topol
-        step_mdrun.set_workflow_object(wf)
         step_mdrun.data.generic.add_file(
             GenericData(file_name=_SGE.STD_TPR, file_data=self.tpr, argument=True)
         )
@@ -76,10 +73,7 @@ class Test_MDrun(unittest.TestCase):
             0: GenericData(file_name=_SGE.STD_TPR, file_data=self.tpr, argument=True)
         }
         step_mdrun = StepGMXMDrun(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = topol
-
-        step_mdrun.set_workflow_object(wf)
+        step_mdrun.data.gmx_state = topol
         step_mdrun.execute()
 
         out_path = os.path.join(self._test_dir, "confout.gro")
@@ -110,9 +104,7 @@ class Test_MDrun(unittest.TestCase):
         step_mdrun = StepGMXMDrun(**step_conf)
         topol = GromacsState()
         step_mdrun = StepGMXMDrun(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = topol
-        step_mdrun.set_workflow_object(wf)
+        step_mdrun.data.gmx_state = topol
         step_mdrun.data.generic.add_file(
             GenericData(file_name=_SGE.STD_TPR, file_data=self.tpr, argument=True)
         )

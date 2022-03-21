@@ -45,9 +45,7 @@ class Test_Solvate(unittest.TestCase):
         }
 
         step_solvate = StepGMXSolvate(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_solvate.set_workflow_object(wf)
+        step_solvate.data.gmx_state = self.topol
         step_solvate.execute()
 
         out_path = os.path.join(self._test_dir, "confout.gro")
@@ -74,9 +72,7 @@ class Test_Solvate(unittest.TestCase):
         }
 
         step_solvate = StepGMXSolvate(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_solvate.set_workflow_object(wf)
+        step_solvate.data.gmx_state = self.topol
         step_solvate.data.generic.add_file(
             GenericData(_SGE.STD_STRUCTURE, file_data=self.data)
         )

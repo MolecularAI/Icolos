@@ -23,7 +23,6 @@ class WorkflowHeaderParameters(AgentHeaderParameters, BaseModel):
 class WorkflowData(BaseModel):
     work_dir: str = None
     perturbation_map: PerturbationMap = None
-    gmx_state: GromacsState = GromacsState()
 
 
 class WorkFlow(BaseAgent, BaseModel):

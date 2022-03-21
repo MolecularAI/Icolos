@@ -52,10 +52,7 @@ class Test_Editconf(unittest.TestCase):
 
         step_editconf = StepGMXEditConf(**step_conf)
 
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_editconf.set_workflow_object(wf)
-
+        step_editconf.data.gmx_state = self.topol
         step_editconf.execute()
         out_path = os.path.join(self._test_dir, "confout.gro")
         step_editconf.get_topol().write_structure(self._test_dir)
@@ -82,9 +79,6 @@ class Test_Editconf(unittest.TestCase):
 
         step_editconf = StepGMXEditConf(**step_conf)
 
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_editconf.set_workflow_object(wf)
         step_editconf.data.generic.add_file(
             GenericData(file_name=_SGE.STD_STRUCTURE, file_data=self.struct)
         )

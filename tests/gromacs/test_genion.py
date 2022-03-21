@@ -55,10 +55,7 @@ class Test_Genion(unittest.TestCase):
         }
 
         step_genion = StepGMXGenion(**step_conf)
-
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_genion.set_workflow_object(wf)
+        step_genion.data.gmx_state = self.topol
         step_genion.execute()
 
         out_path = os.path.join(self._test_dir, "confout.gro")

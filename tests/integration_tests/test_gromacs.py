@@ -106,6 +106,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "01_pdb2gmx"}},
                 },
                 {
                     _SBE.STEPID: "03_solvate",
@@ -120,6 +121,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "02_editconf"}},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -133,7 +135,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -141,8 +143,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            }
-                        ]
+                            },
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "03_solvate"},
                     },
                 },
                 {
@@ -163,6 +166,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "SOL",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "04_grompp"}},
                 },
                 {
                     _SBE.STEPID: "06_grompp_eminim",
@@ -176,7 +180,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -184,8 +188,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            }
-                        ]
+                            },
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "05_genion"},
                     },
                 },
                 {
@@ -200,6 +205,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "06_grompp_eminim"}
+                    },
                 },
                 {
                     _SBE.STEPID: "08_nvt_grompp",
@@ -210,10 +218,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -222,8 +229,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            }
-                        ]
+                            },
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "07_eminim_mdrun"},
                     },
                 },
                 {
@@ -239,6 +247,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "08_nvt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "10_npt_grompp",
@@ -249,10 +258,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -261,8 +269,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            }
-                        ]
+                            },
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "09_nvt_mdrun"},
                     },
                 },
                 {
@@ -278,6 +287,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "10_npt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "12_prod_md_grompp",
@@ -288,10 +298,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                             "make_ndx_command": "auto",
                             "fields": {"nsteps": "5000"},
                         },
@@ -301,8 +310,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                             {
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
-                            }
-                        ]
+                            },
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "11_npt_mdrun"},
                     },
                 },
                 {
@@ -322,12 +332,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         }
                     },
                     _SBE.INPUT: {
-                        _SBE.INPUT_GENERIC: [
-                            {
-                                _SBE.INPUT_SOURCE: "12_prod_md_grompp",
-                                _SBE.INPUT_EXTENSION: "tpr",
-                            }
-                        ]
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "12_prod_md_grompp"}
                     },
                     _SBE.WRITEOUT: [
                         {
@@ -350,8 +355,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-center"]
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"pipe_input": "echo -ne 1 0"},
+                        _SBE.SETTINGS_ADDITIONAL: {"pipe_input": "Protein System"},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "13_prod_mdrun"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -371,6 +377,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {"format": "gromacs"},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "14_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GENERIC: {_SBE.WRITEOUT_GENERIC_KEY: "pdb"},
@@ -470,7 +477,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
-                    _SBE.INPUT: {},
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "01_pdb2gmx"}},
                 },
                 {
                     _SBE.STEPID: "03_solvate",
@@ -485,6 +492,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "02_editconf"}},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -498,7 +506,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -507,7 +515,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "03_solvate"},
                     },
                 },
                 {
@@ -528,6 +537,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "SOL",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "04_grompp"}},
                 },
                 {
                     _SBE.STEPID: "06_grompp_eminim",
@@ -541,7 +551,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-maxwarn": 50},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -550,7 +560,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "05_genion"},
                     },
                 },
                 {
@@ -566,6 +577,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "06_grompp_eminim"}
+                    },
                 },
                 {
                     _SBE.STEPID: "08_nvt_grompp",
@@ -580,7 +594,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -590,7 +604,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "07_eminim_mdrun"},
                     },
                 },
                 {
@@ -614,7 +629,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "08_nvt_grompp",
                                 _SBE.INPUT_EXTENSION: "tpr",
                             }
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "08_nvt_grompp"},
                     },
                 },
                 {
@@ -630,7 +646,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -640,7 +656,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "09_nvt_mdrun"},
                     },
                 },
                 {
@@ -664,7 +681,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "10_npt_grompp",
                                 _SBE.INPUT_EXTENSION: "tpr",
                             }
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "10_npt_grompp"},
                     },
                 },
                 {
@@ -681,7 +699,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                             "fields": {"nsteps": "10000"},
                             "make_ndx_command": "auto",
                         },
@@ -692,7 +710,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "11_npt_mdrun"},
                     },
                 },
                 {
@@ -710,6 +729,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 "-pme": "gpu",
                             },
                         }
+                    },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "12_prod_md_grompp"}
                     },
                     _SBE.WRITEOUT: [
                         {
@@ -746,6 +768,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System"
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "13_prod_mdrun"}},
                 },
                 {
                     _SBE.STEPID: "15_trjconv",
@@ -765,6 +788,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System"
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "14_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -788,6 +812,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "forcefield": MAIN_CONFIG["FORCEFIELD"],
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "15_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "props"},
@@ -891,6 +916,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "01_pdb2gmx"}},
                 },
                 {
                     _SBE.STEPID: "03_solvate",
@@ -905,6 +931,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "02_editconf"}},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -918,7 +945,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -927,7 +954,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "03_solvate"},
                     },
                 },
                 {
@@ -948,6 +976,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "SOL",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "04_grompp"}},
                 },
                 {
                     _SBE.STEPID: "06_grompp_eminim",
@@ -961,7 +990,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -970,7 +999,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "05_genion"},
                     },
                 },
                 {
@@ -986,6 +1016,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "06_grompp_eminim"}
+                    },
                 },
                 {
                     _SBE.STEPID: "08_nvt_grompp",
@@ -1000,7 +1033,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -1010,7 +1043,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "07_eminim_mdrun"},
                     },
                 },
                 {
@@ -1027,6 +1061,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ADDITIONAL: {},
                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "08_nvt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "10_npt_grompp",
@@ -1041,7 +1076,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                         },
                     },
@@ -1051,7 +1086,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "09_nvt_mdrun"},
                     },
                 },
                 {
@@ -1069,6 +1105,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "10_npt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "12_prod_md_grompp",
@@ -1084,7 +1121,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                             "fields": {"nsteps": "5000"},
                             "make_ndx_command": "auto",
                         },
@@ -1095,7 +1132,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "11_npt_mdrun"},
                     },
                 },
                 {
@@ -1113,6 +1151,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 "-pme": "gpu",
                             },
                         }
+                    },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "12_prod_md_grompp"}
                     },
                     _SBE.WRITEOUT: [
                         {
@@ -1137,6 +1178,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {"pipe_input": "RNA System"},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "13_prod_mdrun"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -1237,7 +1279,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
-                    _SBE.INPUT: {},
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "01_pdb2gmx"}},
                 },
                 {
                     _SBE.STEPID: "03_solvate",
@@ -1252,6 +1294,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "02_editconf"}},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -1265,7 +1308,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -1274,7 +1317,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "03_solvate"},
                     },
                 },
                 {
@@ -1295,6 +1339,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "SOL",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "04_grompp"}},
                 },
                 {
                     _SBE.STEPID: "06_grompp_eminim",
@@ -1307,7 +1352,10 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-maxwarn": 50},
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"-r": False, _SGE.REPLICAS: 4},
+                        _SBE.SETTINGS_ADDITIONAL: {
+                            "restraints": False,
+                            _SGE.REPLICAS: 4,
+                        },
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
@@ -1315,7 +1363,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "05_genion"},
                     },
                 },
                 {
@@ -1332,6 +1381,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: True},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "06_grompp_eminim"}
+                    },
                 },
                 {
                     _SBE.STEPID: "08_nvt_grompp",
@@ -1345,7 +1397,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 4,
                         },
@@ -1356,7 +1408,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "07_eminim_mdrun"},
                     },
                 },
                 {
@@ -1374,6 +1427,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: True},
                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "08_nvt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "10_npt_grompp",
@@ -1387,7 +1441,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 4,
                         },
@@ -1398,7 +1452,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "09_nvt_mdrun"},
                     },
                 },
                 {
@@ -1417,6 +1472,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: True},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "10_npt_grompp"}},
                 },
                 {
                     _SBE.STEPID: "12_prod_md_grompp",
@@ -1432,7 +1488,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                             "fields": {"nsteps": "10000"},
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 4,
@@ -1444,7 +1500,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "11_npt_mdrun"},
                     },
                 },
                 {
@@ -1465,6 +1522,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: True},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "12_prod_md_grompp"}
+                    },
                 },
                 {
                     _SBE.STEPID: "14_trjconv",
@@ -1481,6 +1541,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "13_prod_mdrun"}},
                 },
                 {
                     _SBE.STEPID: "15_trjconv",
@@ -1499,6 +1560,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System"
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "14_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -1520,6 +1582,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "coupling_groups": "Protein Other",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "15_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {
@@ -1623,7 +1686,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
-                    _SBE.INPUT: {},
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "01_pdb2gmx"}},
                 },
                 {
                     _SBE.STEPID: "03_solvate",
@@ -1638,6 +1701,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {},
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "02_editconf"}},
                 },
                 {
                     _SBE.STEPID: "04_grompp",
@@ -1651,7 +1715,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                         },
                     },
                     _SBE.INPUT: {
@@ -1660,7 +1724,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/ions.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "03_solvate"},
                     },
                 },
                 {
@@ -1681,6 +1746,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "SOL",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "04_grompp"}},
                 },
                 {
                     _SBE.STEPID: "06_grompp_eminim",
@@ -1693,7 +1759,10 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-maxwarn": 50},
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"-r": False, _SGE.REPLICAS: 2},
+                        _SBE.SETTINGS_ADDITIONAL: {
+                            "restraints": False,
+                            _SGE.REPLICAS: 2,
+                        },
                     },
                     _SBE.INPUT: {
                         _SBE.INPUT_GENERIC: [
@@ -1701,7 +1770,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/minim.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "05_genion"},
                     },
                 },
                 {
@@ -1717,6 +1787,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: False},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "06_grompp_eminim"}
+                    },
                 },
                 {
                     _SBE.STEPID: "08_nvt_grompp",
@@ -1731,7 +1804,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 2,
                         },
@@ -1742,7 +1815,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/nvt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "07_eminim_mdrun"},
                     },
                 },
                 {
@@ -1766,7 +1840,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "08_nvt_grompp",
                                 _SBE.INPUT_EXTENSION: "tpr",
                             }
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "08_nvt_grompp"},
                     },
                 },
                 {
@@ -1781,7 +1856,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-n": "index.ndx"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": True,
+                            "restraints": True,
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 2,
                         },
@@ -1792,7 +1867,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/npt_equil.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "09_nvt_mdrun"},
                     },
                 },
                 {
@@ -1816,7 +1892,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "10_npt_grompp",
                                 _SBE.INPUT_EXTENSION: "tpr",
                             }
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "10_npt_grompp"},
                     },
                 },
                 {
@@ -1833,7 +1910,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             },
                         },
                         _SBE.SETTINGS_ADDITIONAL: {
-                            "-r": False,
+                            "restraints": False,
                             "fields": {"nsteps": "10000"},
                             "make_ndx_command": "auto",
                             _SGE.REPLICAS: 2,
@@ -1845,7 +1922,8 @@ class Test_GROMACS_MD(unittest.TestCase):
                                 _SBE.INPUT_SOURCE: "{file_base}/md.mdp",
                                 _SBE.INPUT_EXTENSION: "mdp",
                             },
-                        ]
+                        ],
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "11_npt_mdrun"},
                     },
                 },
                 {
@@ -1865,6 +1943,9 @@ class Test_GROMACS_MD(unittest.TestCase):
                         },
                         _SBE.SETTINGS_ADDITIONAL: {_SGE.MULTIDIR: False},
                     },
+                    _SBE.INPUT: {
+                        _SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "12_prod_md_grompp"}
+                    },
                 },
                 {
                     _SBE.STEPID: "14_trjconv",
@@ -1883,6 +1964,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System"
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "13_prod_mdrun"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -1908,6 +1990,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "pipe_input": "Protein_Other System"
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "14_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc"},
@@ -1929,6 +2012,7 @@ class Test_GROMACS_MD(unittest.TestCase):
                             "coupling_groups": "Protein Other",
                         },
                     },
+                    _SBE.INPUT: {_SBE.INPUT_GMX: {_SBE.INPUT_SOURCE: "15_trjconv"}},
                     _SBE.WRITEOUT: [
                         {
                             _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "props"},

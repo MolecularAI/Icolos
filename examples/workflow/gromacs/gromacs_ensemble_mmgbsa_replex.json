@@ -72,6 +72,11 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
 			},
 			{
@@ -88,6 +93,11 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
 			},
 			{
@@ -111,7 +121,10 @@
 							"source": "{file_base}/ions.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "03_solvate"
+					}
 				}
 			},
 			{
@@ -132,6 +145,11 @@
 					},
 					"additional": {
 						"pipe_input": "SOL"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "04_grompp"
 					}
 				}
 			},
@@ -157,7 +175,10 @@
 							"source": "{file_base}/minim.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "05_genion"
+					}
 				}
 			},
 			{
@@ -183,6 +204,11 @@
 					},
 					"additional": {
 						"multidir": true
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "06_grompp_eminim"
 					}
 				}
 			},
@@ -211,7 +237,10 @@
 							"source": "{file_base}/nvt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "07_eminim_mdrun"
+					}
 				}
 			},
 			{
@@ -237,6 +266,11 @@
 					},
 					"additional": {
 						"multidir": true
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "08_nvt_grompp"
 					}
 				}
 			},
@@ -265,7 +299,10 @@
 							"source": "{file_base}/npt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "09_nvt_mdrun"
+					}
 				}
 			},
 			{
@@ -291,6 +328,11 @@
 					},
 					"additional": {
 						"multidir": true
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "10_npt_grompp"
 					}
 				}
 			},
@@ -322,7 +364,11 @@
 							"source": "{file_base}/md.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "11_npt_mdrun"
+					}
+				
 				}
 			},
 			{
@@ -350,6 +396,11 @@
 					"additional": {
 						"multidir": true
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "12_prod_md_grompp"
+					}
 				}
 			},
 			{
@@ -371,6 +422,11 @@
 					"additional": {
 						"pipe_input": "Protein_Other System"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "13_prod_mdrun"
+					}
 				}
 			},
 			{
@@ -390,6 +446,11 @@
 					"additional": {
 						"pipe_input": "Protein_Other System"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14_trjconv"
+					}
 				}
 			},
 			{
@@ -405,6 +466,11 @@
 					"additional": {
 						"coupling_groups": "Protein Other",
 						"forcefield": "{GMXLIB}/amber14sb.ff"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14b_trjconv"
 					}
 				},
 				"writeout": [

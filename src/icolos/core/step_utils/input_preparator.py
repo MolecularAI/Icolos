@@ -2,6 +2,7 @@ from icolos.core.containers.generic import GenericContainer, GenericData
 import json
 import pandas as pd
 from rdkit import Chem
+from icolos.core.containers.gmx_state import GromacsState
 
 from icolos.loggers.base_logger import BaseLogger
 from icolos.utils.enums.input_enums import InputEnum
@@ -44,6 +45,7 @@ class StepData(BaseModel):
 
     compounds: List[Compound] = []
     generic: GenericContainer = GenericContainer()
+    gmx_state: GromacsState = GromacsState()
 
 
 class StepCSVInputColumnParameters(BaseModel):
@@ -69,8 +71,10 @@ class StepInputSource(BaseModel):
 
 
 class StepInputParameters(BaseModel):
+
     compounds: List[StepInputSource] = []
     generic: List[StepInputSource] = []
+    gmx_state: StepInputSource = {}
     perturbation_map: List[StepInputSource] = None
     merge: StepMerge = StepMerge()
     work_dir: str = None
@@ -93,6 +97,11 @@ class InputPreparator(BaseModel):
             self._generate_generic_input(step_input, step_type)
             if step_input.generic
             else GenericContainer()
+        )
+        gmx_state = (
+            self._generate_gmx_state_input(step_input)
+            if step_input.gmx_state
+            else GromacsState()
         )
         # Instruct the step to run in a specific workdir, e.g. from a previously failed job or to execute a few related steps in the same dir
         if step_input.work_dir is not None:
@@ -124,7 +133,7 @@ class InputPreparator(BaseModel):
         else:
             work_dir = None
         return (
-            StepData(compounds=compounds, generic=generic),
+            StepData(compounds=compounds, generic=generic, gmx_state=gmx_state),
             work_dir,
         )
 
@@ -165,6 +174,12 @@ class InputPreparator(BaseModel):
         if len(compounds) > 0:
             compounds = self._apply_compound_merger(step_input, compounds)
         return compounds
+
+    def _generate_gmx_state_input(
+        self, step_input: StepInputParameters
+    ) -> GromacsState:
+        input_step = self.workflow.find_step_by_step_id(step_input.gmx_state.source)
+        return input_step.data.gmx_state
 
     def _generate_generic_input(
         self, step_input: StepInputParameters, step_type

@@ -51,9 +51,7 @@ class Test_Trjconv(unittest.TestCase):
         }
 
         step_trjconv = StepGMXTrjconv(**step_conf)
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_trjconv.set_workflow_object(wf)
+        step_trjconv.data.gmx_state = self.topol
         step_trjconv.execute()
         out_path = os.path.join(self._test_dir, "traj.xtc")
         step_trjconv.get_topol().write_trajectory(self._test_dir)

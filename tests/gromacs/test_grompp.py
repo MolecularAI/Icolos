@@ -1,4 +1,3 @@
-from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
@@ -53,7 +52,7 @@ class Test_Grompp(unittest.TestCase):
                         "-nsteeps": 123,
                     },  # deliberate typo to check warning
                     _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
-                    "-r": False,
+                    "restraints": False,
                     _SGE.MAKE_NDX_COMMAND: "auto",
                 },
             },
@@ -64,10 +63,7 @@ class Test_Grompp(unittest.TestCase):
         step_grompp.data.generic.add_file(
             GenericData(file_name="tmp03394.mdp", file_data=self.mdp, argument=True)
         )
-        wf = WorkFlow()
-        wf.workflow_data.gmx_state = self.topol
-        step_grompp.set_workflow_object(wf)
-
+        step_grompp.data.gmx_state = self.topol
         step_grompp.execute()
 
         out_path = os.path.join(self._test_dir, _SGE.STD_TPR)

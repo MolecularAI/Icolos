@@ -23,7 +23,6 @@
 			"global_variables": {
 				"file_base": "{package_dir}/../IcolosData/gromacs/protein",
 				"output_dir": "{package_dir}/tests/junk/gromacs"
-
 			}
 		},
 		"steps": [
@@ -73,8 +72,12 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "01_pdb2gmx"
+					}
 				}
-				
 			},
 			{
 				"step_id": "03_solvate",
@@ -90,8 +93,12 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
-				
 			},
 			{
 				"step_id": "04_grompp",
@@ -110,12 +117,14 @@
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/ions.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "03_solvate"
+					}
 				}
 			},
 			{
@@ -137,6 +146,11 @@
 					"additional": {
 						"pipe_input": "SOL"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "04_grompp"
+					}
 				}
 			},
 			{
@@ -156,12 +170,14 @@
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/minim.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "05_genion"
+					}
 				}
 			},
 			{
@@ -176,6 +192,11 @@
 						"parameters": {}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "06_grompp_eminim"
+					}
 				}
 			},
 			{
@@ -198,12 +219,14 @@
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/nvt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "07_eminim_mdrun"
+					}
 				}
 			},
 			{
@@ -218,6 +241,11 @@
 						"parameters": {}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "08_nvt_grompp"
+					}
 				}
 			},
 			{
@@ -240,12 +268,14 @@
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/npt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "09_nvt_mdrun"
+					}
 				}
 			},
 			{
@@ -260,6 +290,11 @@
 						"parameters": {}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "10_npt_grompp"
+					}
 				}
 			},
 			{
@@ -285,12 +320,14 @@
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/md.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "11_npt_mdrun"
+					}
 				}
 			},
 			{
@@ -309,6 +346,11 @@
 						}
 					}
 				},
+				"input": {
+					"gmx_state": {
+						"source": "12_prod_md_grompp"
+					}
+				},
 				"writeout": [
 					{
 						"gmx_state": {
@@ -318,7 +360,6 @@
 							"resource": "{output_dir}/production"
 						}
 					}
-					
 				]
 			},
 			{
@@ -335,6 +376,11 @@
 					},
 					"additional": {
 						"pipe_input": "Protein_Other System"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "13_prod_mdrun"
 					}
 				}
 			},
@@ -356,6 +402,11 @@
 						"make_ndx_command": "auto"
 					}
 				},
+				"input": {
+					"gmx_state": {
+						"source": "14_trjconv"
+					}
+				},
 				"writeout": [
 					{
 						"gmx_state": {
@@ -375,11 +426,15 @@
 				},
 				"settings": {
 					"arguments": {
-						"parameters": {
-						}
+						"parameters": {}
 					},
 					"additional": {
 						"coupling_groups": "Protein Other"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "15_trjconv"
 					}
 				},
 				"writeout": [

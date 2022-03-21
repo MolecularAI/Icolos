@@ -145,6 +145,7 @@ class StepBaseEnum(str, Enum):
     INPUT_EXTENSION = "extension"
     INPUT_SOURCE = "source"
     INPUT_GENERIC = "generic"
+    INPUT_GMX = "gmx_state"
     INPUT_FORMAT = "format"
     INPUT_SOURCE_TYPE = "source_type"
     INPUT_SOURCE_TYPE_FILE = "file"

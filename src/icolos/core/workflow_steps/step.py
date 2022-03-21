@@ -525,7 +525,7 @@ class StepBase(BaseModel):
 
     def get_topol(self) -> GromacsState:
         if not self.data.generic.get_file_names_by_extension("pkl"):
-            return self.get_workflow_object().workflow_data.gmx_state
+            return self.data.gmx_state
         else:
             return self.load_topol(
                 self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)

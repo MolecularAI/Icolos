@@ -263,38 +263,38 @@ class WriteOutHandler(BaseModel):
         writeout_keys = map(lambda s: s.strip(), self.config.gmx_state.key.split(","))
         for key in writeout_keys:
             if key == _SGE.FIELD_KEY_TOPOL:
-                self.workflow_data.gmx_state.write_topol(resource)
+                self.data.gmx_state.write_topol(resource)
             elif key == _SGE.FIELD_KEY_NDX:
-                self.workflow_data.gmx_state.write_ndx(resource)
+                self.data.gmx_state.write_ndx(resource)
             elif key == _SGE.PROPS:
-                self.workflow_data.gmx_state.write_props(resource)
+                self.data.gmx_state.write_props(resource)
             elif key == _SGE.FIELD_KEY_LOG:
-                self.workflow_data.gmx_state.write_log(resource)
+                self.data.gmx_state.write_log(resource)
             elif key == _SGE.FIELD_KEY_TPR:
-                self.workflow_data.gmx_state.write_tpr(resource)
+                self.data.gmx_state.write_tpr(resource)
             elif key == _SGE.FIELD_KEY_XTC:
                 # if we have multiple trajectories, write them out sequentially, with index attached
-                if len(self.workflow_data.gmx_state.trajectories.keys()) > 1:
-                    for k, v in self.workflow_data.gmx_state.trajectories.items():
+                if len(self.data.gmx_state.trajectories.keys()) > 1:
+                    for k, v in self.data.gmx_state.trajectories.items():
                         parts = v.get_file_name().split(".")
                         file_name = parts[0] + "_" + str(k) + "." + parts[1]
-                        self.workflow_data.gmx_state.write_trajectory(
+                        self.data.gmx_state.write_trajectory(
                             resource, file=file_name, index=k
                         )
 
                 else:
-                    self.workflow_data.gmx_state.write_trajectory(resource)
+                    self.data.gmx_state.write_trajectory(resource)
             elif key == _SGE.FIELD_KEY_STRUCTURE:
-                if len(self.workflow_data.gmx_state.structures.keys()) > 1:
-                    for k, v in self.workflow_data.gmx_state.structures.items():
+                if len(self.data.gmx_state.structures.keys()) > 1:
+                    for k, v in self.data.gmx_state.structures.items():
                         parts = v.get_file_name().split(".")
                         file_name = parts[0] + "_" + str(k) + "." + parts[1]
-                        self.workflow_data.gmx_state.write_structure(
+                        self.data.gmx_state.write_structure(
                             resource, file=file_name, index=k
                         )
 
                 else:
-                    self.workflow_data.gmx_state.write_structure(resource)
+                    self.data.gmx_state.write_structure(resource)
             else:
                 raise ValueError(
                     f"Gromacs file of type {key} is not supported for writeout"
