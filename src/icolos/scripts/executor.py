@@ -20,7 +20,9 @@ from icolos.utils.entry_point_functions.parsing_functions import (
     parse_header,
     log_version_number,
     get_version_number,
-    version_match, get_versions_as_strings)
+    version_match,
+    get_versions_as_strings,
+)
 from icolos.utils.general.citation_generator import print_citations
 from icolos.utils.general.files_paths import attach_root_path
 
@@ -84,7 +86,10 @@ def main():
     log_version_number(logger)
     if not version_match(conf):
         version_config, version_installation = get_versions_as_strings(conf)
-        logger.log(f"Version of configuration file ({version_config}) and installation ({version_installation}) do not match or are not defined, proceed with caution.", _LE.WARNING)
+        logger.log(
+            f"Version of configuration file ({version_config}) and installation ({version_installation}) do not match or are not defined, proceed with caution.",
+            _LE.WARNING,
+        )
 
     # update global variables and settings
     conf = parse_header(

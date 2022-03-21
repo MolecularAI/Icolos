@@ -102,7 +102,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -147,7 +147,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false,
+						"restraints": false,
 						"replicas": 4
 					}
 				},
@@ -201,7 +201,7 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true,
+						"restraints": true,
 						"replicas": 4
 					}
 				},
@@ -255,7 +255,7 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true,
+						"restraints": true,
 						"replicas": 4
 					}
 				},
@@ -312,7 +312,7 @@
 							"nsteps": "10000"
 						},
 						"make_ndx_command": "auto",
-						"-r": false,
+						"restraints": false,
 						"replicas": 4
 					}
 				},
@@ -345,10 +345,6 @@
 					"arguments": {
 						"flags": [],
 						"parameters": {
-							"-nb": "gpu",
-							"-bonded": "gpu",
-							"-pme": "gpu",
-							"-update": "gpu"
 						}
 					},
 					"additional": {
@@ -408,16 +404,16 @@
 					},
 					"additional": {
 						"coupling_groups": "Protein Other",
-						"forcefield": "/<fill_path>/forcefields/amber14sb.ff"
+						"forcefield": "{GMXLIB}/amber14sb.ff"
 					}
 				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "dat"
+						"gmx_state": {
+							"key": "props"
 						},
 						"destination": {
-							"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
+							"resource": "{output_dir}"
 						}
 					}
 				]

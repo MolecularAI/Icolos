@@ -11,6 +11,7 @@ from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
 from copy import deepcopy
 import os
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.containers.perturbation_map import PerturbationMap
 
 
@@ -61,6 +62,7 @@ class StepExecutionResourceParameters(BaseModel):
     partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
+    tasks: str = None
     mem: str = None
     cores: int = None
     modules: List = []
@@ -189,10 +191,11 @@ class StepBase(BaseModel):
         return [deepcopy(comp) for comp in self.data.compounds]
 
     def process_write_out(self):
-        # TODO: process generic data write-out
         for writeout in self.writeout:
             writeout_handler = WriteOutHandler(config=writeout)
             writeout_handler.set_data(self.data)
+            # attach workflow data at this point
+            writeout_handler.set_workflow_data(self.get_workflow_object().workflow_data)
             writeout_handler.write()
 
     def get_compound_stats(self) -> Tuple[int, int, int]:
@@ -236,6 +239,7 @@ class StepBase(BaseModel):
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
                 cores=self.execution.resources.cores,
+                tasks=self.execution.resources.tasks,
                 partition=self.execution.resources.partition,
                 time=self.execution.resources.time,
                 mem=self.execution.resources.mem,
@@ -518,3 +522,11 @@ class StepBase(BaseModel):
             if key in self.settings.additional.keys()
             else default
         )
+
+    def get_topol(self) -> GromacsState:
+        if not self.data.generic.get_file_names_by_extension("pkl"):
+            return self.get_workflow_object().workflow_data.gmx_state
+        else:
+            return self.load_topol(
+                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
+            )

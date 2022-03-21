@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from pydantic import BaseModel, PrivateAttr
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.flow_control.flow_control import FlowControlBase
 from icolos.core.workflow_steps.step import StepBase
@@ -11,9 +11,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.utils.general.icolos_exceptions import get_exception_message
 
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
-from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 
-_WE = WorkflowEnum()
 _LE = LoggingConfigEnum()
 _SBE = StepBaseEnum
 
@@ -25,7 +23,7 @@ class WorkflowHeaderParameters(AgentHeaderParameters, BaseModel):
 class WorkflowData(BaseModel):
     work_dir: str = None
     perturbation_map: PerturbationMap = None
-    gmx_topol: GromacsTopol = GromacsTopol()
+    gmx_state: GromacsState = GromacsState()
 
 
 class WorkFlow(BaseAgent, BaseModel):

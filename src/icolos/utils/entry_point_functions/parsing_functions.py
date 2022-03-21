@@ -85,6 +85,7 @@ def get_version_number() -> str:
     try:
         # this requires python >= 3.8
         from importlib import metadata
+
         return metadata.version("icolos")
     except:
         return None
@@ -108,7 +109,11 @@ def log_version_number(logger: BaseLogger):
 def version_match(conf: dict) -> bool:
     version_config = get_config_version_number(conf)
     version_installation = get_version_number()
-    if version_config is None or version_installation is None or version_config != version_installation:
+    if (
+        version_config is None
+        or version_installation is None
+        or version_config != version_installation
+    ):
         return False
     return True
 
@@ -117,5 +122,7 @@ def get_versions_as_strings(conf: dict) -> Tuple[str, str]:
     version_config = get_config_version_number(conf)
     version_installation = get_version_number()
     version_config = "unknown" if version_config is None else version_config
-    version_installation = "unknown" if version_installation is None else version_installation
+    version_installation = (
+        "unknown" if version_installation is None else version_installation
+    )
     return version_config, version_installation

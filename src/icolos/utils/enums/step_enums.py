@@ -201,6 +201,8 @@ class StepBaseEnum(str, Enum):
     WRITEOUT_GENERIC = "generic"
     WRITEOUT_GENERIC_KEY = "key"
 
+    WRITEOUT_GMX = "gmx_state"
+
     WRITEOUT_DESTINATION = "destination"
     WRITEOUT_DESTINATION_RESOURCE = "resource"
     WRITEOUT_DESTINATION_TYPE = "type"
@@ -735,6 +737,7 @@ class StepGromacsEnum:
     FIELD_KEY_LOG = "log"
     FIELD_KEY_EDR = "edr"
     FIELD_KEY_NDX = "ndx"
+    PROPS = "props"
     FILE_SIZE_THRESHOLD = 2000000000
 
     MAKE_NDX_COMMAND = "make_ndx_command"
@@ -754,6 +757,7 @@ class StepGromacsEnum:
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
     STD_TPR = "topol.tpr"
+    STD_LOG = "md.log"
     STD_XTC = "traj.xtc"
     STD_TRR = "traj.trr"
     STD_STRUCTURE = "confout.gro"
@@ -776,8 +780,10 @@ class StepGromacsEnum:
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
     PARAM_METHOD = "param_method"
+    MMGBSA_DG = "MMGBSA_DG"
     GAFF = "gaff"
     OPENFF = "openff"
+    RESTRAINTS = "restraints"
     WATER_POSRE = """
 #ifdef POSRES_WATER
 [ position_restraints ]

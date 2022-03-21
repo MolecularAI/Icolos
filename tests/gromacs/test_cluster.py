@@ -1,5 +1,5 @@
 from icolos.core.containers.generic import GenericData
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.workflow_steps.gromacs.cluster import StepGMXCluster
 import unittest
 import os
@@ -29,7 +29,7 @@ class Test_Cluster(unittest.TestCase):
         ) as f:
             struct = f.readlines()
 
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
         self.topol.top_lines = topol
         self.topol.set_tpr(path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_TPR)
@@ -46,7 +46,7 @@ class Test_Cluster(unittest.TestCase):
                 SBE.SETTINGS_ARGUMENTS: {
                     SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                     SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
-                        "-dt": "1000",
+                        "-dt": "10",
                         "-n": "index.ndx",
                     },
                 },
@@ -59,7 +59,7 @@ class Test_Cluster(unittest.TestCase):
 
         step_cluster = StepGMXCluster(**step_conf)
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
         step_cluster.set_workflow_object(wf)
 
         step_cluster.execute()
@@ -67,3 +67,7 @@ class Test_Cluster(unittest.TestCase):
         step_cluster.write_generic_by_extension(self._test_dir, "pdb")
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 7383600)
+        out_path = os.path.join(self._test_dir, "cluster_id.xvg")
+        step_cluster.write_generic_by_extension(self._test_dir, "xvg")
+        stat_inf = os.stat(out_path)
+        self.assertGreater(stat_inf.st_size, 700)

@@ -1,8 +1,10 @@
+from icolos.utils.enums.program_parameters import GromacsEnum, OpenBabelEnum
 from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 from pydantic import BaseModel
-from icolos.core.workflow_steps.cavity_explorer.base import StepCavityExplorerBase
-from icolos.utils.enums.step_enums import StepCavExploreEnum
+from icolos.core.workflow_steps.fpocket.base import StepFpocketBase
+from icolos.utils.enums.step_enums import StepCavExploreEnum, StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
+from icolos.utils.execute_external.openbabel import OpenBabelExecutor
 from icolos.core.workflow_steps.step import _LE
 from sklearn.cluster import DBSCAN
 from collections import Counter
@@ -11,14 +13,21 @@ import re
 import os
 
 _SFP = StepCavExploreEnum()
+_OBE = OpenBabelEnum()
+_SGE = StepGromacsEnum()
 
 
-class StepMDpocket(StepCavityExplorerBase, BaseModel):
+class StepMDpocket(StepFpocketBase, BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
+    obabel_executor: OpenBabelExecutor = None
+
     def __init__(self, **data):
         super().__init__(**data)
 
-        # self._initialize_backend(executor=MPIExecutor)
         self._initialize_backend(executor=Executor)
+        self.obabel_executor = OpenBabelExecutor()
 
         # set max_length_sublists to 1
         self.execution.parallelization.max_length_sublists = 1
@@ -201,15 +210,10 @@ class StepMDpocket(StepCavityExplorerBase, BaseModel):
         for file in pocket_files:
             arguments = self._parse_arguments(
                 flag_dict={
-                    "--trajectory_file": os.path.join(
-                        tmp_dir,
-                        self.data.generic.get_argument_by_extension(self.format_),
-                    ),
+                    "--trajectory_file": _SGE.STD_XTC,
                     "--trajectory_format": self.format_,
-                    "--selected_pocket": os.path.join(
-                        tmp_dir, os.path.join(tmp_dir, file)
-                    ),
-                    "-f": self.data.generic.get_argument_by_extension("pdb"),
+                    "--selected_pocket": file,
+                    "-f": "confout.pdb",
                     "-o": file.split(".")[0],
                 }
             )
@@ -237,12 +241,8 @@ class StepMDpocket(StepCavityExplorerBase, BaseModel):
         args = []
         for next_subtask_list in batch:
             tmp_dirs.append(tmp_dir)
-            for (
-                subtask
-            ) in (
-                next_subtask_list
-            ):  # enforced only one task per subtask, otherwise it makes no sense
-                args.append(subtask.data)  # append the arguments list
+            for subtask in next_subtask_list:
+                args.append(subtask.data)
         return tmp_dirs, args
 
     def _execute_mdpocket(self, tmp_dir, arguments):
@@ -254,24 +254,29 @@ class StepMDpocket(StepCavityExplorerBase, BaseModel):
             check=True,
         )
 
+    def convert_gro_to_pdb(self, tmp_dir: str) -> None:
+        structure = self.get_topol().structures[0]
+        args = ["-igro", structure.get_file_name(), "-O", "confout.pdb"]
+        self.obabel_executor.execute(
+            command=_OBE.OBABEL, arguments=args, check=True, location=tmp_dir
+        )
+        os.remove(os.path.join(tmp_dir, structure.get_file_name()))
+
     def execute(self):
 
         tmp_dir = self._make_tmpdir()
         # print(paths)
-        self._write_input_files(tmp_dir)
+        topol = self.get_topol()
+        self._write_input_files(tmp_dir, topol=topol)
         # set some constants from the arguments
         self._set_mdpocket_args()
-
+        self.convert_gro_to_pdb(tmp_dir)
         # execute the initial mdpocket job (without a specific pocket) to produce the .dx file
         mdpocket_run1_args = self._parse_arguments(
             flag_dict={
-                "--trajectory_file": os.path.join(
-                    tmp_dir, self.data.generic.get_argument_by_extension(self.format_)
-                ),
+                "--trajectory_file": _SGE.STD_XTC,
                 "--trajectory_format": self.format_,
-                "-f": os.path.join(
-                    tmp_dir, self.data.generic.get_argument_by_extension("pdb")
-                ),
+                "-f": "confout.pdb",
             }
         )
 

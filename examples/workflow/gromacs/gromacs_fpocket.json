@@ -112,7 +112,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -166,7 +166,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -216,7 +216,7 @@
 						}
 					},
 					"additional": {
-						"-r": true,
+						"restraints": true,
 						"make_ndx_command": "auto"
 					}
 				},
@@ -266,7 +266,7 @@
 						}
 					},
 					"additional": {
-						"-r": true,
+						"restraints": true,
 						"make_ndx_command": "auto"
 					}
 				},
@@ -315,7 +315,7 @@
 						}
 					},
 					"additional": {
-						"-r": false,
+						"restraints": false,
 						"fields": {
 							"nsteps": "500"
 						},
@@ -343,58 +343,18 @@
 						"parameters": {
 							"-nb": "gpu",
 							"-bonded": "gpu",
-							"-pme": "gpu",
-							"-c": "structure.pdb"
+							"-pme": "gpu"
 						}
 					}
 				},
-				"input": {
-					"generic": [
-						{
-							"source": "12_prod_md_grompp",
-							"extension": "tpr"
-						}
-					]
-				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "xtc"
+						"gmx_state": {
+							"key": "xtc, log, tpr, gro"
 						},
 						"destination": {
-							"resource": "{output_dir}/md_0_1.xtc",
-							"type": "file",
-							"format": "txt"
-						}
-					},
-					{
-						"generic": {
-							"key": "log"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.log",
-							"type": "file",
-							"format": "txt"
-						}
-					},
-					{
-						"generic": {
-							"key": "pdb"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.pdb",
-							"type": "file",
-							"format": "txt"
-						}
-					},
-					{
-						"generic": {
-							"key": "tpr"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.tpr",
-							"type": "file",
-							"format": "txt"
+							"resource": "{output_dir}"
+							
 						}
 					}
 				]
@@ -411,24 +371,12 @@
 							"-center"
 						],
 						"parameters": {
-							"-pbc": "nojump"
+							"-pbc": "mol"
 						}
 					},
 					"additional": {
 						"pipe_input": "Protein Protein"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "13_prod_mdrun",
-							"extension": "xtc"
-						},
-						{
-							"source": "13_prod_mdrun",
-							"extension": "tpr"
-						}
-					]
 				}
 			},
 			{
@@ -447,51 +395,7 @@
 					"additional": {
 						"pipe_input": "Protein Protein"
 					}
-				},
-				"input": {
-					"generic": [
-						{
-							"source": "14_trjconv",
-							"extension": "xtc"
-						},
-						{
-							"source": "14_trjconv",
-							"extension": "tpr"
-						}
-					]
-				},
-				"writeout": [
-					{
-						"generic": {
-							"key": "xtc"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1_trjconv.xtc",
-							"type": "file",
-							"format": "txt"
-						}
-					}
-				]
-			},
-			{
-				"step_id": "16_editconf",
-				"type": "editconf",
-				"execution": {
-					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
-				},
-				"settings": {
-					"arguments": {
-						"flags": [],
-						"parameters": {
-							"-n": "index.ndx",
-							"-o": "structure.pdb"
-						}
-					},
-					"additional": {
-						"pipe_input": "Protein"
-					}
 				}
-				
 			},
 			{
 				"step_id": "17_MDpocket",
@@ -508,18 +412,6 @@
 						"format": "gromacs"
 					}
 				},
-				"input": {
-					"generic": [
-						{
-							"source": "15_trjconv",
-							"extension": "xtc"
-						},
-						{
-							"source": "16_editconf",
-							"extension": "pdb"
-						}
-					]
-				},
 				"writeout": [
 					{
 						"generic": {
@@ -527,8 +419,6 @@
 						},
 						"destination": {
 							"resource": "{output_dir}",
-							"type": "file",
-							"format": "txt",
 							"mode": "dir"
 						}
 					},
@@ -538,8 +428,6 @@
 						},
 						"destination": {
 							"resource": "{output_dir}",
-							"type": "file",
-							"format": "txt",
 							"mode": "dir"
 						}
 					},
@@ -549,8 +437,6 @@
 						},
 						"destination": {
 							"resource": "{output_dir}",
-							"type": "file",
-							"format": "txt",
 							"mode": "dir"
 						}
 					}

@@ -124,7 +124,7 @@ class PATHS_EXAMPLEDATA:
     GROMACS_DMP_LIGAND_TRJ = expand_path("gromacs/protein/DMP.xtc")
     GROMACS_DMP_LIGAND_SDF = expand_path("gromacs/protein/DMP.sdf")
     GROMACS_PROTEIN_FILE_BASE = expand_path("gromacs/protein")
-    GROMACS_TS_CLUSTERS = expand_path("gromacs/clusters_ts_example.xvg")
+    GROMACS_TS_CLUSTERS = expand_path("gromacs/protein/cluster_id.xvg")
     GROMACS_1BVG_TPR = expand_path("gromacs/protein/1BVG.tpr")
     GROMACS_1BVG_XTC = expand_path("gromacs/protein/1BVG.xtc")
     GROMACS_1BVG_TOP = expand_path("gromacs/protein/1BVG.top")
