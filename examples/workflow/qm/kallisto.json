@@ -20,7 +20,10 @@
         "step_id": "calculating_kallisto_features",
         "type": "kallisto",
         "execution": {
-          "binary_location": "{kallisto_location}"
+          "binary_location": "{kallisto_location}",
+          "parallelization": {
+            "jobs": 2
+          }
         },
         "settings": {
           "arguments": {
@@ -29,13 +32,13 @@
             }
           },
           "additional": {
-            "features": ["vdw"]
+            "features": ["vdw", "alp"]
           }
         },
         "input": {
           "compounds": [
             {
-              "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
+              "source": "{package_dir}/../IcolosData/clustering/paracetamol_11_conformers.sdf",
               "source_type": "file",
               "format": "SDF"
             }

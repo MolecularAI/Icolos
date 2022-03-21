@@ -211,5 +211,5 @@ class StepKallisto(StepCalculationBase, BaseModel):
         self._execute_kallisto()
         self._logger.log(
             f"Completed execution of Kallisto for {len(all_conformers)} conformers, attached the following features: [{', '.join(self.kallisto_additional.features)}].",
-            _LE.WARNING,
+            _LE.INFO,
         )
