@@ -1,5 +1,5 @@
 import shutil
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
 )
@@ -107,7 +107,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         return list(ligand_lines.keys())
 
     def _generate_gaff_params(
-        self, tmp_dir: str, input_pdb: str, topol: GromacsTopol
+        self, tmp_dir: str, input_pdb: str, topol: GromacsState
     ) -> None:
         """
         :param tmp_dir: step's base directory
@@ -169,7 +169,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         )
 
     def _generate_openff_params(
-        self, tmp_dir: str, input_pdb: str, topol: GromacsTopol
+        self, tmp_dir: str, input_pdb: str, topol: GromacsState
     ):
         """
         Generate Amber-compatible Smirnoff params for a single component

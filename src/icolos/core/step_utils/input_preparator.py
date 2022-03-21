@@ -213,7 +213,6 @@ class InputPreparator(BaseModel):
 
             if len(files) == 1:
                 file = files[0]
-                # file.set_argument()
                 return [file]
             # else use the argument method
             else:

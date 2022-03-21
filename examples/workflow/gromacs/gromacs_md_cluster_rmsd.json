@@ -38,7 +38,6 @@
                     }
                 },
                 "additional": {
-					"charge_method": "gas"
                 }
             },
             "input": {
@@ -100,7 +99,7 @@
                         }
                     },
                     "additional": {
-                        "restraints": false
+                        "-r": false
                     }
                 },
                 "input": {
@@ -144,7 +143,7 @@
                         }
                     },
                     "additional": {
-                        "restraints": false
+                        "-r": false
                     }
                 },
                 "input": {
@@ -186,7 +185,7 @@
                     },
                     "additional": {
                         "make_ndx_command": "auto",
-                        "restraints": true
+                        "-r": true
                     }
                 },
                 "input": {
@@ -226,7 +225,7 @@
                     },
                     "additional": {
                         "make_ndx_command": "auto",
-                        "restraints": true
+                        "-r": true
                     }
                 },
                 "input": {
@@ -270,7 +269,7 @@
                             "nsteps": "50000"
                         },
                         "make_ndx_command": "auto",
-                        "restraints": false
+                        "-r": false
                     }
                 },
                 "input": {
@@ -306,7 +305,8 @@
                         }
                     }
                 ]
-            },{
+            },
+			{
                 "step_id": "14_trjconv",
                 "type": "trjconv",
                 "execution":{
@@ -319,14 +319,79 @@
                     "additional":{
                         "pipe_input": "Protein System"
                     }
+                }
+            },
+			{
+                "step_id": "15_trjconv",
+                "type": "trjconv",
+                "execution":{
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                },
+                "settings":{
+                    "arguments":{
+                        "flags":[],
+						"parameters": {
+							"-fit": "rot+trans"
+						}
+                    },
+                    "additional":{
+                        "pipe_input": "Protein System"
+                    }
                 },
                 "writeout":[
                     {
-                        "gmx_state": {
-                            "key": "xtc, gro, top"
+                        "gromacs_state": {
+                            "key": "xtc"
                         },
                         "destination": {
-                            "resource": "{output_dir}/processed"
+                            "resource": "{output_dir}"
+                            
+                        }
+                    }
+                ]
+            },
+			{
+                "step_id": "16_cluster",
+                "type": "cluster",
+                "execution":{
+                    "prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                },
+                "settings":{
+                    "arguments":{
+                        "flags":[],
+						"parameters": {
+							"-dt": "10"
+						}
+                    },
+                    "additional":{
+                        "pipe_input": "Protein System"
+                    }
+                }
+            },
+			{
+                "step_id": "17_cluster_ts",
+                "type": "cluster_ts",
+                "execution":{
+                    "prefix_execution": "module load R"
+                },
+                "settings":{
+                    "arguments":{
+                        "flags":[],
+						"parameters": {
+							"lengths": "101",
+							"clustersNumber": "20",
+							"mdEngine": "GROMACS"
+						}
+                    }
+                },
+
+                "writeout":[
+                    {
+                        "generic": {
+                            "key": "png"
+                        },
+                        "destination": {
+                            "resource": "{output_dir}/cluster.png"
                             
                         }
                     }

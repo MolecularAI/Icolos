@@ -1,7 +1,7 @@
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.gromacs.editconf import StepGMXEditConf
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
@@ -26,7 +26,7 @@ class Test_Editconf(unittest.TestCase):
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
             self.struct = f.readlines()
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=self.struct)]
 
     def test_editconf_wf_input(self):
@@ -53,7 +53,7 @@ class Test_Editconf(unittest.TestCase):
         step_editconf = StepGMXEditConf(**step_conf)
 
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
         step_editconf.set_workflow_object(wf)
 
         step_editconf.execute()
@@ -83,7 +83,7 @@ class Test_Editconf(unittest.TestCase):
         step_editconf = StepGMXEditConf(**step_conf)
 
         wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
+        wf.workflow_data.gmx_state = self.topol
         step_editconf.set_workflow_object(wf)
         step_editconf.data.generic.add_file(
             GenericData(file_name=_SGE.STD_STRUCTURE, file_data=self.struct)

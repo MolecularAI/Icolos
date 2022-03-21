@@ -1,4 +1,4 @@
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
@@ -19,7 +19,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    topol: GromacsTopol = None
+    topol: GromacsState = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -109,6 +109,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         mdp_file.write(tmp_dir)
 
         replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
+        # replicas = len(topol.tprs.values())
         topol.write_topol(tmp_dir)
         init_struct = len(topol.structures)
 
@@ -116,7 +117,11 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
             index = 0 if init_struct == 1 else i
             # we are branching for the first time, just use this confout.gro as the starting point
             topol.write_structure(tmp_dir, index=index)
-            args = ["-r", _SGE.STD_STRUCTURE] if self.settings.additional["-r"] else []
+            args = (
+                ["-r", _SGE.STD_STRUCTURE]
+                if self.settings.additional[_SGE.RESTRAINTS]
+                else []
+            )
 
             arguments = self._parse_arguments(
                 flag_dict={
@@ -136,8 +141,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
                 f"Completed execution for {self.step_id} successfully for replica {i}",
                 _LE.INFO,
             )
-
             topol.set_tpr(tmp_dir, index=i)
-            topol.set_structure(tmp_dir, index=i)
+            # topol.set_structure(tmp_dir, index=i)
         self._parse_output(tmp_dir)
         self._remove_temporary(tmp_dir)

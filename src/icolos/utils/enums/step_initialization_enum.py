@@ -9,7 +9,7 @@ from icolos.core.workflow_steps.calculation.electrostatics.esp_sim import StepEs
 from icolos.core.workflow_steps.calculation.feature_counter import StepFeatureCounter
 from icolos.core.workflow_steps.gromacs.do_dssp import StepGMXDoDSSP
 from icolos.core.workflow_steps.gromacs.mmpbsa import StepGMXmmpbsa
-from icolos.core.workflow_steps.cavity_explorer.mdpocket import StepMDpocket
+from icolos.core.workflow_steps.fpocket.mdpocket import StepMDpocket
 from icolos.core.workflow_steps.gromacs.trajcat import StepGMXTrjcat
 from icolos.core.workflow_steps.io.data_manipulation import StepDataManipulation
 from icolos.core.workflow_steps.schrodinger.fep_analysis import StepFepPlusAnalysis

@@ -16,7 +16,10 @@ from icolos.utils.enums.entry_points import ExecutorEnum
 
 from icolos.utils.entry_point_functions.parsing_functions import (
     get_version_number,
-    version_match, get_versions_as_strings, get_config_version_number)
+    version_match,
+    get_versions_as_strings,
+    get_config_version_number,
+)
 from icolos.utils.general.citation_generator import ConsoleColours
 
 # enums
@@ -92,10 +95,16 @@ def main():
     # check version matching
     version_config = get_config_version_number(conf)
     if version_config is None:
-        _report(f"Version number of configuration not specified, add to \"header\" block.", _LE.WARNING)
+        _report(
+            f'Version number of configuration not specified, add to "header" block.',
+            _LE.WARNING,
+        )
     if not version_match(conf):
         version_config, version_installation = get_versions_as_strings(conf)
-        _report(f"Versions of installation ({version_installation}) and configuration ({version_config}) do not match or are not specified.", _LE.WARNING)
+        _report(
+            f"Versions of installation ({version_installation}) and configuration ({version_config}) do not match or are not specified.",
+            _LE.WARNING,
+        )
 
     # load the sub-schemas (e.g. for the header region and the steps etc.), construct a schema for the entire workflow
     # and validate the input JSON against it

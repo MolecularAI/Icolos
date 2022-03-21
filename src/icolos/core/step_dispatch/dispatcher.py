@@ -45,7 +45,7 @@ class StepDispatcher(StepBase, BaseModel):
         Execute multiple steps in parallel
         """
         # Spin up multiple processes.
-        self.execution.parallelization.jobs = self.parallel_execution.cores
+        self.execution.parallelization.jobs = self.parallel_execution.jobs
 
         # TODO, we can repeat entire workflows if we want, I'm not sure this makes sense though
         self._subtask_container = SubtaskContainer(max_tries=1)
@@ -57,7 +57,7 @@ class StepDispatcher(StepBase, BaseModel):
         while self._subtask_container.done() is False:
 
             next_batch = self._get_sublists(
-                get_first_n_lists=self.parallel_execution.cores
+                get_first_n_lists=self.parallel_execution.jobs
             )  # return n lists of length max_sublist_length
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]

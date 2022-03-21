@@ -1,5 +1,6 @@
 import os
 import unittest
+from icolos.core.composite_agents.workflow import WorkFlow, WorkflowData
 from icolos.core.containers.generic import GenericContainer, GenericData
 from icolos.core.containers.compound import Compound, Enumeration
 from icolos.core.step_utils.input_preparator import StepData
@@ -333,3 +334,44 @@ class Test_WriteOut(unittest.TestCase):
             shutil.copyfile(out_path, PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC)
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 16415800)
+
+    def test_gmx_state_writeout(self):
+        conf = {
+            _SBE.WRITEOUT_CONFIG: {
+                _SBE.WRITEOUT_GMX: {_SBE.WRITEOUT_GENERIC_KEY: "xtc, top, gro"},
+                _SBE.WRITEOUT_DESTINATION: {
+                    _SBE.WRITEOUT_DESTINATION_RESOURCE: self._test_dir
+                },
+            }
+        }
+        writeout_handler = WriteOutHandler(**conf)
+        writeout_handler.workflow_data = WorkflowData()
+
+        writeout_handler.workflow_data.gmx_state.trajectories[0] = GenericData(
+            file_name="traj.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC
+        )
+        writeout_handler.workflow_data.gmx_state.trajectories[1] = GenericData(
+            file_name="traj.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC
+        )
+        writeout_handler.workflow_data.gmx_state.structures[0] = GenericData(
+            file_name="confout.gro",
+            file_data=PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO,
+        )
+        writeout_handler.workflow_data.gmx_state.structures[1] = GenericData(
+            file_name="confout.gro",
+            file_data=PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO,
+        )
+        writeout_handler.workflow_data.gmx_state.set_topol(
+            path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP
+        )
+
+        writeout_handler.write()
+
+        for file in [
+            "confout_0.gro",
+            "confout_1.gro",
+            "topol.top",
+            "traj_0.xtc",
+            "traj_1.xtc",
+        ]:
+            assert os.path.isfile(os.path.join(self._test_dir, file))
