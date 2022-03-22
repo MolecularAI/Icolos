@@ -1,9 +1,10 @@
+import json
 import os
+import re
 from copy import deepcopy
 from tempfile import mkdtemp
 from typing import List, Tuple
 from pydantic import BaseModel
-from rdkit import Chem
 
 from icolos.core.containers.compound import Conformer
 from icolos.core.workflow_steps.calculation.base import StepCalculationBase
@@ -12,7 +13,6 @@ from icolos.utils.enums.step_enums import StepJazzyEnum
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.execute_external.jazzy import JazzyExecutor
 from icolos.utils.general.files_paths import gen_tmp_file
-from icolos.utils.general.icolos_exceptions import StepFailed
 from icolos.utils.general.parallelization import SubtaskContainer, Parallelizer
 
 _SJE = StepJazzyEnum()
@@ -23,14 +23,23 @@ _all_jazzy_commands = [
     _JE.VIS
 ]
 
+_all_jazzy_properties = [
+    _JE.RESULT_DGA,
+    _JE.RESULT_DGP,
+    _JE.RESULT_DGTOT,
+    _JE.RESULT_SA,
+    _JE.RESULT_SDC,
+    _JE.RESULT_SDX
+]
 
-#class KallistoAdditional(BaseModel):
-#    features: List[str] = [_KE.ALP, _KE.BONDS]  # list of features to be obtained
+
+class JazzyAdditional(BaseModel):
+    command: str = _JE.VEC
 
 
 class StepJazzy(StepCalculationBase, BaseModel):
 
-    #kallisto_additional: KallistoAdditional = None
+    jazzy_additional: JazzyAdditional = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -39,33 +48,13 @@ class StepJazzy(StepCalculationBase, BaseModel):
         self._check_backend_availability()
 
         # initialize the additional settings
-        #self.kallisto_additional = KallistoAdditional(**self.settings.additional)
-
-    def _prepare_temp_input(self, tmp_dir: str, molecule: Chem.Mol) -> str:
-        tmp_sdf_path = super()._prepare_temp_input(tmp_dir, molecule)
-
-        # Kallisto expects the input either in a mol2 file or an XYZ file
-        _, tmp_xyz_path = gen_tmp_file(suffix=".xyz", dir=tmp_dir)
-
-        # translate the
-        arguments = [
-            tmp_sdf_path,
-            _OBE.OBABEL_INPUTFORMAT_SDF,
-            _OBE.OBABEL_OUTPUT_FORMAT_XYZ,
-            "".join([_OBE.OBABEL_O, tmp_xyz_path]),
-        ]
-        self._openbabel_executor.execute(
-            command=_OBE.OBABEL, arguments=arguments, check=False
-        )
-
-        self._logger.log(
-            f"Translated input molecule to file {tmp_xyz_path}.", _LE.DEBUG
-        )
-        return tmp_xyz_path
+        self.jazzy_additional = JazzyAdditional(**self.settings.additional)
+        if self.jazzy_additional.command not in _all_jazzy_commands:
+            raise ValueError(f"Jazzy command {self.jazzy_additional.command} unknown - abort.")
 
     def _prepare_batch(self, batch) -> Tuple:
         tmp_dirs = []
-        input_files = []
+        input_smiles = []
         output_files = []
         conformers = []
         for next_subtask_list in batch:
@@ -76,11 +65,12 @@ class StepJazzy(StepCalculationBase, BaseModel):
                 output_files.append(tmp_out_path)
                 conformer = subtask.data
                 conformers.append(conformer)
-                input_xyz_file = self._prepare_temp_input(
-                    tmp_dir, conformer.get_molecule()
-                )
-                input_files.append(input_xyz_file)
-        return tmp_dirs, input_files, output_files, conformers
+
+                # TODO: not really efficient for SMILES, but keep it (?) on conformer level in anticipation of
+                #       structural input that differs per conformer
+                input_smile = conformer.get_enumeration_object().get_smile()
+                input_smiles.append(input_smile)
+        return tmp_dirs, input_smiles, output_files, conformers
 
     def _prepare_arguments(self, settings: List) -> List:
 
@@ -93,9 +83,9 @@ class StepJazzy(StepCalculationBase, BaseModel):
 
         # flatten the dictionary into a list for command-line execution
         for key in parameters.keys():
-            if key in _all_kallisto_commands:
+            if key in _all_jazzy_commands:
                 self._logger.log(
-                    f"Use the additional block to specify Kallisto commands, parameter {key} ignored.",
+                    f"Use the additional block to specify Jazzy commands, parameter {key} ignored.",
                     _LE.WARNING,
                 )
                 continue
@@ -103,28 +93,20 @@ class StepJazzy(StepCalculationBase, BaseModel):
             settings.append(parameters[key])
         return settings
 
-    def _run_subjob(self, tmp_dir: str, input_file: str, output_file: str) -> None:
+    def _run_subjob(self, tmp_dir: str, input_smile: str, output_file: str) -> None:
         work_dir = os.getcwd()
         os.chdir(tmp_dir)
 
-        # construct the specified command-line call
-        arguments = []
-        for feature in self.kallisto_additional.features:
-            if feature not in _all_kallisto_commands:
-                self._logger.log(
-                    f"Kallisto feature {feature} not supported, will be ignored.",
-                    _LE.WARNING,
-                )
-                continue
-            arguments.append(feature)
-            arguments.append(input_file)
+        # construct the specified command-line call; only one command can be used at a time
+        # e.g. jazzy vec [OPTIONS] SMILES
+        arguments = [self.jazzy_additional.command, '"' + input_smile + '"']
         arguments = self._prepare_arguments(arguments)
 
         result = self._backend_executor.execute(
-            command=_KE.KALLISTO, arguments=arguments, check=False
+            command=_JE.JAZZY, arguments=arguments, check=False
         )
 
-        # Kallisto prints the result to stdout -> store it in a temporary file
+        # Jazzy prints the result to stdout -> store it in a temporary file
         with open(output_file, "w") as f:
             f.writelines(result.stdout)
 
@@ -133,38 +115,32 @@ class StepJazzy(StepCalculationBase, BaseModel):
     def _parse_jazzy_result(
         self, output_files: List[str], conformers: List[Conformer]
     ) -> List:
-        def _split_list(inp: List, chunk_size: int) -> List[List[str]]:
-            assert len(inp) % chunk_size == 0
-            return [
-                inp[idx : idx + chunk_size] for idx in range(0, len(inp), chunk_size)
-            ]
 
         results = []
-        number_features = len(self.kallisto_additional.features)
 
         for output_file, conformer in zip(output_files, conformers):
-            number_atoms = conformer.get_molecule().GetNumAtoms()
-
-            # load features from output file
-            with open(output_file, "r") as f:
-                features_lines = f.readlines()
-            features_lines = [line.lstrip().rstrip() for line in features_lines]
-
-            # check, that all features could be calculated for all atoms
-            expected_lines = number_features * number_atoms
-            if expected_lines != len(features_lines):
+            # load the JSON string that was captured from stdout and written to the output file
+            try:
+                with open(output_file) as file:
+                    # Jazzy does not output valid JSONs (' instead of "), so we need to replace those
+                    # except escaped ones
+                    result = file.read().replace("\r", "").replace("\n", "")
+                    p = re.compile('(?<!\\\\)\'')
+                    result = p.sub('\"', result)
+                    result = json.loads(result)
+            except:
                 self._logger.log(
-                    f"Kallisto result for conformer {conformer.get_index_string()} incomplete ({len(features_lines)} lines instead of the expected {expected_lines}), check {output_file} - proceeding.",
-                    _LE.WARNING,
+                    f"Jazzy result for conformer {conformer.get_index_string()} stored in file {output_file} not found - proceeding.",
+                    _LE.WARNING
                 )
-                results.append(_SKE.FAILURE)
+                results.append(_SJE.FAILURE)
                 continue
 
-            # group the features and add them to the conformers
-            sublists = _split_list(features_lines, number_atoms)
-            for feature, sublist in zip(self.kallisto_additional.features, sublists):
-                conformer.get_molecule().SetProp(feature, "|".join(sublist))
-            results.append(_SKE.SUCCESS)
+            # attach the properties obtained as tags
+            for key in result.keys():
+                if key in _all_jazzy_properties:
+                    conformer.get_molecule().SetProp(key, str(result[key]))
+            results.append(_SJE.SUCCESS)
         return results
 
     def _execute_jazzy(self):
@@ -172,7 +148,7 @@ class StepJazzy(StepCalculationBase, BaseModel):
         n = 1
         while self._subtask_container.done() is False:
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
-            tmp_dirs, input_files, output_files, conformers = self._prepare_batch(
+            tmp_dirs, input_smiles, output_files, conformers = self._prepare_batch(
                 next_batch
             )
 
@@ -182,7 +158,7 @@ class StepJazzy(StepCalculationBase, BaseModel):
             self._logger.log(f"Executing Jazzy for batch {n}.", _LE.DEBUG)
 
             jazzy_parallelizer.execute_parallel(
-                tmp_dir=tmp_dirs, input_file=input_files, output_file=output_files
+                tmp_dir=tmp_dirs, input_smile=input_smiles, output_file=output_files
             )
 
             results = self._parse_jazzy_result(output_files, conformers)
@@ -197,7 +173,6 @@ class StepJazzy(StepCalculationBase, BaseModel):
             self._remove_temporary(tmp_dirs)
 
     def execute(self):
-        #assert len(self.kallisto_additional.features) > 0
         all_conformers = []
         for compound in self.get_compounds():
             for enumeration in compound.get_enumerations():
@@ -209,7 +184,7 @@ class StepJazzy(StepCalculationBase, BaseModel):
             max_tries=self.execution.failure_policy.n_tries
         )
         self._subtask_container.load_data(all_conformers)
-        #self._execute_jazzy()
+        self._execute_jazzy()
         self._logger.log(
             f"Completed execution of Jazzy for {len(all_conformers)} conformers (using their SMILES strings).",
             _LE.INFO,
