@@ -42,10 +42,6 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         complete_command = command + " " + " ".join(str(e) for e in arguments)
         complete_command = [complete_command.replace("'", "")]
 
-        # log complete command for inspection and reproducibility (if in DEBUG mode)
-        logger = StepLogger()
-        # logger.log(f"Complete command: {complete_command}", _LE.DEBUG)
-
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)

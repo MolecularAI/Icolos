@@ -1,3 +1,4 @@
+from copy import deepcopy
 from icolos.core.containers.generic import GenericContainer, GenericData
 import json
 import pandas as pd
@@ -179,7 +180,7 @@ class InputPreparator(BaseModel):
         self, step_input: StepInputParameters
     ) -> GromacsState:
         input_step = self.workflow.find_step_by_step_id(step_input.gmx_state.source)
-        return input_step.data.gmx_state
+        return deepcopy(input_step.data.gmx_state)
 
     def _generate_generic_input(
         self, step_input: StepInputParameters, step_type

@@ -42,7 +42,7 @@ class Test_PMXanalyse(unittest.TestCase):
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
-                    _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                    _SBE.SETTINGS_ARGUMENTS_FLAGS: ["--quiet"],
                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                 },
                 _SBE.SETTINGS_ADDITIONAL: {},
