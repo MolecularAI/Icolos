@@ -30,7 +30,7 @@ class StepBaseEnum(str, Enum):
     STEP_FILTER = "FILTER"
     STEP_PANTHER = "PANTHER"
     STEP_KALLISTO = "KALLISTO"
-    STEP_JAZZY = "jazzy"
+    STEP_JAZZY = "JAZZY"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
     STEP_EDITCONF = "EDITCONF"

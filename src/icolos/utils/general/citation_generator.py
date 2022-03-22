@@ -86,6 +86,12 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         "\nKallisto: Caldeweyher, E., Kallisto: A command-line interface to simplify computational modelling and the generation of atomic features. Journal of Open Source Software, 6(60), 3050, https://doi.org/10.21105/joss.03050. 2021\n",
     )
     add_citation(
+        _SBE.STEP_JAZZY,
+        step_types,
+        citations,
+        "\nJazzy: Caldeweyher, E., Ghiandoni, G.M., https://github.com/AstraZeneca/jazzy <CITATION MISSING>\n",
+    )
+    add_citation(
         _SBE.STEP_TURBOMOLE,
         step_types,
         citations,
