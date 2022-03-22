@@ -32,7 +32,7 @@ def add_citation(
             for w_step_type in workflow_step_types
             if step_type.upper() in w_step_type
         ]
-    ):
+    ) or step_type == "default":
         citations.append(citation_string)
 
 
@@ -53,6 +53,14 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
     )
     citations = []
     step_types = [step.type.upper() for step in steps]
+
+    # add general Icolos citation
+    add_citation(
+        "default",
+        step_types,
+        citations,
+        "\nIcolos: J. Harry Moore, Matthias R. Bauer, Jeff Guo, Atanas Patronov, Ola Engkvist and Christian Margreitter. Icolos: A workflow manager for structure based post-processing of de novo generated small molecules. https://doi.org/10.26434/chemrxiv-2022-sjcp3, https://github.com/MolecularAI/Icolos (2022)\n",
+    )
 
     # add individual citations based on the step types used in this workflow (can be empty, of course)
     add_citation(
