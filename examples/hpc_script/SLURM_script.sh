@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=5
 #SBATCH --mem-per-cpu=2G
 
-source /projects/cc/mai/miniconda3/bin/activate /projects/cc/mai/miniconda3/envs/Icolos
-python /projects/cc/mai/Icolos/executor.py -conf /projects/cc/mai/examples/Icolos/MPI_test/workflow_ReSCoSS.json \
+source /projects/cc/mai/miniconda3/bin/activate /projects/cc/mai/miniconda3/envs/icolosprod
+icolos -conf /projects/cc/mai/examples/Icolos/MPI_test/workflow_ReSCoSS.json \
        --global_variables "output_dir:<path>/icolos/tests/junk" -debug
 
