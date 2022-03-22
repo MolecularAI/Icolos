@@ -1061,6 +1061,47 @@ class KallistoEnum:
         raise ValueError("No changes allowed.")
 
 
+class JazzyEnum:
+    JAZZY = "jazzy"
+    HELP = "--help"
+    HELP_IDENTIFICATION_STRING = "Show this message"
+
+    # "vec" command
+    VEC = "vec"      # "generating properties" mode
+    VEC_OPT = "--opt"   # optimization
+    VEC_OPT_MMF94 = "MMF94"
+    VEC_OPT_MMF94S = "MMF94s"
+    VEC_OPT_UFF = "UFF"
+    VEC_STRENGHT_ONLY = "--strength_only"
+
+    # "vis" command
+    VIS = "vis"      # "generating graphics" mode
+    VIS_OPT = "--opt"
+    VIS_OPT_MMF94 = "MMF94"
+    VIS_OPT_MMF94S = "MMF94s"
+    VIS_OPT_UFF = "UFF"
+    VIS_FIG_SIZE = "--fig_size"    # Size of SVG image in pixels.  [default: 500, 500]
+    VIS_SDC_THRESHOLD = "--sdc_threshold"    # Treshold strength to depic Carbon donors. [default: 0.0]
+    VIS_SA_THRESHOLD = "--sa_threshold"    # Treshold strength to depic acceptors. [default: 0.0]
+    VIS_BASE64 = "--base64"
+    VIS_FLATTEN_MOLECULE = "--flatten_molecule"
+    VIS_HIGHLIGHT_ATOMS = "--highlight_atoms"
+    VIS_IGNORE_SDC = "--ignore_sdc"
+    VIS_IGNORE_SDX = "--ignore_sdx"
+    VIS_IGNORE_SA = "--ignore_sa"
+    VIS_HELP = "--help"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
 class ShaepEnum:
 
     SHAEP_EXECUTABLE = "shaep"
