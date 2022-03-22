@@ -65,18 +65,13 @@ class Test_Jazzy(unittest.TestCase):
             ),
             [5.3347, 12.9328, 24.6745],
         )
-        print(jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_JE.RESULT_SDX))
-        """self.assertEqual(
-            jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_KE.VDW),
-            "3.4378599199634587|3.4396538784100725|3.4382871194521347|3.4390089115175315|3.397830365486183|3.3935108635482236|3.360611990090132|3.2709073572038108|3.419724012319036|3.279653714976599|3.272947644270613",
-        )
         self.assertEqual(
-            jazzy_step.get_compounds()[0][0][1].get_molecule().GetProp(_KE.VDW),
-            "3.4396309533823914|3.437787905571396|3.439055955216591|3.4382857970612846|3.3978687711274818|3.3934963890468453|3.360556672297951|3.2709909790501612|3.419779086892037|3.279703488664608|3.2729758490815994",
+            jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_JE.RESULT_SDX),
+            "1.4151"
         )
 
-        # check SDF write-out (including energy-as-tag annotation)
-        out_path = os.path.join(self._test_dir, "kallisto_paracetamol.sdf")
+        # check SDF write-out
+        out_path = os.path.join(self._test_dir, "jazzy_paracetamol.sdf")
         jazzy_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 23491)"""
+        self.assertEqual(stat_inf.st_size, 18225)
