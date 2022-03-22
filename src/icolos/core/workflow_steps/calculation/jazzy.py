@@ -130,7 +130,7 @@ class StepJazzy(StepCalculationBase, BaseModel):
 
         os.chdir(work_dir)
 
-    def _parse_kallisto_result(
+    def _parse_jazzy_result(
         self, output_files: List[str], conformers: List[Conformer]
     ) -> List:
         def _split_list(inp: List, chunk_size: int) -> List[List[str]]:
@@ -168,7 +168,7 @@ class StepJazzy(StepCalculationBase, BaseModel):
         return results
 
     def _execute_jazzy(self):
-        kallisto_parallelizer = Parallelizer(func=self._run_subjob)
+        jazzy_parallelizer = Parallelizer(func=self._run_subjob)
         n = 1
         while self._subtask_container.done() is False:
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
@@ -179,17 +179,17 @@ class StepJazzy(StepCalculationBase, BaseModel):
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
-            self._logger.log(f"Executing Kallisto for batch {n}.", _LE.DEBUG)
+            self._logger.log(f"Executing Jazzy for batch {n}.", _LE.DEBUG)
 
-            kallisto_parallelizer.execute_parallel(
+            jazzy_parallelizer.execute_parallel(
                 tmp_dir=tmp_dirs, input_file=input_files, output_file=output_files
             )
 
-            results = self._parse_kallisto_result(output_files, conformers)
+            results = self._parse_jazzy_result(output_files, conformers)
             for sublist, result in zip(next_batch, results):
                 assert len(sublist) == 1
                 for task in sublist:
-                    if result == _SKE.SUCCESS:
+                    if result == _SJE.SUCCESS:
                         task.set_status_success()
                     else:
                         task.set_status_failed()

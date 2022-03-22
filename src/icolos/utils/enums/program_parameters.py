@@ -1091,6 +1091,17 @@ class JazzyEnum:
     VIS_IGNORE_SA = "--ignore_sa"
     VIS_HELP = "--help"
 
+    # result dictionary keys for "vec" command
+    RESULT_SDC = "sdc"
+    RESULT_SDX = "sdx"
+    RESULT_SA = "sa"
+    RESULT_DGA = "dga"
+    RESULT_DGP = "dgp"
+    RESULT_DGTOT = "dgtot"
+    RESULT_STATUS = "__status"
+    RESULT_STATUS_SUCCESS = "success"
+    RESULT_SMILES = "smiles"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:
