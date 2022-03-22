@@ -65,6 +65,7 @@ class Test_Jazzy(unittest.TestCase):
             ),
             [5.3347, 12.9328, 24.6745],
         )
+        print(jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_JE.RESULT_SDX))
         """self.assertEqual(
             jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_KE.VDW),
             "3.4378599199634587|3.4396538784100725|3.4382871194521347|3.4390089115175315|3.397830365486183|3.3935108635482236|3.360611990090132|3.2709073572038108|3.419724012319036|3.279653714976599|3.272947644270613",
