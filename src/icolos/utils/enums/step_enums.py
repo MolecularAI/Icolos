@@ -30,6 +30,7 @@ class StepBaseEnum(str, Enum):
     STEP_FILTER = "FILTER"
     STEP_PANTHER = "PANTHER"
     STEP_KALLISTO = "KALLISTO"
+    STEP_JAZZY = "JAZZY"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
     STEP_EDITCONF = "EDITCONF"
@@ -693,6 +694,21 @@ class StepPantherEnum:
 class StepKallistoEnum:
 
     FEATURES = "features"
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepJazzyEnum:
     SUCCESS = "success"
     FAILURE = "failure"
 
