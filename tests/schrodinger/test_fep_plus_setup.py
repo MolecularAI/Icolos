@@ -74,7 +74,7 @@ class Test_FepPlusSetup(unittest.TestCase):
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-num-procs": 8},
                 }
             },
         }

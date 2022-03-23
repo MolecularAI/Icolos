@@ -345,7 +345,7 @@ class Test_WriteOut(unittest.TestCase):
             }
         }
         writeout_handler = WriteOutHandler(**conf)
-        writeout_handler.workflow_data = WorkflowData()
+        writeout_handler.workflow_data = StepData()
 
         writeout_handler.workflow_data.gmx_state.trajectories[0] = GenericData(
             file_name="traj.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC

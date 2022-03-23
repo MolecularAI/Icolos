@@ -7,6 +7,8 @@
 - Added `validator` entry point that allows to check configuration JSONs against a JSON Schema.
 #### Internal
 - Added version check between configuration files and installation.
+- Add internal mechanism for handling gromacs simulation state
+- Various fixes for pmx steps + SLURM interface
 
 ### Version 1.8.0 | 2022-02-23
 #### Features
