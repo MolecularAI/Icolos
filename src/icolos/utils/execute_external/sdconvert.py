@@ -35,7 +35,7 @@ class SDConvertExecutor(ExecutorBase):
 
     def is_available(self):
         try:
-            raise NotImplementedError
+            # raise NotImplementedError
             result = self.execute(
                 command=SEE.SDCONVERT, arguments=SEE.SDCONVERT_HELP, check=False
             )

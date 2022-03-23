@@ -112,7 +112,7 @@ class Test_MMPBSA(unittest.TestCase):
         step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
 
-        self.assertGreater(stat_inf.st_size, 200)
+        self.assertGreater(stat_inf.st_size, 180)
 
     def test_protein_lig_single_traj_MPI(self):
 
@@ -144,7 +144,7 @@ class Test_MMPBSA(unittest.TestCase):
         step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
 
-        self.assertGreater(stat_inf.st_size, 200)
+        self.assertGreater(stat_inf.st_size, 180)
 
     def test_protein_lig_multi_traj_MPI(self):
         step_conf = {
@@ -189,7 +189,7 @@ class Test_MMPBSA(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
         step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 200)
+        self.assertGreater(stat_inf.st_size, 180)
         self.assertEqual(
             np.mean(step_mmpbsa.get_topol().properties[_SGE.MMGBSA_DG]), -32.1691
         )

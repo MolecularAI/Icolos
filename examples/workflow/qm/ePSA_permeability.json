@@ -63,10 +63,10 @@
                 "step_id": "conf_macromodel",
                 "type": "macromodel",
                 "execution": {
-                    "prefix_execution": "module load schrodinger/2019-4"
+                    "prefix_execution": "module load schrodinger/2020-4"
                 },
                 "token_guard": {
-                    "prefix_execution": "module load schrodinger/2019-4",
+                    "prefix_execution": "module load schrodinger/2020-4",
                     "token_pools": {
                         "MMOD_MACROMODEL": 2
                     },

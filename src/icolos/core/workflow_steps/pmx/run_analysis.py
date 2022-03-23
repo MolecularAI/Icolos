@@ -58,7 +58,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         o = "{0}/results.txt".format(analysispath)
         args = " ".join(self.settings.arguments.flags)
 
-        cmd = "$PMX analyse -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
+        cmd = "$PMX analyse  --quiet -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
             fA, fB, o, oA, oB, wplot, 298, 100
         )
         # subprocess complains that the command is too long

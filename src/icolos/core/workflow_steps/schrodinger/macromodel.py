@@ -145,6 +145,8 @@ class StepMacromodel(StepSchrodingerBase, BaseModel):
 
                 # execute MacroModel, obtain the output SDF and switch back the working directory to what it was before
                 result = self._execute_macromodel(com_file=com_file)
+                print(result)
+                os.listdir(tmp_dir)
                 self._sdconvert_util.mae2sdf(mae_file=mae_output, sdf_file=sdf_output)
                 self._restore_working_dir()
 
