@@ -6,7 +6,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 setup(
     name="icolos",
     maintainer="Christian Margreitter, Harry Moore",
-    version="1.8.1",
+    version="1.9.0",
     url="https://github.com/MolecularAI/Icolos",
     packages=find_namespace_packages(where="src"),
     package_dir={"": "src"},
