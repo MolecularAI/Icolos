@@ -78,10 +78,10 @@ class Test_MMPBSA(unittest.TestCase):
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
         step_mmpbsa.execute()
-        out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
-        step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
+        out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
+        step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 5570)
+        self.assertGreater(stat_inf.st_size, 200)
 
     def test_protein_lig_single_traj_custom_file(self):
 
@@ -108,11 +108,11 @@ class Test_MMPBSA(unittest.TestCase):
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
         step_mmpbsa.execute()
-        out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
-        step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
+        out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
+        step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
 
-        self.assertGreater(stat_inf.st_size, 4680)
+        self.assertGreater(stat_inf.st_size, 200)
 
     def test_protein_lig_single_traj_MPI(self):
 
@@ -140,11 +140,11 @@ class Test_MMPBSA(unittest.TestCase):
             GenericData(file_name="DMP:100.itp", file_data=self.lig_itp)
         )
         step_mmpbsa.execute()
-        out_path = os.path.join(self._test_dir, "FINAL_RESULTS_MMPBSA.dat")
-        step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
+        out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
+        step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
 
-        self.assertGreater(stat_inf.st_size, 4680)
+        self.assertGreater(stat_inf.st_size, 200)
 
     def test_protein_lig_multi_traj_MPI(self):
         step_conf = {
@@ -186,10 +186,10 @@ class Test_MMPBSA(unittest.TestCase):
         )
         step_mmpbsa.data.gmx_state = topol
         step_mmpbsa.execute()
-        # out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
-        # step_mmpbsa.write_generic_by_extension(self._test_dir, "dat")
-        # stat_inf = os.stat(out_path)
-        # self.assertGreater(stat_inf.st_size, 5570)
+        out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
+        step_mmpbsa.data.gmx_state.write_props(self._test_dir)
+        stat_inf = os.stat(out_path)
+        self.assertGreater(stat_inf.st_size, 200)
         self.assertEqual(
             np.mean(step_mmpbsa.get_topol().properties[_SGE.MMGBSA_DG]), -32.1691
         )
