@@ -1,7 +1,7 @@
 {
   "workflow": {
     "header": {
-      "version": "1.8.1",
+      "version": "1.9.0",
       "workflow_id": "Example using kallisto",
       "description": "Details, code base etc.: https://github.com/AstraZeneca/kallisto",
       "logging": {

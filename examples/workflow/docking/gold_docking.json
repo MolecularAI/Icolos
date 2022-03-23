@@ -1,7 +1,7 @@
 {
     "workflow": {
         "header": {
-            "version": "1.8.1",
+            "version": "1.9.0",
             "workflow_id": "Gold docking",
             "description": "Runs docking using CCDC's GOLD and a pre-defined receptor file.",
             "environment": {
