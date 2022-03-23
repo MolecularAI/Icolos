@@ -345,23 +345,23 @@ class Test_WriteOut(unittest.TestCase):
             }
         }
         writeout_handler = WriteOutHandler(**conf)
-        writeout_handler.workflow_data = StepData()
+        writeout_handler.data = StepData()
 
-        writeout_handler.workflow_data.gmx_state.trajectories[0] = GenericData(
+        writeout_handler.data.gmx_state.trajectories[0] = GenericData(
             file_name="traj.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC
         )
-        writeout_handler.workflow_data.gmx_state.trajectories[1] = GenericData(
+        writeout_handler.data.gmx_state.trajectories[1] = GenericData(
             file_name="traj.xtc", file_data=PATHS_EXAMPLEDATA.GROMACS_1BVG_XTC
         )
-        writeout_handler.workflow_data.gmx_state.structures[0] = GenericData(
+        writeout_handler.data.gmx_state.structures[0] = GenericData(
             file_name="confout.gro",
             file_data=PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO,
         )
-        writeout_handler.workflow_data.gmx_state.structures[1] = GenericData(
+        writeout_handler.data.gmx_state.structures[1] = GenericData(
             file_name="confout.gro",
             file_data=PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO,
         )
-        writeout_handler.workflow_data.gmx_state.set_topol(
+        writeout_handler.data.gmx_state.set_topol(
             path="", file=PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP
         )
 

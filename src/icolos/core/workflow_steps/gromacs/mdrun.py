@@ -100,7 +100,6 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         """
         Normal gmx mdrun call, if multiple structures are loaded into the topology, run them in parallel according to the parallelizer settings
         """
-        # self.write_input_files(tmp_dir, topol=topol)
         # if we have multiple structures, run the simulations externally, in parallel
         work_dirs = [tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(self.topol.tprs))]
 

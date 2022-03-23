@@ -23,11 +23,11 @@ class Test_Structconvert(unittest.TestCase):
         pass
 
     def test_sdf2pdb(self):
-        executor = OBabelStructConvert(prefix_execution=_SEE.SCHRODINGER_MODULE)
+        executor = OBabelStructConvert()
         output_path = os.path.join(self._test_dir, "output_small_molecule.pdb")
         executor.sdf2pdb(
             sdf_file=PATHS_EXAMPLEDATA.SMALL_MOLECULES_SDF_PATH, pdb_file=output_path
         )
 
         stat_inf = os.stat(output_path)
-        self.assertEqual(stat_inf.st_size, 2354)
+        self.assertEqual(stat_inf.st_size, 6544)

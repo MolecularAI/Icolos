@@ -334,7 +334,8 @@ class StepPMXBase(StepBase, BaseModel):
                                 f"Warning: job {subtask} failed!", _LE.WARNING
                             )
                             if (
-                                self.get_perturbation_map().strict_execution
+                                self.get_perturbation_map() is not None
+                                and self.get_perturbation_map().strict_execution
                                 and isinstance(subtask.data, str)
                             ):
                                 edge = self.get_perturbation_map().get_edge_by_id(
