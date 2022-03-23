@@ -85,7 +85,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
                 "0ec09ef_4afa8f9/ligand/stateA/run1/transitions/frame1.gro",
             )
         )
-        self.assertGreater(stat_inf.st_size, 414600)
+        self.assertGreater(stat_inf.st_size,357800)
 
         stat_inf = os.stat(
             os.path.join(
