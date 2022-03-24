@@ -237,7 +237,7 @@ class StepPMXBase(StepBase, BaseModel):
         )
         arguments_acpype = [
             "-di",
-            "MOL.pdb",
+            "MOL.sdf",
             "-c",
             charge_method,
             "-a",
@@ -521,10 +521,8 @@ class StepPMXBase(StepBase, BaseModel):
             raise NotImplementedError(f"Cannot parametrize object of type {type(node)}")
         lig_path = os.path.join(self.work_dir, "input", "ligands", node_id)
         os.makedirs(lig_path, exist_ok=True)
-        conf.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
+        conf.write(os.path.join(lig_path, "MOL.sdf"))
 
-        # clean the written pdb, remove anything except hetatm/atom lines
-        self._clean_pdb_structure(lig_path)
         # now run ACPYPE on the ligand to produce the topology file
         self._parametrisation_pipeline(lig_path, conf=conf)
 
