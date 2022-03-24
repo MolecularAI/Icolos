@@ -45,10 +45,11 @@ class Test_PMX_setup(unittest.TestCase):
             _SBE.STEPID: "01_PMX_SETUP",
             _SBE.STEP_TYPE: _SBE.STEP_PMX_SETUP,
             _SBE.EXEC: {
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 8,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
-                }
+                },
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ADDITIONAL: {

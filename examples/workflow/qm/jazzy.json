@@ -1,0 +1,61 @@
+{
+  "workflow": {
+    "header": {
+      "version": "1.9.0",
+      "workflow_id": "Example using jazzy",
+      "description": "Details, code base etc.: https://github.com/AstraZeneca/jazzy",
+      "logging": {
+        "logfile": "tests/junk/jazzy.log"
+      },
+      "environment": {
+        "export": [
+        ]
+      },
+      "global_variables": {
+        "jazzy_location": "~/miniconda3/envs/jazzy/bin"
+      }
+    },
+    "steps": [
+      {
+        "step_id": "calculating_jazzy_features",
+        "type": "jazzy",
+        "execution": {
+          "binary_location": "{jazzy_location}",
+          "parallelization": {
+            "jobs": 2
+          }
+        },
+        "settings": {
+          "arguments": {
+            "flags": [],
+            "parameters": {
+            }
+          },
+          "additional": {
+          }
+        },
+        "input": {
+          "compounds": [
+            {
+              "source": "{package_dir}/../IcolosData/clustering/paracetamol_11_conformers.sdf",
+              "source_type": "file",
+              "format": "SDF"
+            }
+          ]
+        },
+        "writeout": [
+          {
+            "compounds": {
+              "category": "conformers"
+            },
+            "destination": {
+              "resource": "{package_dir}/tests/junk/jazzy_result.sdf",
+              "type": "file",
+              "format": "SDF"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

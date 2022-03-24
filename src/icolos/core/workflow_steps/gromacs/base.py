@@ -1,5 +1,5 @@
 from icolos.core.containers.generic import GenericData
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from pydantic import BaseModel
 import os
@@ -20,7 +20,7 @@ class StepGromacsBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def write_input_files(self, tmp_dir: str, topol: GromacsTopol = None):
+    def write_input_files(self, tmp_dir: str, topol: GromacsState = None):
         """
         Defaults to writing all available data from the workflow's topology object, unless that file has been specified in generic data, which will be prioritised
         """
@@ -65,14 +65,14 @@ class StepGromacsBase(StepBase, BaseModel):
         for file in self.data.generic.get_flattened_files():
             file.write(tmp_dir)
 
-    def pickle_topol(self, topol: GromacsTopol, tmp_dir: str):
+    def pickle_topol(self, topol: GromacsState, tmp_dir: str):
         """
         Write the Icolos internal state to a pickled file in the tmpdir
         """
         with open(os.path.join(tmp_dir, "icolos_topol_state.pkl"), "wb") as f:
             dill.dump(topol, f)
 
-    def load_topol(self, file: GenericData) -> GromacsTopol:
+    def load_topol(self, file: GenericData) -> GromacsState:
         data = file.get_data()
         return dill.load(data)
 
@@ -133,8 +133,9 @@ class StepGromacsBase(StepBase, BaseModel):
 
     def _generate_index_groups(self, tmp_dir: str):
         # dump the first structure file to the tmpdir
-        self.get_topol().structures[0].write(tmp_dir)
-        args = ["-f", _SGE.STD_STRUCTURE]
+        structure = self.get_topol().structures[0]
+        structure.write(tmp_dir)
+        args = ["-f", structure.get_file_name()]
         ndx_list = [f for f in os.listdir(tmp_dir) if f.endswith(_SGE.FIELD_KEY_NDX)]
         if len(ndx_list) == 1:
             args.extend(["-n", ndx_list[0]])
@@ -202,11 +203,3 @@ class StepGromacsBase(StepBase, BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.INFO)
         self.get_topol().set_ndx(tmp_dir)
-
-    def get_topol(self) -> GromacsTopol:
-        if not self.data.generic.get_file_names_by_extension("pkl"):
-            return self.get_workflow_object().workflow_data.gmx_topol
-        else:
-            return self.load_topol(
-                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
-            )

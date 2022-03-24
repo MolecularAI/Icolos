@@ -1,4 +1,6 @@
 import os
+import sys
+
 import pandas as pd
 import argparse
 
@@ -7,7 +9,7 @@ import rdkit.Chem as Chem
 from icolos.core.step_utils.rdkit_utils import to_smiles
 
 
-if __name__ == "__main__":
+def main():
 
     # get the input parameters and parse them
     parser = argparse.ArgumentParser(
@@ -97,3 +99,8 @@ if __name__ == "__main__":
             mode="w",
             quoting=None,
         )
+
+
+if __name__ == "__main__":
+    ret = main()
+    sys.exit(0)

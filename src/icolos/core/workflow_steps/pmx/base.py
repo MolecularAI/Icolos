@@ -322,6 +322,7 @@ class StepPMXBase(StepBase, BaseModel):
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
             if result_checker is not None:
+                self._logger.log("Checking execution results...", _LE.DEBUG)
                 batch_results = result_checker(jobs)
                 good_results = 0
                 for task, result in zip(next_batch, batch_results):
@@ -333,7 +334,8 @@ class StepPMXBase(StepBase, BaseModel):
                                 f"Warning: job {subtask} failed!", _LE.WARNING
                             )
                             if (
-                                self.get_perturbation_map().strict_execution
+                                self.get_perturbation_map() is not None
+                                and self.get_perturbation_map().strict_execution
                                 and isinstance(subtask.data, str)
                             ):
                                 edge = self.get_perturbation_map().get_edge_by_id(
@@ -341,6 +343,7 @@ class StepPMXBase(StepBase, BaseModel):
                                 )
                                 if edge is not None:
                                     edge._set_status(_PE.STATUS_FAILED)
+
                         else:
                             subtask.set_status_success()
                             good_results += 1

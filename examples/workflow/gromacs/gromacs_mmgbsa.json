@@ -1,6 +1,7 @@
 {
 	"workflow": {
 		"header": {
+			"version": "1.9.0",
 			"workflow_id": "gromacs_test",
 			"description": "full md run with gromacs with ligand parametrisation and mmgbsa calculation",
 			"environment": {
@@ -22,7 +23,6 @@
 			"global_variables": {
 				"file_base": "{package_dir}/../IcolosData/gromacs/protein",
 				"output_dir": "{package_dir}/tests/junk/gromacs"
-
 			}
 		},
 		"steps": [
@@ -39,10 +39,11 @@
 						],
 						"parameters": {
 							"-water": "tip3p",
-							"-ff": "amber14sb"
+							"-ff": "amber03"
 						}
 					},
 					"additional": {
+						"charge_method": "gas"
 					}
 				},
 				"input": {
@@ -71,8 +72,12 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "01_pdb2gmx"
+					}
 				}
-				
 			},
 			{
 				"step_id": "03_solvate",
@@ -88,8 +93,12 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
-				
 			},
 			{
 				"step_id": "04_grompp",
@@ -103,17 +112,19 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/ions.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "03_solvate"
+					}
 				}
 			},
 			{
@@ -137,12 +148,9 @@
 					}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "04_grompp",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "04_grompp"
+					}
 				}
 			},
 			{
@@ -157,17 +165,19 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/minim.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "05_genion"
+					}
 				}
 			},
 			{
@@ -184,12 +194,9 @@
 					"additional": {}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "06_grompp_eminim",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "06_grompp_eminim"
+					}
 				}
 			},
 			{
@@ -207,17 +214,19 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true
+						"restraints": true
 					}
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/nvt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "07_eminim_mdrun"
+					}
 				}
 			},
 			{
@@ -234,12 +243,9 @@
 					"additional": {}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "08_nvt_grompp",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "08_nvt_grompp"
+					}
 				}
 			},
 			{
@@ -257,17 +263,19 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true
+						"restraints": true
 					}
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/npt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "09_nvt_mdrun"
+					}
 				}
 			},
 			{
@@ -284,12 +292,9 @@
 					"additional": {}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "10_npt_grompp",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "10_npt_grompp"
+					}
 				}
 			},
 			{
@@ -310,17 +315,19 @@
 							"nsteps": "50000"
 						},
 						"make_ndx_command": "auto",
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
 					"generic": [
-						
 						{
 							"source": "{file_base}/md.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "11_npt_mdrun"
+					}
 				}
 			},
 			{
@@ -340,52 +347,17 @@
 					}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "12_prod_md_grompp",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "12_prod_md_grompp"
+					}
 				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "xtc"
+						"gmx_state": {
+							"key": "xtc, log, gro, tpr"
 						},
 						"destination": {
-							"resource": "{output_dir}/md_0_1.xtc",
-							"type": "file",
-							"format": "TXT"
-						}
-					},
-					{
-						"generic": {
-							"key": "log"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.log",
-							"type": "file",
-							"format": "TXT"
-						}
-					},
-					{
-						"generic": {
-							"key": "gro"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.gro",
-							"type": "file",
-							"format": "TXT"
-						}
-					},
-					{
-						"generic": {
-							"key": "tpr"
-						},
-						"destination": {
-							"resource": "{output_dir}/md_0_1.tpr",
-							"type": "file",
-							"format": "TXT"
+							"resource": "{output_dir}/production"
 						}
 					}
 				]
@@ -403,71 +375,75 @@
 						]
 					},
 					"additional": {
-						"pipe_input": "System System"
+						"pipe_input": "Protein_Other System"
 					}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "13_prod_mdrun",
-							"extension": "xtc"
-						},
-						{
-							"source": "13_prod_mdrun",
-							"extension": "tpr"
+					"gmx_state": {
+						"source": "13_prod_mdrun"
+					}
+				}
+			},
+			{
+				"step_id": "15_trjconv",
+				"type": "trjconv",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-fit": "rot+trans"
 						}
-					]
+					},
+					"additional": {
+						"pipe_input": "Protein_Other System",
+						"make_ndx_command": "auto"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14_trjconv"
+					}
 				},
 				"writeout": [
 					{
-						"generic": {
+						"gmx_state": {
 							"key": "xtc"
 						},
 						"destination": {
-							"resource": "{output_dir}/md_0_1_trjconv.xtc",
-							"type": "file",
-							"format": "TXT"
+							"resource": "{output_dir}/processed"
 						}
 					}
 				]
 			},
 			{
-				"step_id": "15_gmx_MMPBSA",
+				"step_id": "16_gmx_MMPBSA",
 				"type": "gmx_mmpbsa",
 				"execution": {
-					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2 && module load gmx_MMPBSA/1.3.3-fosscuda-2019a-Python-3.7.2"
+					"prefix_execution": "module load gmx_MMPBSA/1.4.3-foss-2021a-CUDA-11.3.1"
 				},
 				"settings": {
 					"arguments": {
-						"parameters": {
-						}
+						"parameters": {}
 					},
 					"additional": {
-						"coupling_groups": "Protein Other",
-						"forcefield": "<fill_path>/amber14sb.ff"
+						"coupling_groups": "Protein Other"
 					}
 				},
 				"input": {
-					"generic": [
-						{
-							"source": "14_trjconv",
-							"extension": "xtc"
-						},
-						{
-							"source": "13_prod_mdrun",
-							"extension": "tpr"
-						}
-					]
+					"gmx_state": {
+						"source": "15_trjconv"
+					}
 				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "dat"
+						"gmx_state": {
+							"key": "props"
 						},
 						"destination": {
-							"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.pdb",
-							"type": "file",
-							"format": "TXT"
+							"resource": "{output_dir}"
 						}
 					}
 				]

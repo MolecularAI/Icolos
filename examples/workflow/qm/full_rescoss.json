@@ -1,7 +1,8 @@
 {
     "workflow": {
         "header": {
-            "id": "rescoss",
+            "version": "1.9.0",
+            "workflow_id": "rescoss",
             "description": "Full ReSCoSS configuration (version 1.0).",
             "environment": {
                 "export": [{
@@ -68,10 +69,10 @@
                 "step_id": "conf_macromodel",
                 "type": "macromodel",
                 "execution": {
-                    "prefix_execution": "module load schrodinger/2019-4"
+                    "prefix_execution": "module load schrodinger/2020-4"
                 },
                 "token_guard": {
-                    "prefix_execution": "module load schrodinger/2019-4",
+                    "prefix_execution": "module load schrodinger/2020-4",
                     "token_pools": {
                         "MMOD_MACROMODEL": 2
                     },
@@ -131,7 +132,7 @@
                 "execution": {
                     "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
                     "parallelization": {
-                        "cores": 10
+                        "jobs": 10
                     }
                 },
                 "settings": {

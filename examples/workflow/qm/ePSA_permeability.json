@@ -1,7 +1,8 @@
 {
     "workflow": {
         "header": {
-            "id": "ePSA_permeability_example",
+            "version": "1.9.0",
+            "workflow_id": "ePSA_permeability_example",
             "description": "A shortened, simplified version of the ReSCoSS workflow to calculate descriptors for molecules to predict ePSA and permeability values.",
             "environment": {
                 "export": [{
@@ -62,10 +63,10 @@
                 "step_id": "conf_macromodel",
                 "type": "macromodel",
                 "execution": {
-                    "prefix_execution": "module load schrodinger/2019-4"
+                    "prefix_execution": "module load schrodinger/2020-4"
                 },
                 "token_guard": {
-                    "prefix_execution": "module load schrodinger/2019-4",
+                    "prefix_execution": "module load schrodinger/2020-4",
                     "token_pools": {
                         "MMOD_MACROMODEL": 2
                     },
@@ -122,7 +123,7 @@
                 "execution": {
                     "binary_location": "/projects/cc/mai/binaries/xtb-6.4.0",
                     "parallelization": {
-                        "cores": 10
+                        "jobs": 10
                     }
                 },
                 "settings": {

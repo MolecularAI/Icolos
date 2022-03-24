@@ -1,6 +1,7 @@
 {
 	"workflow": {
 		"header": {
+			"version": "1.9.0",
 			"workflow_id": "gromacs_ensemble_mmgbsa",
 			"description": "ensemble MMGBSA demonstration - step iteration + SLURM job control",
 			"environment": {
@@ -71,6 +72,11 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
 			},
 			{
@@ -87,6 +93,11 @@
 						}
 					},
 					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
 				}
 			},
 			{
@@ -101,7 +112,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false
+						"restraints": false
 					}
 				},
 				"input": {
@@ -110,7 +121,10 @@
 							"source": "{file_base}/ions.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "03_solvate"
+					}
 				}
 			},
 			{
@@ -132,6 +146,11 @@
 					"additional": {
 						"pipe_input": "SOL"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "04_grompp"
+					}
 				}
 			},
 			{
@@ -146,7 +165,7 @@
 						"parameters": {}
 					},
 					"additional": {
-						"-r": false,
+						"restraints": false,
 						"replicas": 4
 					}
 				},
@@ -156,7 +175,10 @@
 							"source": "{file_base}/minim.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "05_genion"
+					}
 				}
 			},
 			{
@@ -183,6 +205,11 @@
 					"additional": {
 						"multidir": true
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "06_grompp_eminim"
+					}
 				}
 			},
 			{
@@ -200,7 +227,7 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true,
+						"restraints": true,
 						"replicas": 4
 					}
 				},
@@ -210,7 +237,10 @@
 							"source": "{file_base}/nvt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "07_eminim_mdrun"
+					}
 				}
 			},
 			{
@@ -237,6 +267,11 @@
 					"additional": {
 						"multidir": true
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "08_nvt_grompp"
+					}
 				}
 			},
 			{
@@ -254,7 +289,7 @@
 					},
 					"additional": {
 						"make_ndx_command": "auto",
-						"-r": true,
+						"restraints": true,
 						"replicas": 4
 					}
 				},
@@ -264,7 +299,10 @@
 							"source": "{file_base}/npt_equil.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "09_nvt_mdrun"
+					}
 				}
 			},
 			{
@@ -291,6 +329,11 @@
 					"additional": {
 						"multidir": true
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "10_npt_grompp"
+					}
 				}
 			},
 			{
@@ -311,7 +354,7 @@
 							"nsteps": "10000"
 						},
 						"make_ndx_command": "auto",
-						"-r": false,
+						"restraints": false,
 						"replicas": 4
 					}
 				},
@@ -321,7 +364,11 @@
 							"source": "{file_base}/md.mdp",
 							"extension": "mdp"
 						}
-					]
+					],
+					"gmx_state": {
+						"source": "11_npt_mdrun"
+					}
+				
 				}
 			},
 			{
@@ -344,14 +391,15 @@
 					"arguments": {
 						"flags": [],
 						"parameters": {
-							"-nb": "gpu",
-							"-bonded": "gpu",
-							"-pme": "gpu",
-							"-update": "gpu"
 						}
 					},
 					"additional": {
 						"multidir": true
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "12_prod_md_grompp"
 					}
 				}
 			},
@@ -374,6 +422,11 @@
 					"additional": {
 						"pipe_input": "Protein_Other System"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "13_prod_mdrun"
+					}
 				}
 			},
 			{
@@ -393,6 +446,11 @@
 					"additional": {
 						"pipe_input": "Protein_Other System"
 					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14_trjconv"
+					}
 				}
 			},
 			{
@@ -407,16 +465,21 @@
 					},
 					"additional": {
 						"coupling_groups": "Protein Other",
-						"forcefield": "/<fill_path>/forcefields/amber14sb.ff"
+						"forcefield": "{GMXLIB}/amber14sb.ff"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14b_trjconv"
 					}
 				},
 				"writeout": [
 					{
-						"generic": {
-							"key": "dat"
+						"gmx_state": {
+							"key": "props"
 						},
 						"destination": {
-							"resource": "{output_dir}/FINAL_RESULTS_MMPBSA.dat"
+							"resource": "{output_dir}"
 						}
 					}
 				]
