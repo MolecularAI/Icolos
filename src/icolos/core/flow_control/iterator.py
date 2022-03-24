@@ -30,7 +30,7 @@ class IterParallelizer(BaseModel):
 
     # if true, steps must be totally independent, the iterator step
     parallelize: bool = False
-    cores: int = 1
+    jobs: int = 1
     dependent_steps: int = None
 
 
