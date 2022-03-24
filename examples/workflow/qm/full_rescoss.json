@@ -29,19 +29,7 @@
             "global_variables": {
             }
         },
-        "steps": [{
-                "step_id": "initialization",
-                "type": "initialization",
-                "input": {
-                    "compounds": [
-                        {
-                            "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
-                            "source_type": "file",
-                            "format": "SDF"
-                        }
-                    ]
-                }
-            }, {
+        "steps": [ {
                 "step_id": "omega_confgen",
                 "type": "omega",
                 "execution": {
@@ -60,8 +48,9 @@
                 "input": {
                     "compounds": [
                         {
-                            "source": "initialization",
-                            "source_type": "step"
+                            "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
+                            "source_type": "file",
+                            "format": "SDF"
                         }
                     ]
                 }
@@ -90,8 +79,9 @@
                 "input": {
                     "compounds": [
                         {
-                            "source": "initialization",
-                            "source_type": "step"
+                            "source": "{package_dir}/../IcolosData/molecules/aspirin.sdf",
+                            "source_type": "file",
+                            "format": "SDF"
                         }
                     ]
                 }
