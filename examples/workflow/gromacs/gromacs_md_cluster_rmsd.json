@@ -1,0 +1,476 @@
+{
+	"workflow": {
+		"header": {
+			"version": "1.9.0",
+			"workflow_id": "gromacs_test",
+			"description": "full md run with gromacs",
+			"environment": {
+				"export": [
+					{
+						"key": "GMX_GPU_DD_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_GPU_PME_PP_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
+						"value": "true"
+					}
+				]
+			},
+			"global_variables": {
+				"file_base": "{package_dir}/../IcolosData/gromacs/protein",
+				"output_dir": "{package_dir}/tests/junk/gromacs"
+			}
+		},
+		"steps": [
+			{
+				"step_id": "01_pdb2gmx",
+				"type": "pdb2gmx",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-ignh"
+						],
+						"parameters": {
+							"-water": "tip3p",
+							"-ff": "amber03"
+						}
+					},
+					"additional": {}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/1BVG.pdb",
+							"extension": "pdb"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "02_editconf",
+				"type": "editconf",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-c"
+						],
+						"parameters": {
+							"-d": "1.0",
+							"-bt": "dodecahedron"
+						}
+					},
+					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "01_pdb2gmx"
+					}
+				}
+			},
+			{
+				"step_id": "03_solvate",
+				"type": "solvate",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-cs": "spc216"
+						}
+					},
+					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "02_editconf"
+					}
+				}
+			},
+			{
+				"step_id": "04_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"-r": false
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/ions.mdp",
+							"extension": "mdp"
+						}
+					],
+					"gmx_state": {
+						"source": "03_solvate"
+					}
+				}
+			},
+			{
+				"step_id": "05_genion",
+				"type": "genion",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-neutral"
+						],
+						"parameters": {
+							"-pname": "NA",
+							"-nname": "CL"
+						}
+					},
+					"additional": {
+						"pipe_input": "SOL"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "04_grompp"
+					}
+				}
+			},
+			{
+				"step_id": "06_grompp_eminim",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"-r": false
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/minim.mdp",
+							"extension": "mdp"
+						}
+					],
+					"gmx_state": {
+						"source": "05_genion"
+					}
+				}
+			},
+			{
+				"step_id": "07_eminim_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "06_grompp_eminim"
+					}
+				}
+			},
+			{
+				"step_id": "08_nvt_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"make_ndx_command": "auto",
+						"-r": true
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/nvt_equil.mdp",
+							"extension": "mdp"
+						}
+					],
+					"gmx_state": {
+						"source": "07_eminim_mdrun"
+					}
+				}
+			},
+			{
+				"step_id": "09_nvt_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "08_nvt_grompp"
+					}
+				}
+			},
+			{
+				"step_id": "10_npt_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"make_ndx_command": "auto",
+						"-r": true
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/npt_equil.mdp",
+							"extension": "mdp"
+						}
+					],
+					"gmx_state": {
+						"source": "09_nvt_mdrun"
+					}
+				}
+			},
+			{
+				"step_id": "11_npt_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"make_ndx_command": "auto"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "10_npt_grompp"
+					}
+				}
+			},
+			{
+				"step_id": "12_prod_md_grompp",
+				"type": "grompp",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-n": "index.ndx"
+						}
+					},
+					"additional": {
+						"fields": {
+							"nsteps": "50000"
+						},
+						"make_ndx_command": "auto",
+						"-r": false
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_base}/md.mdp",
+							"extension": "mdp"
+						}
+					],
+					"gmx_state": {
+						"source": "11_npt_mdrun"
+					}
+				}
+			},
+			{
+				"step_id": "13_prod_mdrun",
+				"type": "mdrun",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-nb": "gpu",
+							"-bonded": "gpu"
+						}
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "12_prod_md_grompp"
+					}
+				},
+				"writeout": [
+					{
+						"gmx_state": {
+							"key": "xtc, gro, tpr, log"
+						},
+						"destination": {
+							"resource": "{output_dir}"
+						}
+					}
+				]
+			},
+			{
+				"step_id": "14_trjconv",
+				"type": "trjconv",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [
+							"-center"
+						]
+					},
+					"additional": {
+						"pipe_input": "Protein System"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "13_prod_mdrun"
+					}
+				}
+			},
+			{
+				"step_id": "15_trjconv",
+				"type": "trjconv",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-fit": "rot+trans"
+						}
+					},
+					"additional": {
+						"pipe_input": "Protein System"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "14_trjconv"
+					}
+				},
+				"writeout": [
+					{
+						"gromacs_state": {
+							"key": "xtc"
+						},
+						"destination": {
+							"resource": "{output_dir}"
+						}
+					}
+				]
+			},
+			{
+				"step_id": "16_cluster",
+				"type": "cluster",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-dt": "10"
+						}
+					},
+					"additional": {
+						"pipe_input": "Protein System"
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "15_trjconv"
+					}
+				}
+			},
+			{
+				"step_id": "17_cluster_ts",
+				"type": "cluster_ts",
+				"execution": {
+					"prefix_execution": "module load R"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"lengths": "101",
+							"clustersNumber": "20",
+							"mdEngine": "GROMACS"
+						}
+					}
+				},
+				"input": {
+					"gmx_state": {
+						"source": "16_cluster"
+					}
+				},
+				"writeout": [
+					{
+						"generic": {
+							"key": "png"
+						},
+						"destination": {
+							"resource": "{output_dir}/cluster.png"
+						}
+					}
+				]
+			}
+		]
+	}
+}

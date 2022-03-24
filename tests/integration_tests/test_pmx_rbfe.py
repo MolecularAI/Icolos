@@ -70,6 +70,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "01_pmx_setup",
                     _SBE.STEP_TYPE: "pmx_setup",
                     _SBE.EXEC: {
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                         "parallelization": {"cores": 8},
                     },
                     _SBE.SETTINGS: {
@@ -196,6 +197,10 @@ class TestPMXrbfe(unittest.TestCase):
                             ],
                             _SBE.EXEC_RESOURCES_PARTITION: "gpu",
                             _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
+                            _SBE.EXEC_RESOURCES_ADDITIONAL_LINES: [
+                                'echo "hello, world!"'
+                            ],
                         },
                     },
                     _SBE.SETTINGS: {
@@ -203,7 +208,9 @@ class TestPMXrbfe(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"sim_type": "em"},
+                        _SBE.SETTINGS_ADDITIONAL: {
+                            "sim_type": "em",
+                        },
                     },
                 },
                 {
@@ -233,6 +240,7 @@ class TestPMXrbfe(unittest.TestCase):
                             ],
                             _SBE.EXEC_RESOURCES_PARTITION: "gpu",
                             _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
                         },
                     },
                     _SBE.SETTINGS: {

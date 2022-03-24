@@ -165,7 +165,6 @@ class StepPrime(StepSchrodingerBase, BaseModel):
                 mol.SetProp("_Name", conf_id)
                 writer.write(mol)
             writer.close()
-            print(tmp_input_sdf_file)
 
             # now we have an sdf file with all the conformers from that batch.  Attach the
             structcat_args = [
@@ -210,6 +209,7 @@ class StepPrime(StepSchrodingerBase, BaseModel):
             check=True,
             location=tmp_output_dir,
         )
+        print(result)
 
         output_file = complex_path.split(".")[0] + "-out.maegz"
         assert os.path.isfile(output_file)

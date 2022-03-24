@@ -1,7 +1,8 @@
 {
     "workflow": {
         "header": {
-            "id": "input_file_types_example",
+            "version": "1.8.1",
+            "workflow_id": "input_file_types_example",
             "description": "This configuration illustrates the use of different input file types.",
             "logging": {
               "logfile": "tests/junk/input_file_types.log"

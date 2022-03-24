@@ -110,7 +110,7 @@ class PerturbationMap(BaseModel):
     replicas: int = 3
     node_df: pd.DataFrame = None
     # prune subsequent edge calculations on error
-    strict_execution: str = True
+    strict_execution: str = False
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

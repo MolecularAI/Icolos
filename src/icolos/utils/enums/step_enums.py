@@ -29,6 +29,8 @@ class StepBaseEnum(str, Enum):
     STEP_DESMOND_SETUP = "DESMOND_SETUP"
     STEP_FILTER = "FILTER"
     STEP_PANTHER = "PANTHER"
+    STEP_KALLISTO = "KALLISTO"
+    STEP_JAZZY = "JAZZY"
     STEP_SHAEP = "SHAEP"
     STEP_PDB2GMX = "PDB2GMX"
     STEP_EDITCONF = "EDITCONF"
@@ -86,7 +88,7 @@ class StepBaseEnum(str, Enum):
     EXEC_PREFIXEXECUTION = "prefix_execution"
     EXEC_BINARYLOCATION = "binary_location"
     EXEC_PARALLELIZATION = "parallelization"
-    EXEC_PARALLELIZATION_CORES = "cores"
+    EXEC_PARALLELIZATION_CORES = "jobs"
     EXEC_PARALLELIZATION_MAXLENSUBLIST = "max_length_sublists"
     EXEC_FAILUREPOLICY = "failure_policy"
     EXEC_FAILUREPOLICY_NTRIES = "n_tries"
@@ -99,6 +101,7 @@ class StepBaseEnum(str, Enum):
     EXEC_RESOURCES_MEM = "mem"
     EXEC_RESOURCES_CORES = "cores"
     EXEC_RESOURCES_OTHER_ARGS = "other_args"
+    EXEC_RESOURCES_ADDITIONAL_LINES = "additional_lines"
 
     # settings
     SETTINGS = "settings"
@@ -143,6 +146,7 @@ class StepBaseEnum(str, Enum):
     INPUT_EXTENSION = "extension"
     INPUT_SOURCE = "source"
     INPUT_GENERIC = "generic"
+    INPUT_GMX = "gmx_state"
     INPUT_FORMAT = "format"
     INPUT_SOURCE_TYPE = "source_type"
     INPUT_SOURCE_TYPE_FILE = "file"
@@ -198,6 +202,8 @@ class StepBaseEnum(str, Enum):
 
     WRITEOUT_GENERIC = "generic"
     WRITEOUT_GENERIC_KEY = "key"
+
+    WRITEOUT_GMX = "gmx_state"
 
     WRITEOUT_DESTINATION = "destination"
     WRITEOUT_DESTINATION_RESOURCE = "resource"
@@ -685,6 +691,38 @@ class StepPantherEnum:
         raise ValueError("No changes allowed.")
 
 
+class StepKallistoEnum:
+
+    FEATURES = "features"
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
+class StepJazzyEnum:
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+    # try to find the internal value and return
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+    # prohibit any attempt to set any values
+    def __setattr__(self, key, value):
+        raise ValueError("No changes allowed.")
+
+
 class StepShaepEnum:
     # field keys for storing data
     FIELD_KEY_NEGATIVE_IMAGE = "negative_image"
@@ -716,6 +754,7 @@ class StepGromacsEnum:
     FIELD_KEY_LOG = "log"
     FIELD_KEY_EDR = "edr"
     FIELD_KEY_NDX = "ndx"
+    PROPS = "props"
     FILE_SIZE_THRESHOLD = 2000000000
 
     MAKE_NDX_COMMAND = "make_ndx_command"
@@ -735,6 +774,7 @@ class StepGromacsEnum:
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
     STD_TPR = "topol.tpr"
+    STD_LOG = "md.log"
     STD_XTC = "traj.xtc"
     STD_TRR = "traj.trr"
     STD_STRUCTURE = "confout.gro"
@@ -757,8 +797,10 @@ class StepGromacsEnum:
     COUPLING_GROUPS = "coupling_groups"
     DEFAULT_MMPBSA_IN = "src/icolos/config/amber/default_mmpbsa.in"
     PARAM_METHOD = "param_method"
+    MMGBSA_DG = "MMGBSA_DG"
     GAFF = "gaff"
     OPENFF = "openff"
+    RESTRAINTS = "restraints"
     WATER_POSRE = """
 #ifdef POSRES_WATER
 [ position_restraints ]

@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Step - output block",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "compounds": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "selected_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "aggregation": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "highest_is_best": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "generic": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "destination": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resource": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": ["destination"]
+  }
+}

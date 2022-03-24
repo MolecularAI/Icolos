@@ -47,9 +47,13 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                        "-b": "2100",
+                    },
                 },
-                _SBE.SETTINGS_ADDITIONAL: {"sim_type": "transitions"},
+                _SBE.SETTINGS_ADDITIONAL: {
+                    "sim_type": "transitions",
+                },
             },
         }
 
@@ -81,7 +85,7 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
                 "0ec09ef_4afa8f9/ligand/stateA/run1/transitions/frame1.gro",
             )
         )
-        self.assertGreater(stat_inf.st_size, 414600)
+        self.assertGreater(stat_inf.st_size,357800)
 
         stat_inf = os.stat(
             os.path.join(
@@ -89,4 +93,4 @@ class Test_PMXPrepareTransitions(unittest.TestCase):
                 "0ec09ef_4afa8f9/ligand/stateB/run1/transitions/frame1.gro",
             )
         )
-        self.assertGreater(stat_inf.st_size, 414600)
+        self.assertGreater(stat_inf.st_size, 357800)

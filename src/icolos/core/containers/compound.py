@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import List
 from rdkit import Chem
+from icolos.core.step_utils.obabel_structconvert import OBabelStructConvert
 
 from icolos.utils.enums.compound_enums import (
     CompoundContainerEnum,
@@ -116,8 +117,8 @@ class Conformer:
         writer.close()
         if format_ == _WE.PDB:
             pdb_path = path.split(".")[0] + ".pdb"
-            # convert the written sdf file to a pdb with the schrodinger converter
-            converter = StructConvert(prefix_execution=_SEE.SCHRODINGER_MODULE)
+            # convert the written sdf file to a pdb with OB
+            converter = OBabelStructConvert()
             converter.sdf2pdb(sdf_file=path, pdb_file=pdb_path)
             os.remove(path)
 

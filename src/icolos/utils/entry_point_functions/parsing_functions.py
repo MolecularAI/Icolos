@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 from icolos.loggers.base_logger import BaseLogger
 
@@ -87,11 +88,41 @@ def get_version_number() -> str:
 
         return metadata.version("icolos")
     except:
-        return "unknown"
+        return None
+
+
+def get_config_version_number(conf: dict) -> str:
+    try:
+        return str(conf[_WE.WORKFLOW][_WE.HEADER][_WE.VERSION])
+    except:
+        return None
 
 
 def log_version_number(logger: BaseLogger):
     version = get_version_number()
-    if version == "unknown":
+    if version is None:
         logger.log(f"Could not obtain Icolos version.", _LE.WARNING)
+        version = "unknown"
     logger.log(f"Icolos version {version} initialized.", _LE.INFO)
+
+
+def version_match(conf: dict) -> bool:
+    version_config = get_config_version_number(conf)
+    version_installation = get_version_number()
+    if (
+        version_config is None
+        or version_installation is None
+        or version_config != version_installation
+    ):
+        return False
+    return True
+
+
+def get_versions_as_strings(conf: dict) -> Tuple[str, str]:
+    version_config = get_config_version_number(conf)
+    version_installation = get_version_number()
+    version_config = "unknown" if version_config is None else version_config
+    version_installation = (
+        "unknown" if version_installation is None else version_installation
+    )
+    return version_config, version_installation

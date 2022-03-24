@@ -119,8 +119,6 @@ class StepLigprep(StepSchrodingerBase, BaseModel):
         )
 
     def _execute_ligprep(self):
-        # TODO: add individual resubmission for failed subtasks
-        # get number of sublists in batch and initialize Parallelizer
         ligprep_parallelizer = Parallelizer(func=self._run_subjob)
 
         # continue until everything is successfully done or number of retries have been exceeded

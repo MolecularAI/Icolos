@@ -1,7 +1,11 @@
 {
     "workflow": {
         "header": {
+            "version": "1.9.0",
             "workflow_id": "gromacs_test",
+			"logging": {
+				"logfile": "/home/kmzp800/alternative_logfile.log"
+			},
             "description": "full md run with gromacs",
             "environment": {
                 "export": [{
@@ -37,6 +41,7 @@
                     }
                 },
                 "additional": {
+					"charge_method": "gas"
                 }
             },
             "input": {
@@ -98,7 +103,7 @@
                         }
                     },
                     "additional": {
-                        "-r": false
+                        "restraints": false
                     }
                 },
                 "input": {
@@ -126,14 +131,7 @@
                     "additional": {
                         "pipe_input": "SOL"
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "04_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
 
             },{
                 "step_id": "06_grompp_eminim",
@@ -149,7 +147,7 @@
                         }
                     },
                     "additional": {
-                        "-r": false
+                        "restraints": false
                     }
                 },
                 "input": {
@@ -175,14 +173,7 @@
                     },
                     "additional": {
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "06_grompp_eminim",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
             },{
                 "step_id": "08_nvt_grompp",
                 "type": "grompp",
@@ -198,7 +189,7 @@
                     },
                     "additional": {
                         "make_ndx_command": "auto",
-                        "-r": true
+                        "restraints": true
                     }
                 },
                 "input": {
@@ -222,14 +213,7 @@
                     },
                     "additional": {
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "08_nvt_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
+                }
             },{
                 "step_id": "10_npt_grompp",
                 "type": "grompp",
@@ -245,7 +229,7 @@
                     },
                     "additional": {
                         "make_ndx_command": "auto",
-                        "-r": true
+                        "restraints": true
                     }
                 },
                 "input": {
@@ -270,15 +254,7 @@
                     "additional": {
                         "make_ndx_command": "auto"
                     }
-                },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "10_npt_grompp",
-                            "extension": "tpr"
-                        }
-                    ]}
-
+                }
             },{
                 "step_id": "12_prod_md_grompp",
                 "type": "grompp",
@@ -297,7 +273,7 @@
                             "nsteps": "50000"
                         },
                         "make_ndx_command": "auto",
-                        "-r": false
+                        "restraints": false
                     }
                 },
                 "input": {
@@ -323,53 +299,13 @@
                         }
                     }
                 },
-                "input": {
-                    "generic": [
-                        {
-                            "source": "12_prod_md_grompp",
-                            "extension": "tpr"
-                        }
-                    ]
-                },
                 "writeout": [
                     {
-                        "generic": {
-                            "key": "xtc"
+                        "gmx_state": {
+                            "key": "xtc, gro, tpr, log"
                         },
                         "destination": {
-                            "resource": "{output_dir}/md_0_1.xtc",
-                            "type": "file",
-                            "format": "TXT"
-                        }
-                    },
-                    {
-                        "generic": {
-                            "key": "log"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.log",
-                            "type": "file",
-                            "format": "TXT"
-                        }
-                    },
-                    {
-                        "generic": {
-                            "key": "gro"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.gro",
-                            "type": "file",
-                            "format": "TXT"
-                        }
-                    },
-                    {
-                        "generic": {
-                            "key": "tpr"
-                        },
-                        "destination": {
-                            "resource": "{output_dir}/md_0_1.tpr",
-                            "type": "file",
-                            "format": "TXT"
+                            "resource": "{output_dir}"
                         }
                     }
                 ]
@@ -387,27 +323,14 @@
                         "pipe_input": "Protein System"
                     }
                 },
-                "input":{
-                    "generic":[
-                        {
-                            "source": "13_prod_mdrun",
-                            "extension": "xtc"
-                        },
-                        {
-                            "source": "13_prod_mdrun",
-                            "extension": "tpr"
-                        }
-                    ]
-                },
                 "writeout":[
                     {
-                        "generic": {
-                            "key": "xtc"
+                        "gmx_state": {
+                            "key": "xtc, gro, top"
                         },
                         "destination": {
-                            "resource": "{output_dir}/md_0_1_trjconv.xtc",
-                            "type": "file",
-                            "format": "TXT"
+                            "resource": "{output_dir}/processed"
+                            
                         }
                     }
                 ]
