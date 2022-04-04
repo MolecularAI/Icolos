@@ -1,6 +1,6 @@
 from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.workflow_steps.gromacs.genion import StepGMXGenion
 import unittest
 import os
@@ -30,7 +30,7 @@ class Test_Genion(unittest.TestCase):
             attach_root_path(PATHS_EXAMPLEDATA.GROMACS_HOLO_STRUCTURE_GRO), "r"
         ) as f:
             struct = f.readlines()
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
         self.topol.tprs = [GenericData(_SGE.STD_TPR, file_data=tpr)]
         self.topol.top_lines = topol
@@ -55,10 +55,7 @@ class Test_Genion(unittest.TestCase):
         }
 
         step_genion = StepGMXGenion(**step_conf)
-
-        wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
-        step_genion.set_workflow_object(wf)
+        step_genion.data.gmx_state = self.topol
         step_genion.execute()
 
         out_path = os.path.join(self._test_dir, "confout.gro")

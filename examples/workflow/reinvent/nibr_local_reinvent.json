@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.9.0",
             "workflow_id": "NIBR",
             "description": "NIBR (local) workflow with returning results in REINVENT JSON format - no use of cloud computing such as AWS.",
             "environment": {
@@ -36,7 +37,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2020-4",
                     "parallelization": {
-                        "cores": 2,
+                        "jobs": 2,
                         "max_length_sublists": 1
                     },
                     "failure_policy": {
@@ -69,7 +70,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2021-1-js-aws",
                     "parallelization": {
-                        "cores": 4,
+                        "jobs": 4,
                         "max_length_sublists": 1
                     },
                     "failure_policy": {
@@ -121,7 +122,6 @@
                         }],
                     "compounds": [{
                             "source": "Glide",
-                            "target_field": "compounds",
                             "source_type": "step"
                         }
                     ]

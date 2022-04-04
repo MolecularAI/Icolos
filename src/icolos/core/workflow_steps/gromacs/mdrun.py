@@ -1,5 +1,6 @@
 import tempfile
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from typing import List
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
@@ -9,6 +10,7 @@ from icolos.core.workflow_steps.step import _LE
 import os
 
 from icolos.utils.execute_external.gromacs import GromacsExecutor
+from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -20,6 +22,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
     """
     Launch gmx mdrun
     """
+
+    topol: GromacsState = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -47,11 +51,10 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         for line in log_file[-50:]:
             self._logger_blank.log(line, _LE.INFO)
 
-    def run_single_tpr(self, tmp_dir: str, topol: GromacsTopol):
-        # if we're simulating a protein, we need to modify the topol file to include the correct index groups \
-        # to allow ligand restraint.  This means an ndx file must be specified in the json
-        self.write_input_files(tmp_dir, topol=topol)
-
+    def execute_mdrun(self, path: str, index: int):
+        """
+        Make a single call to mdrun
+        """
         flag_dict = (
             {
                 "-s": _SGE.STD_TPR,
@@ -64,25 +67,69 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
         arguments = self._parse_arguments(flag_dict)
         self._backend_executor.execute(
-            command=_GE.MDRUN, arguments=arguments, location=tmp_dir, check=True
+            command=_GE.MDRUN, arguments=arguments, location=path, check=True
         )
 
-        self._tail_log_file(tmp_dir)
-        self._logger.log(
-            f"Completed execution for {self.step_id} successfully", _LE.INFO
+    def execute_parallel_simulations(self, work_dirs):
+        # attach the index of the workdir
+        work_dirs = [(idx, wkdir) for idx, wkdir in enumerate(work_dirs)]
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
         )
-        self._parse_output(tmp_dir)
-        if "-c" in self.settings.arguments.parameters.keys():
-            topol.set_structure(tmp_dir, self.settings.arguments.parameters["-c"])
+        self._subtask_container.load_data(work_dirs)
+        parallelizer = Parallelizer(func=self.execute_mdrun)
+        n = 1
+        while self._subtask_container.done() is False:
+            next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
+            _ = [sub.increment_tries() for element in next_batch for sub in element]
+            _ = [sub.set_status_failed() for element in next_batch for sub in element]
+            paths, indices = self.prepare_jobs(next_batch)
+            parallelizer.execute_parallel(path=paths, index=indices)
+            n += 1
+
+    def prepare_jobs(self, batch) -> List[tuple]:
+        paths, indices = [], []
+        for task in batch:
+            for element in task:
+                # tuple of (idx, dirpath)
+                paths.append(element.data[1])
+                indices.append(element.data[0])
+        return paths, indices
+
+    def run_single_tpr(self, tmp_dir: str):
+        """
+        Normal gmx mdrun call, if multiple structures are loaded into the topology, run them in parallel according to the parallelizer settings
+        """
+        # if we have multiple structures, run the simulations externally, in parallel
+        work_dirs = [tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(self.topol.tprs))]
+
+        # prepare tmpdirs with tpr files
+        for path, tpr in zip(work_dirs, self.topol.tprs.values()):
+            tpr.write(path)
+
+        # if > 1, instantiate a parallelizer, load the paths in and execute in parallel, user should be using the slurm/SGE interface to request extern resources
+        if len(work_dirs) > 1:
+            self.execute_parallel_simulations(work_dirs)
         else:
-            topol.set_structure(tmp_dir)
-        topol.set_trajectory(tmp_dir)
+            tmp_dir = work_dirs[0]
+            self.execute_mdrun(tmp_dir, index=0)
 
-    def run_multidir_sim(self, tmp_dir: str, topol: GromacsTopol):
+        # now parse the outputs
+        for index, path in enumerate(work_dirs):
+            # set a structure other than confout.gro e.g. if a pdb output has been set
+            struct = (
+                self.settings.arguments.parameters["-c"]
+                if "-c" in self.settings.arguments.parameters.keys()
+                else _SGE.STD_STRUCTURE
+            )
+            self.topol.set_structure(path, file=struct, index=index)
+            self.topol.set_trajectory(path, index=index)
+            self.topol.set_log(path, index=index)
+
+    def run_multidir_sim(self, tmp_dir: str):
         """
         Runs a multidir simulation, allowing for replex simulations.  Several conditions are required for this running mode
         1) the previous step in the workflow should have been an iterator to produce n tpr files.  This must have been run with single_dir mode ON and remove_temprorary_files OFF, so we can extract files from those workflows' tmpdirs
-
         """
         if not self.execution.platform == _ERE.SLURM:
             self._logger.log(
@@ -91,14 +138,12 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             )
 
         # extract the tprs from the topol object, write to separate tmpdirs
-        work_dirs = [
-            tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(topol.structures))
-        ]
+        work_dirs = [tempfile.mkdtemp(dir=tmp_dir) for _ in range(len(self.topol.tprs))]
         self._logger.log(
             f"Initiating gmx multidir run in directories {', '.join(work_dirs)}",
             _LE.DEBUG,
         )
-        for path, tpr in zip(work_dirs, topol.tprs):
+        for path, tpr in zip(work_dirs, self.topol.tprs.values()):
             tpr.write(path)
 
         # note, this must be a multiple of the number of simulations
@@ -112,19 +157,21 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         )
         # udpate the structures to the new coordinates
         for i, work_dir in enumerate(work_dirs):
-            topol.set_structure(work_dir, index=i)
-            topol.set_trajectory(work_dir, index=i)
-            topol.set_tpr(work_dir, index=i)
+            self.topol.set_structure(work_dir, index=i)
+            self.topol.set_trajectory(work_dir, index=i)
+            self.topol.set_tpr(work_dir, index=i)
+            self.topol.set_log(work_dir, index=i)
 
     def execute(self):
 
         tmp_dir = self._make_tmpdir()
-        topol = self.get_topol()
+        self.topol = self.get_topol()
+        self.execution.parallelization.max_length_sublists = 1
         # pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object
-        self.pickle_topol(topol, tmp_dir)
+        self.pickle_topol(self.topol, tmp_dir)
         multidir = self.get_additional_setting(_SGE.MULTIDIR, default=False)
         if multidir:
-            self.run_multidir_sim(tmp_dir, topol=topol)
+            self.run_multidir_sim(tmp_dir)
         else:
-            self.run_single_tpr(tmp_dir, topol=topol)
+            self.run_single_tpr(tmp_dir)
         self._remove_temporary(tmp_dir)

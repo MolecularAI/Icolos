@@ -14,6 +14,7 @@ class ConsoleColours:
     RED = "\033[93m"
     FAIL = "\033[91m"
     ENDC = "\033[0m"
+    ORANGE = "\033[0;33m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
     BLINKING = "\33[5m"
@@ -25,7 +26,13 @@ def add_citation(
     citations: List[str],
     citation_string: str,
 ):
-    if step_type.upper() in workflow_step_types:
+    if any(
+        [
+            True
+            for w_step_type in workflow_step_types
+            if step_type.upper() in w_step_type
+        ]
+    ) or step_type == "default":
         citations.append(citation_string)
 
 
@@ -47,6 +54,14 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
     citations = []
     step_types = [step.type.upper() for step in steps]
 
+    # add general Icolos citation
+    add_citation(
+        "default",
+        step_types,
+        citations,
+        "\nIcolos: J. Harry Moore, Matthias R. Bauer, Jeff Guo, Atanas Patronov, Ola Engkvist and Christian Margreitter. Icolos: A workflow manager for structure based post-processing of de novo generated small molecules. https://doi.org/10.26434/chemrxiv-2022-sjcp3, https://github.com/MolecularAI/Icolos (2022)\n",
+    )
+
     # add individual citations based on the step types used in this workflow (can be empty, of course)
     add_citation(
         "mdrun",
@@ -55,7 +70,7 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         "\nGROMACS: https://doi.org/10.1016/j.softx.2015.06.001\nH.J.C. Berendsen, D. van der Spoel, and R. van Drunen, “GROMACS: A message-passing parallel molecular dynamics implementation,” Comp. Phys. Comm., 91 43–56 (1995)\nD. van der Spoel, E. Lindahl, B. Hess, G. Groenhof, A.E. Mark, and H.J.C. Berendsen, “GROMACS: Fast, Flexible and Free,” J. Comp. Chem., 26 1701–1718 (2005)\nH. Bekker, H.J.C. Berendsen, E.J. Dijkstra, S. Achterop, R. van Drunen, D. van der Spoel, A. Sijbers, and H. Keegstra et al., “Gromacs: A parallel computer for molecular dynamics simulations”; pp. 252–256 in Physics computing 92. Edited by R.A. de Groot and J. Nadrchal. World Scientific, Singapore, 1993",
     )
     add_citation(
-        "pmx",
+        "pmx_",
         step_types,
         citations,
         "\nPMX: Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger and Bert L. de Groot. Accurate and Rigorous Large Scale Mutation Free Energy Prediction. Angewandte Chemie Int. Ed. 55: 7364-7368(2016)\nVytautas Gapsys, Servaas Michielssens, Daniel Seeliger, and Bert L. de Groot. pmx: Automated protein structure and topology generation for alchemical perturbations. J. Comput. Chem. 36:348-354 (2015\n",
@@ -71,6 +86,18 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
         step_types,
         citations,
         "\nFEP+: R. Abel, L. Wang, E.D. Harder, B.J. Berne, R.A. Friesner. Advancing Drug Discovery through Enhanced Free Energy Calculations. Acc. Chem. Res., 2017 50 (7), 1625-1632\n",
+    )
+    add_citation(
+        _SBE.STEP_KALLISTO,
+        step_types,
+        citations,
+        "\nKallisto: Caldeweyher, E., Kallisto: A command-line interface to simplify computational modelling and the generation of atomic features. Journal of Open Source Software, 6(60), 3050, https://doi.org/10.21105/joss.03050. 2021\n",
+    )
+    add_citation(
+        _SBE.STEP_JAZZY,
+        step_types,
+        citations,
+        "\nJazzy: Caldeweyher, E., Ghiandoni, G.M., https://github.com/AstraZeneca/jazzy <CITATION MISSING>\n",
     )
     add_citation(
         _SBE.STEP_TURBOMOLE,

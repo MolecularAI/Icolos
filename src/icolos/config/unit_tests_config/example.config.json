@@ -26,5 +26,7 @@
   "DSSP": "/opt/scp/software/DSSP/4.0.0-GCCcore-8.2.0/bin",
   "MINICONDA_BASE": ". /<path to miniconda>/etc/profile.d/conda.sh",
   "OPENMM_FORCEFIELDS": "/projects/cc/mai/material/Icolos/openmmforcefields",
-  "MDPLOT": "/projects/cc/mai/binaries/MDplot"
+  "MDPLOT": "/projects/cc/mai/binaries/MDplot",
+  "KALLISTO_LOCATION": "~/miniconda3/envs/kallisto/bin",
+  "JAZZY_LOCATION": "~/miniconda3/envs/jazzy/bin"
 }

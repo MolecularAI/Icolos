@@ -1,5 +1,7 @@
 import os
 from shlex import quote
+from icolos.loggers.steplogger import StepLogger
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from icolos.utils.execute_external.execute import ExecutorBase
 from icolos.utils.enums.program_parameters import SlurmEnum
 import subprocess
@@ -8,6 +10,8 @@ import time
 from tempfile import mkstemp
 
 _SE = SlurmEnum()
+logger = StepLogger()
+_LE = LoggingConfigEnum()
 
 
 class SlurmExecutor(ExecutorBase):
@@ -17,12 +21,13 @@ class SlurmExecutor(ExecutorBase):
         self,
         cores: int,
         partition: str,
-        tasks: int,
         time: str,
         mem: str,
+        tasks: str,
         modules: List,
         other_args: dict,
         gres: str,
+        additional_lines: List,
         prefix_execution=None,
         binary_location=None,
     ):
@@ -31,11 +36,12 @@ class SlurmExecutor(ExecutorBase):
         self.cores = cores
         self.partition = partition
         self.time = time
-        self.tasks = tasks
         self.mem = mem
+        self.tasks = tasks
         self.modules = modules
         self.other_args = other_args
         self.gres = gres
+        self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
 
@@ -60,7 +66,10 @@ class SlurmExecutor(ExecutorBase):
         if self.is_available():
             launch_command = f"sbatch {tmpfile}"
         else:
-            print("Warning - Slurm was not found, falling back to local execution!")
+            logger.log(
+                "Warning - Slurm was not found, falling back to local execution!",
+                _LE.WARNING,
+            )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
@@ -117,7 +126,7 @@ class SlurmExecutor(ExecutorBase):
 
         # allow for piped input to be passed to binaries
         if pipe_input is not None:
-            # pipe_input = self._par/se_pipe_input(pipe_input)
+            # pipe_input = self._parse_pipe_input(pipe_input)
             command = pipe_input + " | " + command
 
         # check, if command (binary) is to be found at a specific location (rather than in $PATH)
@@ -136,16 +145,16 @@ class SlurmExecutor(ExecutorBase):
     def _wait_for_job_completion(self, job_id: str):
         completed = False
         state = None
+        logger.log(f"Monitoring slurm job {job_id}", _LE.DEBUG)
         while completed is False:
             state = self._check_job_status(job_id)
-            if state in [_SE.PENDING, _SE.RUNNING]:
-                time.sleep(5)
+            if state in [_SE.PENDING, _SE.RUNNING, None]:
+                time.sleep(60)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True
             elif state == _SE.FAILED:
                 completed = True
-
         return state
 
     def _tail_log_file(
@@ -170,7 +179,7 @@ class SlurmExecutor(ExecutorBase):
                         print(line)
                     completed = True
             except FileNotFoundError:
-                print("log file not found, sleeping")
+                logger.log("log file not found, sleeping", _LE.DEBUG)
                 time.sleep(10)
         return state
 
@@ -178,29 +187,34 @@ class SlurmExecutor(ExecutorBase):
         """
         Monitor the status of a previously submitted job, return the result
         """
-        command = f"module load slurmtools && jobinfo {job_id}"
+        # use the entrypoint included in the Icolos install
+
+        command = f"sacct -j {job_id} --parsable --noheader -a"
         result = subprocess.run(
             command,
             shell=True,
+            universal_newlines=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True,
         )
-
-        state = None
-        for line in result.stdout.split("\n"):
-            if _SE.STATE in line:
-                state = line.split(":")[-1].split()[0]
+        if result.stdout:
+            state = result.stdout.split("\n")[0].split("|")[5]
+        else:
+            state = None
         return state
 
     def _construct_slurm_header(self):
         header = [
             "#!/bin/bash",
-            f"#SBATCH  --cores={self.cores}",
             f"#SBATCH --partition={self.partition}",
-            f"#SBATCH --tasks={self.tasks}",
             f"#SBATCH --time={self.time}",
         ]
+        if self.mem is not None:
+            header.append(f"#SBATCH --mem={self.mem}")
+        if self.cores is not None:
+            header.append(f"#SBATCH -c{self.cores}")
+        if self.tasks is not None:
+            header.append(f"#SBATCH --tasks={self.tasks}")
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
@@ -208,5 +222,9 @@ class SlurmExecutor(ExecutorBase):
 
         for module in self.modules:
             header.append(f"module load {module}")
+
+        # add any other specified lines
+        for line in self.additional_lines:
+            header.append(line)
 
         return header

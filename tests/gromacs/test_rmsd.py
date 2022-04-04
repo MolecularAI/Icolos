@@ -31,7 +31,6 @@ class Test_Trjcat(unittest.TestCase):
         self.comp = get_docked_ligands_as_conformers(
             PATHS_EXAMPLEDATA.GROMACS_DMP_LIGAND_SDF
         )
-        print(self.comp)
 
     def test_gmx_rmsd(self):
         step_conf = {

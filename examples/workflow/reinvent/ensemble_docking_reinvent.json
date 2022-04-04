@@ -1,6 +1,7 @@
 {
     "workflow": {
         "header": {
+            "version": "1.9.0",
             "workflow_id": "Docking with Glide",
             "description": "Docking a few compounds with Glide after Ligprep embedding.",
             "environment": {
@@ -20,7 +21,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2021-2-js-aws",
                     "parallelization": {
-                        "cores": 8
+                        "jobs": 8
                     },
                     "failure_policy": {
                         "n_tries": 3
@@ -53,7 +54,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2021-2-js-aws",
                     "parallelization": {
-                        "cores": 24
+                        "jobs": 24
                     },
                     "failure_policy": {
                         "n_tries": 3
@@ -98,7 +99,7 @@
                 "execution": {
                     "prefix_execution": "module load schrodinger/2021-2-js-aws",
                     "parallelization": {
-                        "cores": 24
+                        "jobs": 24
                     },
                     "failure_policy": {
                         "n_tries": 3

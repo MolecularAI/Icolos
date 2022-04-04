@@ -70,6 +70,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "01_pmx_setup",
                     _SBE.STEP_TYPE: "pmx_setup",
                     _SBE.EXEC: {
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                         "parallelization": {"cores": 8},
                     },
                     _SBE.SETTINGS: {
@@ -185,7 +186,7 @@ class TestPMXrbfe(unittest.TestCase):
                     },
                 },
                 {
-                    _SBE.STEPID: "07_run_simulations",
+                    _SBE.STEPID: "06b_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
                         _SBE.EXEC_PARALLELIZATION: {"cores": 1},
@@ -196,6 +197,10 @@ class TestPMXrbfe(unittest.TestCase):
                             ],
                             _SBE.EXEC_RESOURCES_PARTITION: "gpu",
                             _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
+                            _SBE.EXEC_RESOURCES_ADDITIONAL_LINES: [
+                                'echo "hello, world!"'
+                            ],
                         },
                     },
                     _SBE.SETTINGS: {
@@ -203,7 +208,47 @@ class TestPMXrbfe(unittest.TestCase):
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
                             _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
                         },
-                        _SBE.SETTINGS_ADDITIONAL: {"sim_type": "em"},
+                        _SBE.SETTINGS_ADDITIONAL: {
+                            "sim_type": "em",
+                        },
+                    },
+                },
+                {
+                    _SBE.STEPID: "06c_prepare_simulations",
+                    _SBE.STEP_TYPE: "pmx_prepare_simulations",
+                    _SBE.EXEC: {
+                        _SBE.EXEC_PARALLELIZATION: {"cores": 8},
+                        _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+                    },
+                    _SBE.SETTINGS: {
+                        _SBE.SETTINGS_ARGUMENTS: {
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                        },
+                        _SBE.SETTINGS_ADDITIONAL: {"sim_type": "nvt"},
+                    },
+                },
+                {
+                    _SBE.STEPID: "06d_run_simulations",
+                    _SBE.STEP_TYPE: "pmx_run_simulations",
+                    _SBE.EXEC: {
+                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PLATFORM: "slurm",
+                        _SBE.EXEC_RESOURCES: {
+                            _SBE.EXEC_RESOURCES_MODULES: [
+                                "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                            ],
+                            _SBE.EXEC_RESOURCES_PARTITION: "gpu",
+                            _SBE.EXEC_RESOURCES_GRES: "gpu:volta:1",
+                            _SBE.EXEC_RESOURCES_CORES: "8",
+                        },
+                    },
+                    _SBE.SETTINGS: {
+                        _SBE.SETTINGS_ARGUMENTS: {
+                            _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                        },
+                        _SBE.SETTINGS_ADDITIONAL: {"sim_type": "nvt"},
                     },
                 },
                 {
@@ -298,7 +343,7 @@ class TestPMXrbfe(unittest.TestCase):
         wflow = WorkFlow(**conf)
         wflow.initialize()
 
-        self.assertEqual(len(wflow.steps), 12)
+        self.assertEqual(len(wflow.steps), 14)
         wflow.execute()
         out_path = os.path.join(self._test_dir, "resultsAll.csv")
         stat_inf = os.stat(out_path)

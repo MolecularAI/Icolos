@@ -4,6 +4,7 @@ import os
 from icolos.core.workflow_steps.schrodinger.fep_plus_execution import StepFepPlusExec
 from icolos.utils.enums.step_enums import StepBaseEnum, StepFepPlusEnum, StepGlideEnum
 from tests.tests_paths import (
+    MAIN_CONFIG,
     PATHS_EXAMPLEDATA,
     get_ligands_as_compounds_with_conformers,
     PATHS_1UYD,
@@ -44,7 +45,7 @@ class Test_FepPlusExec(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_fep_setup",
             _SBE.STEP_TYPE: "fep_setup",
-            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2020-4"},
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULES"]},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-WAIT", "-h"],

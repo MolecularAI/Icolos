@@ -25,9 +25,9 @@ You are welcome to clone the repository and use a local version, and in particul
 in contact with us.
 
 ## Installation
-After cloning, first install and activate the `icolosprod` `conda` environment:
+After cloning, first install and activate the `icolosprod` `conda` environment. To ensure the right installation directory is used, you can add the `--prefix` parameter to the `create` call, specifying the location of the `conda` environments.
 ```
-conda create -f environment_min.yml
+conda env create -f environment_min.yml
 conda activate icolosprod
 ```
 Then install the package:
@@ -60,6 +60,12 @@ conda activate icolosprod
 icolos -conf workflow.json
 ```
 
+We usually advise to check the validity of your configuration file before you try to execute it. There is a bespoke `validator` entry point to facilitate this:
+
+```
+validator -conf workflow.json
+```
+
 ## `SLURM` Execution
 Once specified, a workflow can be called like this in a `bash` script:
 
@@ -90,6 +96,6 @@ For GROMACS workflows requiring the GPU partition, you will need to adapt the he
 ```
 
 ## Developers
-- Christian Margreitter <christian.margreitter@astrazeneca.com>
-- J. Harry Moore <harry.moore@astrazeneca.com>
+- Christian Margreitter [@cmargreitter](https://github.com/CMargreitter)
+- J. Harry Moore [@jharrymoore](https://github.com/jharrymoore)
 - Matthias R. Bauer <mattias.r.b@gmail.com>

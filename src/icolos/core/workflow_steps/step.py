@@ -11,6 +11,7 @@ from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
 from copy import deepcopy
 import os
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.containers.perturbation_map import PerturbationMap
 
 
@@ -58,19 +59,20 @@ class StepFailurePolicyParameters(BaseModel):
 
 
 class StepExecutionResourceParameters(BaseModel):
-    partition: _EPE = _EPE.CORE
+    partition: str = _EPE.CORE
     time: str = "12:00:00"
     gres: str = None
-    mem: str = "32g"
-    cores: int = 8
-    tasks: int = 1
+    tasks: str = None
+    mem: str = None
+    cores: int = None
     modules: List = []
     other_args: dict = {}
+    additional_lines: List = []
 
 
 class StepExecutionParameters(BaseModel):
     class StepExecutionParallelizationParameters(BaseModel):
-        cores: int = 1
+        jobs: int = 1
         max_length_sublists: int = None
 
     prefix_execution: str = None
@@ -189,10 +191,11 @@ class StepBase(BaseModel):
         return [deepcopy(comp) for comp in self.data.compounds]
 
     def process_write_out(self):
-        # TODO: process generic data write-out
         for writeout in self.writeout:
             writeout_handler = WriteOutHandler(config=writeout)
             writeout_handler.set_data(self.data)
+            # attach workflow data at this point
+            writeout_handler.set_workflow_data(self.get_workflow_object().workflow_data)
             writeout_handler.write()
 
     def get_compound_stats(self) -> Tuple[int, int, int]:
@@ -242,10 +245,10 @@ class StepBase(BaseModel):
                 mem=self.execution.resources.mem,
                 modules=self.execution.resources.modules,
                 other_args=self.execution.resources.other_args,
+                additional_lines=self.execution.resources.additional_lines,
                 gres=self.execution.resources.gres,
             )
         else:
-
             self._backend_executor = executor(
                 prefix_execution=self.execution.prefix_execution,
                 binary_location=self.execution.binary_location,
@@ -371,7 +374,7 @@ class StepBase(BaseModel):
 
     def _get_number_cores(self):
         # prepare the parallelization and set the number of cores to be used
-        cores = self.execution.parallelization.cores
+        cores = self.execution.parallelization.jobs
         if cores == 0:
             cores = 1
         elif cores < 0:
@@ -519,3 +522,11 @@ class StepBase(BaseModel):
             if key in self.settings.additional.keys()
             else default
         )
+
+    def get_topol(self) -> GromacsState:
+        if not self.data.generic.get_file_names_by_extension("pkl"):
+            return self.data.gmx_state
+        else:
+            return self.load_topol(
+                self.data.generic.get_argument_by_extension("pkl", rtn_file_object=True)
+            )

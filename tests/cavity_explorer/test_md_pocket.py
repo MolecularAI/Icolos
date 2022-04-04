@@ -2,7 +2,7 @@ from icolos.core.containers.generic import GenericData
 import unittest
 from icolos.utils.enums.step_enums import StepCavExploreEnum, StepBaseEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA
-from icolos.core.workflow_steps.cavity_explorer.mdpocket import StepMDpocket
+from icolos.core.workflow_steps.fpocket.mdpocket import StepMDpocket
 from icolos.utils.general.files_paths import attach_root_path
 
 import os

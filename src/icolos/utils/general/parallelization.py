@@ -136,23 +136,11 @@ class Parallelizer(BaseModel):
         list_exec = self.rearrange_input(kwargs)
 
         # # run in parallel; wait for all subjobs to finish before proceeding
-        # # Optional mechanism for collecting return code from subprocessees
-        # if self.collect_rtn_codes:
-        #     manager = multiprocessing.Manager()
-        #     q = manager.dict()
-        #     for subprocess_args in list_exec:
-        #         subprocess_args["q"] = q
-        # # rtn_codes = []
         processes = []
         for subprocess_args in list_exec:
             p = multiprocessing.Process(target=self.func, kwargs=subprocess_args)
             processes.append(p)
             p.start()
-        # for p in processes:
-        #     ret = q.get()
-        #     rtn_codes.append(ret)
+
         for p in processes:
             p.join()
-
-        # if self.collect_rtn_codes:
-        #     return q.values()

@@ -12,6 +12,5 @@ class FlowControlInitializationEnum:
     # Keep these separate to the main pool of steps to avoid circular imports
 
     FLOW_CONTROL_INIT_DICT = {
-        _SBE.STEP_ACTIVE_LEARNING: StepActiveLearning,
         _SBE.STEP_ITERATOR: StepIterator,
     }

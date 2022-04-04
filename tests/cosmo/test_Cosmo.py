@@ -66,21 +66,21 @@ class Test_Cosmo(unittest.TestCase):
         # test general block
         self.assertEqual(
             cosmo_step.get_compounds()[0][0][0].get_molecule().GetProp("E_cosmo"),
-            "-943302.2152",
+            "-406899.0254",
         )
 
         # test solvent blocks
         self.assertEqual(
             cosmo_step.get_compounds()[0][0][0].get_molecule().GetProp("Gsolv_meoh"),
-            "-24.59517",
+            "-13.13470",
         )
         self.assertEqual(
             cosmo_step.get_compounds()[0][0][0].get_molecule().GetProp("Gsolv_h2o"),
-            "-23.47666",
+            "-10.51388",
         )
         self.assertEqual(
             cosmo_step.get_compounds()[0][0][0].get_molecule().GetProp("G_propanone"),
-            "-943303.47354",
+            "-406899.11871",
         )
         try:
             self.assertEqual(
@@ -146,7 +146,7 @@ class Test_Cosmo(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         cosmo_step.execute()
         self.assertListEqual(
@@ -156,19 +156,19 @@ class Test_Cosmo(unittest.TestCase):
                 .GetConformer(0)
                 .GetPositions()[0]
             ),
-            [0.8785, 0.6004, -0.2173],
+            [5.3347, 12.9328, 24.6745],
         )
         self.assertEqual(
             cosmo_step.get_compounds()[0][0][0].get_molecule().GetProp("Gsolv_h2o"),
-            "-23.47666",
+            "-10.51388",
         )
         cosmofile = cosmo_step.get_compounds()[0][0][0].get_extra_data()[
             _CTE.EXTRA_DATA_COSMOFILE
         ]
-        self.assertTrue("basgrd points=   9806" in cosmofile[5])
+        self.assertTrue("nspa=   92" in cosmofile[5])
 
         # check write-out
         out_path = os.path.join(self._test_dir, "cosmo_output_files.sdf")
         cosmo_step.write_conformers(out_path)
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 3079)
+        self.assertEqual(stat_inf.st_size, 2010)

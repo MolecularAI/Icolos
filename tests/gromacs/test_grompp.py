@@ -1,8 +1,7 @@
-from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
 import unittest
 import os
-from icolos.core.containers.gromacs_topol import GromacsTopol
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import MAIN_CONFIG, PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.core.workflow_steps.gromacs.grompp import StepGMXGrompp
@@ -29,7 +28,7 @@ class Test_Grompp(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.GROMACS_IONS_MDP, "r") as f:
             self.mdp = f.read()
 
-        self.topol = GromacsTopol()
+        self.topol = GromacsState()
         self.topol.structures = [GenericData(_SGE.STD_STRUCTURE, file_data=struct)]
         top_path = os.path.dirname(PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP)
         top_file = PATHS_EXAMPLEDATA.GROMACS_1BVG_TOP.split("/")[-1]
@@ -53,7 +52,7 @@ class Test_Grompp(unittest.TestCase):
                         "-nsteeps": 123,
                     },  # deliberate typo to check warning
                     _SGE.FORCEFIELD: MAIN_CONFIG["FORCEFIELD"],
-                    "-r": False,
+                    "restraints": False,
                     _SGE.MAKE_NDX_COMMAND: "auto",
                 },
             },
@@ -64,10 +63,7 @@ class Test_Grompp(unittest.TestCase):
         step_grompp.data.generic.add_file(
             GenericData(file_name="tmp03394.mdp", file_data=self.mdp, argument=True)
         )
-        wf = WorkFlow()
-        wf.workflow_data.gmx_topol = self.topol
-        step_grompp.set_workflow_object(wf)
-
+        step_grompp.data.gmx_state = self.topol
         step_grompp.execute()
 
         out_path = os.path.join(self._test_dir, _SGE.STD_TPR)

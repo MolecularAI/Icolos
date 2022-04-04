@@ -61,6 +61,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
             "-s": _SGE.STD_TPR,
             "-f": _SGE.STD_XTC,
             "-cl": "clusters.pdb",
+            "-clid": "cluster_id.xvg",
         }
         arguments = self._parse_arguments(flag_dict=flag_dict)
 

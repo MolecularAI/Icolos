@@ -247,7 +247,7 @@ class StepGlide(StepSchrodingerBase, BaseModel):
     def _get_time_limit_per_task(self):
         # for "SP" method, it can be expected to that about 90 s / ligand is required at most
         # use a bit extra
-        return int(self.settings.additional.get(_SGE.TIME_LIMIT_PER_TASK, 120))
+        return int(self.settings.additional.get(_SGE.TIME_LIMIT_PER_TASK, 240))
 
     def _get_path_tmp_results(
         self, glide_pose_outtype: str, base_path: str

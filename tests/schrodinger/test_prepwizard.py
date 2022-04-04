@@ -4,6 +4,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum
 from icolos.core.workflow_steps.schrodinger.prepwizard import StepPrepwizard
 from icolos.core.containers.generic import GenericData
 from tests.tests_paths import (
+    MAIN_CONFIG,
     PATHS_1UYD,
     PATHS_EXAMPLEDATA,
 )
@@ -59,7 +60,7 @@ class Test_Prepwizard(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_rem",
             _SBE.STEP_TYPE: _SBE.STEP_PREPWIZARD,
-            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "ml schrodinger"},
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"]},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ADDITIONAL: {_SPE.REMOVE_RES: ["DMP"]},
             },
@@ -89,9 +90,7 @@ class Test_Prepwizard(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_rem",
             _SBE.STEP_TYPE: _SBE.STEP_PREPWIZARD,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"]},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ADDITIONAL: {_SPE.REMOVE_RES: "ligands"},
             },

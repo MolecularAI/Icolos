@@ -2,7 +2,7 @@ import unittest
 import os
 from icolos.core.workflow_steps.schrodinger.fep_plus_setup import StepFepPlusSetup
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGlideEnum, StepFepPlusEnum
-from tests.tests_paths import PATHS_1UYD
+from tests.tests_paths import MAIN_CONFIG, PATHS_1UYD
 from tests.tests_paths import (
     PATHS_EXAMPLEDATA,
     get_docked_ligands_as_conformers,
@@ -68,13 +68,11 @@ class Test_FepPlusSetup(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "test_fep_setup",
             _SBE.STEP_TYPE: _SBE.STEP_FEP_PLUS_SETUP,
-            _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-1-js-aws"
-            },
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"]},
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                    _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-num-procs": 8},
                 }
             },
         }

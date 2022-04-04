@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.workflow_steps.step import StepBase
 from typing import List
 from icolos.utils.enums.step_enums import StepCavExploreEnum
@@ -6,7 +7,7 @@ from icolos.utils.enums.step_enums import StepCavExploreEnum
 _SFP = StepCavExploreEnum()
 
 
-class StepCavityExplorerBase(StepBase, BaseModel):
+class StepFpocketBase(StepBase, BaseModel):
     eps: float = None
     iso_value: int = None
     threshold: float = None
@@ -16,10 +17,26 @@ class StepCavityExplorerBase(StepBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def _write_input_files(self, tmp_dir):
-        # HM: this is the simplest implementation - we can think about whether we need any more complexity
+    def _write_input_files(self, tmp_dir, topol: GromacsState):
         for file in self.data.generic.get_flattened_files():
             file.write(tmp_dir)
+        if topol is not None:
+            # handle structure files
+            if not self.data.generic.get_files_by_extension("gro"):
+                if topol.structures:
+                    topol.write_structure(tmp_dir)
+            if not self.data.generic.get_files_by_extension("top"):
+                if topol.top_lines:
+                    topol.write_topol(tmp_dir)
+            if not self.data.generic.get_files_by_extension("tpr"):
+                if topol.tprs:
+                    topol.write_tpr(tmp_dir)
+            if not self.data.generic.get_files_by_extension("xtc"):
+                if topol.trajectories:
+                    topol.write_trajectory(tmp_dir)
+            if not self.data.generic.get_files_by_extension("ndx"):
+                if topol.ndx:
+                    topol.write_ndx(tmp_dir)
 
     def _parse_arguments(self, flag_dict: dict, args: list = None) -> List:
         arguments = args if args is not None else []

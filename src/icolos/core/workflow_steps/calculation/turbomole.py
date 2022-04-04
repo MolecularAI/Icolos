@@ -53,16 +53,17 @@ class StepTurbomole(StepCalculationBase, BaseModel):
         #       use strict=True after fix; probably, it has to to with $TURBOTMPDIR (all parallel jobs access the same)
         self._check_backend_availability(strict=False)
 
-    def get_original_conformer(self, conformer) -> Conformer:
+    def get_original_conformer(self, conformer: Conformer) -> Conformer:
         for compound in self.get_compounds():
-            for enum in compound.get_enumerations():
-                if (
-                    enum._enumeration_id
-                    == conformer.get_enumeration_object().get_enumeration_id()
-                ):
-                    for conf in enum.get_conformers():
-                        if conf._conformer_id == conformer._conformer_id:
-                            return conf
+            if conformer.get_enumeration_object()._compound_object.get_compound_number() == compound.get_compound_number():
+                for enum in compound.get_enumerations():
+                    if (
+                        enum._enumeration_id
+                        == conformer.get_enumeration_object().get_enumeration_id()
+                    ):
+                        for conf in enum.get_conformers():
+                            if conf._conformer_id == conformer._conformer_id:
+                                return conf
 
     def _prepare_tmp_input_directories(
         self, batch: List
@@ -99,7 +100,7 @@ class StepTurbomole(StepCalculationBase, BaseModel):
                     arguments=[
                         _OE.OBABEL_INPUTFORMAT_SDF,
                         path_input_sdf,
-                        _OE.OBABEL_OUTPUTFORMAT_XYZ,
+                        _OE.OBABEL_OUTPUT_FORMAT_XYZ,
                         "".join([_OE.OBABEL_O, path_input_xyz]),
                     ],
                     check=True,
@@ -292,7 +293,9 @@ class StepTurbomole(StepCalculationBase, BaseModel):
                     file_content = f.readlines()
                 conf = self.get_original_conformer(conformer)
                 conf.add_extra_data(key=_COE.EXTRA_DATA_COSMOFILE, data=file_content)
-                # conformer.add_extra_data(key=_COE.EXTRA_DATA_COSMOFILE, data=file_content)
+                # conformer.add_extra_data(
+                #     key=_COE.EXTRA_DATA_COSMOFILE, data=file_content
+                # )
 
             else:
                 self._logger.log(
@@ -410,7 +413,6 @@ class StepTurbomole(StepCalculationBase, BaseModel):
             )
 
             results = self._parse_output(tmp_dirs, conformers)
-
             for sublist, result in zip(next_batch, results):
                 # TODO: this only works if max length sublist == 1, fine for now as that is all turbomole can handle
                 for task in sublist:

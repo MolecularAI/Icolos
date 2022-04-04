@@ -158,7 +158,6 @@ class Test_Ligprep(unittest.TestCase):
             self._aspirin_molecule,
             self._Aspirin,
         ]
-
         ligprep_step.execute()
 
         self.assertEqual(

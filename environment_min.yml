@@ -16,6 +16,7 @@ dependencies:
   - psi4>=1.4
   - pdbfixer
   - pydantic>=1.8
+  - jsonschema
   - pyvis
   - requests
   - openbabel>=3
@@ -24,6 +25,7 @@ dependencies:
   - openff-toolkit>=0.10.2
   - dill>=0.3.4
   - pytorch
+  - dscribe>=1.2.1
   - pip:
     - black
     - regex

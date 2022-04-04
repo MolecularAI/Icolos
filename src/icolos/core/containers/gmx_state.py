@@ -1,3 +1,4 @@
+import numpy as np
 import os
 from turtle import st
 from typing import AnyStr, Dict, List
@@ -6,10 +7,6 @@ from icolos.core.containers.generic import GenericData
 from icolos.utils.enums.program_parameters import GromacsEnum
 
 from icolos.utils.enums.step_enums import StepGromacsEnum
-
-# acpype and pdb2gmx both do a job of handling posre creation etc
-
-# this should be a singular object tacked on to the workflow that gets updated as the workflow progresses.
 
 _SGE = StepGromacsEnum()
 _GE = GromacsEnum()
@@ -26,7 +23,7 @@ class AtomType(BaseModel):
     mass: float
 
 
-class GromacsTopol(BaseModel):
+class GromacsState(BaseModel):
     class Config:
         arbitrary_types_allowed: True
 
@@ -39,12 +36,15 @@ class GromacsTopol(BaseModel):
     water: str = "tip3p"
     system: List = []
     molecules: Dict = {}
-    structures: List = []
-    tprs: List = []
-    trajectories: List = []
+    # hold the files as generic data objects, keyed by the index
+    structures: Dict = {}
+    tprs: Dict = {}
+    trajectories: Dict = {}
+    log: Dict = {}
     ndx: List = []
     # store computed properties on the topology
-    properties: Dict = {}
+    # {property: [val1, val2, val3]}
+    properties: Dict[str, List] = {}
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -287,24 +287,27 @@ class GromacsTopol(BaseModel):
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
 
         struct = GenericData(file_name=file, file_data=lines)
-        try:
-            self.structures[index] = struct
-        except IndexError:
-            self.structures.append(struct)
+        self.structures[index] = struct
+
+    def set_log(self, path: str, file: str = _SGE.STD_LOG, index: int = 0):
+        with open(os.path.join(path, file), "r") as f:
+            lines = f.readlines()
+        log = GenericData(file_name=file, file_data=lines)
+        self.log[index] = log
 
     def set_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         with open(os.path.join(path, file), "rb") as f:
             data = f.read()
         data = GenericData(file_name=file, file_data=data, file_id=index)
-        # either the object already exists, or we are creating it for the first time
-        try:
-            self.tprs[index] = data
-        except IndexError:
-            self.tprs.append(data)
+        self.tprs[index] = data
 
     def write_tpr(self, path: str, file: str = _SGE.STD_TPR, index: int = 0):
         tpr = self.tprs[index]
         tpr.write(os.path.join(path, file), join=False)
+
+    def write_log(self, path: str, file: str = _SGE.STD_LOG, index: int = 0):
+        log = self.log[index]
+        log.write(os.path.join(path, file), join=False)
 
     def set_ndx(self, path: str, file: str = _SGE.STD_INDEX):
         with open(os.path.join(path, file), "r") as f:
@@ -323,18 +326,11 @@ class GromacsTopol(BaseModel):
 
     def set_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
         # depending on mdp settings, some runs will not produce an xtc file, only trr
-        if not os.path.isfile(os.path.join(path, file)):
-            # avoid indexing errors
-            data = GenericData(file_name="empty_traj.txt")
-        else:
+        if os.path.isfile(os.path.join(path, file)):
             with open(os.path.join(path, file), "rb") as f:
                 data = f.read()
             data = GenericData(file_name=file, file_data=data, file_id=index)
-            # either the object already exists, or we are creating it for the first time
-            try:
-                self.trajectories[index] = data
-            except IndexError:
-                self.trajectories.append(data)
+            self.trajectories[index] = data
 
     def write_trajectory(self, path: str, file: str = _SGE.STD_XTC, index: int = 0):
         traj = self.trajectories[index]
@@ -351,6 +347,30 @@ class GromacsTopol(BaseModel):
             lines = [l for l in lines if any([l.startswith(idx) for idx in _GE.ATOMS])]
         data = self.structures[index].get_data() + lines
         self.structures[index].set_data(data)
+
+    def write_props(self, path: str):
+        """
+        writes summary of properties for all trajectories to a file
+        """
+        prop_string = [f"{key}: {value}" for key, value in self.properties.items()]
+        avg_prop_string = [
+            f"{key}: {np.mean(value)}" for key, value in self.properties.items()
+        ]
+
+        output_string = f"""
+ICOLOS PROPERTY SUMMARY
+### Computed properties properties: {self.properties.keys()}
+
+### Properties
+{prop_string}
+
+
+### Average Properties
+{avg_prop_string} 
+        """
+
+        with open(os.path.join(path, "ICOLOS_PROPS.dat"), "w") as f:
+            f.write(output_string)
 
     def __str__(self) -> str:
         return f"Gromacs Topology object: System: {self.system} | Molecules: {[m for m in self.molecules]} | FF: {self.forcefield} | itp files: {[f for f in self.itps.keys()]} | posre files {[f for f in self.posre.keys()]}"
