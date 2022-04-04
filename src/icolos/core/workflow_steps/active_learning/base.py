@@ -1,5 +1,3 @@
-import os
-import tempfile
 from typing import List
 from pydantic import BaseModel
 import pandas as pd
@@ -14,7 +12,6 @@ from icolos.utils.enums.step_enums import StepActiveLearningEnum, StepBaseEnum
 from icolos.utils.general.convenience_functions import nested_get
 from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
-from rdkit.Chem import Mol
 from sklearn.gaussian_process.kernels import DotProduct
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -128,7 +125,10 @@ class ActiveLearningBase(StepBase, BaseModel):
                 )
             )
             oracle_steps[0].data.compounds.append(cmp)
-        print(f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds")
+        self._logger.log(
+            f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds",
+            _LE.DEBUG,
+        )
         for step in oracle_steps:
             oracle_wf.add_step(step)
         return oracle_wf
@@ -159,7 +159,6 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         # retrieve compounds from the final step
         final_compounds = oracle_wf._initialized_steps[-1].data.compounds
-        print(final_compounds)
         return final_compounds
 
     def _extract_final_scores(

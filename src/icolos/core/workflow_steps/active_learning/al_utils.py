@@ -1,7 +1,6 @@
 import os
 import shutil
 import tempfile
-from typing import List
 import numpy as np
 
 # RDkit
@@ -9,14 +8,13 @@ from rdkit import Chem
 from rdkit.Chem.rdmolops import GetAdjacencyMatrix
 from ase import io
 import ase
-from dscribe.descriptors import SOAP
 
 # Pytorch and Pytorch Geometric
 import torch
 from torch_geometric.data import Data
 from torch.utils.data import DataLoader
 
-# functions adapted from https://www.blopig.com/blog/2022/02/how-to-turn-a-smiles-string-into-a-molecular-graph-for-pytorch-geometric/
+# gnn featurization functions adapted from https://www.blopig.com/blog/2022/02/how-to-turn-a-smiles-string-into-a-molecular-graph-for-pytorch-geometric/
 
 
 def one_hot_encoding(x, permitted_list):

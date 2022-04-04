@@ -59,7 +59,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 smiles.append(Chem.MolToSmiles(mol))
                 # pd.concat([library, entry])
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
-            print(library.head())
+            self._logger_blank.log(library.head(), _LE.DEBUG)
             library = self.construct_fingerprints(library)
         scores = (
             np.absolute(pd.to_numeric(library[criteria].fillna(0)))
@@ -70,7 +70,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         return library, scores
 
     def _run_learning_loop_virtual_lib(
-        self, learner: ActiveLearner, lib: pd.DataFrame, tmp_dir: str, top_1_idx: list = None, 
+        self,
+        learner: ActiveLearner,
+        lib: pd.DataFrame,
+        tmp_dir: str,
+        top_1_idx: list = None,
     ) -> tuple[pd.DataFrame, List]:
         rounds = int(self.settings.additional[_SALE.N_ROUNDS])
         n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
@@ -140,7 +144,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
-        print(tmp_dir)
         criteria = (
             self.get_additional_setting(_SALE.CRITERIA)
             if self.get_additional_setting(_SALE.EVALUATE, default=False)
@@ -158,12 +161,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             enriched_lib,
             queried_compound_idx_by_batch,
         ) = self._run_learning_loop_virtual_lib(
-            learner=learner, lib=lib, tmp_dir = tmp_dir, top_1_idx=list(top_1_idx)
+            learner=learner, lib=lib, tmp_dir=tmp_dir, top_1_idx=list(top_1_idx)
         )
 
         # compare distributions
-        print(lib[criteria].astype(float).describe())
-        print(enriched_lib[criteria].astype(float).describe())
         enriched_lib.to_csv(os.path.join(tmp_dir, "enriched_lib.csv"))
         bins = np.linspace(-12, -9, 30)
         fig, axs = plt.subplots(
@@ -222,11 +223,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             axs[idx + 1].legend()
             # axs[idx + 1].set_title(f"enriched lib batch {(idx + 1) * 5}")
         fig.savefig(os.path.join(tmp_dir, "dist.png"), dpi=300)
-        
-        
 
         # pickle the final model
         # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
         #     pickle.dump(learner, f)
 
         self._parse_output(tmp_dir)
+        self._remove_temporary(tmp_dir)

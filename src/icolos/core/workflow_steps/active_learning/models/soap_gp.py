@@ -11,6 +11,7 @@ from icolos.core.workflow_steps.active_learning.al_utils import (
 )
 
 # define a custom kernel to compute similarity between two compounds based on their soap matrices
+# note this is very expensive in its current on-the-fly implementation and probably too much of an overhead for VS applications.
 
 
 class SOAP_Kernel(gpytorch.kernels.Kernel):
