@@ -118,7 +118,7 @@ class ActiveLearningBase(StepBase, BaseModel):
         # manually attach the compound objects to the oracle's lead step
         # subsequent steps should take their input from the the previous step, as ususal.
         for idx, compound in enumerate(compound_list):
-            cmp = Compound(compound_number=idx)
+            cmp = Compound(name=str(idx), compound_number=idx)
             cmp.add_enumeration(
                 Enumeration(
                     compound_object=cmp,
@@ -128,9 +128,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                 )
             )
             oracle_steps[0].data.compounds.append(cmp)
+        print(f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds")
         for step in oracle_steps:
             oracle_wf.add_step(step)
-
         return oracle_wf
 
     def query_oracle(self, compound_list: List[pd.Series]) -> List[Compound]:
@@ -156,12 +156,10 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Processing write-out blocks for {step.step_id}.", _LE.DEBUG
             )
             step.process_write_out()
-        self._logger.log(
-            f"Execution of {len(self._initialized_steps)} steps completed.", _LE.INFO
-        )
 
         # retrieve compounds from the final step
-        final_compounds = oracle_wf.steps[-1].data.compounds
+        final_compounds = oracle_wf._initialized_steps[-1].data.compounds
+        print(final_compounds)
         return final_compounds
 
     def _extract_final_scores(
@@ -184,7 +182,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
 
-        return np.absolute(top_scores)
+        return np.absolute(top_scores, dtype=np.float32)
 
     def check_additional(self, key, val=True) -> bool:
 
