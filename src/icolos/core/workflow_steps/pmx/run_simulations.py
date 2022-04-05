@@ -90,10 +90,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 mdlog,
             ]
             for flag in self.settings.arguments.flags:
-                job_command.append(flag)
+                job_command.append(str(flag))
             for key, value in self.settings.arguments.parameters.items():
-                job_command.append(key)
-                job_command.append(value)
+                job_command.append(str(key))
+                job_command.append(str(value))
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
