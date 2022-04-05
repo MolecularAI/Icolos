@@ -237,13 +237,11 @@ class StepPMXBase(StepBase, BaseModel):
         )
         arguments_acpype = [
             "-di",
-            "MOL.pdb",
+            "MOL.sdf",
             "-c",
             charge_method,
             "-a",
             "gaff2",
-            "-o",
-            "gmx",
             "-n",
             formal_charge,
         ]
@@ -261,11 +259,22 @@ class StepPMXBase(StepBase, BaseModel):
             for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
             if f.endswith("GMX.itp")
         ][0]
+        pdb_file = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.endswith("NEW.pdb")
+        ][0]
         shutil.copyfile(
             os.path.join(tmp_dir, acpype_dir, itp_file),
             # standardized name must be enforced here to make argument
             # parsing easier in subsequent pmx steps
             os.path.join(tmp_dir, "MOL.itp"),
+        )
+        shutil.copyfile(
+            os.path.join(tmp_dir, acpype_dir, pdb_file),
+            # standardized name must be enforced here to make argument
+            # parsing easier in subsequent pmx steps
+            os.path.join(tmp_dir, "MOL.pdb"),
         )
         # for abfe calculations we need the ligand_GMX.top + .gro files as well
         if include_top:
@@ -521,7 +530,7 @@ class StepPMXBase(StepBase, BaseModel):
             raise NotImplementedError(f"Cannot parametrize object of type {type(node)}")
         lig_path = os.path.join(self.work_dir, "input", "ligands", node_id)
         os.makedirs(lig_path, exist_ok=True)
-        conf.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
+        conf.write(os.path.join(lig_path, "MOL.sdf"))
 
         # now run ACPYPE on the ligand to produce the topology file
         self._parametrisation_pipeline(lig_path, conf=conf)
