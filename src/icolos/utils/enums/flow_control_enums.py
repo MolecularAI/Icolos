@@ -13,4 +13,5 @@ class FlowControlInitializationEnum:
 
     FLOW_CONTROL_INIT_DICT = {
         _SBE.STEP_ITERATOR: StepIterator,
+        _SBE.STEP_ACTIVE_LEARNING: StepActiveLearning,
     }

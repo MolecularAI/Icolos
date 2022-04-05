@@ -1,14 +1,8 @@
 from typing import List, Tuple
 import os
-import pickle
-
 from modAL.models.learners import ActiveLearner
 from pydantic.main import BaseModel
-
-
 from icolos.core.workflow_steps.active_learning.base import ActiveLearningBase
-
-
 from icolos.core.workflow_steps.step import _LE
 from icolos.utils.enums.step_enums import (
     StepActiveLearningEnum,
@@ -19,7 +13,6 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 _SALE = StepActiveLearningEnum()
 
@@ -59,8 +52,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 smiles.append(Chem.MolToSmiles(mol))
                 # pd.concat([library, entry])
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
-            self._logger_blank.log(library.head(), _LE.DEBUG)
-            library = self.construct_fingerprints(library)
+        library = self.construct_fingerprints(library)
         scores = (
             np.absolute(pd.to_numeric(library[criteria].fillna(0)))
             if criteria is not None
@@ -79,10 +71,12 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         rounds = int(self.settings.additional[_SALE.N_ROUNDS])
         n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
         queried_compound_idx = []
-        queried_compounds_by_batch = []
-        fraction_top1_hits = []
+        queried_compounds_per_epoch = []
+        fraction_top1_hits_per_epoch = []
         key = _SALE.MORGAN_FP
         X = np.array(list(lib[key]))
+        print("X shape is", X.shape)
+
         for rnd in range(rounds):
             query_idx, _ = learner.query(
                 X,
@@ -90,8 +84,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 previous_idx=queried_compound_idx,
             )
             queried_compound_idx += list(query_idx)
-            if (rnd + 1) % 5 == 0:
-                queried_compounds_by_batch.append([int(i) for i in query_idx])
+            queried_compounds_per_epoch.append([int(i) for i in query_idx])
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             if self.get_additional_setting(_SALE.EVALUATE, default=False):
@@ -134,13 +127,27 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     f"Fraction of top 1% hits queries by round {rnd}: {hits_queried}%",
                     _LE.INFO,
                 )
-                fraction_top1_hits.append(hits_queried)
+                fraction_top1_hits_per_epoch.append(hits_queried)
             df = lib.iloc[queried_compound_idx]
-            df.to_csv(os.path.join(tmp_dir, f"enriched_lib_round_{rnd+1}.csv"))
-        self._logger.log(f"Hits queried at each epoch:\n{fraction_top1_hits}", _LE.INFO)
+            df.to_pickle(os.path.join(tmp_dir, f"enriched_lib_round_{rnd+1}.pkl"))
+
+        # create a results dataframe to store per-epoch properties
+        self._logger.log("Generating results dataframe...", _LE.DEBUG)
+
+        # we have a list of compound IDs per epoch, we want the transpose
+        queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
+        print(queried_compounds_per_position.shape)  # [ 128 * n_epochs]
+        col_dict = {
+            "epoch": [i for i in range(rounds)],
+            "top_1%_per_epoch": fraction_top1_hits_per_epoch,
+        }
+        for idx, row in enumerate(queried_compounds_per_position):
+            col_dict[f"seq_idx_pos_{idx}"] = list(row)
+        resuts_df = pd.DataFrame(col_dict)
+        resuts_df.to_csv(os.path.join(tmp_dir, "results.csv"))
 
         # return the enriched df
-        return lib.iloc[queried_compound_idx], queried_compounds_by_batch
+        return lib.iloc[queried_compound_idx], queried_compounds_per_epoch
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
@@ -150,6 +157,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             else None
         )
         lib, scores = self._parse_library(criteria=criteria)
+        lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if scores is not None:
             top_1_percent = int(0.01 * len(scores))
             top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
@@ -164,6 +172,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             learner=learner, lib=lib, tmp_dir=tmp_dir, top_1_idx=list(top_1_idx)
         )
 
+        # this should be in a notebook, not production code
         # compare distributions
         enriched_lib.to_csv(os.path.join(tmp_dir, "enriched_lib.csv"))
         bins = np.linspace(-12, -9, 30)
@@ -229,4 +238,3 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         #     pickle.dump(learner, f)
 
         self._parse_output(tmp_dir)
-        self._remove_temporary(tmp_dir)
