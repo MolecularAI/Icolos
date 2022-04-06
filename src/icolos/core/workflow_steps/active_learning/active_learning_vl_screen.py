@@ -67,21 +67,34 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         lib: pd.DataFrame,
         tmp_dir: str,
         top_1_idx: list = None,
-    ) -> tuple[pd.DataFrame, List]:
-        rounds = int(self.settings.additional[_SALE.N_ROUNDS])
-        n_instances = int(self.settings.additional[_SALE.BATCH_SIZE])
+        replica=0,
+    ) -> None:
+
+        n_instances = int(self.settings.additional[_SALE.FRACTION_PER_EPOCH] * len(lib))
+        rounds = int(
+            (
+                self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION, default=0.25)
+                * len(lib)
+            )
+            / n_instances
+        )
+        self._logger.log(
+            f"Running {rounds} rounds of {n_instances} componds, replica {replica}",
+            _LE.DEBUG,
+        )
         queried_compound_idx = []
         queried_compounds_per_epoch = []
         fraction_top1_hits_per_epoch = []
         key = _SALE.MORGAN_FP
         X = np.array(list(lib[key]))
-        print("X shape is", X.shape)
 
         for rnd in range(rounds):
+            warmup = rnd < self.get_additional_setting(_SALE.WARMUP, default=1)
             query_idx, _ = learner.query(
                 X,
                 n_instances=n_instances,
                 previous_idx=queried_compound_idx,
+                warmup=warmup,
             )
             queried_compound_idx += list(query_idx)
             queried_compounds_per_epoch.append([int(i) for i in query_idx])
@@ -129,14 +142,27 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 )
                 fraction_top1_hits_per_epoch.append(hits_queried)
             df = lib.iloc[queried_compound_idx]
-            df.to_pickle(os.path.join(tmp_dir, f"enriched_lib_round_{rnd+1}.pkl"))
+            df.to_pickle(
+                os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
+            )
+
+            if (
+                self.get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
+                and rnd > 3
+            ):
+                # average of last three top-1 fractions
+                rolling_avg = np.mean(fraction_top1_hits_per_epoch[-4:-1])
+                if fraction_top1_hits_per_epoch[-1] - rolling_avg < 0.01:
+                    self._logger.log(
+                        f"Fraction top1 hits converged to 0.01, stopping...", _LE.INFO
+                    )
+                    break
 
         # create a results dataframe to store per-epoch properties
         self._logger.log("Generating results dataframe...", _LE.DEBUG)
 
         # we have a list of compound IDs per epoch, we want the transpose
         queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
-        print(queried_compounds_per_position.shape)  # [ 128 * n_epochs]
         col_dict = {
             "epoch": [i for i in range(rounds)],
             "top_1%_per_epoch": fraction_top1_hits_per_epoch,
@@ -144,10 +170,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         for idx, row in enumerate(queried_compounds_per_position):
             col_dict[f"seq_idx_pos_{idx}"] = list(row)
         resuts_df = pd.DataFrame(col_dict)
-        resuts_df.to_csv(os.path.join(tmp_dir, "results.csv"))
+        resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
 
         # return the enriched df
-        return lib.iloc[queried_compound_idx], queried_compounds_per_epoch
+        enriched_lib = lib.iloc[queried_compound_idx]
+        enriched_lib.to_pickle(os.path.join(tmp_dir, f"enriched_lib_rep_{replica}.pkl"))
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
@@ -162,79 +189,21 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_percent = int(0.01 * len(scores))
             top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
 
-        learner = self._initialize_learner()
+        replicas = self.get_additional_setting(_SALE.REPLICAS, default=1)
+        for replica in range(replicas):
+            learner = self._initialize_learner()
 
-        self._logger.log("Evaluating virtual library...", _LE.DEBUG)
-        (
-            enriched_lib,
-            queried_compound_idx_by_batch,
-        ) = self._run_learning_loop_virtual_lib(
-            learner=learner, lib=lib, tmp_dir=tmp_dir, top_1_idx=list(top_1_idx)
-        )
-
-        # this should be in a notebook, not production code
-        # compare distributions
-        enriched_lib.to_csv(os.path.join(tmp_dir, "enriched_lib.csv"))
-        bins = np.linspace(-12, -9, 30)
-        fig, axs = plt.subplots(
-            len(queried_compound_idx_by_batch) + 1,
-            1,
-            figsize=(10, len(queried_compound_idx_by_batch) * 4),
-        )
-        axs[0].set_title("Full library distribution + final enriched set")
-        axs[0].hist(
-            lib[criteria].astype(np.float32),
-            label="full lib",
-            bins=bins,
-            density=True,
-            alpha=0.5,
-        )
-        axs[0].hist(
-            enriched_lib[criteria].astype(np.float32),
-            label=f"enriched lib",
-            bins=bins,
-            density=True,
-            alpha=0.5,
-        )
-        axs[0].axvline(
-            lib[criteria].astype(np.float32).mean(),
-            color="red",
-            linestyle="dashed",
-            linewidth=2,
-            label="full lib mean",
-        )
-        axs[0].axvline(
-            enriched_lib[criteria].astype(np.float32).mean(),
-            color="green",
-            linestyle="dashed",
-            linewidth=2,
-            label="enriched lib mean",
-        )
-        axs[0].legend()
-        for axis in ["top", "bottom", "left", "right"]:
-            axs[0].spines[axis].set_linewidth(4)
-        for idx, batch_idx in enumerate(queried_compound_idx_by_batch):
-            axs[idx + 1].hist(
-                lib.iloc[batch_idx][criteria].astype(np.float32),
-                label=f"batch {(idx+1) * 5}",
-                bins=bins,
-                density=True,
-                alpha=0.5,
-            )
-            axs[idx + 1].axvline(
-                lib.iloc[batch_idx][criteria].astype(np.float32).mean(),
-                color="green",
-                linestyle="dashed",
-                linewidth=1,
-                label="mean",
+            self._logger.log("Evaluating virtual library...", _LE.DEBUG)
+            self._run_learning_loop_virtual_lib(
+                learner=learner,
+                lib=lib,
+                tmp_dir=tmp_dir,
+                top_1_idx=list(top_1_idx),
+                replica=replica,
             )
 
-            axs[idx + 1].legend()
-            # axs[idx + 1].set_title(f"enriched lib batch {(idx + 1) * 5}")
-        fig.savefig(os.path.join(tmp_dir, "dist.png"), dpi=300)
+            # pickle the final model
+            # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
+            #     pickle.dump(learner, f)
 
-        # pickle the final model
-        # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
-        #     pickle.dump(learner, f)
-
-        self._parse_output(tmp_dir)
+        # self._parse_output(tmp_dir)

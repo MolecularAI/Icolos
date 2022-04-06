@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from typing import List
 import numpy as np
 
 # RDkit
@@ -14,7 +15,12 @@ import torch
 from torch_geometric.data import Data
 from torch.utils.data import DataLoader
 
+from icolos.loggers.steplogger import StepLogger
+
+from icolos.core.workflow_steps.step import _LE
+
 # gnn featurization functions adapted from https://www.blopig.com/blog/2022/02/how-to-turn-a-smiles-string-into-a-molecular-graph-for-pytorch-geometric/
+_logger = StepLogger()
 
 
 def one_hot_encoding(x, permitted_list):
@@ -231,20 +237,27 @@ def create_graph(mol: Chem.Mol, y):
 def greedy_acquisition(
     estimator,
     X: np.ndarray,
-    previous_idx,
+    previous_idx: List[int],
     n_instances: int,
+    warmup: bool = False,
 ) -> np.ndarray:
     """
     Implement greedy acquisition strategy, return the n_samples best scores
 
     """
-    try:
-        predictions = estimator.predict(X)
-    except:
-        print("estimator not fitted, producing random ")
+    if warmup:
+        _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         predictions = np.random.uniform(12, 0, X.shape[0])
+    else:
+        try:
+            predictions = estimator.predict(X)
+        except:
+            _logger.log("estimator not fitted, using random sampling...", _LE.DEBUG)
+            predictions = np.random.uniform(12, 0, X.shape[0])
 
     # zero those predictions we've seen before
+    # TODO: is this the best approach? This ensures that we're not simply sampling the same points endlessly
+    # Top-1% coverage stalls very quickly without this
     for idx in previous_idx:
         predictions[idx] = 0
     # smaller before n_instances, largest after
