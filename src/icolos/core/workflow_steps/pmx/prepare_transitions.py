@@ -7,7 +7,7 @@ from icolos.utils.enums.program_parameters import (
     GromacsEnum,
     StepPMXEnum,
 )
-from icolos.utils.execute_external.pmx import PMXExecutor
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
@@ -24,7 +24,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=PMXExecutor)
+        self._initialize_backend(executor=GromacsExecutor)
 
     def execute(self):
         edges = [e.get_edge_id() for e in self.get_edges()]
@@ -55,7 +55,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             "-b": 2000,
         }
         trjconv_args = self.get_arguments(trjconv_args)
-        self._gromacs_executor.execute(
+        self._backend_executor.execute(
             _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
         )
 
@@ -90,6 +90,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             sim_type="transitions",
             framestart=1,
             framestop=81,
+            executor=self._backend_executor,
         )
         if result.returncode != 0:
             self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)

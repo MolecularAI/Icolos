@@ -135,7 +135,15 @@ class StepPMXBase(StepBase, BaseModel):
         )
 
     def _prepare_single_tpr(
-        self, simpath, toppath, state, sim_type, empath=None, framestart=0, framestop=1
+        self,
+        simpath,
+        toppath,
+        state,
+        sim_type,
+        executor,
+        empath=None,
+        framestart=0,
+        framestop=1,
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -176,7 +184,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = self._gromacs_executor.execute(
+            result = executor.execute(
                 command=_GE.GROMPP, arguments=grompp_args, check=True
             )
         elif sim_type == "transitions":
