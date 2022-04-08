@@ -90,11 +90,17 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         for rnd in range(rounds):
             warmup = rnd < self.get_additional_setting(_SALE.WARMUP, default=1)
+            init_batch_size = int(
+                n_instances
+                * self.get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
+            )
+            self._logger.log(f"Generating {init_batch_size} initial samples", _LE.DEBUG)
             query_idx, _ = learner.query(
                 X,
-                n_instances=n_instances,
+                n_instances=init_batch_size if rnd == 0 else n_instances,
                 previous_idx=queried_compound_idx,
                 warmup=warmup,
+                epsilon=self.get_additional_setting(_SALE.EPSILON, default=0.0),
             )
             queried_compound_idx += list(query_idx)
             queried_compounds_per_epoch.append([int(i) for i in query_idx])
@@ -133,7 +139,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             if top_1_idx is not None:
                 # what fraction of top1% compoudnds has the model requested to evaluate
                 hits_queried = (
-                    np.in1d(np.unique(np.array(queried_compound_idx)), top_1_idx).sum()
+                    np.isin(np.unique(queried_compound_idx), top_1_idx).sum()
                     / len(top_1_idx)
                 ) * 100
                 self._logger.log(
@@ -141,6 +147,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     _LE.INFO,
                 )
                 fraction_top1_hits_per_epoch.append(hits_queried)
+                if hits_queried > 99:
+                    break
             df = lib.iloc[queried_compound_idx]
             df.to_pickle(
                 os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
@@ -148,10 +156,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
             if (
                 self.get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
-                and rnd > 3
+                and rnd > 4
             ):
                 # average of last three top-1 fractions
-                rolling_avg = np.mean(fraction_top1_hits_per_epoch[-4:-1])
+                rolling_avg = np.mean(fraction_top1_hits_per_epoch[-5:-1])
                 if fraction_top1_hits_per_epoch[-1] - rolling_avg < 0.01:
                     self._logger.log(
                         f"Fraction top1 hits converged to 0.01, stopping...", _LE.INFO
@@ -164,11 +172,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         # we have a list of compound IDs per epoch, we want the transpose
         queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
         col_dict = {
-            "epoch": [i for i in range(rounds)],
+            "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
             "top_1%_per_epoch": fraction_top1_hits_per_epoch,
         }
-        for idx, row in enumerate(queried_compounds_per_position):
-            col_dict[f"seq_idx_pos_{idx}"] = list(row)
+        # for idx, row in enumerate(queried_compounds_per_position):
+        #     col_dict[f"seq_idx_pos_{idx}"] = list(row)
         resuts_df = pd.DataFrame(col_dict)
         resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
 

@@ -1030,7 +1030,7 @@ class StepActiveLearningEnum:
     SMILES = "SMILES"
     MOLECULE = "Molecule"
     VIRTUAL_LIB = "virtual_lib"
-    INIT_SAMPLES = "init_samples"
+    INIT_SAMPLE_FACTOR = "init_sample_factor"
     MORGAN_FP = "MorganFP"
     SOAP_VECTOR = "soap_vector"
     ID = "ID"
@@ -1047,3 +1047,4 @@ class StepActiveLearningEnum:
     VALIDATION_LIB = "validation_lib"
     DYNAMIC_STOP = "dynamic_stop"
     REPLICAS = "replicas"
+    EPSILON = "epsilon"

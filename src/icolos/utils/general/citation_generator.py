@@ -26,13 +26,16 @@ def add_citation(
     citations: List[str],
     citation_string: str,
 ):
-    if any(
-        [
-            True
-            for w_step_type in workflow_step_types
-            if step_type.upper() in w_step_type
-        ]
-    ) or step_type == "default":
+    if (
+        any(
+            [
+                True
+                for w_step_type in workflow_step_types
+                if step_type.upper() in w_step_type
+            ]
+        )
+        or step_type == "default"
+    ):
         citations.append(citation_string)
 
 
@@ -46,7 +49,7 @@ ooooo   .oooooo.     .oooooo.   ooooo          .oooooo.    .oooooo..o
  888  888          888      888  888         888      888      `"Y88b 
  888  `88b    ooo  `88b    d88'  888       o `88b    d88' oo     .d8P 
 o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'  
-====================================================================={ConsoleColours.ENDC}\n"""
+   ====================================================================={ConsoleColours.ENDC}\n"""
     writeout_lines = header.split("\n")
     writeout_lines.append(
         "If you publish work using Icolos, please consider citing the following papers, based on the workflow's steps...\n\n"
