@@ -92,10 +92,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             framestop=81,
             executor=self._backend_executor,
         )
-        if result.returncode != 0:
-            self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
-            for line in result.stderr.split("\n"):
-                self._logger.log(line, _LE.DEBUG)
+        # if result.returncode != 0:
+        #     self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
+        #     for line in result.stderr.split("\n"):
+        #         self._logger.log(line, _LE.DEBUG)
         self._clean_backup_files(tipath)
 
     def prepare_transitions(self, jobs: List[str]):
