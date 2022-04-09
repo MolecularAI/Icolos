@@ -47,10 +47,8 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
                 _LE.DEBUG,
             )
-            # run everything through in one batch, with multiple edges per call
-            self.execution.parallelization.max_length_sublists = int(
-                np.ceil(len(job_pool) / self._get_number_cores())
-            )
+            # run this through in many batches of 1 to allow efficient scaling on cluster
+            self.execution.parallelization.max_length_sublists = 1
             self._subtask_container = SubtaskContainer(
                 max_tries=self.execution.failure_policy.n_tries
             )
