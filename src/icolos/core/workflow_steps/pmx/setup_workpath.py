@@ -22,13 +22,14 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     """
 
     _gromacs_executor: GromacsExecutor = None
-    _antechamber_executor: Executor = None
+    # _antechamber_executor: Executor = None
 
     def __init__(self, **data):
         super().__init__(**data)
         self._gromacs_executor = GromacsExecutor(
             prefix_execution=self.execution.prefix_execution
         )
+        self._initialize_backend(executor=Executor)
 
     def execute(self):
         # sets the number of replicas to be used throughput the pmx run

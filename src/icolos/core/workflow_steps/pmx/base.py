@@ -252,7 +252,7 @@ class StepPMXBase(StepBase, BaseModel):
             formal_charge,
         ]
         self._logger.log("Generating ligand parameters...", _LE.DEBUG)
-        self._antechamber_executor.execute(
+        self._backend_executor.execute(
             command=_GE.ACPYPE_BINARY,
             arguments=arguments_acpype,
             location=tmp_dir,
