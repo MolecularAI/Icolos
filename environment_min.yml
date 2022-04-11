@@ -25,7 +25,6 @@ dependencies:
   - openff-toolkit>=0.10.2
   - dill>=0.3.4
   - pytorch
-  - dscribe>=1.2.1
   - pip:
     - black
     - regex

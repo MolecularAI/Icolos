@@ -209,9 +209,3 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 top_1_idx=list(top_1_idx),
                 replica=replica,
             )
-
-            # pickle the final model
-            # with open(os.path.join(tmp_dir, "model.pkl"), "wb") as f:
-            #     pickle.dump(learner, f)
-
-        # self._parse_output(tmp_dir)
