@@ -211,10 +211,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             subtask_results = []
             for sim in subtask:
                 location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
-                with open(location, "r") as f:
-                    lines = f.readlines()
-                subtask_results.append(
-                    any(["Finished mdrun" in l for l in lines[-20:]])
-                )
+                if os.path.isfile(location):
+                    with open(location, "r") as f:
+                        lines = f.readlines()
+                    subtask_results.append(
+                        any(["Finished mdrun" in l for l in lines[-20:]])
+                    )
+                else:
+                    subtask_results.append(False)
             results.append(subtask_results)
         return results
