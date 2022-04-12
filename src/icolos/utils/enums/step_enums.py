@@ -1026,10 +1026,12 @@ class StepGoldTargetPreparationEnum:
 
 class StepActiveLearningEnum:
 
+    ORACLE_TYPE = "oracle_type"
     ORACLE_CONFIG = "oracle_config"
     SMILES = "SMILES"
     MOLECULE = "Molecule"
     VIRTUAL_LIB = "virtual_lib"
+    FRAGMENTS ="fragments"
     INIT_SAMPLE_FACTOR = "init_sample_factor"
     MORGAN_FP = "MorganFP"
     SOAP_VECTOR = "soap_vector"

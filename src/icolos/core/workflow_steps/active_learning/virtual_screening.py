@@ -52,6 +52,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 smiles.append(Chem.MolToSmiles(mol))
                 # pd.concat([library, entry])
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
+        else:
+            raise ValueError(f"File {lib_path} must of of type smi or sdf")
         library = self.construct_fingerprints(library)
         scores = (
             np.absolute(pd.to_numeric(library[criteria].fillna(0)))
@@ -68,6 +70,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         tmp_dir: str,
         top_1_idx: list = None,
         replica=0,
+        fragment_lib: pd.DataFrame = None,
     ) -> None:
 
         n_instances = int(self.settings.additional[_SALE.FRACTION_PER_EPOCH] * len(lib))
@@ -87,6 +90,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         fraction_top1_hits_per_epoch = []
         key = _SALE.MORGAN_FP
         X = np.array(list(lib[key]))
+        oracle_type = self.get_additional_setting(_SALE.ORACLE_TYPE, default="docking")
 
         for rnd in range(rounds):
             warmup = rnd < self.get_additional_setting(_SALE.WARMUP, default=1)
@@ -94,7 +98,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 n_instances
                 * self.get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
             )
-            self._logger.log(f"Generating {init_batch_size} initial samples", _LE.DEBUG)
+            self._logger.log(f"Generating {init_batch_size} samples", _LE.DEBUG)
             query_idx, _ = learner.query(
                 X,
                 n_instances=init_batch_size if rnd == 0 else n_instances,
@@ -124,7 +128,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                     f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
                 )
 
-                compounds = self.query_oracle(query_compounds)
+                compounds = self.query_oracle(
+                    query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
+                )
                 scores = self._extract_final_scores(
                     compounds, self.settings.additional[_SALE.CRITERIA]
                 )
@@ -197,6 +203,23 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_percent = int(0.01 * len(scores))
             top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
 
+        # load fragment lib if provided
+        print("loading fragment library")
+        fragments_libary = (
+            PandasTools.LoadSDF(
+                self.get_additional_setting(_SALE.FRAGMENTS),
+                smilesName=_SALE.SMILES,
+                molColName=_SALE.MOLECULE,
+                includeFingerprints=True,
+                removeHs=False,
+                embedProps=True,
+            )
+            if self.get_additional_setting(_SALE.FRAGMENTS) is not None
+            else None
+        )
+
+        print(fragments_libary.head())
+
         replicas = self.get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):
             learner = self._initialize_learner()
@@ -205,6 +228,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             self._run_learning_loop_virtual_lib(
                 learner=learner,
                 lib=lib,
+                fragment_lib=fragments_libary,
                 tmp_dir=tmp_dir,
                 top_1_idx=list(top_1_idx),
                 replica=replica,

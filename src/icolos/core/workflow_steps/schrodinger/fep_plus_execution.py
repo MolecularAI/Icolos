@@ -36,16 +36,17 @@ class StepFepPlusExec(StepFEPBase, BaseModel):
 
         self._job_id = None
 
-    def _parse_arguments(self):
+    def _parse_arguments(self, tmp_dir: str):
         parameters = deepcopy(self.settings.arguments.parameters)
         arguments = []
-        if len(self.settings.arguments.flags) > 0:
-            for flag in self.settings.arguments.flags:
-                arguments.append(str(flag))
+
         if parameters:
             for key in parameters.keys():
+                # treat this specially, needs escaped quotations
                 arguments.append(key)
-                if parameters[key] is not None and parameters[key] != "":
+                if key == "-solvent_asl":
+                    arguments.append(f"'{parameters[key]}'")
+                else:
                     arguments.append(str(parameters[key]))
         # for our AWS config, need to set processors per job =1
         if "-ppj" not in arguments:
@@ -56,7 +57,18 @@ class StepFepPlusExec(StepFEPBase, BaseModel):
             )
         if _SFE.RETRIES not in arguments:
             arguments.extend([_SFE.RETRIES, "3"])
-        arguments.append(_SFE.FMP_OUTPUT_FILE)
+        if len(self.settings.arguments.flags) > 0:
+            for flag in self.settings.arguments.flags:
+                arguments.append(str(flag))
+        # only do this for small-molecule FEP
+        if "-protein" in arguments:
+            arguments.append(
+                os.path.join(
+                    tmp_dir, self.data.generic.get_argument_by_extension("maegz")
+                )
+            )
+        else:
+            arguments.append(_SFE.FMP_OUTPUT_FILE)
 
         # remove "-WAIT" if it has been set, as this will interfere with the implementation (and might cause issues
         # due to file system write buffering)
@@ -168,7 +180,7 @@ class StepFepPlusExec(StepFEPBase, BaseModel):
             )
 
         # obtain the arguments as a list of strings
-        arguments = self._parse_arguments()
+        arguments = self._parse_arguments(tmp_dir)
         self._logger.log(f"Executing FEP+ calculation in {tmp_dir}.", _LE.INFO)
 
         # execute fep_plus

@@ -41,9 +41,7 @@ class StructConvert:
         self.execute(arguments=arguments)
 
     def pdb2mae(self, pdb_file: str, mae_file: str):
-        # new schrodinger does not check this, needs to be done here
-        assert pdb_file.endswith(".pdb")
-        assert mae_file.endswith(".mae")
+        
         arguments = [
             pdb_file,
             mae_file,

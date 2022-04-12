@@ -1067,22 +1067,26 @@ class JazzyEnum:
     HELP_IDENTIFICATION_STRING = "Show this message"
 
     # "vec" command
-    VEC = "vec"      # "generating properties" mode
-    VEC_OPT = "--opt"   # optimization
+    VEC = "vec"  # "generating properties" mode
+    VEC_OPT = "--opt"  # optimization
     VEC_OPT_MMF94 = "MMF94"
     VEC_OPT_MMF94S = "MMF94s"
     VEC_OPT_UFF = "UFF"
     VEC_STRENGHT_ONLY = "--strength_only"
 
     # "vis" command
-    VIS = "vis"      # "generating graphics" mode
+    VIS = "vis"  # "generating graphics" mode
     VIS_OPT = "--opt"
     VIS_OPT_MMF94 = "MMF94"
     VIS_OPT_MMF94S = "MMF94s"
     VIS_OPT_UFF = "UFF"
-    VIS_FIG_SIZE = "--fig_size"    # Size of SVG image in pixels.  [default: 500, 500]
-    VIS_SDC_THRESHOLD = "--sdc_threshold"    # Treshold strength to depic Carbon donors. [default: 0.0]
-    VIS_SA_THRESHOLD = "--sa_threshold"    # Treshold strength to depic acceptors. [default: 0.0]
+    VIS_FIG_SIZE = "--fig_size"  # Size of SVG image in pixels.  [default: 500, 500]
+    VIS_SDC_THRESHOLD = (
+        "--sdc_threshold"  # Treshold strength to depic Carbon donors. [default: 0.0]
+    )
+    VIS_SA_THRESHOLD = (
+        "--sa_threshold"  # Treshold strength to depic acceptors. [default: 0.0]
+    )
     VIS_BASE64 = "--base64"
     VIS_FLATTEN_MOLECULE = "--flatten_molecule"
     VIS_HIGHLIGHT_ATOMS = "--highlight_atoms"
@@ -1548,8 +1552,8 @@ class FepPlusEnum:
     FEP_MAPPER = "$SCHRODINGER/run -FROM scisol fep_mapper.py"
     FEP_EXECUTOR = "$SCHRODINGER/fep_plus"
     FEP_HELP = "-h"
-    JSC_LIST = 'ssh <location> "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc list"'
-    JSC_TAIL_FILE = 'ssh <location> "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc tail-file'
+    JSC_LIST = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc list"'
+    JSC_TAIL_FILE = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc tail-file'
     DICT = "dict"
     PATH = "path"
     FEP_MAPPER_HELP_SUCCESS_STRING = "If given, the match will be allowed"

@@ -131,6 +131,7 @@ class StepBase(BaseModel):
     # @staticmethod
     def _make_tmpdir(self):
         if self.work_dir is not None:
+            self._logger.log(f"Using specified work_dir {self.work_dir}", _LE.DEBUG)
             return self.work_dir
         else:
             self.work_dir = tempfile.mkdtemp()
