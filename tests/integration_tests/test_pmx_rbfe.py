@@ -1,6 +1,10 @@
 import unittest
 import os
 from icolos.core.composite_agents.workflow import WorkFlow
+from icolos.utils.entry_point_functions.logging_helper_functions import (
+    initialize_logging,
+)
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from tests.tests_paths import (
     MAIN_CONFIG,
     PATHS_1UYD,
@@ -14,6 +18,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 _WE = WorkflowEnum()
 _SBE = StepBaseEnum
 _SGE = StepGromacsEnum()
+_LE = LoggingConfigEnum()
 
 
 class TestPMXrbfe(unittest.TestCase):
@@ -343,6 +348,8 @@ class TestPMXrbfe(unittest.TestCase):
         wflow = WorkFlow(**conf)
         wflow.initialize()
 
+        log_conf = attach_root_path(_LE.PATH_CONFIG_DEBUG)
+        _ = initialize_logging(log_conf_path=log_conf, workflow_conf=conf)
         self.assertEqual(len(wflow.steps), 14)
         wflow.execute()
         out_path = os.path.join(self._test_dir, "resultsAll.csv")

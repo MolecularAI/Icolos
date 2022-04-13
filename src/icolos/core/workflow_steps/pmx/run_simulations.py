@@ -49,7 +49,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             )
             # run everything through in one batch, with multiple edges per call
             self.execution.parallelization.max_length_sublists = int(
-                np.ceil(len(job_pool) / self._get_number_cores())
+                np.floor(len(job_pool) / self._get_number_cores())
             )
             self._subtask_container = SubtaskContainer(
                 max_tries=self.execution.failure_policy.n_tries
@@ -90,10 +90,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 mdlog,
             ]
             for flag in self.settings.arguments.flags:
-                job_command.append(flag)
+                job_command.append(str(flag))
             for key, value in self.settings.arguments.parameters.items():
-                job_command.append(key)
-                job_command.append(value)
+                job_command.append(str(key))
+                job_command.append(str(value))
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
@@ -213,10 +213,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             subtask_results = []
             for sim in subtask:
                 location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
-                with open(location, "r") as f:
-                    lines = f.readlines()
-                subtask_results.append(
-                    any(["Finished mdrun" in l for l in lines[-20:]])
-                )
+                if os.path.isfile(location):
+                    with open(location, "r") as f:
+                        lines = f.readlines()
+                    subtask_results.append(
+                        any(["Finished mdrun" in l for l in lines[-20:]])
+                    )
+                else:
+                    subtask_results.append(False)
             results.append(subtask_results)
         return results

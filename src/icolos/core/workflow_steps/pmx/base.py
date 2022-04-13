@@ -135,7 +135,15 @@ class StepPMXBase(StepBase, BaseModel):
         )
 
     def _prepare_single_tpr(
-        self, simpath, toppath, state, sim_type, empath=None, framestart=0, framestop=1
+        self,
+        simpath,
+        toppath,
+        state,
+        sim_type,
+        executor,
+        empath=None,
+        framestart=0,
+        framestop=1,
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -176,7 +184,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = self._gromacs_executor.execute(
+            result = executor.execute(
                 command=_GE.GROMPP, arguments=grompp_args, check=True
             )
         elif sim_type == "transitions":
@@ -207,9 +215,7 @@ class StepPMXBase(StepBase, BaseModel):
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = self._gromacs_executor.execute(
-                command=grompp_full_cmd, arguments=[], check=True
-            )
+            result = executor.execute(command=grompp_full_cmd, arguments=[])
         self._clean_backup_files(simpath)
         return result
 
@@ -237,18 +243,16 @@ class StepPMXBase(StepBase, BaseModel):
         )
         arguments_acpype = [
             "-di",
-            "MOL.pdb",
+            "MOL.sdf",
             "-c",
             charge_method,
             "-a",
             "gaff2",
-            "-o",
-            "gmx",
             "-n",
             formal_charge,
         ]
         self._logger.log("Generating ligand parameters...", _LE.DEBUG)
-        self._antechamber_executor.execute(
+        self._backend_executor.execute(
             command=_GE.ACPYPE_BINARY,
             arguments=arguments_acpype,
             location=tmp_dir,
@@ -261,11 +265,22 @@ class StepPMXBase(StepBase, BaseModel):
             for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
             if f.endswith("GMX.itp")
         ][0]
+        pdb_file = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.endswith("NEW.pdb")
+        ][0]
         shutil.copyfile(
             os.path.join(tmp_dir, acpype_dir, itp_file),
             # standardized name must be enforced here to make argument
             # parsing easier in subsequent pmx steps
             os.path.join(tmp_dir, "MOL.itp"),
+        )
+        shutil.copyfile(
+            os.path.join(tmp_dir, acpype_dir, pdb_file),
+            # standardized name must be enforced here to make argument
+            # parsing easier in subsequent pmx steps
+            os.path.join(tmp_dir, "MOL.pdb"),
         )
         # for abfe calculations we need the ligand_GMX.top + .gro files as well
         if include_top:
@@ -293,7 +308,7 @@ class StepPMXBase(StepBase, BaseModel):
         self,
         run_func: Callable,
         step_id: str,
-        result_checker: Callable = None,
+        result_checker: Callable,
         **kwargs,
     ):
         """
@@ -301,8 +316,6 @@ class StepPMXBase(StepBase, BaseModel):
         runs the step's execute method,
         passes any kwargs straight to the run_func
         If result_checker is provided,
-
-
         """
         parallelizer = Parallelizer(func=run_func)
         n = 1
@@ -313,53 +326,58 @@ class StepPMXBase(StepBase, BaseModel):
             )  # return n lists of length max_sublist_length
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
+
             jobs = self._prepare_edges(next_batch)
+            n_removed = 0
+            pre_exec_results = result_checker(jobs)
+            for job, exec_success, task in zip(jobs, pre_exec_results, next_batch):
+                # we test on the subtask level, not the individual job level, but since jobs are run through with max_len_sublists=1, in practice this doesn't matter
+                if all(r is True for r in exec_success):
+                    jobs.remove(job)
+                    for subtask in task:
+                        subtask.set_status_success()
+                    self._logger.log(
+                        f"Removed job {job} from execution batch, good output found",
+                        _LE.DEBUG,
+                    )
+                    n_removed += 1
             self._logger.log(
-                f"Executing {step_id} for batch {n}, containing {len(jobs)} * {len(jobs[0])} jobs",
+                f"Executing {step_id} for batch {n}, containing {len(jobs)} * {self.execution.parallelization.max_length_sublists} jobs",
                 _LE.INFO,
             )
+            # prune successful jobs from the batch
 
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
-            if result_checker is not None:
-                self._logger.log("Checking execution results...", _LE.DEBUG)
-                batch_results = result_checker(jobs)
-                good_results = 0
-                for task, result in zip(next_batch, batch_results):
-                    # returns boolean arrays: False => failed job
-                    for subtask, sub_result in zip(task, result):
-                        if sub_result == False:
-                            subtask.set_status_failed()
-                            self._logger.log(
-                                f"Warning: job {subtask} failed!", _LE.WARNING
+            self._logger.log("Checking execution results...", _LE.DEBUG)
+            batch_results = result_checker(jobs)
+            good_results = 0
+            for task, result in zip(next_batch, batch_results):
+                # returns boolean arrays: False => failed job
+                for subtask, sub_result in zip(task, result):
+                    if sub_result == False:
+                        subtask.set_status_failed()
+                        self._logger.log(f"Warning: job {subtask} failed!", _LE.WARNING)
+                        if (
+                            self.get_perturbation_map() is not None
+                            and self.get_perturbation_map().strict_execution
+                            and isinstance(subtask.data, str)
+                        ):
+                            edge = self.get_perturbation_map().get_edge_by_id(
+                                subtask.data
                             )
-                            if (
-                                self.get_perturbation_map() is not None
-                                and self.get_perturbation_map().strict_execution
-                                and isinstance(subtask.data, str)
-                            ):
-                                edge = self.get_perturbation_map().get_edge_by_id(
-                                    subtask.data
-                                )
-                                if edge is not None:
-                                    edge._set_status(_PE.STATUS_FAILED)
+                            if edge is not None:
+                                edge._set_status(_PE.STATUS_FAILED)
 
-                        else:
-                            subtask.set_status_success()
-                            good_results += 1
-                self._logger.log(
-                    f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(jobs) * len(jobs[0])} jobs for step {step_id}",
-                    _LE.INFO,
-                )
-
-            else:
-                self._logger.log(
-                    f"Step {step_id} is running without a result checker - failed executions will be ignored!",
-                    _LE.WARNING,
-                )
-                for element in next_batch:
-                    for subtask in element:
+                    else:
                         subtask.set_status_success()
+                        good_results += 1
+
+            self._logger.log(
+                f"EXECUTION SUMMARY: Completed {good_results} jobs successfully (out of {len(next_batch) * len(next_batch[0])} jobs for step {step_id}. Removed {n_removed} already completed jobs",
+                _LE.INFO,
+            )
+
             self._log_execution_progress()
             n += 1
 
@@ -521,7 +539,7 @@ class StepPMXBase(StepBase, BaseModel):
             raise NotImplementedError(f"Cannot parametrize object of type {type(node)}")
         lig_path = os.path.join(self.work_dir, "input", "ligands", node_id)
         os.makedirs(lig_path, exist_ok=True)
-        conf.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
+        conf.write(os.path.join(lig_path, "MOL.sdf"))
 
         # now run ACPYPE on the ligand to produce the topology file
         self._parametrisation_pipeline(lig_path, conf=conf)
