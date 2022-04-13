@@ -602,7 +602,7 @@ class StepGlide(StepSchrodingerBase, BaseModel):
                         _SBE.ANNOTATION_TAG_DOCKING_SCORE, str(0.0)
                     )
                     dummy_conf.get_molecule().SetProp(
-                        _SBE.ANNOTATION_TAG_G_SCORE, str(0.0)
+                        _SGE.GLIDE_DOCKING_SCORE, str(0.0)
                     )
                     enum.add_conformer(dummy_conf)
         self._logger.log(f"Added {num_added} dummy conformers", _LE.DEBUG)
