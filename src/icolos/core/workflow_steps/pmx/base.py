@@ -135,7 +135,15 @@ class StepPMXBase(StepBase, BaseModel):
         )
 
     def _prepare_single_tpr(
-        self, simpath, toppath, state, sim_type, empath=None, framestart=0, framestop=1
+        self,
+        simpath,
+        toppath,
+        state,
+        sim_type,
+        executor,
+        empath=None,
+        framestart=0,
+        framestop=1,
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -176,7 +184,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = self._gromacs_executor.execute(
+            result = executor.execute(
                 command=_GE.GROMPP, arguments=grompp_args, check=True
             )
         elif sim_type == "transitions":
@@ -207,9 +215,7 @@ class StepPMXBase(StepBase, BaseModel):
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = self._gromacs_executor.execute(
-                command=grompp_full_cmd, arguments=[], check=True
-            )
+            result = executor.execute(command=grompp_full_cmd, arguments=[])
         self._clean_backup_files(simpath)
         return result
 
@@ -237,13 +243,11 @@ class StepPMXBase(StepBase, BaseModel):
         )
         arguments_acpype = [
             "-di",
-            "MOL.pdb",
+            "MOL.sdf",
             "-c",
             charge_method,
             "-a",
             "gaff2",
-            "-o",
-            "gmx",
             "-n",
             formal_charge,
         ]
@@ -261,11 +265,22 @@ class StepPMXBase(StepBase, BaseModel):
             for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
             if f.endswith("GMX.itp")
         ][0]
+        pdb_file = [
+            f
+            for f in os.listdir(os.path.join(tmp_dir, acpype_dir))
+            if f.endswith("NEW.pdb")
+        ][0]
         shutil.copyfile(
             os.path.join(tmp_dir, acpype_dir, itp_file),
             # standardized name must be enforced here to make argument
             # parsing easier in subsequent pmx steps
             os.path.join(tmp_dir, "MOL.itp"),
+        )
+        shutil.copyfile(
+            os.path.join(tmp_dir, acpype_dir, pdb_file),
+            # standardized name must be enforced here to make argument
+            # parsing easier in subsequent pmx steps
+            os.path.join(tmp_dir, "MOL.pdb"),
         )
         # for abfe calculations we need the ligand_GMX.top + .gro files as well
         if include_top:
@@ -521,7 +536,7 @@ class StepPMXBase(StepBase, BaseModel):
             raise NotImplementedError(f"Cannot parametrize object of type {type(node)}")
         lig_path = os.path.join(self.work_dir, "input", "ligands", node_id)
         os.makedirs(lig_path, exist_ok=True)
-        conf.write(os.path.join(lig_path, "MOL.sdf"), format_="pdb")
+        conf.write(os.path.join(lig_path, "MOL.sdf"))
 
         # now run ACPYPE on the ligand to produce the topology file
         self._parametrisation_pipeline(lig_path, conf=conf)

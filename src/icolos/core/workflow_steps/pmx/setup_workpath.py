@@ -118,7 +118,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
                             os.makedirs(simpath, exist_ok=True)
 
     def _check_results(self, batch: List[List[Node]]) -> List[List[bool]]:
-        output_files = ["ffMOL.itp", "MOL.itp"]
+        output_files = ["ffMOL.itp", "MOL.itp", "MOL.pdb"]
         results = []
         for subjob in batch:
             subjob_results = []
