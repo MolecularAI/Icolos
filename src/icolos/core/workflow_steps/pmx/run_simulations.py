@@ -47,8 +47,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
                 _LE.DEBUG,
             )
-            # run this through in many batches of 1 to allow efficient scaling on cluster
-            self.execution.parallelization.max_length_sublists = 1
+            # run everything through in one batch, with multiple edges per call
+            self.execution.parallelization.max_length_sublists = int(
+                np.floor(len(job_pool) / self._get_number_cores())
+            )
             self._subtask_container = SubtaskContainer(
                 max_tries=self.execution.failure_policy.n_tries
             )
@@ -211,10 +213,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             subtask_results = []
             for sim in subtask:
                 location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
-                with open(location, "r") as f:
-                    lines = f.readlines()
-                subtask_results.append(
-                    any(["Finished mdrun" in l for l in lines[-20:]])
-                )
+                if os.path.isfile(location):
+                    with open(location, "r") as f:
+                        lines = f.readlines()
+                    subtask_results.append(
+                        any(["Finished mdrun" in l for l in lines[-20:]])
+                    )
+                else:
+                    subtask_results.append(False)
             results.append(subtask_results)
         return results
