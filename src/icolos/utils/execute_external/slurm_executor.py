@@ -78,7 +78,8 @@ class SlurmExecutor(ExecutorBase):
         if result.returncode != 0:
             # something has gone wrong with submitting the slurm script
             logger.log(
-                f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}", _LE.WARNING
+                f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
+                _LE.WARNING,
             )
 
         # either monitor the job id, or resort to parsing the log file
