@@ -507,7 +507,7 @@ class WriteOutHandler(BaseModel):
             dict_result[_WE.COMPOUND_NAME][irow] = "" if name is None else name
             dict_result["original_smiles"][
                 irow
-            ] = conf.get_enumeration_object()._original_smile
+            ] = conf.get_enumeration_object().get_original_smile()
 
             dict_result["enumerated_smiles"][irow] = Chem.rdmolfiles.MolToSmiles(
                 conf.get_molecule()
