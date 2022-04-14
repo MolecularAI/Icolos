@@ -329,30 +329,33 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
             jobs = self._prepare_edges(next_batch)
-            # why is this only pruning half the jobs if all are completed??
             if prune_completed:
                 n_removed = 0
                 pre_exec_results = result_checker(jobs)
-
-                for job, exec_success, task in zip(jobs, pre_exec_results, next_batch):
+                for job_sublist, exec_success_sublist, sublist in zip(
+                    jobs, pre_exec_results, next_batch
+                ):
                     # we test on the subtask level, not the individual job level, but since jobs are run through with max_len_sublists=1, in practice this doesn't matter
-                    if all(r is True for r in exec_success):
-                        # remove the entire sublist (one fewer cores running)
-                        jobs.remove(job)
-                        # make sure that job isn't picked back up in the next batch
-                        for subtask in task:
-                            subtask.set_status_success()
-                        self._logger.log(
-                            f"Removed job {job} from execution batch, good output found",
-                            _LE.DEBUG,
-                        )
+                    # if all(r is True for r in exec_success):
+                    for job, result, task in zip(
+                        job_sublist, exec_success_sublist, sublist
+                    ):
+                        if result is True:
+                            # remove the entire sublist (one fewer cores running)
+                            job_sublist.remove(job)
+                            task.set_status_success()
+                            self._logger.log(
+                                f"Removed job {job} from execution batch, good output found",
+                                _LE.DEBUG,
+                            )
                         n_removed += 1
+                        # if we have emptied entire job queues, remove the queue
                 self._logger.log(
                     f"Executing {step_id} for batch {n}, containing {len(jobs)} * {self.execution.parallelization.max_length_sublists} jobs",
                     _LE.INFO,
                 )
-            # prune successful jobs from the batch
 
+            jobs = [j for j in jobs if j]
             parallelizer.execute_parallel(jobs=jobs, **kwargs)
 
             self._logger.log("Checking execution results...", _LE.DEBUG)
@@ -487,7 +490,7 @@ class StepPMXBase(StepBase, BaseModel):
         )
         self.get_workflow_object().set_perturbation_map(perturbation_map)
 
-    def _prepare_edges(self, batch) -> List[str]:
+    def _prepare_edges(self, batch) -> List[List[str]]:
         edges = []
 
         for task in batch:
