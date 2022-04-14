@@ -477,7 +477,14 @@ class WriteOutHandler(BaseModel):
 
         # initialize a dictionary with all tags as keys and filled with NA for every position
         dict_result = self._initialize_dict_csv(
-            keys=[_WE.RDKIT_NAME, _WE.COMPOUND_NAME] + tags, nrow=len(confs_unrolled)
+            keys=[
+                _WE.RDKIT_NAME,
+                _WE.COMPOUND_NAME,
+                "original_smiles",
+                "enumerated_smiles",
+            ]
+            + tags,
+            nrow=len(confs_unrolled),
         )
 
         # resolve resource
@@ -498,6 +505,14 @@ class WriteOutHandler(BaseModel):
             # add the compound name, if specified
             name = conf.get_compound_name()
             dict_result[_WE.COMPOUND_NAME][irow] = "" if name is None else name
+            dict_result["original_smiles"][
+                irow
+            ] = conf.get_enumeration_object().get_original_smile()
+
+            dict_result["enumerated_smiles"][irow] = Chem.rdmolfiles.MolToSmiles(
+                conf.get_molecule()
+            )
+
             for tag in tags:
                 try:
                     value = conf.get_molecule().GetProp(tag).strip()

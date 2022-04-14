@@ -1,6 +1,5 @@
 from typing import List
 from pydantic.main import BaseModel
-from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 from icolos.core.workflow_steps.step import _LE
