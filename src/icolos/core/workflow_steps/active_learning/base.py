@@ -27,6 +27,7 @@ from icolos.core.workflow_steps.active_learning.al_utils import greedy_acquisiti
 from modAL.models.learners import BayesianOptimizer, ActiveLearner
 from icolos.core.workflow_steps.active_learning.models.ffnn import FeedForwardNet
 from skorch.regressor import NeuralNetRegressor
+from icolos.utils.execute_external.execute import Executor
 import torch
 from torch import nn
 
@@ -205,34 +206,16 @@ class ActiveLearningBase(StepBase, BaseModel):
             start_letter = "A"
             line_stub = self.get_additional_setting("mut_res")
             # create mutations file simultaneously
-            with open("mutations.txt", "w") as f:
+            with open("mutations.txt", "w") as f, Chem.SDWriter(
+                "database.sdf"
+            ) as writer:
                 for frag in frags:
                     frag_idx = str(idx).zfill(2)
-                    elem_count = {}
-                    with Chem.PDBWriter(f"{start_letter}{frag_idx}.pdb") as writer:
-                        mol = frag.Molecule
-                        mi = Chem.AtomPDBResidueInfo()
-                        for a in mol.GetAtoms():
-                            n = elem_count.get(a.GetAtomicNum(), 0)
-                            n += 1
-                            elem_count[a.GetAtomicNum()] = n
-                            n = min(n, 99)
-                            mi = Chem.AtomPDBResidueInfo()
-                            mi.SetResidueName(f"{start_letter}{frag_idx}")
-                            mi.SetResidueNumber(1)
-                            atom_name = "{0:>2s}{1:<2d}".format(a.GetSymbol(), n)
-                            mi.SetIsHeteroAtom(True)
-                            mi.SetName(atom_name)
-                            mi.SetOccupancy(0.0)
-                            mi.SetTempFactor(0.0)
-                            a.SetMonomerInfo(mi)
-                        print(Chem.rdPartialCharges.ComputeGasteigerCharges(mol))
-                        # mi.SetResidueName(f"{start_letter}{frag_idx}")
-                        # [a.SetMonomerInfo(mi) for a in mol.GetAtoms()]
-                        # rename the molecule
-                        mol.SetProp(_WOE.RDKIT_NAME, frag_idx)
+                    mol = frag.Molecule
+                    # rename the molecule
+                    mol.SetProp(_WOE.RDKIT_NAME, f"{start_letter}{frag_idx}")
 
-                        writer.write(frag.Molecule)
+                    writer.write(frag.Molecule)
 
                     f.write(f"{line_stub}->{start_letter}{frag_idx}\n")
                     idx += 1
@@ -240,32 +223,18 @@ class ActiveLearningBase(StepBase, BaseModel):
                     if idx > 99:
                         start_letter = "B"
 
-            file_list = [f for f in os.listdir(tmp_dir) if f.endswith("pdb")]
             # need to add the header line to each pdb
-            for pdb_file in file_list:
-                with open(pdb_file, "r") as f:
-                    lines = f.readlines()
-                lines = [
-                    f"HEADER    LIGAND                                  06-JAN-06   {pdb_file.split('.')[0]}\n"
-                ] + lines
-                with open(pdb_file, "w") as f:
-                    for line in lines:
-                        f.write(line)
+            # now run schrodinger's script to generate the nsr database
 
-            # # now convert sdf to mae
-            converter = StructConvert(prefix_execution="module load schrodinger")
-            for pdb in file_list:
-                converter.pdb2mae(pdb, f"{pdb.split('.')[0]}.mae")
+            command = "$SCHRODINGER/run python3 $NSR_LIB_SCRIPT database.sdf"
 
-            # now concatenate
-            concatenator = StructcatUtil(
-                backend="structcat", prefix_execution="module load schrodinger"
+            executor = Executor(prefix_execution="ml schrodinger")
+            result = executor.execute(
+                command, arguments=[], check=True, location=tmp_dir
             )
-            concatenator.concatenate(
-                [f"{pdb.split('.')[0]}.mae" for pdb in file_list], "database_nsr.mae"
-            )
+            print(result, tmp_dir)
 
-            # need to add the residue information to the resulting mae file
+            # now ncaa_nca.maegz will be in the tmpdir
 
             # tmpdir is prepared, now initialize the FEP+ step, no need to prepare input, this is constant for FEP
             oracle_wf = self._initialize_oracle()
