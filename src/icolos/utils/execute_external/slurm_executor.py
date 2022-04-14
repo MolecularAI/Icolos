@@ -72,15 +72,25 @@ class SlurmExecutor(ExecutorBase):
             )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
-        result = super().execute(
-            command=launch_command, arguments=[], location=location, check=check
-        )
-        if result.returncode != 0:
-            # something has gone wrong with submitting the slurm script
-            logger.log(
-                f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
-                _LE.WARNING,
+
+        for i in range(10):
+            result = super().execute(
+                command=launch_command, arguments=[], location=location, check=check
             )
+            if result.returncode == 0:
+                break
+            else:
+                # something has gone wrong with submitting the slurm script
+                logger.log(
+                    f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
+                    _LE.WARNING,
+                )
+                # sleep and retry
+                time.sleep(10)
+                logger.log(
+                    f"Retrying submission for job {tmpfile}, attempt {i+1}/10",
+                    _LE.DEBUG,
+                )
 
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
