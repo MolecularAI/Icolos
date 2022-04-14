@@ -130,11 +130,11 @@ class StepFepPlusExec(StepFEPBase, BaseModel):
             logging_result = self._backend_executor.execute(
                 command=_FE.JSC_TAIL_FILE, arguments=arguments, check=False
             )
-            if logging_result.returncode == 1:
+            if logging_result.returncode != 0:
                 time.sleep(30)
                 trials += 1
                 continue
-            elif logging_result.returncode == 0:
+            else:
                 break
         if logging_result is None:
             raise StepFailed("Could not obtain log file from server within time limit.")

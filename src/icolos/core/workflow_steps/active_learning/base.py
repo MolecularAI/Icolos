@@ -1,4 +1,5 @@
 import os
+import string
 import tempfile
 from tracemalloc import start
 from typing import List
@@ -202,25 +203,29 @@ class ActiveLearningBase(StepBase, BaseModel):
             compound_index = [row.IDX for row in compound_list]
             # retrieve the fragment using the index of the enumerated compound
             frags = [fragment_lib.iloc[idx] for idx in compound_index]
-            idx = 0
-            start_letter = "A"
+            letter_strings = string.ascii_uppercase
+            all_letters = []
+            for char1 in letter_strings:
+                for char2 in letter_strings:
+                    for char3 in letter_strings:
+                        all_letters.append(f"{char1}{char2}{char3}")
             line_stub = self.get_additional_setting("mut_res")
+
             # create mutations file simultaneously
             with open("mutations.txt", "w") as f, Chem.SDWriter(
                 "database.sdf"
             ) as writer:
-                for frag in frags:
-                    frag_idx = str(idx).zfill(2)
+                for idx, frag in enumerate(frags):
                     mol = frag.Molecule
                     # rename the molecule
-                    mol.SetProp(_WOE.RDKIT_NAME, f"{start_letter}{frag_idx}")
+                    mol.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
 
                     writer.write(frag.Molecule)
 
-                    f.write(f"{line_stub}->{start_letter}{frag_idx}\n")
+                    f.write(f"{line_stub}->{all_letters[idx]}\n")
                     idx += 1
                     # not bullet proof, but gives 200 unique residue IDs, which should be enough to be getting on with
-                    if idx > 99:
+                    if idx > 26:
                         start_letter = "B"
 
             # need to add the header line to each pdb
