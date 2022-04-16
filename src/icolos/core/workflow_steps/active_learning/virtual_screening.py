@@ -103,6 +103,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             compounds = self.query_oracle(
                 query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
             )
+            # handle extracting scores from each compound
             scores = self._extract_final_scores(
                 compounds, self.settings.additional[_SALE.CRITERIA]
             )

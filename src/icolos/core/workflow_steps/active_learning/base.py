@@ -1,3 +1,4 @@
+import json
 import os
 import string
 import tempfile
@@ -105,26 +106,22 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
-    def _initialize_oracle(
-        self, compound_list: List[pd.Series] = None, work_dir: str = None
-    ) -> WorkFlow:
+    def _initialize_oracle(self, compound_list: List[pd.Series] = None) -> WorkFlow:
         """
         Initialize a workflow object with the attached steps initialized
         """
-        # list of step configs
-        base_oracle_config = self.settings.additional["oracle_config"]
-        wf_config = {
-            # inherit header settings from the parent workflow
-            _WE.HEADER: self.get_workflow_object().header,
-            _WE.STEPS: [],
-        }
+        # path to the json config for the oracle config
+        oracle_conf = self.settings.additional["oracle_config"]
+        with open(oracle_conf, "r") as f:
+            wf_config = json.load(oracle_conf)
+
         oracle_wf = WorkFlow(**wf_config)
         oracle_steps = []
-        for step in base_oracle_config:
-            step = self._initialize_oracle_step_from_dict(step)
+        for step in wf_config.steps:
+            st = self._initialize_oracle_step_from_dict(step)
 
-            step.set_workflow_object(oracle_wf)
-            oracle_steps.append(step)
+            st.set_workflow_object(oracle_wf)
+            oracle_steps.append(st)
 
         if compound_list is not None:
 
@@ -190,8 +187,8 @@ class ActiveLearningBase(StepBase, BaseModel):
             # retrieve compounds from the final step
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
             return final_compounds
-        elif oracle_type == "FEP":
-            self._logger.log("querying FEP oracle", _LE.DEBUG)
+        elif oracle_type == "protein_FEP":
+            self._logger.log("querying protein_FEP oracle", _LE.DEBUG)
             # do not pass scores, generate a tmpdir, create the NCAA database, create the mutations file and run the FEP job on AWS
             # create tmpdir
             orig_dir = os.getcwd()
@@ -210,7 +207,6 @@ class ActiveLearningBase(StepBase, BaseModel):
                     for char3 in letter_strings:
                         all_letters.append(f"{char1}{char2}{char3}")
             line_stub = self.get_additional_setting("mut_res")
-
             # create mutations file simultaneously
             with open("mutations.txt", "w") as f, Chem.SDWriter(
                 "database.sdf"
@@ -219,26 +215,14 @@ class ActiveLearningBase(StepBase, BaseModel):
                     mol = frag.Molecule
                     # rename the molecule
                     mol.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
-
                     writer.write(frag.Molecule)
-
                     f.write(f"{line_stub}->{all_letters[idx]}\n")
                     idx += 1
-                    # not bullet proof, but gives 200 unique residue IDs, which should be enough to be getting on with
-                    if idx > 26:
-                        start_letter = "B"
-
-            # need to add the header line to each pdb
-            # now run schrodinger's script to generate the nsr database
 
             command = "$SCHRODINGER/run python3 $NSR_LIB_SCRIPT database.sdf"
 
             executor = Executor(prefix_execution="ml schrodinger")
-            result = executor.execute(
-                command, arguments=[], check=True, location=tmp_dir
-            )
-            print(result, tmp_dir)
-
+            executor.execute(command, arguments=[], check=True, location=tmp_dir)
             # now ncaa_nca.maegz will be in the tmpdir
 
             # tmpdir is prepared, now initialize the FEP+ step, no need to prepare input, this is constant for FEP
