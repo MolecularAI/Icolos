@@ -30,7 +30,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def _parse_library(self, criteria: str = None) -> Tuple[DataFrame, np.ndarray]:
         """
-        Loads the library file from disk
+        Loads the library file from a file
         This should be a .sdf or smi file containing the compounds to be screened
         """
         lib_path = self.settings.additional[_SALE.VIRTUAL_LIB]
@@ -63,7 +63,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         return library, scores
 
-    def _run_learning_loop_virtual_lib(
+    def _run_learning_loop(
         self,
         learner: ActiveLearner,
         lib: pd.DataFrame,
@@ -72,78 +72,94 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         replica=0,
         fragment_lib: pd.DataFrame = None,
     ) -> None:
-
-        n_instances = int(self.settings.additional[_SALE.FRACTION_PER_EPOCH] * len(lib))
-        rounds = int(
-            (
-                self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION, default=0.25)
-                * len(lib)
+        def query_surrogate():
+            query_idx, _ = learner.query(
+                X,
+                n_instances=batch_size,
+                previous_idx=queried_compound_idx,
+                warmup=warmup,
+                epsilon=epsilon,
             )
-            / n_instances
+            queried_compound_idx += list(query_idx)
+            queried_compounds_per_epoch.append([int(i) for i in query_idx])
+            return query_idx
+
+        def get_precomputed_scores():
+            self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
+            scores = np.absolute(
+                [
+                    float(lib.iloc[int(idx)][self.settings.additional[_SALE.CRITERIA]])
+                    for idx in query_idx
+                ],
+                dtype=np.float32,
+            )
+            return scores
+
+        def get_scores_from_oracle():
+            self._logger.log(
+                f"Querying oracle with {len(query_idx)} compounds", _LE.INFO
+            )
+
+            compounds = self.query_oracle(
+                query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
+            )
+            scores = self._extract_final_scores(
+                compounds, self.settings.additional[_SALE.CRITERIA]
+            )
+            return scores
+
+        n_instances = (
+            int(self.get_additional_setting(_SALE.FRACTION_PER_EPOCH) * len(lib))
+            if self.get_additional_setting(_SALE.FRACTION_PER_EPOCH) is not None
+            else int(self.get_additional_setting(_SALE.BATCH_SIZE))
         )
-        self._logger.log(
-            f"Running {rounds} rounds of {n_instances} componds, replica {replica}",
-            _LE.DEBUG,
+        rounds = (
+            int(
+                (self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) * len(lib))
+                / n_instances
+            )
+            if self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) is not None
+            else int(self.get_additional_setting(_SALE.N_ROUNDS))
         )
+
         queried_compound_idx = []
         queried_compounds_per_epoch = []
         fraction_top1_hits_per_epoch = []
         key = _SALE.MORGAN_FP
+        warmup_period = self.get_additional_setting(_SALE.WARMUP, default=1)
         X = np.array(list(lib[key]))
         oracle_type = self.get_additional_setting(_SALE.ORACLE_TYPE, default="docking")
-
+        epsilon = float(self.get_additional_setting(_SALE.EPSILON, default=0.0))
+        self._logger.log(
+            f"Running {rounds} rounds of {n_instances} componds, replica {replica}",
+            _LE.DEBUG,
+        )
         for rnd in range(rounds):
-            warmup = rnd < self.get_additional_setting(_SALE.WARMUP, default=1)
-            init_batch_size = int(
-                n_instances
-                * self.get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
+            # are we still in the warmup period?
+            warmup = rnd < warmup_period
+            batch_size = (
+                int(
+                    n_instances
+                    * self.get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
+                )
+                if rnd == 0
+                else n_instances
             )
-            self._logger.log(f"Generating {init_batch_size} samples", _LE.DEBUG)
-            query_idx, _ = learner.query(
-                X,
-                n_instances=init_batch_size if rnd == 0 else n_instances,
-                previous_idx=queried_compound_idx,
-                warmup=warmup,
-                epsilon=self.get_additional_setting(_SALE.EPSILON, default=0.0),
-            )
-            queried_compound_idx += list(query_idx)
-            queried_compounds_per_epoch.append([int(i) for i in query_idx])
+            query_idx = query_surrogate()
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             if self.get_additional_setting(_SALE.EVALUATE, default=False):
-                # retrieve precalculated scores instead of docking
-                self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
-                scores = np.absolute(
-                    [
-                        float(
-                            lib.iloc[int(idx)][self.settings.additional[_SALE.CRITERIA]]
-                        )
-                        for idx in query_idx
-                    ],
-                    dtype=np.float32,
-                )
+                scores = get_precomputed_scores()
             else:
-                # get scores from oracle
-                self._logger.log(
-                    f"Querying oracle with {len(query_compounds)} compounds", _LE.INFO
-                )
-
-                compounds = self.query_oracle(
-                    query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
-                )
-                scores = self._extract_final_scores(
-                    compounds, self.settings.additional[_SALE.CRITERIA]
-                )
-
+                scores = get_scores_from_oracle()
             if self.settings.additional["model"] == "ffnn":
                 scores = scores.reshape(-1, 1)
 
-            self._logger.log("Fitting with new data...", _LE.INFO)
+            self._logger.log("Fitting surrogate with new data...", _LE.INFO)
             new_data = np.array([compound[key] for compound in query_compounds])
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
-                # what fraction of top1% compoudnds has the model requested to evaluate
                 hits_queried = (
                     np.isin(np.unique(queried_compound_idx), top_1_idx).sum()
                     / len(top_1_idx)
@@ -155,6 +171,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 fraction_top1_hits_per_epoch.append(hits_queried)
                 if hits_queried > 99:
                     break
+
             df = lib.iloc[queried_compound_idx]
             df.to_pickle(
                 os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
@@ -181,8 +198,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
             "top_1%_per_epoch": fraction_top1_hits_per_epoch,
         }
-        # for idx, row in enumerate(queried_compounds_per_position):
-        #     col_dict[f"seq_idx_pos_{idx}"] = list(row)
+        for idx, row in enumerate(queried_compounds_per_position):
+            col_dict[f"seq_idx_pos_{idx}"] = list(row)
         resuts_df = pd.DataFrame(col_dict)
         resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
 
@@ -225,7 +242,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             learner = self._initialize_learner()
 
             self._logger.log("Evaluating virtual library...", _LE.DEBUG)
-            self._run_learning_loop_virtual_lib(
+            self._run_learning_loop(
                 learner=learner,
                 lib=lib,
                 fragment_lib=fragments_libary,
