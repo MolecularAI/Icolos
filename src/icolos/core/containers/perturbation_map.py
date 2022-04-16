@@ -75,6 +75,8 @@ class Edge(BaseModel):
     snapCoreRmsd: str = None
     bidirSnapCoreRmsd: str = None
     status: _PE = _PE.STATUS_SUCCESS
+    ddG: float = 0.0
+    ddG_err: float = 0.0
 
     def __init__(self, **data):
         super().__init__(**data)

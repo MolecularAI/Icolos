@@ -1,5 +1,5 @@
 from icolos.core.flow_control.iterator import StepIterator
-from icolos.core.workflow_steps.active_learning.active_learning_vl_screen import (
+from icolos.core.workflow_steps.active_learning.virtual_screening import (
     StepActiveLearning,
 )
 from icolos.utils.enums.step_enums import StepBaseEnum

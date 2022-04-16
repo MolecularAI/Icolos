@@ -113,7 +113,7 @@
                 "step_id": "FEP_plus_exec",
                 "type": "fep_plus_exec",
                 "execution": {
-                   "prefix_execution": "module load schrodinger/2021-2-js-aws && $SCHRODINGER/jsc download-start"
+                   "prefix_execution": "module load schrodinger/2021-2-js-aws "
                 },
                 "token_guard": {
                     "prefix_execution": "module load schrodinger/2021-2-js-aws",
