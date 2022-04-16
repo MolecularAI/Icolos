@@ -72,17 +72,16 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         replica=0,
         fragment_lib: pd.DataFrame = None,
     ) -> None:
-        def query_surrogate():
+        def query_surrogate(prev_idx: List) -> List:
             query_idx, _ = learner.query(
                 X,
                 n_instances=batch_size,
-                previous_idx=queried_compound_idx,
+                previous_idx=prev_idx,
                 warmup=warmup,
                 epsilon=epsilon,
             )
-            queried_compound_idx += list(query_idx)
             queried_compounds_per_epoch.append([int(i) for i in query_idx])
-            return query_idx
+            return list(query_idx)
 
         def get_precomputed_scores():
             self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
@@ -146,7 +145,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 if rnd == 0
                 else n_instances
             )
-            query_idx = query_surrogate()
+            query_idx = query_surrogate(queried_compound_idx)
+            print(query_idx)
+            queried_compound_idx += query_idx
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             if self.get_additional_setting(_SALE.EVALUATE, default=False):
@@ -235,8 +236,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             if self.get_additional_setting(_SALE.FRAGMENTS) is not None
             else None
         )
-
-        print(fragments_libary.head())
 
         replicas = self.get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):

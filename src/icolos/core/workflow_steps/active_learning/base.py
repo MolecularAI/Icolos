@@ -7,7 +7,7 @@ from typing import List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Enumeration
+from icolos.core.containers.compound import Compound, Conformer, Enumeration
 from icolos.core.step_utils.sdconvert_util import SDConvertUtil
 from icolos.core.step_utils.structcat_util import StructcatUtil
 from icolos.core.step_utils.structconvert import StructConvert
@@ -15,6 +15,11 @@ from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 from icolos.core.workflow_steps.step import _LE
+from icolos.utils.entry_point_functions.parsing_functions import (
+    add_global,
+    get_runtime_global_variables,
+    parse_header,
+)
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.step_enums import StepActiveLearningEnum, StepBaseEnum
 from icolos.utils.enums.write_out_enums import WriteOutEnum
@@ -113,12 +118,15 @@ class ActiveLearningBase(StepBase, BaseModel):
         # path to the json config for the oracle config
         oracle_conf = self.settings.additional["oracle_config"]
         with open(oracle_conf, "r") as f:
-            wf_config = json.load(oracle_conf)
-
-        oracle_wf = WorkFlow(**wf_config)
+            wf_config = json.load(f)
+        # inherit header from main workflow
+        header = self.get_workflow_object().header
+        oracle_wf = WorkFlow(**wf_config["workflow"])
+        oracle_wf.header = header
         oracle_steps = []
-        for step in wf_config.steps:
-            st = self._initialize_oracle_step_from_dict(step)
+        for step_conf in oracle_wf.steps:
+            step_conf = oracle_wf._update_global_variables(conf=step_conf)
+            st = self._initialize_oracle_step_from_dict(step_conf)
 
             st.set_workflow_object(oracle_wf)
             oracle_steps.append(st)
@@ -152,9 +160,8 @@ class ActiveLearningBase(StepBase, BaseModel):
         for idx, step in enumerate(oracle_wf._initialized_steps):
             # only write initial input
             if skip_init_input and idx == 0:
-                print("Skipping generating input")
+                self._logger.log("Skipping generating input", _LE.DEBUG)
             else:
-
                 # input has been generated for the lead step from the virtual lib
                 step.generate_input()
             self._logger.log(
@@ -179,13 +186,22 @@ class ActiveLearningBase(StepBase, BaseModel):
         """
         Interface function with the oracle method
         """
-        if oracle_type == "docking":
+        if oracle_type in ("docking", "pmx_rbfe"):
+            # TODO: with the pmx oracle, I think it only makes sense to use star maps, then we can take the ddG values from the hub compounds vs some reference
             oracle_wf = self._initialize_oracle(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
 
             # retrieve compounds from the final step
-            final_compounds = oracle_wf._initialized_steps[-1].data.compounds
+            if oracle_type == "docking":
+                final_compounds = oracle_wf._initialized_steps[-1].data.compounds
+            else:
+                final_compounds = [
+                    n.conformer
+                    for n in oracle_wf._initialized_steps[-1]
+                    .get_perturbation_map()
+                    .get_nodes()
+                ]
             return final_compounds
         elif oracle_type == "protein_FEP":
             self._logger.log("querying protein_FEP oracle", _LE.DEBUG)
@@ -232,6 +248,8 @@ class ActiveLearningBase(StepBase, BaseModel):
             # now parse the log file from the fep step
 
             os.chdir(orig_dir)
+        else:
+            raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
 
     def _extract_final_scores(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
@@ -240,18 +258,23 @@ class ActiveLearningBase(StepBase, BaseModel):
         Takes a list of compound objects from the oracle and extracts the best score based on the provided criteria
         """
         top_scores = []
-        for comp in compounds:
-            scores = []
-            for enum in comp.get_enumerations():
-                for conf in enum.get_conformers():
-                    scores.append(float(conf._conformer.GetProp(criteria)))
 
-            # if docking generated no conformers
-            if not scores:
-                scores.append(0.0)
+        if isinstance(compounds[0], Compound):
+            for comp in compounds:
+                scores = []
+                for enum in comp.get_enumerations():
+                    for conf in enum.get_conformers():
+                        scores.append(float(conf._conformer.GetProp(criteria)))
 
-            best_score = max(scores) if highest_is_best else min(scores)
-            top_scores.append(best_score)
+                # if docking generated no conformers
+                if not scores:
+                    scores.append(0.0)
+
+                best_score = max(scores) if highest_is_best else min(scores)
+                top_scores.append(best_score)
+        elif isinstance(compounds[0], Conformer):
+            for conf in compounds:
+                scores.append(float(conf._conformer.GetProp(criteria)))
 
         return np.absolute(top_scores, dtype=np.float32)
 

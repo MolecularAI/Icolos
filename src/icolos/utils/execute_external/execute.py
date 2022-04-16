@@ -42,7 +42,6 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         complete_command = command + " " + " ".join(str(e) for e in arguments)
         if "-solvent_asl" not in complete_command:
             complete_command = [complete_command.replace("'", "")]
-        print(complete_command)
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
