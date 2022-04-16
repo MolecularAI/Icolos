@@ -8,6 +8,7 @@ from icolos.utils.enums.program_parameters import (
     StepPMXEnum,
 )
 from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
@@ -25,7 +26,7 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=PMXExecutor)
+        self._initialize_backend(executor=GromacsExecutor)
 
     def execute(self):
         if self.run_type == _PSE.RBFE:
@@ -85,7 +86,12 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
                         )
 
                         self._prepare_single_tpr(
-                            simpath, toppath, state, sim_type, empath
+                            simpath=simpath,
+                            toppath=toppath,
+                            state=state,
+                            sim_type=sim_type,
+                            empath=empath,
+                            executor=self._backend_executor,
                         )
 
     def _get_previous_sim_type(self, sim_type: str):

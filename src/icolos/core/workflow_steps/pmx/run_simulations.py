@@ -39,27 +39,27 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
 
-        # run in two separate batches, job times will be equal and we won't have a mismatch between short ligand jobs and longer protein jobs
-        for branch in self.therm_cycle_branches:
-            # prepare and pool jobscripts, unroll replicas,  etc
-            job_pool = self._prepare_job_pool(edges, branch=branch)
-            self._logger.log(
-                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
-                _LE.DEBUG,
-            )
-            # run everything through in one batch, with multiple edges per call
-            self.execution.parallelization.max_length_sublists = int(
-                np.ceil(len(job_pool) / self._get_number_cores())
-            )
-            self._subtask_container = SubtaskContainer(
-                max_tries=self.execution.failure_policy.n_tries
-            )
-            self._subtask_container.load_data(job_pool)
-            self._execute_pmx_step_parallel(
-                run_func=self._execute_command,
-                step_id="pmx_run_simulations",
-                result_checker=self._inspect_log_files,
-            )
+        # prepare and pool jobscripts, unroll replicas,  etc
+        job_pool = self._prepare_job_pool(edges)
+        self._logger.log(
+            f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations",
+            _LE.DEBUG,
+        )
+        # run everything through in one batch, with multiple edges per call
+        self.execution.parallelization.max_length_sublists = int(
+            np.floor(len(job_pool) / self._get_number_cores())
+        )
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
+        )
+        self._subtask_container.load_data(job_pool)
+        self._execute_pmx_step_parallel(
+            run_func=self._execute_command,
+            step_id="pmx_run_simulations",
+            # for run_simulations, because batch efficiency is crucial, we do this prior to batching
+            prune_completed=False,
+            result_checker=self._inspect_log_files,
+        )
 
     def get_mdrun_command(
         self,
@@ -90,10 +90,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 mdlog,
             ]
             for flag in self.settings.arguments.flags:
-                job_command.append(flag)
+                job_command.append(str(flag))
             for key, value in self.settings.arguments.parameters.items():
-                job_command.append(key)
-                job_command.append(value)
+                job_command.append(str(key))
+                job_command.append(str(value))
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
@@ -167,7 +167,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str], branch: str):
+    def _prepare_job_pool(self, edges: List[str]):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -175,14 +175,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         batch_script_paths = []
         for edge in edges:
-            # for state in self.states:
             for r in range(1, replicas + 1):
                 for state in self.states:
-                    path = self._prepare_single_job(
-                        edge=edge, wp=branch, state=state, r=r
-                    )
-                    if path is not None:
-                        batch_script_paths.append(path)
+                    for branch in self.therm_cycle_branches:
+                        path = self._prepare_single_job(
+                            edge=edge, wp=branch, state=state, r=r
+                        )
+                        if path is not None:
+                            batch_script_paths.append(path)
         return batch_script_paths
 
     def _execute_command(self, jobs: List[str]):
@@ -213,10 +213,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             subtask_results = []
             for sim in subtask:
                 location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
-                with open(location, "r") as f:
-                    lines = f.readlines()
-                subtask_results.append(
-                    any(["Finished mdrun" in l for l in lines[-20:]])
-                )
+                if os.path.isfile(location):
+                    with open(location, "r") as f:
+                        lines = f.readlines()
+                    subtask_results.append(
+                        any(["Finished mdrun" in l for l in lines[-20:]])
+                    )
+                else:
+                    subtask_results.append(False)
             results.append(subtask_results)
         return results

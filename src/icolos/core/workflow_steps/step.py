@@ -382,6 +382,11 @@ class StepBase(BaseModel):
             # subtract the number of cores (neg. value, thus add up) from total number of cores, e.g. -1 will
             # use all available cores minus 1
             cores = multiprocessing.cpu_count() + cores
+        if cores > multiprocessing.cpu_count():
+            self._logger.log(
+                f"WARNING: running {cores} processes on {multiprocessing.cpu_count()} logical cores!",
+                _LE.WARNING,
+            )
         return cores
 
     def _print_log_file(self, path: str):
