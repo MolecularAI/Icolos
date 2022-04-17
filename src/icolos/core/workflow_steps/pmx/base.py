@@ -328,9 +328,9 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
+            n_removed = 0
             jobs = self._prepare_edges(next_batch)
             if prune_completed:
-                n_removed = 0
                 pre_exec_results = result_checker(jobs)
                 for job_sublist, exec_success_sublist, sublist in zip(
                     jobs, pre_exec_results, next_batch
