@@ -215,7 +215,7 @@ class StepPMXBase(StepBase, BaseModel):
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(command=grompp_full_cmd, arguments=[])
+            result = executor.execute(command=grompp_full_cmd, arguments=[], check=False)
         self._clean_backup_files(simpath)
         return result
 
