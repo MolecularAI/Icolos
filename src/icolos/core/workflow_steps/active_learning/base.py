@@ -1,4 +1,5 @@
 import json
+from rdkit import Chem
 import os
 import string
 import tempfile
@@ -102,6 +103,21 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
+    # def _prepare_compound_input(self, compound_list: List[Compound]):
+    #     prepared_compounds = []
+    #     for idx, compound in enumerate(compound_list):
+    #         cmp = Compound(name=str(idx), compound_number=idx)
+    #         cmp.add_enumeration(
+    #             Enumeration(
+    #                 compound_object=cmp,
+    #                 smile=compound[_SALE.SMILES],
+    #                 original_smile=compound[_SALE.SMILES],
+    # molecule=compound[_SALE.MOLECULE],
+    #             )
+    #         )
+    #         prepared_compounds.append(cmp)
+    #     return prepared_compounds
+
     def _initialize_oracle(self, compound_list: List[pd.Series] = None) -> WorkFlow:
         """
         Initialize a workflow object with the attached steps initialized
@@ -110,6 +126,23 @@ class ActiveLearningBase(StepBase, BaseModel):
         oracle_conf = self.settings.additional["oracle_config"]
         with open(oracle_conf, "r") as f:
             wf_config = json.load(f)
+        if compound_list is not None:
+
+            # manually attach the compound objects to the oracle's lead step
+            with Chem.SDWriter("compounds.sdf") as writer:
+                for comp in compound_list:
+                    writer.write(comp[_SALE.MOLECULE])
+
+            # self._logger.log(
+            #     f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds",
+            #     _LE.DEBUG,
+            # )
+            compound_dict = {
+                "source": "compounds.sdf",
+                "source_type": "file",
+                "format": "SDF",
+            }
+            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
         # inherit header from main workflow
         header = self.get_workflow_object().header
         oracle_wf = WorkFlow(**wf_config["workflow"])
@@ -122,25 +155,6 @@ class ActiveLearningBase(StepBase, BaseModel):
             st.set_workflow_object(oracle_wf)
             oracle_steps.append(st)
 
-        if compound_list is not None:
-
-            # manually attach the compound objects to the oracle's lead step
-            # subsequent steps should take their input from the the previous step, as ususal.
-            for idx, compound in enumerate(compound_list):
-                cmp = Compound(name=str(idx), compound_number=idx)
-                cmp.add_enumeration(
-                    Enumeration(
-                        compound_object=cmp,
-                        smile=compound[_SALE.SMILES],
-                        original_smile=compound[_SALE.SMILES],
-                        molecule=compound[_SALE.MOLECULE],
-                    )
-                )
-                oracle_steps[0].data.compounds.append(cmp)
-            self._logger.log(
-                f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds",
-                _LE.DEBUG,
-            )
         for step in oracle_steps:
             oracle_wf.add_step(step)
         return oracle_wf
@@ -262,8 +276,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             for comp in compounds:
                 scores = []
                 for enum in comp.get_enumerations():
-                    for conf in enum.get_conformers():
-                        scores.append(float(conf._conformer.GetProp(criteria)))
+                    scores.append(float(enum.get_molecule().GetProp(criteria)))
 
                 # if docking generated no conformers
                 if not scores:
