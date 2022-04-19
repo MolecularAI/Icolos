@@ -185,7 +185,7 @@ class StepPMXBase(StepBase, BaseModel):
                 mdout,
             ]
             result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP, arguments=grompp_args, check=False
             )
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
