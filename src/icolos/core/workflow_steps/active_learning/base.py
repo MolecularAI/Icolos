@@ -2,24 +2,15 @@ import json
 import os
 import string
 import tempfile
-from tracemalloc import start
 from typing import List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.compound import Compound, Conformer, Enumeration
-from icolos.core.step_utils.sdconvert_util import SDConvertUtil
-from icolos.core.step_utils.structcat_util import StructcatUtil
-from icolos.core.step_utils.structconvert import StructConvert
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 from icolos.core.workflow_steps.step import _LE
-from icolos.utils.entry_point_functions.parsing_functions import (
-    add_global,
-    get_runtime_global_variables,
-    parse_header,
-)
 from icolos.utils.enums.composite_agents_enums import WorkflowEnum
 from icolos.utils.enums.step_enums import StepActiveLearningEnum, StepBaseEnum
 from icolos.utils.enums.write_out_enums import WriteOutEnum
@@ -182,7 +173,7 @@ class ActiveLearningBase(StepBase, BaseModel):
         compound_list: List[pd.Series],
         oracle_type: str = "docking",
         fragment_lib: pd.DataFrame = None,
-    ) -> List[Compound]:
+    ) -> np.ndarray:
         """
         Interface function with the oracle method
         """
@@ -202,14 +193,13 @@ class ActiveLearningBase(StepBase, BaseModel):
                     .get_perturbation_map()
                     .get_nodes()
                 ]
-            return final_compounds
+
         elif oracle_type == "protein_FEP":
             self._logger.log("querying protein_FEP oracle", _LE.DEBUG)
             # do not pass scores, generate a tmpdir, create the NCAA database, create the mutations file and run the FEP job on AWS
             # create tmpdir
             orig_dir = os.getcwd()
             tmp_dir = tempfile.mkdtemp()
-            print(tmp_dir)
             os.chdir(tmp_dir)
 
             # extract the relevant amino acids using compound indices from the ncaa library
@@ -244,12 +234,17 @@ class ActiveLearningBase(StepBase, BaseModel):
             # tmpdir is prepared, now initialize the FEP+ step, no need to prepare input, this is constant for FEP
             oracle_wf = self._initialize_oracle()
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, work_dir=tmp_dir)
-
-            # now parse the log file from the fep step
+            final_compounds = oracle_wf._initialized_steps[-1].data.compounds
 
             os.chdir(orig_dir)
+            # now parse the dG vals out of the map and return the annotated compounds
         else:
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
+        self._logger.log("Extracting final scores", _LE.DEBUG)
+        scores = self._extract_final_scores(
+            final_compounds, self.settings.additional[_SALE.CRITERIA]
+        )
+        return scores
 
     def _extract_final_scores(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
