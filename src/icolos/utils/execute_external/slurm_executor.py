@@ -31,6 +31,7 @@ class SlurmExecutor(ExecutorBase):
         additional_lines: List,
         prefix_execution=None,
         binary_location=None,
+        n_tries: int = 50,
     ):
         super().__init__(prefix_execution=None, binary_location=None)
 
@@ -45,6 +46,7 @@ class SlurmExecutor(ExecutorBase):
         self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
+        self.n_tries = n_tries
 
     def execute(
         self,
@@ -73,11 +75,7 @@ class SlurmExecutor(ExecutorBase):
             )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
-        # TODO: not ideal, this could fail for a number of reasons, turn down the number of resubmissions
-        for i in range(5):
-            # add a stochastic delay to avoid overloading the slurm daemon
-            delay = np.random.uniform(1, 15)
-            time.sleep(delay)
+        for i in range(self.n_tries):
             result = super().execute(
                 # do not enforce checking here,
                 command=launch_command,
@@ -94,7 +92,9 @@ class SlurmExecutor(ExecutorBase):
                     _LE.WARNING,
                 )
                 # sleep and retry
-                time.sleep(10)
+                # add a stochastic delay to avoid overloading the slurm daemon
+                delay = np.random.uniform(5, 20)
+                time.sleep(delay)
                 logger.log(
                     f"Retrying submission for job {tmpfile}, attempt {i+1}/5",
                     _LE.DEBUG,
