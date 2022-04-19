@@ -99,11 +99,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 f"Querying oracle with {len(query_idx)} compounds", _LE.INFO
             )
 
-            scores= self.query_oracle(
+            scores = self.query_oracle(
                 query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
             )
-            # handle extracting scores from each compound
-            
+
             return scores
 
         n_instances = (

@@ -7,3 +7,4 @@ from icolos.core.workflow_steps.schrodinger.fep_plus_setup import StepFepPlusSet
 from icolos.core.workflow_steps.schrodinger.fep_plus_execution import StepFepPlusExec
 from icolos.core.workflow_steps.schrodinger.desmond_preprocessor import StepDesmondSetup
 from icolos.core.workflow_steps.schrodinger.desmond_exec import StepDesmondExec
+from icolos.core.workflow_steps.schrodinger.residue_scanning import StepResidueScanning

@@ -40,7 +40,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
 
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
-        if "-solvent_asl" not in complete_command:
+        if "_asl" not in complete_command:
             complete_command = [complete_command.replace("'", "")]
         old_cwd = os.getcwd()
         if location is not None:

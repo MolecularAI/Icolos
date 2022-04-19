@@ -177,25 +177,28 @@ class ActiveLearningBase(StepBase, BaseModel):
         """
         Interface function with the oracle method
         """
-        if oracle_type in ("docking", "pmx_rbfe"):
+        if oracle_type == "pmx_rbfe":
             # TODO: with the pmx oracle, I think it only makes sense to use star maps, then we can take the ddG values from the hub compounds vs some reference
             oracle_wf = self._initialize_oracle(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
 
-            # retrieve compounds from the final step
-            if oracle_type == "docking":
-                final_compounds = oracle_wf._initialized_steps[-1].data.compounds
-            else:
-                final_compounds = [
-                    n.conformer
-                    for n in oracle_wf._initialized_steps[-1]
-                    .get_perturbation_map()
-                    .get_nodes()
-                ]
+            final_compounds = [
+                n.conformer
+                for n in oracle_wf._initialized_steps[-1]
+                .get_perturbation_map()
+                .get_nodes()
+            ]
 
-        elif oracle_type == "protein_FEP":
-            self._logger.log("querying protein_FEP oracle", _LE.DEBUG)
+        elif oracle_type == "docking":
+
+            oracle_wf = self._initialize_oracle(compound_list)
+            # we have a fully initialized step with the compounds loaded.  Execute them
+            oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
+
+            final_compounds = oracle_wf._initialized_steps[-1].data.compounds
+
+        elif oracle_type in ("protein_FEP", "residue_scanning"):
             # do not pass scores, generate a tmpdir, create the NCAA database, create the mutations file and run the FEP job on AWS
             # create tmpdir
             orig_dir = os.getcwd()
@@ -231,16 +234,17 @@ class ActiveLearningBase(StepBase, BaseModel):
             executor.execute(command, arguments=[], check=True, location=tmp_dir)
             # now ncaa_nca.maegz will be in the tmpdir
 
-            # tmpdir is prepared, now initialize the FEP+ step, no need to prepare input, this is constant for FEP
-            oracle_wf = self._initialize_oracle()
+            # execution is the same for both cases, just different oracle
+            oracle_wf = self._initialize_oracle(compound_list=compound_list)
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, work_dir=tmp_dir)
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
-
+            print(final_compounds)
             os.chdir(orig_dir)
-            # now parse the dG vals out of the map and return the annotated compounds
+
         else:
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
         self._logger.log("Extracting final scores", _LE.DEBUG)
+
         scores = self._extract_final_scores(
             final_compounds, self.settings.additional[_SALE.CRITERIA]
         )
@@ -271,7 +275,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             for conf in compounds:
                 scores.append(float(conf._conformer.GetProp(criteria)))
 
-        return np.absolute(top_scores, dtype=np.float32)
+        return np.array(top_scores, dtype=np.float32)
 
     def check_additional(self, key, val=True) -> bool:
 
