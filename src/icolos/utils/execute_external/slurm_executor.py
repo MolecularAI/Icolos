@@ -72,10 +72,14 @@ class SlurmExecutor(ExecutorBase):
             )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
-
+        # TODO: not ideal, this could fail for a number of reasons, turn down the number of resubmissions
         for i in range(10):
             result = super().execute(
-                command=launch_command, arguments=[], location=location, check=check
+                # do not enforce checking here,
+                command=launch_command,
+                arguments=[],
+                location=location,
+                check=False,
             )
             if result.returncode == 0:
                 break
