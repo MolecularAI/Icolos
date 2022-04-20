@@ -185,7 +185,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
 
             flag_list = self._parse_arguments(flag_dict=flag_dict)
 
-            result = self._run_mmpbsa(args=flag_list, tmp_dir=wkdir)
+            self._run_mmpbsa(args=flag_list, tmp_dir=wkdir)
         self.parse_results(wkdirs)
 
         # parse and delete generated output

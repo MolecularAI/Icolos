@@ -265,7 +265,7 @@ class StepGold(StepBase, BaseModel):
         arguments = [config_path]
         old_dir = os.getcwd()
         os.chdir(output_dir)
-        execution_result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_CGE.GOLD_CALL, arguments=arguments, check=True
         )
         os.chdir(old_dir)

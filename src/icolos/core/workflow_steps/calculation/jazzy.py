@@ -18,10 +18,7 @@ from icolos.utils.general.parallelization import SubtaskContainer, Parallelizer
 _SJE = StepJazzyEnum()
 _JE = JazzyEnum()
 
-_all_jazzy_commands = [
-    _JE.VEC,
-    _JE.VIS
-]
+_all_jazzy_commands = [_JE.VEC, _JE.VIS]
 
 _all_jazzy_properties = [
     _JE.RESULT_DGA,
@@ -29,7 +26,7 @@ _all_jazzy_properties = [
     _JE.RESULT_DGTOT,
     _JE.RESULT_SA,
     _JE.RESULT_SDC,
-    _JE.RESULT_SDX
+    _JE.RESULT_SDX,
 ]
 
 
@@ -50,7 +47,9 @@ class StepJazzy(StepCalculationBase, BaseModel):
         # initialize the additional settings
         self.jazzy_additional = JazzyAdditional(**self.settings.additional)
         if self.jazzy_additional.command not in _all_jazzy_commands:
-            raise ValueError(f"Jazzy command {self.jazzy_additional.command} unknown - abort.")
+            raise ValueError(
+                f"Jazzy command {self.jazzy_additional.command} unknown - abort."
+            )
 
     def _prepare_batch(self, batch) -> Tuple:
         tmp_dirs = []
@@ -125,13 +124,13 @@ class StepJazzy(StepCalculationBase, BaseModel):
                     # Jazzy does not output valid JSONs (' instead of "), so we need to replace those
                     # except escaped ones
                     result = file.read().replace("\r", "").replace("\n", "")
-                    p = re.compile('(?<!\\\\)\'')
-                    result = p.sub('\"', result)
+                    p = re.compile("(?<!\\\\)'")
+                    result = p.sub('"', result)
                     result = json.loads(result)
-            except:
+            except FileNotFoundError:
                 self._logger.log(
                     f"Jazzy result for conformer {conformer.get_index_string()} stored in file {output_file} not found - proceeding.",
-                    _LE.WARNING
+                    _LE.WARNING,
                 )
                 results.append(_SJE.FAILURE)
                 continue

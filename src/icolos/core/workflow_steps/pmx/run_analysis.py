@@ -56,6 +56,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         oB = "{0}/integ1.dat".format(analysispath)
         wplot = "{0}/wplot.png".format(analysispath)
         o = "{0}/results.txt".format(analysispath)
+        # TODO: at the moment we ignore flags from the command line
+        # args = " ".join(self.settings.arguments.flags)
 
         cmd = "$PMX analyse  --quiet -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
             fA, fB, o, oA, oB, wplot, 298, 100

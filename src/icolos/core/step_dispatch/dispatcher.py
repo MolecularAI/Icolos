@@ -68,7 +68,7 @@ class StepDispatcher(StepBase, BaseModel):
 
             jobs = self._prepare_batch(next_batch)
 
-            result = parallelizer.execute_parallel(jobs=jobs)
+            parallelizer.execute_parallel(jobs=jobs)
 
             # TODO: sucessful execution of each step is not explicitly checked,
             # the step is responsible for throwing errors if something has gone wrong
