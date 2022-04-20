@@ -118,7 +118,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             if self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) is not None
             else int(self.get_additional_setting(_SALE.N_ROUNDS))
         )
-
         queried_compound_idx = []
         queried_compounds_per_epoch = []
         fraction_top1_hits_per_epoch = []
@@ -145,6 +144,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             query_idx = query_surrogate(queried_compound_idx)
             print(query_idx)
             queried_compound_idx += query_idx
+            print(queried_compound_idx)
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             if self.get_additional_setting(_SALE.EVALUATE, default=False):
@@ -159,12 +159,16 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
+                # what fraction of the top1% hits have been found?
                 hits_queried = (
-                    np.isin(np.unique(queried_compound_idx), top_1_idx).sum()
+                    np.isin(
+                        queried_compound_idx,
+                        top_1_idx,
+                    ).sum()
                     / len(top_1_idx)
                 ) * 100
                 self._logger.log(
-                    f"Fraction of top 1% hits queries by round {rnd}: {hits_queried}%",
+                    f"Fraction of top 1% hits queried by round {rnd}: {hits_queried}%",
                     _LE.INFO,
                 )
                 fraction_top1_hits_per_epoch.append(hits_queried)

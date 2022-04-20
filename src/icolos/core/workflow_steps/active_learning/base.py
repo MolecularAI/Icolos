@@ -103,21 +103,6 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
-    # def _prepare_compound_input(self, compound_list: List[Compound]):
-    #     prepared_compounds = []
-    #     for idx, compound in enumerate(compound_list):
-    #         cmp = Compound(name=str(idx), compound_number=idx)
-    #         cmp.add_enumeration(
-    #             Enumeration(
-    #                 compound_object=cmp,
-    #                 smile=compound[_SALE.SMILES],
-    #                 original_smile=compound[_SALE.SMILES],
-    # molecule=compound[_SALE.MOLECULE],
-    #             )
-    #         )
-    #         prepared_compounds.append(cmp)
-    #     return prepared_compounds
-
     def _initialize_oracle(self, compound_list: List[pd.Series] = None) -> WorkFlow:
         """
         Initialize a workflow object with the attached steps initialized
@@ -130,13 +115,12 @@ class ActiveLearningBase(StepBase, BaseModel):
 
             # manually attach the compound objects to the oracle's lead step
             with Chem.SDWriter("compounds.sdf") as writer:
-                for comp in compound_list:
-                    writer.write(comp[_SALE.MOLECULE])
+                for idx, comp in enumerate(compound_list):
+                    mol = comp[_SALE.MOLECULE]
+                    mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
+                    mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
+                    writer.write(mol)
 
-            # self._logger.log(
-            #     f"first step loaded with {len(oracle_steps[0].data.compounds)} compounds",
-            #     _LE.DEBUG,
-            # )
             compound_dict = {
                 "source": "compounds.sdf",
                 "source_type": "file",
