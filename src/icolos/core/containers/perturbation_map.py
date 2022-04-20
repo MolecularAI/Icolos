@@ -174,18 +174,6 @@ class PerturbationMap(BaseModel):
 
         data = split_data
 
-        map_info = pd.DataFrame(
-            data[start_edge + 3 : start_node - 1],
-            index=None,
-            columns=[
-                "Short ID",
-                "ligand1 -> ligand2",
-                "Bennett ddG",
-                "Cycle Closure ddG",
-                "Complex dG",
-                "Solvent dG",
-            ],
-        )
         self.node_df = pd.DataFrame(
             data[start_node + 3 : stop_node - 1],
             index=None,

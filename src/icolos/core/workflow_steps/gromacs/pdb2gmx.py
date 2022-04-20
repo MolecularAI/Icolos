@@ -121,7 +121,6 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         )
         conf = Chem.rdmolfiles.MolFromPDBFile(os.path.join(tmp_dir, input_pdb))
         formal_charge = Chem.rdmolops.GetFormalCharge(conf) if conf is not None else 0
-        stub = input_pdb.split(".")[0]
         self._logger.log(
             f"Computed formal charge: {formal_charge} for structure {input_pdb}",
             _LE.DEBUG,

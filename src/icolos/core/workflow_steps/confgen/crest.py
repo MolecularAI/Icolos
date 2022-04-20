@@ -105,7 +105,7 @@ class StepCREST(StepConfgenBase, BaseModel):
                 self._logger.log(
                     f"Executing CREST backend in folder {tmp_dir}.", _LE.DEBUG
                 )
-                result = self._backend_executor.execute(
+                self._backend_executor.execute(
                     command=_EE.CREST, arguments=settings, check=False
                 )
                 self._restore_working_dir()

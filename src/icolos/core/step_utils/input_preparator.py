@@ -380,8 +380,7 @@ class InputPreparator(BaseModel):
                 comp_id = id_parts[0]
                 enum_id = id_parts[1]
 
-            except:
-                #
+            except IndexError:
                 icolos_naming = False
                 comp_id = mol_name
                 enum_id = 0

@@ -247,7 +247,6 @@ class WriteOutHandler(BaseModel):
                 resource = os.path.join("/".join(resource.split("/")[:-1]), file_name)
                 file.write(resource, join=False)
             elif self.config.destination.mode == _SBE.WRITEOUT_DESTINATION_DIR:
-                resource = resource
                 assert os.path.isdir(resource)
                 file.write(resource, join=True, final_writeout=True)
 

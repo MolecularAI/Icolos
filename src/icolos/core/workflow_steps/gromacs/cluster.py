@@ -23,7 +23,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
         self._check_backend_availability()
 
     def execute(self):
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         topol = self.get_topol()
         self.write_input_files(tmp_dir, topol=topol)
 
@@ -41,7 +41,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
                         "-o",
                         _SGE.STD_INDEX,
                     ]
-                    result = self._backend_executor.execute(
+                    self._backend_executor.execute(
                         command=_GE.MAKE_NDX,
                         arguments=ndx_arguments,
                         location=tmp_dir,
