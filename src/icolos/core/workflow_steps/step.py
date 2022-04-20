@@ -248,6 +248,7 @@ class StepBase(BaseModel):
                 additional_lines=self.execution.resources.additional_lines,
                 gres=self.execution.resources.gres,
                 n_tries=self.execution.failure_policy.n_tries,
+                retry_wait_seconds = self.execution.failure_policy.retry_wait_seconds
             )
         else:
             self._backend_executor = executor(

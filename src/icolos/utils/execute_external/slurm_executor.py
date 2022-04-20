@@ -32,6 +32,7 @@ class SlurmExecutor(ExecutorBase):
         prefix_execution=None,
         binary_location=None,
         n_tries: int = 50,
+        retry_wait_seconds: int = 10,
     ):
         super().__init__(prefix_execution=None, binary_location=None)
 
@@ -47,6 +48,7 @@ class SlurmExecutor(ExecutorBase):
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
         self.n_tries = n_tries
+        self.retry_wait_seconds = retry_wait_seconds
 
     def execute(
         self,
@@ -93,8 +95,8 @@ class SlurmExecutor(ExecutorBase):
                 )
                 # sleep and retry
                 # add a stochastic delay to avoid overloading the slurm daemon
-                delay = np.random.uniform(5, 20)
-                time.sleep(delay)
+                # delay = np.random.uniform(5, 20)
+                time.sleep(self.retry_n_seconds)
                 logger.log(
                     f"Retrying submission for job {tmpfile}, attempt {i+1}/5",
                     _LE.DEBUG,
