@@ -96,7 +96,7 @@ class SlurmExecutor(ExecutorBase):
                 # sleep and retry
                 # add a stochastic delay to avoid overloading the slurm daemon
                 # delay = np.random.uniform(5, 20)
-                time.sleep(self.retry_n_seconds)
+                time.sleep(self.retry_wait_seconds)
                 logger.log(
                     f"Retrying submission for job {tmpfile}, attempt {i+1}/5",
                     _LE.DEBUG,
