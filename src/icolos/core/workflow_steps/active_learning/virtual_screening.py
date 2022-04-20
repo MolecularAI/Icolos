@@ -29,10 +29,13 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         super().__init__(**data)
 
     def _parse_library(self, criteria: str = None) -> Tuple[DataFrame, np.ndarray]:
+        """Parse a virtual library to a dataframe
+
+        :param str criteria: optional criteria to extract to df column from sdf tags, defaults to None
+        :raises ValueError: Accepts only sdf or smi files
+        :return Tuple[DataFrame, np.ndarray]: tuple containing datafarme of parsed data and scores, empty if no criteria provided
         """
-        Loads the library file from a file
-        This should be a .sdf or smi file containing the compounds to be screened
-        """
+
         lib_path = self.settings.additional[_SALE.VIRTUAL_LIB]
         if lib_path.endswith("sdf"):
             # hold the lib in a pandas df
@@ -50,7 +53,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             for mol in suppl:
                 mols.append(mol)
                 smiles.append(Chem.MolToSmiles(mol))
-                # pd.concat([library, entry])
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
         else:
             raise ValueError(f"File {lib_path} must of of type smi or sdf")
@@ -72,6 +74,16 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         replica=0,
         fragment_lib: pd.DataFrame = None,
     ) -> None:
+        """Main active learning loop, runs the train and query loop on the virtual lib
+
+        :param ActiveLearner learner: Initialized modAL active learning object
+        :param pd.DataFrame lib: dataframe containing compounds to screen
+        :param str tmp_dir: tmpdir to run the calculations in
+        :param list top_1_idx: optional list of of indices of top 1% compounds, for retrospective performance eval, defaults to None
+        :param int replica: id of the experiment replica, defaults to 0
+        :param pd.DataFrame fragment_lib: for non-natural amino acids, pass a df containing the non-natural fragments, only for protein FEP and residue scanning oracles. defaults to None
+        """
+
         def query_surrogate(prev_idx: List) -> List:
             query_idx, _ = learner.query(
                 X,
@@ -106,26 +118,26 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             return scores
 
         n_instances = (
-            int(self.get_additional_setting(_SALE.FRACTION_PER_EPOCH) * len(lib))
-            if self.get_additional_setting(_SALE.FRACTION_PER_EPOCH) is not None
-            else int(self.get_additional_setting(_SALE.BATCH_SIZE))
+            int(self._get_additional_setting(_SALE.FRACTION_PER_EPOCH) * len(lib))
+            if self._get_additional_setting(_SALE.FRACTION_PER_EPOCH) is not None
+            else int(self._get_additional_setting(_SALE.BATCH_SIZE))
         )
         rounds = (
             int(
-                (self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) * len(lib))
+                (self._get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) * len(lib))
                 / n_instances
             )
-            if self.get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) is not None
-            else int(self.get_additional_setting(_SALE.N_ROUNDS))
+            if self._get_additional_setting(_SALE.MAX_SAMPLED_FRACTION) is not None
+            else int(self._get_additional_setting(_SALE.N_ROUNDS))
         )
         queried_compound_idx = []
         queried_compounds_per_epoch = []
         fraction_top1_hits_per_epoch = []
         key = _SALE.MORGAN_FP
-        warmup_period = self.get_additional_setting(_SALE.WARMUP, default=1)
+        warmup_period = self._get_additional_setting(_SALE.WARMUP, default=1)
         X = np.array(list(lib[key]))
-        oracle_type = self.get_additional_setting(_SALE.ORACLE_TYPE, default="docking")
-        epsilon = float(self.get_additional_setting(_SALE.EPSILON, default=0.0))
+        oracle_type = self._get_additional_setting(_SALE.ORACLE_TYPE, default="docking")
+        epsilon = float(self._get_additional_setting(_SALE.EPSILON, default=0.0))
         self._logger.log(
             f"Running {rounds} rounds of {n_instances} componds, replica {replica}",
             _LE.DEBUG,
@@ -136,7 +148,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             batch_size = (
                 int(
                     n_instances
-                    * self.get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
+                    * self._get_additional_setting(_SALE.INIT_SAMPLE_FACTOR, default=1)
                 )
                 if rnd == 0
                 else n_instances
@@ -147,7 +159,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             print(queried_compound_idx)
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
-            if self.get_additional_setting(_SALE.EVALUATE, default=False):
+            # check evaluation mode or not
+            if self._get_additional_setting(_SALE.EVALUATE, default=False):
                 scores = get_precomputed_scores()
             else:
                 scores = get_scores_from_oracle()
@@ -181,7 +194,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
 
             if (
-                self.get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
+                self._get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
                 and rnd > 4
             ):
                 # average of last three top-1 fractions
@@ -213,8 +226,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
     def execute(self):
         tmp_dir = self._make_tmpdir()
         criteria = (
-            self.get_additional_setting(_SALE.CRITERIA)
-            if self.get_additional_setting(_SALE.EVALUATE, default=False)
+            self._get_additional_setting(_SALE.CRITERIA)
+            if self._get_additional_setting(_SALE.EVALUATE, default=False)
             else None
         )
         lib, scores = self._parse_library(criteria=criteria)
@@ -224,21 +237,21 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
 
         # load fragment lib if provided
-        print("loading fragment library")
+        print("loading fragment library...")
         fragments_libary = (
             PandasTools.LoadSDF(
-                self.get_additional_setting(_SALE.FRAGMENTS),
+                self._get_additional_setting(_SALE.FRAGMENTS),
                 smilesName=_SALE.SMILES,
                 molColName=_SALE.MOLECULE,
                 includeFingerprints=True,
                 removeHs=False,
                 embedProps=True,
             )
-            if self.get_additional_setting(_SALE.FRAGMENTS) is not None
+            if self._get_additional_setting(_SALE.FRAGMENTS) is not None
             else None
         )
 
-        replicas = self.get_additional_setting(_SALE.REPLICAS, default=1)
+        replicas = self._get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):
             learner = self._initialize_learner()
 

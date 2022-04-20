@@ -80,7 +80,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         Set up required mdp file and run gmx grompp
         Note that any issues with your parametrisation or system building will normally cause grompp to panic
         """
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         topol = self.get_topol()
 
         # do this bit once
@@ -108,7 +108,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         )
         mdp_file.write(tmp_dir)
 
-        replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
+        replicas = self._get_additional_setting(_SGE.REPLICAS, default=1)
         # replicas = len(topol.tprs.values())
         topol.write_topol(tmp_dir)
         init_struct = len(topol.structures)

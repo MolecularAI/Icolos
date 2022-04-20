@@ -292,11 +292,21 @@ class StepBase(BaseModel):
         writeout_handler.write()
 
     def write_generic_by_extension(self, path: str, ext: str, join=True):
-        """writes all files of a specific file type to the specified directory, retaining original files names"""
+        """Write all generic data objects with a given extension
+
+        :param str path: path to write object to, by default just a directory
+        :param str ext: extension
+        :param bool join: controls join behaviour, if True, joins existing filename to path, defaults to True
+        """
         for file in self.data.generic.get_files_by_extension(ext):
             file.write(path, join=join)
 
-    def write_generic_by_name(self, path, name: str):
+    def write_generic_by_name(self, path: str, name: str):
+        """Write a generic file by name
+
+        :param str path: directory to write to
+        :param str name: name of file to be written out
+        """
         file = self.data.generic.get_file_by_name(name)
         file.write(path)
 
@@ -519,7 +529,7 @@ class StepBase(BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.DEBUG)
 
-    def get_additional_setting(self, key: str, default: str = None):
+    def _get_additional_setting(self, key: str, default: str = None):
         """
         Query settings.additional with the key, if not set use the default
         """

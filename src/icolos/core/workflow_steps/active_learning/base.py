@@ -41,7 +41,12 @@ class ActiveLearningBase(StepBase, BaseModel):
         super().__init__(**data)
 
     def _initialize_oracle_step_from_dict(self, step_conf: dict) -> StepBase:
-        # note this is a bit of a hack to get around a circular import, we can't use the main util
+        """Initialize an oracle step, note this is similar to the main workflow initialization method, but needs to be a separate initializer for the AL workflow
+
+        :param dict step_conf: config for the step to be initialized
+        :raises ValueError: Step ID must be recognised as an internal step
+        :return StepBase: Initialized step
+        """
         _STE = StepBaseEnum
         step_type = nested_get(step_conf, _STE.STEP_TYPE, default=None)
         step_type = None if step_type is None else step_type.upper()
@@ -52,7 +57,12 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
             )
 
-    def construct_fingerprints(self, library: pd.DataFrame):
+    def construct_fingerprints(self, library: pd.DataFrame) -> pd.DataFrameame:
+        """Add morgan FP column to dataframe containing rdkit mols
+
+        :param pd.DataFrame library: lib containing the mols in column named Molecules
+        :return pd.DataFrame: Modified dataframe with the extra fingerprints col
+        """
         # add morgan FPs
         library[_SALE.MORGAN_FP] = library.apply(
             lambda x: np.array(
@@ -66,9 +76,11 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         return library
 
-    def _initialize_learner(self):
-        """
-        Initializes a range of surrogate models
+    def _initialize_learner(self) -> ActiveLearner:
+        """Initialize the surrogate model specified in the config
+
+        :raises KeyError: Unsopported model specified
+        :return ActiveLearner: Initialized active learner, initialized with a surrogate model architecture and acquisition function
         """
         running_mode = self.settings.additional[_SALE.MODEL]
         if running_mode == "gpr":
@@ -103,30 +115,31 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
-    def _initialize_oracle(self, compound_list: List[pd.Series] = None) -> WorkFlow:
-        """
-        Initialize a workflow object with the attached steps initialized
+    def _initialize_oracle_workflow(self, compound_list: List[pd.Series]) -> WorkFlow:
+        """Initialize the oracle workflow
+
+        :param List[pd.Series] compound_list: List of rows from the library df containing comounds to query
+        :return WorkFlow: Initialized Icolos workflow
         """
         # path to the json config for the oracle config
         oracle_conf = self.settings.additional["oracle_config"]
         with open(oracle_conf, "r") as f:
             wf_config = json.load(f)
-        if compound_list is not None:
 
-            # manually attach the compound objects to the oracle's lead step
-            with Chem.SDWriter("compounds.sdf") as writer:
-                for idx, comp in enumerate(compound_list):
-                    mol = comp[_SALE.MOLECULE]
-                    mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
-                    mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
-                    writer.write(mol)
+        # manually attach the compound objects to the oracle's lead step
+        with Chem.SDWriter("compounds.sdf") as writer:
+            for idx, comp in enumerate(compound_list):
+                mol = comp[_SALE.MOLECULE]
+                mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
+                mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
+                writer.write(mol)
 
-            compound_dict = {
-                "source": "compounds.sdf",
-                "source_type": "file",
-                "format": "SDF",
-            }
-            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
+        compound_dict = {
+            "source": "compounds.sdf",
+            "source_type": "file",
+            "format": "SDF",
+        }
+        wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
         # inherit header from main workflow
         header = self.get_workflow_object().header
         oracle_wf = WorkFlow(**wf_config["workflow"])
@@ -143,16 +156,15 @@ class ActiveLearningBase(StepBase, BaseModel):
             oracle_wf.add_step(step)
         return oracle_wf
 
-    def _run_oracle_wf(
-        self, oracle_wf: WorkFlow, skip_init_input: bool = False, work_dir: str = None
-    ):
+    def _run_oracle_wf(self, oracle_wf: WorkFlow, work_dir: str = None) -> WorkFlow:
+        """Run the oracle workflow through for one set of compounds
+
+        :param WorkFlow oracle_wf: initialized oracle workflow to be run
+        :param str work_dir: _description_, defaults to None
+        :return WorkFlow: Return completed workflow with data attached
+        """
         for idx, step in enumerate(oracle_wf._initialized_steps):
-            # only write initial input
-            if skip_init_input and idx == 0:
-                self._logger.log("Skipping generating input", _LE.DEBUG)
-            else:
-                # input has been generated for the lead step from the virtual lib
-                step.generate_input()
+            step.generate_input()
             self._logger.log(
                 f"Starting execution of oracle step: {step.step_id}", _LE.INFO
             )
@@ -172,12 +184,17 @@ class ActiveLearningBase(StepBase, BaseModel):
         oracle_type: str = "docking",
         fragment_lib: pd.DataFrame = None,
     ) -> np.ndarray:
-        """
-        Interface function with the oracle method
+        """Main interface method with the oracle, controls initialization and executino
+
+        :param List[pd.Series] compound_list: list of rows from library df to be queried by the oracle
+        :param str oracle_type: type of oracle to initialize, defaults to "docking"
+        :param pd.DataFrame fragment_lib: optional fragment library for fep and resi scanning oracles, defaults to None
+        :raises NotImplementedError: Handles unknown oracle types
+        :return np.ndarray: return array of scores for each compound from the oracle
         """
         if oracle_type == "pmx_rbfe":
             # TODO: with the pmx oracle, I think it only makes sense to use star maps, then we can take the ddG values from the hub compounds vs some reference
-            oracle_wf = self._initialize_oracle(compound_list)
+            oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
 
@@ -190,7 +207,7 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         elif oracle_type == "docking":
 
-            oracle_wf = self._initialize_oracle(compound_list)
+            oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
 
@@ -213,7 +230,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 for char2 in letter_strings:
                     for char3 in letter_strings:
                         all_letters.append(f"{char1}{char2}{char3}")
-            line_stub = self.get_additional_setting("mut_res")
+            line_stub = self._get_additional_setting("mut_res")
             # create mutations file simultaneously
             with open("mutations.txt", "w") as f, Chem.SDWriter(
                 "database.sdf"
@@ -233,7 +250,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             # now ncaa_nca.maegz will be in the tmpdir
 
             # execution is the same for both cases, just different oracle
-            oracle_wf = self._initialize_oracle(compound_list=compound_list)
+            oracle_wf = self._initialize_oracle_workflow(compound_list=compound_list)
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, work_dir=tmp_dir)
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
             print(final_compounds)
@@ -251,8 +268,12 @@ class ActiveLearningBase(StepBase, BaseModel):
     def _extract_final_scores(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
     ) -> np.ndarray:
-        """
-        Takes a list of compound objects from the oracle and extracts the best score based on the provided criteria
+        """Extract final scores from compounds
+
+        :param List[Compound] compounds: compounds extracted from final step in workflow
+        :param str criteria: tag to extract score by
+        :param bool highest_is_best: control whether highest vals correspond to best scores, negative for docking scores, affinities etc, defaults to False
+        :return np.ndarray: array containing final scores per compound
         """
         top_scores = []
 
@@ -273,12 +294,3 @@ class ActiveLearningBase(StepBase, BaseModel):
                 scores.append(float(conf._conformer.GetProp(criteria)))
 
         return np.array(top_scores, dtype=np.float32)
-
-    def check_additional(self, key, val=True) -> bool:
-
-        if (
-            key in self.settings.additional.keys()
-            and self.settings.additional[key] == val
-        ):
-            return True
-        return False

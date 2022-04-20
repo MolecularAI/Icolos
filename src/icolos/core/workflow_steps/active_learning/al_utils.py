@@ -14,9 +14,15 @@ def greedy_acquisition(
     warmup: bool = False,
     epsilon: float = 0.0,
 ) -> np.ndarray:
-    """
-    Implement greedy acquisition strategy, return the n_samples best scores
+    """Implements greedy acquisition by querying model for top predicted points
 
+    :param  estimator: SKLearn-type estimator to be queried
+    :param np.ndarray X: array of fingerprints for each compound to be predicted by the model
+    :param List[int] previous_idx: List of the previously queried indices to avoid repitition
+    :param int n_instances: batch size to query
+    :param bool warmup: Control warmup period in which random samples are generated, defaults to False
+    :param float epsilon: enable greedy epsilon acquisition, defaults to 0.0
+    :return np.ndarray: array of top predictions from the estimator
     """
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
@@ -33,8 +39,6 @@ def greedy_acquisition(
             )
 
     # zero those predictions we've seen before
-    # TODO: is this the best approach? This ensures that we're not simply sampling the same points endlessly
-    # Top-1% coverage stalls very quickly without this
     for idx in previous_idx:
         predictions[idx] = 0
     # smaller before n_instances, largest after

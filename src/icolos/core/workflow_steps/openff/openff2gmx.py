@@ -25,7 +25,7 @@ class StepOFF2gmx(StepBase, BaseModel):
         # TODO: do we want to throw everything together or split the params into separate files?
         mols = [
             Molecule.from_smiles(smi)
-            for smi in self.get_additional_setting(_SOFE.UNIQUE_MOLS)
+            for smi in self._get_additional_setting(_SOFE.UNIQUE_MOLS)
         ]
         pdb_file = PDBFile(
             os.path.join(tmp_dir, self.data.generic.get_argument_by_extension("pdb"))
@@ -34,11 +34,11 @@ class StepOFF2gmx(StepBase, BaseModel):
 
         off_topology = Topology.from_openmm(omm_topology, unique_molecules=mols)
 
-        forcefield = ForceField(self.get_additional_setting(_SOFE.FORCEFIELD))
+        forcefield = ForceField(self._get_additional_setting(_SOFE.FORCEFIELD))
 
         omm_system = forcefield.create_openmm_system(off_topology)
 
-        if self.get_additional_setting(_SOFE.METHOD, _SOFE.PARMED) == _SOFE.PARMED:
+        if self._get_additional_setting(_SOFE.METHOD, _SOFE.PARMED) == _SOFE.PARMED:
             parmed_struct = parmed.openmm.load_topology(
                 omm_topology, omm_system, pdb_file.positions
             )
@@ -47,7 +47,7 @@ class StepOFF2gmx(StepBase, BaseModel):
 
             # TODO: validate energy differences
 
-        elif self.get_additional_setting(_SOFE.METHOD) == _SOFE.INTERCHANGE:
+        elif self._get_additional_setting(_SOFE.METHOD) == _SOFE.INTERCHANGE:
             raise NotImplementedError
         else:
             raise NotImplementedError
@@ -56,7 +56,7 @@ class StepOFF2gmx(StepBase, BaseModel):
         """
         Builds a system and parametrise using OpenFF SAGE params, then convert to a GROMACS top/gro format for downstream simulation
         """
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         self.data.generic.write_out_all_files(tmp_dir)
 
         self.parametrise_mols(tmp_dir)

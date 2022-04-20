@@ -70,7 +70,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         trr=None,
     ):
 
-        mdrun_binary = self.get_additional_setting(
+        mdrun_binary = self._get_additional_setting(
             _PSE.MDRUN_EXECUTABLE, default="gmx mdrun"
         )
         # EM

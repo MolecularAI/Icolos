@@ -55,14 +55,14 @@ class StepPMXBase(StepBase, BaseModel):
         self.therm_cycle_branches = ["ligand", "complex"]
 
         # simulation setup
-        self.run_type = self.get_additional_setting(_SPE.RUN_TYPE, "rbfe")
+        self.run_type = self._get_additional_setting(_SPE.RUN_TYPE, "rbfe")
         self.ff = "amber99sb-star-ildn-mut.ff"
-        self.boxshape = self.get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
-        self.boxd = self.get_additional_setting(_SPE.BOXD, 1.5)
-        self.water = self.get_additional_setting(_SPE.WATER, "tip3p")
-        self.conc = self.get_additional_setting(_SPE.CONC, 0.15)
-        self.pname = self.get_additional_setting(_SPE.PNAME, "NaJ")
-        self.nname = self.get_additional_setting(_SPE.NNAME, "ClJ")
+        self.boxshape = self._get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
+        self.boxd = self._get_additional_setting(_SPE.BOXD, 1.5)
+        self.water = self._get_additional_setting(_SPE.WATER, "tip3p")
+        self.conc = self._get_additional_setting(_SPE.CONC, 0.15)
+        self.pname = self._get_additional_setting(_SPE.PNAME, "NaJ")
+        self.nname = self._get_additional_setting(_SPE.NNAME, "ClJ")
         self.mdp_prefixes = {
             "em": "em",
             "nvt": "nvt",
@@ -235,7 +235,7 @@ class StepPMXBase(StepBase, BaseModel):
         self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
     ):
         # main pipeline for producing GAFF parameters for a ligand
-        charge_method = self.get_additional_setting(
+        charge_method = self._get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
         formal_charge = (
@@ -478,7 +478,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
-            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
+            strict_execution=self._get_additional_setting(_SPE.STRICT, default=True),
         )
         perturbation_map.parse_map_file(
             os.path.join(self.work_dir, log_file.get_file_name())

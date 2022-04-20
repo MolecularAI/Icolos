@@ -116,7 +116,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         Produces a gmx ITP file for the ligand, and updates topology
         """
         # main pipeline for producing GAFF parameters for a ligand
-        charge_method = self.get_additional_setting(
+        charge_method = self._get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
         conf = Chem.rdmolfiles.MolFromPDBFile(os.path.join(tmp_dir, input_pdb))
@@ -177,13 +177,13 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         """
         # TODO: ensure we can handle parameter generation for multiple unique mol types
         # get the mols
-        mols = [Molecule.from_smiles(self.get_additional_setting(_SOFE.UNIQUE_MOLS))]
-        pdb_file = PDBFile(os.path.join(self.get_additional_setting("lig_pdb")))
+        mols = [Molecule.from_smiles(self._get_additional_setting(_SOFE.UNIQUE_MOLS))]
+        pdb_file = PDBFile(os.path.join(self._get_additional_setting("lig_pdb")))
         omm_topology = pdb_file.topology
 
         off_topology = Topology.from_openmm(omm_topology, unique_molecules=mols)
 
-        forcefield = ForceField(self.get_additional_setting(_SOFE.FORCEFIELD))
+        forcefield = ForceField(self._get_additional_setting(_SOFE.FORCEFIELD))
 
         omm_system = forcefield.create_openmm_system(off_topology)
 
@@ -210,7 +210,7 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
 
         """
 
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         topol = self.get_topol()
         self.write_input_files(tmp_dir)
         lig_ids = self._split_protein_ligand_complex(tmp_dir)
@@ -242,7 +242,9 @@ class StepGMXPdb2gmx(StepGromacsBase, BaseModel):
         ]
         topol.add_posre(tmp_dir, posre_files)
 
-        param_method = self.get_additional_setting(_SGE.PARAM_METHOD, default=_SGE.GAFF)
+        param_method = self._get_additional_setting(
+            _SGE.PARAM_METHOD, default=_SGE.GAFF
+        )
         for lig in lig_ids:
             input_file = lig + ".pdb"
             if param_method == _SGE.GAFF:
