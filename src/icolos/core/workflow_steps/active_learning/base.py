@@ -57,7 +57,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
             )
 
-    def construct_fingerprints(self, library: pd.DataFrame) -> pd.DataFrameame:
+    def construct_fingerprints(self, library: pd.DataFrame) -> pd.DataFrame:
         """Add morgan FP column to dataframe containing rdkit mols
 
         :param pd.DataFrame library: lib containing the mols in column named Molecules
