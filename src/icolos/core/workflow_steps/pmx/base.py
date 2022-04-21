@@ -185,7 +185,7 @@ class StepPMXBase(StepBase, BaseModel):
                 mdout,
             ]
             result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP, arguments=grompp_args, check=False
             )
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
@@ -215,7 +215,7 @@ class StepPMXBase(StepBase, BaseModel):
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(command=grompp_full_cmd, arguments=[])
+            result = executor.execute(command=grompp_full_cmd, arguments=[], check=False)
         self._clean_backup_files(simpath)
         return result
 
@@ -328,9 +328,9 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
+            n_removed = 0
             jobs = self._prepare_edges(next_batch)
             if prune_completed:
-                n_removed = 0
                 pre_exec_results = result_checker(jobs)
                 for job_sublist, exec_success_sublist, sublist in zip(
                     jobs, pre_exec_results, next_batch

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from shlex import quote
 from icolos.loggers.steplogger import StepLogger
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
@@ -30,6 +31,8 @@ class SlurmExecutor(ExecutorBase):
         additional_lines: List,
         prefix_execution=None,
         binary_location=None,
+        n_tries: int = 50,
+        retry_wait_seconds: int = 10,
     ):
         super().__init__(prefix_execution=None, binary_location=None)
 
@@ -44,6 +47,8 @@ class SlurmExecutor(ExecutorBase):
         self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
+        self.n_tries = n_tries
+        self.retry_wait_seconds = retry_wait_seconds
 
     def execute(
         self,
@@ -72,9 +77,30 @@ class SlurmExecutor(ExecutorBase):
             )
             launch_command = f"bash {tmpfile}"
         # execute the batch script
-        result = super().execute(
-            command=launch_command, arguments=[], location=location, check=check
-        )
+        for i in range(self.n_tries):
+            result = super().execute(
+                # do not enforce checking here,
+                command=launch_command,
+                arguments=[],
+                location=location,
+                check=False,
+            )
+            if result.returncode == 0:
+                break
+            else:
+                # something has gone wrong with submitting the slurm script
+                logger.log(
+                    f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
+                    _LE.WARNING,
+                )
+                # sleep and retry
+                # add a stochastic delay to avoid overloading the slurm daemon
+                # delay = np.random.uniform(5, 20)
+                time.sleep(self.retry_wait_seconds)
+                logger.log(
+                    f"Retrying submission for job {tmpfile}, attempt {i+1}/5",
+                    _LE.DEBUG,
+                )
 
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
@@ -149,7 +175,9 @@ class SlurmExecutor(ExecutorBase):
         while completed is False:
             state = self._check_job_status(job_id)
             if state in [_SE.PENDING, _SE.RUNNING, None]:
-                time.sleep(60)
+                # avoid many simultaneous processes pinging slurmd
+                eps = np.random.uniform(-10, 10)
+                time.sleep(60 + eps)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True
@@ -180,7 +208,7 @@ class SlurmExecutor(ExecutorBase):
                     completed = True
             except FileNotFoundError:
                 logger.log("log file not found, sleeping", _LE.DEBUG)
-                time.sleep(10)
+                time.sleep(30)
         return state
 
     def _check_job_status(self, job_id):

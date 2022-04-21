@@ -56,7 +56,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         }
         trjconv_args = self.get_arguments(trjconv_args)
         self._backend_executor.execute(
-            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
+            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System", check=False
         )
 
         # move frame0.gro to frame80.gro
