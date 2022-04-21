@@ -57,7 +57,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 f"Backend for step {nested_get(step_conf, _STE.STEPID, '')} unknown."
             )
 
-    def construct_fingerprints(self, library: pd.DataFrame) -> pd.DataFrameame:
+    def construct_fingerprints(self, library: pd.DataFrame) -> pd.DataFrame:
         """Add morgan FP column to dataframe containing rdkit mols
 
         :param pd.DataFrame library: lib containing the mols in column named Molecules
@@ -139,7 +139,12 @@ class ActiveLearningBase(StepBase, BaseModel):
             "source_type": "file",
             "format": "SDF",
         }
-        wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
+        try:
+            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
+        except KeyError:
+            # if no input block in the oracle template, add a blank one first,
+            wf_config["workflow"]["steps"][0]["input"] = {}
+            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
         # inherit header from main workflow
         header = self.get_workflow_object().header
         oracle_wf = WorkFlow(**wf_config["workflow"])
@@ -196,7 +201,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             # TODO: with the pmx oracle, I think it only makes sense to use star maps, then we can take the ddG values from the hub compounds vs some reference
             oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
-            oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
+            oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
 
             final_compounds = [
                 n.conformer
@@ -209,7 +214,7 @@ class ActiveLearningBase(StepBase, BaseModel):
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
-            oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, skip_init_input=True)
+            oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
 
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
 

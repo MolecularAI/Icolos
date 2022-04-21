@@ -13,8 +13,12 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
+from icolos.utils.enums.write_out_enums import WriteOutEnum
 
 _SALE = StepActiveLearningEnum()
+_WOE = WriteOutEnum()
 
 
 class StepActiveLearning(ActiveLearningBase, BaseModel):
@@ -54,8 +58,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 mols.append(mol)
                 smiles.append(Chem.MolToSmiles(mol))
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
+        elif lib_path.endswith("pkl"):
+            library = pd.read_pickle(lib_path)
         else:
-            raise ValueError(f"File {lib_path} must of of type smi or sdf")
+            raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
         library = self.construct_fingerprints(library)
         scores = (
             np.absolute(pd.to_numeric(library[criteria].fillna(0)))
@@ -207,7 +213,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         # create a results dataframe to store per-epoch properties
         self._logger.log("Generating results dataframe...", _LE.DEBUG)
-
+        PandasTools.WriteSDF(
+            df,
+            os.path.join(tmp_dir, f"compounds_rep_{replica}.sdf"),
+            molColName=_SALE.MOLECULE,
+        )
         # we have a list of compound IDs per epoch, we want the transpose
         queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
         col_dict = {
