@@ -570,6 +570,8 @@ class StepGlideEnum:
     GLIDE_LOG = ".log"
     GLIDE_SDF = ".sdf"
 
+    FILL_DUMMY_CONFS = "fill_dummy_confs"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:
