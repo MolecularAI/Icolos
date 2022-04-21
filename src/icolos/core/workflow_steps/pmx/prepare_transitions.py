@@ -56,11 +56,13 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         }
         trjconv_args = self.get_arguments(trjconv_args)
         self._backend_executor.execute(
-            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
+            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System", check=False
         )
 
         # move frame0.gro to frame80.gro
-        cmd = "mv {0}/frame0.gro {0}/frame80.gro".format(tipath)
+        last_frame = len([f for f in os.listdir(tipath) if f.startswith("frame")]) + 1
+        self._logger.log(f"Extracted {last_frame} frames", _LE.DEBUG)
+        cmd = f"mv {tipath}/frame0.gro {tipath}/frame{last_frame}.gro".format(tipath)
         os.system(cmd)
 
         self._clean_backup_files(tipath)
@@ -124,10 +126,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         output_files = [
-            f"ligand/stateA/run1/transitions/ti80.tpr",
-            f"ligand/stateB/run1/transitions/ti80.tpr",
-            f"complex/stateA/run1/transitions/ti80.tpr",
-            f"complex/stateB/run1/transitions/ti80.tpr",
+            f"ligand/stateA/run1/transitions/ti1.tpr",
+            f"ligand/stateB/run1/transitions/ti1.tpr",
+            f"complex/stateA/run1/transitions/ti1.tpr",
+            f"complex/stateB/run1/transitions/ti1.tpr",
         ]
         results = []
         for subjob in batch:
