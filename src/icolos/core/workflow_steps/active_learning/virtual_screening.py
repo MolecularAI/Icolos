@@ -12,13 +12,10 @@ from rdkit import Chem
 import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
-from icolos.utils.enums.write_out_enums import WriteOutEnum
 
 _SALE = StepActiveLearningEnum()
-_WOE = WriteOutEnum()
 
 
 class StepActiveLearning(ActiveLearningBase, BaseModel):
@@ -162,7 +159,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             query_idx = query_surrogate(queried_compound_idx)
             print(query_idx)
             queried_compound_idx += query_idx
-            print(queried_compound_idx)
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             # check evaluation mode or not

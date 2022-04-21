@@ -97,18 +97,20 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
+            sim_path = os.path.dirname(tpr)
+            tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
-            for i in range(1, 81):
+            for i, file in tpr_files:
                 single_command = [
                     mdrun_binary,
                     "-s",
-                    f"ti{i}.tpr",
+                    file,
                     "-e",
                     ener,
                     "-c",
                     confout,
                     "-dhdl",
-                    f"dhdl{i}.xvg",
+                    f"dhdl{i+1}.xvg",
                     "-o",
                     trr,
                     "-g",

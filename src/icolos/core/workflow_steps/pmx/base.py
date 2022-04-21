@@ -329,14 +329,13 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
             jobs = self._prepare_edges(next_batch)
+            n_removed = 0
             if prune_completed:
-                n_removed = 0
                 pre_exec_results = result_checker(jobs)
                 for job_sublist, exec_success_sublist, sublist in zip(
                     jobs, pre_exec_results, next_batch
                 ):
                     # we test on the subtask level, not the individual job level, but since jobs are run through with max_len_sublists=1, in practice this doesn't matter
-                    # if all(r is True for r in exec_success):
                     for job, result, task in zip(
                         job_sublist, exec_success_sublist, sublist
                     ):
@@ -348,7 +347,7 @@ class StepPMXBase(StepBase, BaseModel):
                                 f"Removed job {job} from execution batch, good output found",
                                 _LE.DEBUG,
                             )
-                        n_removed += 1
+                            n_removed += 1
                         # if we have emptied entire job queues, remove the queue
                 self._logger.log(
                     f"Executing {step_id} for batch {n}, containing {len(jobs)} * {self.execution.parallelization.max_length_sublists} jobs",
