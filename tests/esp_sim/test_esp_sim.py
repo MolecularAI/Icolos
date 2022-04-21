@@ -1,5 +1,5 @@
 import unittest
-from icolos.core.workflow_steps.calculation.electrostatics.esp_sim import StepEspSim
+from icolos.core.workflow_steps.calculation.esp_sim import StepEspSim
 
 from icolos.utils.enums.step_enums import StepBaseEnum
 from tests.tests_paths import export_unit_test_env_vars

@@ -96,7 +96,6 @@ class StepPrime(StepSchrodingerBase, BaseModel):
         # go through the batch, get the info from the output file and
         scores = []
         for i in range(len(output_sdf_paths)):
-            cur_sublist = batch[i]
             sdf_path = output_sdf_paths[i]
             curr_enum = None
             curr_conformer = None

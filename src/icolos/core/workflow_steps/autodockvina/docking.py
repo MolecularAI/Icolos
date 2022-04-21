@@ -205,7 +205,6 @@ class StepAutoDockVina(StepBase, BaseModel):
         for i in range(len(next_batch)):
             subtask = next_batch[i][0]
             tmp_output_path = tmp_output_paths[i]
-            tmp_input_path = tmp_input_paths[i]
             enumeration_id = enumeration_ids[i]
             grid_id = self.adv_additional.grid_ids[0]
             grid_path = self.adv_additional.configuration.receptor_path
@@ -222,7 +221,6 @@ class StepAutoDockVina(StepBase, BaseModel):
             for mol in mol_supplier:
                 if mol is None:
                     continue
-                cur_enumeration_name = str(mol.GetProp("_Name"))
 
                 # add the information on the actual grid used
                 mol.SetProp(_SBE.ANNOTATION_GRID_ID, str(grid_id))
@@ -286,7 +284,7 @@ class StepAutoDockVina(StepBase, BaseModel):
             config.number_poses,
         ]
 
-        execution_result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_ADE.VINA, arguments=arguments, check=True
         )
         self._delay_file_system(path=tmp_pdbqt_docked)

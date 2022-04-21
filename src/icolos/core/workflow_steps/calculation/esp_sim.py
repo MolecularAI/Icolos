@@ -155,7 +155,6 @@ class StepEspSim(StepBase, BaseModel):
             ref_compound = Chem.AddHs(
                 Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
             )
-            tmp_dir = tempfile.mkdtemp()
             tmp_dirs = []
             for enum in all_enums:
                 tmp_dir = tempfile.mkdtemp()

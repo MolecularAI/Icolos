@@ -66,7 +66,7 @@ class StepDataManipulation(StepIOBase, BaseModel):
 
     def _convert_mae_to_pdb(self):
         converter = StructConvert(prefix_execution=_SEE.SCHRODINGER_MODULE)
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
 
         # find the mae files from the input step and convert to pdb
         for file in self.data.generic.get_files_by_extension("mae"):
@@ -85,12 +85,11 @@ class StepDataManipulation(StepIOBase, BaseModel):
         )
         assert os.path.isfile(self.settings.additional[_SDM.RECEPTOR])
         # create a tmpdir to work in
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         # get compounds from previous step
         conformers = self._unroll_compounds(self.get_compounds(), level="conformers")
         for conf in conformers:
             path = os.path.join(tmp_dir, f"{conf.get_index_string()}.sdf")
-            mol = conf.get_molecule()
             conf.write(path)
             concatenator.concatenate(
                 input_files=[

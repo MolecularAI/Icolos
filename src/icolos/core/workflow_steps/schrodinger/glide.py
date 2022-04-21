@@ -592,7 +592,7 @@ class StepGlide(StepSchrodingerBase, BaseModel):
                 if not enum.get_conformers():
                     num_added += 1
                     self._logger.log(
-                        f"Added dummy conformer for enumeration {enum.get_enumeration_id}!",
+                        f"Added dummy conformer for enumeration {enum.get_enumeration_id()}!",
                         _LE.DEBUG,
                     )
                     dummy_conf = Conformer(

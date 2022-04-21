@@ -3,8 +3,6 @@ from pydantic import BaseModel
 import numpy as np
 from icolos.core.workflow_steps.step import _LE
 
-# TODO: estimator can be either a pytorch model or a sklearn estimator, using skorch wrapping for now, but the skorch API seems fragile in some cases
-
 
 class ActiveLearner(BaseModel):
     """

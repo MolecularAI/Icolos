@@ -204,7 +204,7 @@ o888o  `Y8bood8P'   `Y8bood8P'  o888ooooood8  `Y8bood8P'  8""88888P'
     for line in writeout_lines:
         try:
             width = os.get_terminal_size().columns
-        except:
+        except AttributeError:
             width = 150
 
         print(line.center(width))
