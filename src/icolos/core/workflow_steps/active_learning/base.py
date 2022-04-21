@@ -289,7 +289,8 @@ class ActiveLearningBase(StepBase, BaseModel):
             for comp in compounds:
                 scores = []
                 for enum in comp.get_enumerations():
-                    scores.append(float(enum.get_molecule().GetProp(criteria)))
+                    conf_scores = [float(conf.get_molecule().GetProp(criteria)) for conf in enum.get_conformers()]
+                    scores.append(min(conf_scores))
 
                 # if docking generated no conformers
                 if not scores:
