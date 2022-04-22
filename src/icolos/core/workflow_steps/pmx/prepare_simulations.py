@@ -1,21 +1,16 @@
-from typing import Dict, List, Union
+from typing import List, Union
 from icolos.core.containers.compound import Compound
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import (
-    GromacsEnum,
     StepPMXEnum,
 )
-from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
-from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
 _PSE = StepPMXEnum()
-_SGE = StepGromacsEnum()
-_GE = GromacsEnum()
 
 
 class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
@@ -44,10 +39,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
 
-    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]):
+    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]) -> None:
         # define some constants that depend on whether this is rbfe/abfe
         # for abfe, edge refers to the ligand index
-        # mdp_path = os.path.join(self.work_dir, "input/mdp")
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
         # FIXME: how do we get the replicas for abfe jobs without requiring input every time? inspect the workdir?
         replicas = (

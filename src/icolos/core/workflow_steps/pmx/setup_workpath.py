@@ -1,3 +1,4 @@
+from http.client import TEMPORARY_REDIRECT
 import os
 from typing import List
 from pydantic import BaseModel
@@ -54,6 +55,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         protein = (
             self.get_workflow_object().workflow_data.perturbation_map.get_protein()
         )
+
         protein.write(os.path.join(self.work_dir, "input/protein"))
 
         self._parametrise_protein(protein=protein.get_file_name(), path="input/protein")

@@ -1,6 +1,5 @@
 from concurrent.futures.process import _chain_from_iterable_of_lists
 import json
-from rdkit import Chem
 import os
 import string
 import tempfile
@@ -8,7 +7,7 @@ from typing import List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer, Enumeration
+from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -19,7 +18,9 @@ from icolos.utils.enums.write_out_enums import WriteOutEnum
 from icolos.utils.general.convenience_functions import nested_get
 from icolos.utils.enums.step_initialization_enum import StepInitializationEnum
 from rdkit import Chem
-from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
+from rdkit.Chem.AllChem import (
+    GetMorganFingerprintAsBitVect,
+)
 from sklearn.gaussian_process.kernels import DotProduct
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -103,6 +104,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 criterion=nn.MSELoss,
                 optimizer=torch.optim.Adam,
                 train_split=None,
+                warm_start=True,
                 verbose=0,
                 device=device,
                 max_epochs=100,
@@ -131,17 +133,20 @@ class ActiveLearningBase(StepBase, BaseModel):
         with Chem.SDWriter("compounds.sdf") as writer:
             for idx, comp in enumerate(compound_list):
                 mol = comp[_SALE.MOLECULE]
+                # write the molecules as enumerations
                 mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
                 mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
                 writer.write(mol)
-
         compound_dict = {
             "source": "compounds.sdf",
             "source_type": "file",
             "format": "SDF",
         }
         try:
-            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
+            # if other compound are already specified, add another entry to the list
+            wf_config["workflow"]["steps"][0]["input"]["compounds"].append(
+                compound_dict
+            )
         except KeyError:
             # if no input block in the oracle template, add a blank one first,
             wf_config["workflow"]["steps"][0]["input"] = {}
@@ -199,7 +204,6 @@ class ActiveLearningBase(StepBase, BaseModel):
         :return np.ndarray: return array of scores for each compound from the oracle
         """
         if oracle_type == "pmx_rbfe":
-            # TODO: with the pmx oracle, I think it only makes sense to use star maps, then we can take the ddG values from the hub compounds vs some reference
             oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
@@ -270,7 +274,6 @@ class ActiveLearningBase(StepBase, BaseModel):
             oracle_wf = self._initialize_oracle_workflow(compound_list=compound_list)
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, work_dir=tmp_dir)
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
-            print(final_compounds)
             os.chdir(orig_dir)
 
         else:

@@ -12,13 +12,10 @@ from rdkit import Chem
 import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
-from icolos.utils.enums.write_out_enums import WriteOutEnum
 
 _SALE = StepActiveLearningEnum()
-_WOE = WriteOutEnum()
 
 
 class StepActiveLearning(ActiveLearningBase, BaseModel):
