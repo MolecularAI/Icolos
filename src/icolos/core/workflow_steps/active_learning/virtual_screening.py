@@ -162,7 +162,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             query_idx = query_surrogate(queried_compound_idx)
             print(query_idx)
             queried_compound_idx += query_idx
-            print(queried_compound_idx)
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
             # check evaluation mode or not
@@ -198,7 +197,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             df.to_pickle(
                 os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
             )
-
+            PandasTools.WriteSDF(
+                df,
+                os.path.join(tmp_dir, f"compounds_{replica}_{rnd}.sdf"),
+                molColName=_SALE.MOLECULE,
+            )
             if (
                 self._get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
                 and rnd > 4
@@ -213,11 +216,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         # create a results dataframe to store per-epoch properties
         self._logger.log("Generating results dataframe...", _LE.DEBUG)
-        PandasTools.WriteSDF(
-            df,
-            os.path.join(tmp_dir, f"compounds_rep_{replica}.sdf"),
-            molColName=_SALE.MOLECULE,
-        )
+
         # we have a list of compound IDs per epoch, we want the transpose
         queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
         col_dict = {
@@ -247,7 +246,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
 
         # load fragment lib if provided
-        print("loading fragment library...")
         fragments_libary = (
             PandasTools.LoadSDF(
                 self._get_additional_setting(_SALE.FRAGMENTS),

@@ -1,3 +1,4 @@
+from concurrent.futures.process import _chain_from_iterable_of_lists
 import json
 from rdkit import Chem
 import os
@@ -209,7 +210,18 @@ class ActiveLearningBase(StepBase, BaseModel):
                 .get_perturbation_map()
                 .get_nodes()
             ]
-
+            # TODO: really this should be coupled to the oracle type and should not change
+            criteria = self._get_additional_setting(_SALE.CRITERIA)
+            final_scores = []
+            for conf in final_compounds:
+                try:
+                    final_scores.append(conf._conformer.GetProp(criteria))
+                except KeyError:
+                    self._logger.log(
+                        f"FEP score was not attached to conformer!", _LE.WARNING
+                    )
+                    final_scores.append(0.0)
+            return np.array(final_scores)
         elif oracle_type == "docking":
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
@@ -265,12 +277,12 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
         self._logger.log("Extracting final scores", _LE.DEBUG)
 
-        scores = self._extract_final_scores(
+        scores = self._extract_final_scores_from_compounds(
             final_compounds, self.settings.additional[_SALE.CRITERIA]
         )
         return scores
 
-    def _extract_final_scores(
+    def _extract_final_scores_from_compounds(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
     ) -> np.ndarray:
         """Extract final scores from compounds
@@ -281,22 +293,22 @@ class ActiveLearningBase(StepBase, BaseModel):
         :return np.ndarray: array containing final scores per compound
         """
         top_scores = []
+        for comp in compounds:
+            # extract top score per compound
+            scores = []
+            for enum in comp.get_enumerations():
+                # if conformers attached ,extract from there
+                if enum.get_conformers():
+                    for conf in enum.get_conformers():
+                        try:
+                            conf_score = conf.get_molecule().GetProp(criteria)
+                            scores.append(float(conf_score))
+                        except KeyError:
+                            scores.append(0.0)
+                else:
+                    scores = [0.0]
 
-        if isinstance(compounds[0], Compound):
-            for comp in compounds:
-                scores = []
-                for enum in comp.get_enumerations():
-                    conf_scores = [float(conf.get_molecule().GetProp(criteria)) for conf in enum.get_conformers()]
-                    scores.append(min(conf_scores))
-
-                # if docking generated no conformers
-                if not scores:
-                    scores.append(0.0)
-
-                best_score = max(scores) if highest_is_best else min(scores)
-                top_scores.append(best_score)
-        elif isinstance(compounds[0], Conformer):
-            for conf in compounds:
-                scores.append(float(conf._conformer.GetProp(criteria)))
+            best_score = max(scores) if highest_is_best else min(scores)
+            top_scores.append(best_score)
 
         return np.array(top_scores, dtype=np.float32)
