@@ -100,7 +100,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             sim_path = os.path.dirname(tpr)
             tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
-            for i, file in tpr_files:
+            for i, file in enumerate(tpr_files):
                 single_command = [
                     mdrun_binary,
                     "-s",
