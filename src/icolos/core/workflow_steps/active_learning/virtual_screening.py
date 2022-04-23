@@ -115,7 +115,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
 
             scores = self.query_oracle(
-                query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
+                query_compounds,
+                fragment_lib=fragment_lib,
+                oracle_type=oracle_type,
+                round=rnd,
             )
 
             return scores

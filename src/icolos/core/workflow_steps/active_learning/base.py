@@ -1,6 +1,7 @@
 from concurrent.futures.process import _chain_from_iterable_of_lists
 import json
 import os
+import shutil
 import string
 import tempfile
 from typing import List
@@ -194,6 +195,7 @@ class ActiveLearningBase(StepBase, BaseModel):
         compound_list: List[pd.Series],
         oracle_type: str = "docking",
         fragment_lib: pd.DataFrame = None,
+        round: int = 0,
     ) -> np.ndarray:
         """Main interface method with the oracle, controls initialization and executino
 
@@ -203,7 +205,16 @@ class ActiveLearningBase(StepBase, BaseModel):
         :raises NotImplementedError: Handles unknown oracle types
         :return np.ndarray: return array of scores for each compound from the oracle
         """
+        criteria = self._get_additional_setting(_SALE.CRITERIA)
         if oracle_type == "pmx_rbfe":
+            # test code, append the right tags to the oracle compounds
+            # final_compounds = []
+            # for _ in range(len(compound_list)):
+            #     conf = Conformer(Chem.MolFromSmiles("CCCC"))
+            #     conf.get_molecule().SetProp(criteria, str(np.random.uniform(-5, 5)))
+
+            #     final_compounds.append(conf)
+
             oracle_wf = self._initialize_oracle_workflow(compound_list)
             # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
@@ -215,17 +226,21 @@ class ActiveLearningBase(StepBase, BaseModel):
                 .get_nodes()
             ]
             # TODO: really this should be coupled to the oracle type and should not change
-            criteria = self._get_additional_setting(_SALE.CRITERIA)
             final_scores = []
             for conf in final_compounds:
                 try:
-                    final_scores.append(conf._conformer.GetProp(criteria))
+                    final_scores.append(float(conf.get_molecule().GetProp(criteria)))
                 except KeyError:
                     self._logger.log(
                         f"FEP score was not attached to conformer!", _LE.WARNING
                     )
                     final_scores.append(0.0)
-            return np.array(final_scores)
+            # move the old dir to backup
+            try:
+                shutil.move("output", f"output_{round}")
+            except Exception as e:
+                print("Could not back up output files!, error was ", e)
+            return np.array(final_scores, dtype=np.float32)
         elif oracle_type == "docking":
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
