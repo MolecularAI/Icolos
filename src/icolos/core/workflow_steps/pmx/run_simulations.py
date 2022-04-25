@@ -32,7 +32,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             edges = [e.get_edge_id() for e in self.get_edges()]
         elif self.run_type == "abfe":
             edges = [c.get_index_string() for c in self.get_compounds()]
-        self.sim_type = self.get_additional_setting(_PSE.SIM_TYPE)
+        self.sim_type = self._get_additional_setting(_PSE.SIM_TYPE)
         assert (
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
