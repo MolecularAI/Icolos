@@ -15,7 +15,7 @@ def greedy_acquisition(
     warmup: bool = False,
     epsilon: float = 0.0,
 ) -> np.ndarray:
-    """Implements greedy acquisition by querying model for top predicted points
+    """Implements greedy acquisition by querying model for top predicted points, note that typically we are dealing with affinity prediction so highest is not best.
 
     :param  estimator: SKLearn-type estimator to be queried
     :param np.ndarray X: array of fingerprints for each compound to be predicted by the model
@@ -28,15 +28,17 @@ def greedy_acquisition(
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         indices = range(0, X.shape[0])
-        # return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])
+        # sample indices without replacement
         return np.random.choice(indices, replace=False, size=n_instances)
     else:
         try:
             predictions = estimator.predict(X)
 
         except:
-            _logger.log("estimator not fitted, using random sampling...", _LE.DEBUG)
-            predictions = np.random.uniform(0, 12, X.shape[0])
+            _logger.log(
+                "estimator not fitted, selecting random compounds ...", _LE.DEBUG
+            )
+
             return np.array(
                 [np.random.randint(0, X.shape[0]) for _ in range(n_instances)]
             )
@@ -44,8 +46,8 @@ def greedy_acquisition(
     # zero those predictions we've seen before
     for idx in previous_idx:
         predictions[idx] = 0
-    # smaller before n_instances, largest after
-    sorted_preds = np.argpartition(predictions, -n_instances, axis=0)[-n_instances:]
+    # smaller before n_instances, largest after, take the most negative
+    sorted_preds = np.argpartition(predictions, n_instances, axis=0)[:n_instances]
 
     if epsilon > 0.0:
         # replace that fraction of the predictions with random samples

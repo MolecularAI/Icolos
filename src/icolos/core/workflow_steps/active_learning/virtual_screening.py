@@ -61,7 +61,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
         library = self.construct_fingerprints(library)
         scores = (
-            np.absolute(pd.to_numeric(library[criteria].fillna(0)))
+            pd.to_numeric(library[criteria].fillna(0))
             if criteria is not None
             else []
         )

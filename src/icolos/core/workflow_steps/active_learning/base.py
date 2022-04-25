@@ -133,8 +133,8 @@ class ActiveLearningBase(StepBase, BaseModel):
         with Chem.SDWriter(os.path.join(self.work_dir, "compounds.sdf")) as writer:
             for idx, comp in enumerate(compound_list):
                 mol = comp[_SALE.MOLECULE]
-                # write the molecules as enumerations
-                mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
+                name = comp[_SALE.ID]
+                mol.SetProp(_WOE.RDKIT_NAME, name)
                 mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
                 writer.write(mol)
         compound_dict = {
@@ -207,7 +207,7 @@ class ActiveLearningBase(StepBase, BaseModel):
         criteria = self._get_additional_setting(_SALE.CRITERIA)
         if oracle_type == "pmx_rbfe":
             # test code, append the right tags to the oracle compounds
-            
+
             # output_compounds = []
             # for i in range(len(compound_list)):
             #     # simulate some dropped conformers
@@ -250,7 +250,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                         self._logger.log(
                             f"matched output conformer for mol {comp_name}", _LE.DEBUG
                         )
-                        match_found=True
+                        match_found = True
                 if not match_found:
                     # the enumeration was dropped in the workflow, append the start compound with no tags, will be zeroed
                     final_compounds.append(Conformer(conformer=comp))
