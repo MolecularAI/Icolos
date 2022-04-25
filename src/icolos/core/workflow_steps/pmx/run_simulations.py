@@ -125,7 +125,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     for key, value in self.settings.arguments.parameters.items():
                         single_command.append(str(key))
                         single_command.append(str(value))
-                    single_command.append("\n\n")
+                    single_command.append(f"\n\nrm {os.path.dirname(tpr)}/*#\n\n")
                     job_command += single_command
                 else:
                     self._logger.log(
