@@ -134,8 +134,9 @@ class ActiveLearningBase(StepBase, BaseModel):
             for idx, comp in enumerate(compound_list):
                 mol = comp[_SALE.MOLECULE]
                 name = comp[_SALE.ID]
-                mol.SetProp(_WOE.RDKIT_NAME, name)
+                mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
                 mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
+                mol.SetProp("original_name", name)
                 writer.write(mol)
         compound_dict = {
             "source": os.path.join(self.work_dir, "compounds.sdf"),

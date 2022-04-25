@@ -113,17 +113,24 @@ class PerturbationMap(BaseModel):
         line = line[0]
         return data.index(line)
 
-    def _get_conformer_by_id(self, comp_id: str) -> Optional[Conformer]:
-        # get the compund object based on the ID in the ligand table (compound names). At this stage in the workflow we have only one conformer per enumeration
+    def _get_conformer_by_id(self, comp_id: str) -> Conformer:
+        """return the conformer object from self.data.compounds corresponding to the node in the perturbation map
+
+        :param str comp_id: id of the compound parsed from the map generation
+        :return Conformer: return the conformer object from self.data.compounds
+        """
+        print("comp id", comp_id)
         try:
-            # standard icolos naming convention
+            # if the compounds have come from a previous docking step, they will have this naming convention applied already
             parts = comp_id.split(":")
             compound_id = parts[0]
             enumeration_id = parts[1]
         except:
             # a non-standard compound name has been used
             compound_id = comp_id
+        print("scanning compounds...")
         for compound in self.compounds:
+            print(compound.get_name())
             if compound.get_name().split(":")[0] == compound_id:
                 rtn_compound = compound
                 enums = rtn_compound.get_enumerations()
@@ -152,7 +159,6 @@ class PerturbationMap(BaseModel):
         with open(file_path, "r") as f:
             data = f.readlines()
 
-        start_edge = self._get_line_idx(data, _SFE.EDGE_HEADER_LINE)
         start_node = self._get_line_idx(data, _SFE.NODE_HEADER_LINE)
         stop_node = self._get_line_idx(data, _SFE.SIMULATION_PROTOCOL)
         edge_info_start = self._get_line_idx(data, _SFE.SIMILARITY)
