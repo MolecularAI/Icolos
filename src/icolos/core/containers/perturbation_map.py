@@ -116,7 +116,7 @@ class PerturbationMap(BaseModel):
     def _get_conformer_by_id(self, comp_id: str) -> Optional[Conformer]:
         # get the compund object based on the ID in the ligand table (compound names). At this stage in the workflow we have only one conformer per enumeration
         try:
-            # standard icolos naming conventino
+            # standard icolos naming convention
             parts = comp_id.split(":")
             compound_id = parts[0]
             enumeration_id = parts[1]

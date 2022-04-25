@@ -8,7 +8,7 @@ from typing import List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.compound import Compound, Conformer, Enumeration
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -35,7 +35,6 @@ from torch import nn
 
 _IE = StepInitializationEnum()
 _SALE = StepActiveLearningEnum()
-_WE = WorkflowEnum()
 _WOE = WriteOutEnum()
 
 
@@ -131,7 +130,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             wf_config = json.load(f)
 
         # manually attach the compound objects to the oracle's lead step
-        with Chem.SDWriter("compounds.sdf") as writer:
+        with Chem.SDWriter(os.path.join(self.work_dir, "compounds.sdf")) as writer:
             for idx, comp in enumerate(compound_list):
                 mol = comp[_SALE.MOLECULE]
                 # write the molecules as enumerations
@@ -139,7 +138,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
                 writer.write(mol)
         compound_dict = {
-            "source": "compounds.sdf",
+            "source": os.path.join(self.work_dir, "compounds.sdf"),
             "source_type": "file",
             "format": "SDF",
         }
@@ -208,23 +207,58 @@ class ActiveLearningBase(StepBase, BaseModel):
         criteria = self._get_additional_setting(_SALE.CRITERIA)
         if oracle_type == "pmx_rbfe":
             # test code, append the right tags to the oracle compounds
-            # final_compounds = []
-            # for _ in range(len(compound_list)):
-            #     conf = Conformer(Chem.MolFromSmiles("CCCC"))
-            #     conf.get_molecule().SetProp(criteria, str(np.random.uniform(-5, 5)))
-
-            #     final_compounds.append(conf)
+            
+            # output_compounds = []
+            # for i in range(len(compound_list)):
+            #     # simulate some dropped conformers
+            #     if i not in (2, 4):
+            #         parent_compound = Compound(name=f"{i}", compound_number=i)
+            #         parent_enum = Enumeration(enumeration_id=0)
+            #         parent_enum.set_compound_object(parent_compound)
+            #         conf = Conformer(Chem.MolFromSmiles("CCCC"), conformer_id=0)
+            #         conf.get_molecule().SetProp(criteria, str(np.random.uniform(-5, 5)))
+            #         conf.set_enumeration_object(parent_enum)
+            #         output_compounds.append(conf)
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
-            # we have a fully initialized step with the compounds loaded.  Execute them
+            # # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
 
-            final_compounds = [
+            output_compounds = [
                 n.conformer
                 for n in oracle_wf._initialized_steps[-1]
                 .get_perturbation_map()
                 .get_nodes()
             ]
+            original_compounds = [
+                mol
+                for mol in Chem.SDMolSupplier(
+                    os.path.join(self.work_dir, "compounds.sdf")
+                )
+            ]
+            final_compounds = []
+            for comp in original_compounds:
+                # look through the final compounds and find the one with the right comp/enumeration
+                comp_name = comp.GetProp(_WOE.RDKIT_NAME)
+                match_found = False
+                for out_comp in output_compounds:
+                    if (
+                        comp_name
+                        == out_comp.get_enumeration_object().get_index_string()
+                    ):
+                        final_compounds.append(out_comp)
+                        self._logger.log(
+                            f"matched output conformer for mol {comp_name}", _LE.DEBUG
+                        )
+                        match_found=True
+                if not match_found:
+                    # the enumeration was dropped in the workflow, append the start compound with no tags, will be zeroed
+                    final_compounds.append(Conformer(conformer=comp))
+                    self._logger.log(
+                        f"No conformer belonging to enumeration {comp_name} found!",
+                        _LE.WARNING,
+                    )
+
             # TODO: really this should be coupled to the oracle type and should not change
             final_scores = []
             for conf in final_compounds:
