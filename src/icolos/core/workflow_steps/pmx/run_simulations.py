@@ -51,13 +51,17 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             max_tries=self.execution.failure_policy.n_tries
         )
         self._subtask_container.load_data(job_pool)
-
+        result_checker = (
+            self._inspect_dhdl_files
+            if self.sim_type == "transitions"
+            else self._inspect_log_files
+        )
         self._execute_pmx_step_parallel(
             run_func=self._execute_command,
             step_id="pmx_run_simulations",
             # for run_simulations, because batch efficiency is crucial, we do this prior to batching
             prune_completed=False,
-            result_checker=self._inspect_log_files,
+            result_checker=result_checker,
         )
 
     def get_mdrun_command(
