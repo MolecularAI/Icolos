@@ -162,7 +162,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         else:
             # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
-            print("preparing transition")
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
