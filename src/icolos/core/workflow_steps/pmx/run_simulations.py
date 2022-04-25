@@ -125,7 +125,8 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     for key, value in self.settings.arguments.parameters.items():
                         single_command.append(str(key))
                         single_command.append(str(value))
-                    single_command.append("\n\n")
+                    single_command.append(f"\n\nrm {os.path.dirname(tpr)}/*#\n\n")
+
                     job_command += single_command
                 else:
                     self._logger.log(
@@ -162,7 +163,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         else:
             # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
-            print("preparing transition")
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
