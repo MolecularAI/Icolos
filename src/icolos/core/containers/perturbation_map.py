@@ -119,7 +119,6 @@ class PerturbationMap(BaseModel):
         :param str comp_id: id of the compound parsed from the map generation
         :return Conformer: return the conformer object from self.data.compounds
         """
-        print("comp id", comp_id)
         try:
             # if the compounds have come from a previous docking step, they will have this naming convention applied already
             parts = comp_id.split(":")
@@ -128,9 +127,7 @@ class PerturbationMap(BaseModel):
         except:
             # a non-standard compound name has been used
             compound_id = comp_id
-        print("scanning compounds...")
         for compound in self.compounds:
-            print(compound.get_name())
             if compound.get_name().split(":")[0] == compound_id:
                 rtn_compound = compound
                 enums = rtn_compound.get_enumerations()
