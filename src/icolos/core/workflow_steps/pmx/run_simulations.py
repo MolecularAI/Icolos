@@ -4,14 +4,12 @@ from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
 from icolos.utils.enums.program_parameters import (
-    SlurmEnum,
     StepPMXEnum,
 )
 from icolos.utils.execute_external.slurm_executor import SlurmExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
-_SE = SlurmEnum()
 _PSE = StepPMXEnum()
 
 
@@ -34,7 +32,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             edges = [e.get_edge_id() for e in self.get_edges()]
         elif self.run_type == "abfe":
             edges = [c.get_index_string() for c in self.get_compounds()]
-        self.sim_type = self.settings.additional[_PSE.SIM_TYPE]
+        self.sim_type = self.get_additional_setting(_PSE.SIM_TYPE)
         assert (
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
@@ -53,12 +51,17 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             max_tries=self.execution.failure_policy.n_tries
         )
         self._subtask_container.load_data(job_pool)
+        result_checker = (
+            self._inspect_dhdl_files
+            if self.sim_type == "transitions"
+            else self._inspect_log_files
+        )
         self._execute_pmx_step_parallel(
             run_func=self._execute_command,
             step_id="pmx_run_simulations",
             # for run_simulations, because batch efficiency is crucial, we do this prior to batching
             prune_completed=False,
-            result_checker=self._inspect_log_files,
+            result_checker=result_checker,
         )
 
     def get_mdrun_command(
@@ -100,28 +103,35 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
             for i, file in enumerate(tpr_files):
-                single_command = [
-                    mdrun_binary,
-                    "-s",
-                    file,
-                    "-e",
-                    ener,
-                    "-c",
-                    confout,
-                    "-dhdl",
-                    f"dhdl{i+1}.xvg",
-                    "-o",
-                    trr,
-                    "-g",
-                    mdlog,
-                ]
-                for flag in self.settings.arguments.flags:
-                    single_command.append(str(flag))
-                for key, value in self.settings.arguments.parameters.items():
-                    single_command.append(str(key))
-                    single_command.append(str(value))
-                single_command.append("\n\n")
-                job_command += single_command
+                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i}.xvg")
+                if not os.path.isfile(dhdl_file):
+                    single_command = [
+                        mdrun_binary,
+                        "-s",
+                        file,
+                        "-e",
+                        ener,
+                        "-c",
+                        confout,
+                        "-dhdl",
+                        f"dhdl{i+1}.xvg",
+                        "-o",
+                        trr,
+                        "-g",
+                        mdlog,
+                    ]
+                    for flag in self.settings.arguments.flags:
+                        single_command.append(str(flag))
+                    for key, value in self.settings.arguments.parameters.items():
+                        single_command.append(str(key))
+                        single_command.append(str(value))
+                    single_command.append("\n\n")
+                    job_command += single_command
+                else:
+                    self._logger.log(
+                        f"dhdl file for transition {i} in {os.path.dirname(mdlog)} already exists, skipping",
+                        _LE.DEBUG,
+                    )
 
         return job_command
 
@@ -142,12 +152,17 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         confout = "{0}/confout.gro".format(simpath)
         mdlog = "{0}/md.log".format(simpath)
         trr = "{0}/traj.trr".format(simpath)
-        try:
-            with open(os.path.join(simpath, "md.log"), "r") as f:
-                lines = f.readlines()
-            sim_complete = any(["Finished mdrun" in l for l in lines])
-        except FileNotFoundError:
+        if self.sim_type != "transitions":
+            try:
+                with open(os.path.join(simpath, "md.log"), "r") as f:
+                    lines = f.readlines()
+                sim_complete = any(["Finished mdrun" in l for l in lines])
+            except FileNotFoundError:
+                sim_complete = False
+        else:
+            # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
+            print("preparing transition")
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
@@ -213,7 +228,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         for subtask in jobs:
             subtask_results = []
             for sim in subtask:
-                location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
+                location = os.path.join(os.path.dirname(sim), "md.log")
                 if os.path.isfile(location):
                     with open(location, "r") as f:
                         lines = f.readlines()
@@ -222,5 +237,28 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     )
                 else:
                     subtask_results.append(False)
+            results.append(subtask_results)
+        return results
+
+    def _inspect_dhdl_files(self, jobs: List[str]) -> List[List[bool]]:
+        # check there is a dhdl file for each tpr file
+        results = []
+        for subtask in jobs:
+            subtask_results = []
+            for sim in subtask:
+
+                location = os.path.join(os.path.dirname(sim))
+                n_snapshots = len(
+                    [f for f in os.listdir(location) if f.endswith("tpr")]
+                )
+                dhdl_files = [f"dhdl{i}.xvg" for i in range(1, n_snapshots + 1)]
+
+                if not all(
+                    [os.path.isfile(os.path.join(location, f)) for f in dhdl_files]
+                ):
+                    subtask_results.append(False)
+                else:
+                    subtask_results.append(True)
+
             results.append(subtask_results)
         return results
