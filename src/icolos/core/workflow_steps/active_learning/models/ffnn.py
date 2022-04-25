@@ -19,3 +19,6 @@ except ImportError:
     print(
         "Warning: PyTorch imports failed - ensure you have pytorch + pytorch lightning installed in your environment if you are expecting to use them!"
     )
+
+    class FeedForwardNet:
+        pass
