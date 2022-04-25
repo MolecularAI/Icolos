@@ -49,15 +49,6 @@ class SDConvertUtil:
         ]
         self.execute(arguments=arguments)
 
-    def pdb2mae(self, pdb_file: str, mae_file: str):
-        arguments = [
-            "".join([_SEE.SDCONVERT_I, _SEE.SDCONVERT_FORMAT_SD]),
-            pdb_file,
-            "".join([_SEE.SDCONVERT_O, _SEE.SDCONVERT_FORMAT_MAE]),
-            mae_file,
-        ]
-        self.execute(arguments=arguments)
-
     def sdf2pdb(self, sdf_file: str, pdb_file: str):
         arguments = [
             "".join([_SEE.SDCONVERT_I, _SEE.SDCONVERT_FORMAT_SD]),

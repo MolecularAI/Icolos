@@ -75,6 +75,8 @@ class Edge(BaseModel):
     snapCoreRmsd: str = None
     bidirSnapCoreRmsd: str = None
     status: _PE = _PE.STATUS_SUCCESS
+    ddG: float = 0.0
+    ddG_err: float = 0.0
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -174,18 +176,6 @@ class PerturbationMap(BaseModel):
 
         data = split_data
 
-        map_info = pd.DataFrame(
-            data[start_edge + 3 : start_node - 1],
-            index=None,
-            columns=[
-                "Short ID",
-                "ligand1 -> ligand2",
-                "Bennett ddG",
-                "Cycle Closure ddG",
-                "Complex dG",
-                "Solvent dG",
-            ],
-        )
         self.node_df = pd.DataFrame(
             data[start_node + 3 : stop_node - 1],
             index=None,

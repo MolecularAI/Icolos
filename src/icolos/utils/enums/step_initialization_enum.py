@@ -6,7 +6,7 @@ from icolos.core.workflow_steps.autodockvina.target_preparation import (
 from icolos.core.workflow_steps.calculation.jazzy import StepJazzy
 from icolos.core.workflow_steps.calculation.kallisto import StepKallisto
 from icolos.core.workflow_steps.ccdc.docking import StepGold
-from icolos.core.workflow_steps.calculation.electrostatics.esp_sim import StepEspSim
+from icolos.core.workflow_steps.calculation.esp_sim import StepEspSim
 from icolos.core.workflow_steps.calculation.feature_counter import StepFeatureCounter
 from icolos.core.workflow_steps.gromacs.do_dssp import StepGMXDoDSSP
 from icolos.core.workflow_steps.gromacs.mmpbsa import StepGMXmmpbsa

@@ -107,7 +107,7 @@ class StepXTB(StepConfgenBase, BaseModel):
             arguments
         )  # add additional parameters from config
 
-        result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_EE.XTB, arguments=arguments, check=False
         )
         # for line in result.stdout.split("\n"):

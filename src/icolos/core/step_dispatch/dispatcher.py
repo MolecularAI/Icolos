@@ -1,6 +1,5 @@
 from typing import List
 from pydantic.main import BaseModel
-from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 from icolos.core.workflow_steps.step import _LE
@@ -69,7 +68,7 @@ class StepDispatcher(StepBase, BaseModel):
 
             jobs = self._prepare_batch(next_batch)
 
-            result = parallelizer.execute_parallel(jobs=jobs)
+            parallelizer.execute_parallel(jobs=jobs)
 
             # TODO: sucessful execution of each step is not explicitly checked,
             # the step is responsible for throwing errors if something has gone wrong

@@ -42,8 +42,6 @@ class WorkFlow(BaseAgent, BaseModel):
         self._initialized_steps = []
 
     def initialize(self):
-        # this feels hacky but it fixes a circular import and allows a step in the workflow
-        # to create other workflows
         from icolos.core.steps_utils import initialize_step_from_dict
 
         super().initialize()

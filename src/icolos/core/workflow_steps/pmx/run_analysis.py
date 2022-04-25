@@ -16,7 +16,7 @@ _PSE = StepPMXEnum()
 
 class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     """
-    Analyses map, returns both a summary and a full results dataframe, written to top level of work_dir
+    Analyses map, returns both a summary and a full results dataframe, written to top level of work_dir, and attaches properties to the compound
     """
 
     results_summary: pd.DataFrame = None
@@ -45,7 +45,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             step_id="pmx_run_analysis",
             result_checker=self._check_result,
         )
-        self.analysis_summary(edges)
+        self.analysis_summary(self.get_edges())
 
     def _run_analysis_script(
         self, analysispath, stateApath, stateBpath, bVerbose=False
@@ -56,7 +56,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         oB = "{0}/integ1.dat".format(analysispath)
         wplot = "{0}/wplot.png".format(analysispath)
         o = "{0}/results.txt".format(analysispath)
-        args = " ".join(self.settings.arguments.flags)
+        # TODO: at the moment we ignore flags from the command line
+        # args = " ".join(self.settings.arguments.flags)
 
         cmd = "$PMX analyse  --quiet -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
             fA, fB, o, oA, oB, wplot, 298, 100
@@ -109,7 +110,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 _LE.WARNING,
             )
 
-    def _summarize_results(self, edges):
+    def _summarize_results(self, edges: List[Edge]):
         bootnum = 1000
         for edge in edges:
             for wp in self.therm_cycle_branches:
@@ -119,7 +120,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 distra = []
                 distrb = []
                 for r in range(1, self.get_perturbation_map().replicas + 1):
-                    rowName = "{0}_{1}_{2}".format(edge, wp, r)
+                    rowName = "{0}_{1}_{2}".format(edge.get_edge_id(), wp, r)
                     dg.append(self.results_all.loc[rowName, "val"])
                     erra.append(self.results_all.loc[rowName, "err_analyt"])
                     errb.append(self.results_all.loc[rowName, "err_boot"])
@@ -138,7 +139,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                         )
                     )
 
-                rowName = "{0}_{1}".format(edge, wp)
+                rowName = "{0}_{1}".format(edge.get_edge_id(), wp)
                 distra = np.array(distra).flatten()
                 distrb = np.array(distrb).flatten()
 
@@ -156,16 +157,19 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     )
 
             #### also collect self.results_summary
-            rowNameWater = "{0}_{1}".format(edge, "ligand")
-            rowNameProtein = "{0}_{1}".format(edge, "complex")
+            rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
+            rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
             dg = (
                 self.results_all.loc[rowNameProtein, "val"]
                 - self.results_all.loc[rowNameWater, "val"]
             )
+            edge.ddG = dg
+            edge.node_to.get_conformer().SetProp("ddG", dg)
             erra = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
             )
+            edge.ddG_err = erra
             errb = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
@@ -177,10 +181,10 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             self.results_summary.loc[rowName, "val"] = dg
             self.results_summary.loc[rowName, "err_analyt"] = erra
             self.results_summary.loc[rowName, "err_boot"] = errb
-            print(self.results_summary)
 
-    def analysis_summary(self, edges):
-        for edge in edges:
+    def analysis_summary(self, edges: List[Edge]):
+        edge_ids = [e.get_edge_id() for e in edges]
+        for edge in edge_ids:
             for r in range(1, self.get_perturbation_map().replicas + 1):
                 for wp in self.therm_cycle_branches:
                     analysispath = "{0}/analyse{1}".format(
@@ -196,6 +200,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         # the values have been collected now
         # let's calculate ddGs
         self._summarize_results(edges)
+        # compare with experimental results automatically if provided
         try:
             if "exp_results" in self.settings.additional.keys() and os.path.isfile(
                 self.settings.additional["exp_results"]

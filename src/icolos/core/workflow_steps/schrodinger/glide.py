@@ -584,6 +584,29 @@ class StepGlide(StepSchrodingerBase, BaseModel):
                             )
                             break
 
+    def _fill_dummy_conformers(self):
+        # if any enumerations have not got poses attached by this point, docking failed.  Attach a dummy conformer with the same mol object as the enumeration with gscore = 0
+        num_added = 0
+        for compound in self.get_compounds():
+            for enum in compound.get_enumerations():
+                if not enum.get_conformers():
+                    num_added += 1
+                    self._logger.log(
+                        f"Added dummy conformer for enumeration {enum.get_enumeration_id()}!",
+                        _LE.DEBUG,
+                    )
+                    dummy_conf = Conformer(
+                        conformer=enum.get_molecule(), conformer_id=0
+                    )
+                    dummy_conf.get_molecule().SetProp(
+                        _SBE.ANNOTATION_TAG_DOCKING_SCORE, str(0.0)
+                    )
+                    dummy_conf.get_molecule().SetProp(
+                        _SGE.GLIDE_DOCKING_SCORE, str(0.0)
+                    )
+                    enum.add_conformer(dummy_conf)
+        self._logger.log(f"Added {num_added} dummy conformers", _LE.DEBUG)
+
     def _sort_conformers(self):
         # sort the conformers (best to worst) and update their names to contain the conformer id
         # -> <compound>:<enumeration>:<conformer_number>
@@ -630,6 +653,8 @@ class StepGlide(StepSchrodingerBase, BaseModel):
 
             # do the logging
             self._log_execution(grid_id=grid_id, number_grids=len(gridfiles))
+
+        self._fill_dummy_conformers()
 
         # sort the conformers loaded to the enumerations
         self._sort_conformers()
