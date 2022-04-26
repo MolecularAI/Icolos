@@ -31,8 +31,8 @@ class SlurmExecutor(ExecutorBase):
         additional_lines: List,
         prefix_execution=None,
         binary_location=None,
-        n_tries: int = 50,
-        retry_wait_seconds: int = 10,
+        wait_low: int = 5,
+        wait_high: int = 30,
     ):
         super().__init__(prefix_execution=None, binary_location=None)
 
@@ -47,8 +47,16 @@ class SlurmExecutor(ExecutorBase):
         self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
-        self.n_tries = n_tries
-        self.retry_wait_seconds = retry_wait_seconds
+        self.wait_low = wait_low
+        self.wait_high = wait_high
+
+        # check if the machine can reach slurm
+        self.slurm_available = self.is_available()
+        if self.slurm_available:
+            logger.log(
+                "Warning - Slurm was not found, jobs will be run locally!",
+                _LE.WARNING,
+            )
 
     def execute(
         self,
@@ -68,40 +76,31 @@ class SlurmExecutor(ExecutorBase):
             tmpfile = self.prepare_batch_script(
                 command, arguments, pipe_input, location
             )
-        if self.is_available():
+
+        if self.slurm_available:
             launch_command = f"sbatch {tmpfile}"
         else:
+
+            launch_command = f"bash {tmpfile}"
+
+        # prevent slurm from being overloaded, add a random delay from a uniform distribution
+        delay = np.random.uniform(self.wait_low, self.wait_high)
+        time.sleep(delay)
+
+        # execute the batch script
+        result = super().execute(
+            # do not enforce checking here,
+            command=launch_command,
+            arguments=[],
+            location=location,
+            check=False,
+        )
+        if result.returncode != 0:
+            # something has gone wrong with submitting the slurm script
             logger.log(
-                "Warning - Slurm was not found, falling back to local execution!",
+                f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
                 _LE.WARNING,
             )
-            launch_command = f"bash {tmpfile}"
-        # execute the batch script
-        for i in range(self.n_tries):
-            result = super().execute(
-                # do not enforce checking here,
-                command=launch_command,
-                arguments=[],
-                location=location,
-                check=False,
-            )
-            if result.returncode == 0:
-                break
-            else:
-                # something has gone wrong with submitting the slurm script
-                logger.log(
-                    f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
-                    _LE.WARNING,
-                )
-                # sleep and retry
-                # add a stochastic delay to avoid overloading the slurm daemon
-                # delay = np.random.uniform(5, 20)
-                time.sleep(self.retry_wait_seconds)
-                logger.log(
-                    f"Retrying submission for job {tmpfile}, attempt {i+1}/5",
-                    _LE.DEBUG,
-                )
-
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
