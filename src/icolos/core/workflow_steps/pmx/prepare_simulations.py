@@ -51,11 +51,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         )
 
         for edge in jobs:
-
             for state in self.states:
                 for r in range(1, replicas + 1):
                     for wp in self.therm_cycle_branches:
-
                         toppath = self._get_specific_path(
                             workPath=self.work_dir, edge=edge, wp=wp
                         )

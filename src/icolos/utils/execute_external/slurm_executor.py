@@ -8,6 +8,7 @@ import subprocess
 from typing import List
 import time
 from tempfile import mkstemp
+import numpy as np
 
 _SE = SlurmEnum()
 logger = StepLogger()
@@ -73,7 +74,10 @@ class SlurmExecutor(ExecutorBase):
             launch_command = f"bash {tmpfile}"
         # execute the batch script
         result = super().execute(
-            command=launch_command, arguments=[], location=location, check=check
+            command=launch_command,
+            arguments=[],
+            location=location,
+            check=False,
         )
         if result.returncode != 0:
             # something has gone wrong with submitting the slurm script

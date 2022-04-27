@@ -3,12 +3,13 @@ import numpy as np
 from icolos.loggers.steplogger import StepLogger
 from icolos.core.workflow_steps.step import _LE
 from scipy.stats import norm
+from modAL import ActiveLearner
 
 _logger = StepLogger()
 
 
 def greedy_acquisition(
-    estimator,
+    learner: ActiveLearner,
     X: np.ndarray,
     previous_idx: List[int],
     n_instances: int,
@@ -28,24 +29,26 @@ def greedy_acquisition(
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         indices = range(0, X.shape[0])
-        # return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])
         return np.random.choice(indices, replace=False, size=n_instances)
     else:
         try:
-            predictions = estimator.predict(X)
+            predictions = learner.predict(X)
 
         except:
-            _logger.log("estimator not fitted, using random sampling...", _LE.DEBUG)
-            predictions = np.random.uniform(0, 12, X.shape[0])
-            return np.array(
-                [np.random.randint(0, X.shape[0]) for _ in range(n_instances)]
+            _logger.log(
+                "estimator not fitted, selecting random compounds ...", _LE.DEBUG
             )
+
+            return np.random.choice(indices, replace=False, size=n_instances)
 
     # zero those predictions we've seen before
     for idx in previous_idx:
         predictions[idx] = 0
-    # smaller before n_instances, largest after
-    sorted_preds = np.argpartition(predictions, -n_instances, axis=0)[-n_instances:]
+    # smaller before n_instances, largest after, take the most negative
+    sorted_preds = np.argpartition(predictions, n_instances, axis=0).reshape(-1)[
+        :n_instances
+    ]
+    print("sorted preds", sorted_preds.shape, predictions[sorted_preds])
 
     if epsilon > 0.0:
         # replace that fraction of the predictions with random samples
@@ -67,12 +70,11 @@ def greedy_acquisition(
 
 
 def expected_improvement(
-    estimator,
+    learner: ActiveLearner,
     X: np.ndarray,
     previous_idx: List[int],
     n_instances: int,
     warmup: bool = False,
-    n_repeats: int = 5,
     highest_is_best: bool = False,
 ) -> np.ndarray:
     """Select new points to acquire based on expected improvement
@@ -90,9 +92,16 @@ def expected_improvement(
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])
 
-    subEstimates = np.array([estimator.predict(np.array(X)) for _ in range(n_repeats)])
-    stdev = np.std(subEstimates, axis=0).reshape((-1))
-    y_hat = np.array(estimator.predict(X))
+    estimator = learner.estimator
+    subestimates = []
+    estimators = estimator.estimators_
+
+    for i in range(len(estimators)):
+        estimator.estimators_ = estimators[0 : i + 1]
+        subestimates.append(estimator.predict(X))
+    subestimates = np.array(subestimates)
+    stdev = np.std(subestimates, axis=0).reshape((-1))
+    y_hat = np.array(learner.predict(X))
     mu = np.mean(y_hat)
     y_best = np.max(y_hat) if highest_is_best else np.min(y_hat)
     gamma = (mu - y_best) / stdev
@@ -101,4 +110,4 @@ def expected_improvement(
     for idx in previous_idx:
         ei[idx] = 0
     # smaller before n_instances, largest after
-    return np.argpartition(ei, -n_instances, axis=0)[-n_instances:]
+    return np.argpartition(ei, n_instances, axis=0).reshape(-1)[:n_instances]

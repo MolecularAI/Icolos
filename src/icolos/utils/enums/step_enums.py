@@ -1046,6 +1046,7 @@ class StepActiveLearningEnum:
     WARMUP = "warmup"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"
+    ACQUISITION_FUNCTION = "acquisition_function"
     MODEL = "model"
     EVALUATE = "evaluate"
     CRITERIA = "criteria"

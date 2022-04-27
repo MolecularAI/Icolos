@@ -23,7 +23,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
         self._check_backend_availability()
 
     def execute(self):
-        tmp_dir = self._prepare_tmpdir()
+        tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
         self.write_input_files(tmp_dir, topol=topol)
 

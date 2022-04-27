@@ -67,7 +67,7 @@ class Test_Jazzy(unittest.TestCase):
         )
         self.assertEqual(
             jazzy_step.get_compounds()[0][0][0].get_molecule().GetProp(_JE.RESULT_SDX),
-            "1.4151"
+            "1.4151",
         )
 
         # check SDF write-out

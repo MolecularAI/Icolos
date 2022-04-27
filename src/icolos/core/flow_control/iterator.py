@@ -154,7 +154,7 @@ class StepIterator(FlowControlBase, BaseModel):
 
         elif self.iter_settings.iter_mode == _IE.SINGLE:
             raise NotImplementedError
-           
+
         else:
             raise NotImplementedError
 

@@ -3,7 +3,7 @@ from typing import Callable, List
 from icolos.core.containers.generic import GenericData
 from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from pydantic import BaseModel
@@ -15,7 +15,6 @@ from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
-_SBE = StepBaseEnum
 _ERE = ExecutionPlatformEnum
 
 

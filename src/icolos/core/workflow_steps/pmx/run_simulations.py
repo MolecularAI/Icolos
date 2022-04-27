@@ -34,32 +34,38 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             edges = [e.get_edge_id() for e in self.get_edges()]
         elif self.run_type == "abfe":
             edges = [c.get_index_string() for c in self.get_compounds()]
-        self.sim_type = self.settings.additional[_PSE.SIM_TYPE]
+        self.sim_type = self._get_additional_setting(_PSE.SIM_TYPE)
         assert (
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
 
         # prepare and pool jobscripts, unroll replicas,  etc
-        job_pool = self._prepare_job_pool(edges)
-        self._logger.log(
-            f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations",
-            _LE.DEBUG,
-        )
-        # run everything through in one batch, with multiple edges per call
-        self.execution.parallelization.max_length_sublists = int(
-            np.floor(len(job_pool) / self._get_number_cores())
-        )
-        self._subtask_container = SubtaskContainer(
-            max_tries=self.execution.failure_policy.n_tries
-        )
-        self._subtask_container.load_data(job_pool)
-        self._execute_pmx_step_parallel(
-            run_func=self._execute_command,
-            step_id="pmx_run_simulations",
-            # for run_simulations, because batch efficiency is crucial, we do this prior to batching
-            prune_completed=False,
-            result_checker=self._inspect_log_files,
-        )
+        for branch in self.therm_cycle_branches:
+            job_pool = self._prepare_job_pool(edges, branch=branch)
+            self._logger.log(
+                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
+                _LE.DEBUG,
+            )
+            # run everything through in one batch, with multiple edges per call
+            self.execution.parallelization.max_length_sublists = int(
+                np.floor(len(job_pool) / self._get_number_cores())
+            )
+            self._subtask_container = SubtaskContainer(
+                max_tries=self.execution.failure_policy.n_tries
+            )
+            self._subtask_container.load_data(job_pool)
+            result_checker = (
+                self._inspect_dhdl_files
+                if self.sim_type == "transitions"
+                else self._inspect_log_files
+            )
+            self._execute_pmx_step_parallel(
+                run_func=self._execute_command,
+                step_id="pmx_run_simulations",
+                # for run_simulations, because batch efficiency is crucial, we do this prior to batching
+                prune_completed=False,
+                result_checker=result_checker,
+            )
 
     def get_mdrun_command(
         self,
@@ -73,7 +79,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         mdrun_binary = self._get_additional_setting(
             _PSE.MDRUN_EXECUTABLE, default="gmx mdrun"
         )
-        # EM
         if self.sim_type in ("em", "eq", "npt", "nvt"):
 
             job_command = [
@@ -100,29 +105,36 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             sim_path = os.path.dirname(tpr)
             tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
-            for i, file in tpr_files:
-                single_command = [
-                    mdrun_binary,
-                    "-s",
-                    file,
-                    "-e",
-                    ener,
-                    "-c",
-                    confout,
-                    "-dhdl",
-                    f"dhdl{i+1}.xvg",
-                    "-o",
-                    trr,
-                    "-g",
-                    mdlog,
-                ]
-                for flag in self.settings.arguments.flags:
-                    single_command.append(str(flag))
-                for key, value in self.settings.arguments.parameters.items():
-                    single_command.append(str(key))
-                    single_command.append(str(value))
-                single_command.append("\n\n")
-                job_command += single_command
+            for i, file in enumerate(tpr_files):
+                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i}.xvg")
+                if not os.path.isfile(dhdl_file):
+                    single_command = [
+                        mdrun_binary,
+                        "-s",
+                        file,
+                        "-e",
+                        ener,
+                        "-c",
+                        confout,
+                        "-dhdl",
+                        f"dhdl{i+1}.xvg",
+                        "-o",
+                        trr,
+                        "-g",
+                        mdlog,
+                    ]
+                    for flag in self.settings.arguments.flags:
+                        single_command.append(str(flag))
+                    for key, value in self.settings.arguments.parameters.items():
+                        single_command.append(str(key))
+                        single_command.append(str(value))
+                    single_command.append(f"\n\nrm {os.path.dirname(tpr)}/*#\n\n")
+                    job_command += single_command
+                else:
+                    self._logger.log(
+                        f"dhdl file for transition {i} in {os.path.dirname(mdlog)} already exists, skipping",
+                        _LE.DEBUG,
+                    )
 
         return job_command
 
@@ -169,7 +181,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str]):
+    def _prepare_job_pool(self, edges: List[str], branch: str):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -177,14 +189,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         batch_script_paths = []
         for edge in edges:
+            # for branch in self.therm_cycle_branches:
             for r in range(1, replicas + 1):
                 for state in self.states:
-                    for branch in self.therm_cycle_branches:
-                        path = self._prepare_single_job(
-                            edge=edge, wp=branch, state=state, r=r
-                        )
-                        if path is not None:
-                            batch_script_paths.append(path)
+                    path = self._prepare_single_job(
+                        edge=edge, wp=branch, state=state, r=r
+                    )
+                    if path is not None:
+                        batch_script_paths.append(path)
         return batch_script_paths
 
     def _execute_command(self, jobs: List[str]):

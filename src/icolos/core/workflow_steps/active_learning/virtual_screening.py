@@ -61,9 +61,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
         library = self.construct_fingerprints(library)
         scores = (
-            np.absolute(pd.to_numeric(library[criteria].fillna(0)))
-            if criteria is not None
-            else []
+            pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else []
         )
 
         return library, scores
@@ -100,7 +98,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
         def get_precomputed_scores():
             self._logger.log("Retrieving scores from precomputed data...", _LE.INFO)
-            scores = np.absolute(
+            scores = np.array(
                 [
                     float(lib.iloc[int(idx)][self.settings.additional[_SALE.CRITERIA]])
                     for idx in query_idx
@@ -115,7 +113,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
 
             scores = self.query_oracle(
-                query_compounds, fragment_lib=fragment_lib, oracle_type=oracle_type
+                query_compounds,
+                fragment_lib=fragment_lib,
+                oracle_type=oracle_type,
+                round=rnd,
             )
 
             return scores
@@ -174,11 +175,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
-                # what fraction of the top1% hits have been found?
+                # what fraction of the top1% hits are in the queried dataset?
                 hits_queried = (
                     np.isin(
-                        queried_compound_idx,
                         top_1_idx,
+                        queried_compound_idx,
                     ).sum()
                     / len(top_1_idx)
                 ) * 100
@@ -240,7 +241,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if scores is not None:
             top_1_percent = int(0.01 * len(scores))
-            top_1_idx = np.argpartition(scores, -top_1_percent)[-top_1_percent:]
+            # this assumes lowest is best
+            top_1_idx = np.argpartition(scores, top_1_percent)[:top_1_percent]
+            print(scores[top_1_idx])
 
         # load fragment lib if provided
         fragments_libary = (
