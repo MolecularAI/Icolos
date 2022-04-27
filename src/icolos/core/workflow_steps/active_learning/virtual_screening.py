@@ -158,7 +158,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 else n_instances
             )
             query_idx = query_surrogate(queried_compound_idx)
-            print(query_idx)
+            self._logger.log(f"queried compound indices are {query_idx}", _LE.DEBUG)
             queried_compound_idx += query_idx
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
 
@@ -239,11 +239,10 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         )
         lib, scores = self._parse_library(criteria=criteria)
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
-        if scores is not None:
+        if scores:
             top_1_percent = int(0.01 * len(scores))
             # this assumes lowest is best
             top_1_idx = np.argpartition(scores, top_1_percent)[:top_1_percent]
-            print(scores[top_1_idx])
 
         # load fragment lib if provided
         fragments_libary = (
