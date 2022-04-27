@@ -85,10 +85,12 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         :return Callable: Functino that executes the acquisition function
         """
-        acq_fn = self._get_additional_setting(_SALE.ACQUISITION_FUNCTION)
-        if acq_fn.lower() == "greedy":
+        acq_fn = self._get_additional_setting(
+            _SALE.ACQUISITION_FUNCTION, default=_SALE.GREEDY
+        )
+        if acq_fn.lower() == _SALE.GREEDY:
             return greedy_acquisition
-        elif acq_fn.lower() == "ei":
+        elif acq_fn.lower() == _SALE.EI:
             return expected_improvement
         else:
             raise ValueError(f"Acquisition method {acq_fn} is not supported!")
