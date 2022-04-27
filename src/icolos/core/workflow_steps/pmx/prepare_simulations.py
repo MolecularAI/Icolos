@@ -125,7 +125,6 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             output_files.append(f"ligand/stateB/run{i}/{sim_type}/tpr.tpr")
             output_files.append(f"complex/stateA/run{i}/{sim_type}/tpr.tpr")
             output_files.append(f"complex/stateB/run{i}/{sim_type}/tpr.tpr")
-        print(output_files)
         results = []
         for subjob in batch:
             subjob_results = []
