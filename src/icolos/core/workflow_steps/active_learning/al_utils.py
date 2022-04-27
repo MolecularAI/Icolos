@@ -77,6 +77,7 @@ def expected_improvement(
     n_instances: int,
     warmup: bool = False,
     highest_is_best: bool = False,
+    **kwargs
 ) -> np.ndarray:
     """Select new points to acquire based on expected improvement
 
@@ -89,6 +90,7 @@ def expected_improvement(
     :return np.ndarray: array of top predictions from the estimator
     """
     # if no stdev implemented (only rf + GP can do this as std), generate the standard deviation from repeated sampling
+    # TODO: at the moment this will only work with RF
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])

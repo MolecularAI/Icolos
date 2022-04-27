@@ -243,6 +243,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_percent = int(0.01 * len(scores))
             # this assumes lowest is best
             top_1_idx = np.argpartition(scores, top_1_percent)[:top_1_percent]
+        else:
+            top_1_idx = []
 
         # load fragment lib if provided
         fragments_libary = (
