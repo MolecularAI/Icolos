@@ -118,12 +118,14 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
-        output_files = [
-            f"ligand/stateA/run1/{sim_type}/tpr.tpr",
-            f"ligand/stateB/run1/{sim_type}/tpr.tpr",
-            f"complex/stateA/run1/{sim_type}/tpr.tpr",
-            f"complex/stateB/run1/{sim_type}/tpr.tpr",
-        ]
+        replicas = self.get_perturbation_map().replicas
+        output_files = []
+        for i in range(1, replicas + 1):
+            output_files.append(f"ligand/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"ligand/stateB/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"complex/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"complex/stateB/run{i}/{sim_type}/tpr.tpr")
+        print(output_files)
         results = []
         for subjob in batch:
             subjob_results = []

@@ -184,9 +184,13 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = executor.execute(
+            result: CompletedProcess = executor.execute(
                 command=_GE.GROMPP, arguments=grompp_args, check=False
             )
+            if result.returncode != 0:
+                self._logger.log(
+                    f"gmx grompp failed!, error was {result.stderr}", _LE.WARNING
+                )
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
             grompp_full_cmd = []
@@ -210,12 +214,14 @@ class StepPMXBase(StepBase, BaseModel):
                     "4",
                     "-po",
                     mdout,
-                    "&&",
+                    ";",
                 ]
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(command=grompp_full_cmd, arguments=[], check=False)
+            result = executor.execute(
+                command=grompp_full_cmd, arguments=[], check=False
+            )
         self._clean_backup_files(simpath)
         return result
 
