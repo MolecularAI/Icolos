@@ -152,10 +152,13 @@ class ActiveLearningBase(StepBase, BaseModel):
         with Chem.SDWriter(os.path.join(self.work_dir, "compounds.sdf")) as writer:
             for idx, comp in enumerate(compound_list):
                 mol = comp[_SALE.MOLECULE]
-                name = comp[_SALE.ID]
+                try:
+                    name = comp[_SALE.ID]
+                    mol.SetProp("original_name", name)
+                except KeyError:
+                    pass
                 mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
                 mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
-                mol.SetProp("original_name", name)
                 writer.write(mol)
         compound_dict = {
             "source": os.path.join(self.work_dir, "compounds.sdf"),
