@@ -16,7 +16,7 @@ def greedy_acquisition(
     warmup: bool = False,
     epsilon: float = 0.0,
 ) -> np.ndarray:
-    """Implements greedy acquisition by querying model for top predicted points
+    """Implements greedy acquisition by querying model for top predicted points, note that typically we are dealing with affinity prediction so highest is not best.
 
     :param  estimator: SKLearn-type estimator to be queried
     :param np.ndarray X: array of fingerprints for each compound to be predicted by the model
@@ -29,6 +29,7 @@ def greedy_acquisition(
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         indices = range(0, X.shape[0])
+        # sample indices without replacement
         return np.random.choice(indices, replace=False, size=n_instances)
     else:
         try:

@@ -4,14 +4,12 @@ from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
 from icolos.utils.enums.program_parameters import (
-    SlurmEnum,
     StepPMXEnum,
 )
 from icolos.utils.execute_external.slurm_executor import SlurmExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
-_SE = SlurmEnum()
 _PSE = StepPMXEnum()
 
 
@@ -155,12 +153,17 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         confout = "{0}/confout.gro".format(simpath)
         mdlog = "{0}/md.log".format(simpath)
         trr = "{0}/traj.trr".format(simpath)
-        try:
-            with open(os.path.join(simpath, "md.log"), "r") as f:
-                lines = f.readlines()
-            sim_complete = any(["Finished mdrun" in l for l in lines])
-        except FileNotFoundError:
+        if self.sim_type != "transitions":
+            try:
+                with open(os.path.join(simpath, "md.log"), "r") as f:
+                    lines = f.readlines()
+                sim_complete = any(["Finished mdrun" in l for l in lines])
+            except FileNotFoundError:
+                sim_complete = False
+        else:
+            # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
+            print("preparing transition")
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
@@ -226,7 +229,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         for subtask in jobs:
             subtask_results = []
             for sim in subtask:
-                location = os.path.join("/".join(sim.split("/")[:-1]), "md.log")
+                location = os.path.join(os.path.dirname(sim), "md.log")
                 if os.path.isfile(location):
                     with open(location, "r") as f:
                         lines = f.readlines()
@@ -235,5 +238,28 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     )
                 else:
                     subtask_results.append(False)
+            results.append(subtask_results)
+        return results
+
+    def _inspect_dhdl_files(self, jobs: List[str]) -> List[List[bool]]:
+        # check there is a dhdl file for each tpr file
+        results = []
+        for subtask in jobs:
+            subtask_results = []
+            for sim in subtask:
+
+                location = os.path.join(os.path.dirname(sim))
+                n_snapshots = len(
+                    [f for f in os.listdir(location) if f.endswith("tpr")]
+                )
+                dhdl_files = [f"dhdl{i}.xvg" for i in range(1, n_snapshots + 1)]
+
+                if not all(
+                    [os.path.isfile(os.path.join(location, f)) for f in dhdl_files]
+                ):
+                    subtask_results.append(False)
+                else:
+                    subtask_results.append(True)
+
             results.append(subtask_results)
         return results

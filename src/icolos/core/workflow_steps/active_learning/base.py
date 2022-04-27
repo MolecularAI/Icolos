@@ -7,7 +7,7 @@ from typing import Callable, List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.compound import Compound, Conformer, Enumeration
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
