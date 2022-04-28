@@ -7,7 +7,7 @@ from typing import Callable, List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer, Enumeration
+from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -26,9 +26,11 @@ from sklearn.ensemble import RandomForestRegressor
 from icolos.core.workflow_steps.active_learning.al_utils import (
     expected_improvement,
     greedy_acquisition,
+    latent_distance,
 )
 from modAL.models.learners import BayesianOptimizer, ActiveLearner
-from icolos.core.workflow_steps.active_learning.models.ffnn import FeedForwardNet
+from modAL.acquisition import max_EI
+from icolos.core.workflow_steps.active_learning.al_utils import FeedForwardNet
 from skorch.regressor import NeuralNetRegressor
 from skorch.callbacks import EarlyStopping
 from icolos.utils.execute_external.execute import Executor
@@ -92,6 +94,8 @@ class ActiveLearningBase(StepBase, BaseModel):
             return greedy_acquisition
         elif acq_fn.lower() == _SALE.EI:
             return expected_improvement
+        elif acq_fn.lower() == _SALE.LATENT_DISTANCE:
+            return latent_distance
         else:
             raise ValueError(f"Acquisition method {acq_fn} is not supported!")
 
@@ -108,7 +112,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 estimator=GaussianProcessRegressor(
                     kernel=DotProduct(), normalize_y=True
                 ),
-                query_strategy=acquisition_function,
+                query_strategy=max_EI,
             )
         elif running_mode == "random_forest":
             learner = ActiveLearner(

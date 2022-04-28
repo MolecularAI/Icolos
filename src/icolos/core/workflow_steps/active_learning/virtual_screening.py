@@ -90,8 +90,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 X,
                 n_instances=batch_size,
                 previous_idx=prev_idx,
-                warmup=warmup,
-                epsilon=epsilon,
+                # warmup=warmup,
+                # epsilon=epsilon,
             )
             queried_compounds_per_epoch.append([int(i) for i in query_idx])
             return list(query_idx)
@@ -239,7 +239,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         )
         lib, scores = self._parse_library(criteria=criteria)
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
-        if scores:
+        if isinstance(scores, pd.Series):
             top_1_percent = int(0.01 * len(scores))
             # this assumes lowest is best
             top_1_idx = np.argpartition(scores, top_1_percent)[:top_1_percent]

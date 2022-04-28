@@ -1054,5 +1054,6 @@ class StepActiveLearningEnum:
     DYNAMIC_STOP = "dynamic_stop"
     REPLICAS = "replicas"
     EPSILON = "epsilon"
+    LATENT_DISTANCE = "latent_distance"
     GREEDY = "greedy"
     EI = "ei"
