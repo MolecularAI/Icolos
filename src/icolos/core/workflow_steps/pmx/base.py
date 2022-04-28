@@ -184,7 +184,9 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            executor.execute(command=_GE.GROMPP, arguments=grompp_args, check=False)
+            result = executor.execute(
+                command=_GE.GROMPP, arguments=grompp_args, check=True
+            )
 
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
@@ -349,7 +351,7 @@ class StepPMXBase(StepBase, BaseModel):
                                 f"Removed job {job} from execution batch, good output found",
                                 _LE.DEBUG,
                             )
-                        n_removed += 1
+                            n_removed += 1
                         # if we have emptied entire job queues, remove the queue
                 self._logger.log(
                     f"Executing {step_id} for batch {n}, containing {len(jobs)} * {self.execution.parallelization.max_length_sublists} jobs",
