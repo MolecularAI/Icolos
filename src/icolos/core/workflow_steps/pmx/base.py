@@ -185,7 +185,7 @@ class StepPMXBase(StepBase, BaseModel):
                 mdout,
             ]
             result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP, arguments=grompp_args, check=True, location=simpath
             )
 
         elif sim_type == "transitions":
@@ -217,7 +217,7 @@ class StepPMXBase(StepBase, BaseModel):
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
             result = executor.execute(
-                command=grompp_full_cmd, arguments=[], check=False
+                command=grompp_full_cmd, arguments=[], check=False, location=simpath
             )
         self._clean_backup_files(simpath)
         return result
