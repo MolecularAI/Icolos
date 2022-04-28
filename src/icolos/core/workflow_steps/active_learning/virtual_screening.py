@@ -13,6 +13,7 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error
 
 
 _SALE = StepActiveLearningEnum()
@@ -60,6 +61,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         else:
             raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
         library = self.construct_fingerprints(library)
+        # randomly shuffle the compound rows
+        library = library.sample(frac=1).reset_index(drop=True)
         scores = (
             pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else []
         )
@@ -71,6 +74,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         learner: ActiveLearner,
         lib: pd.DataFrame,
         tmp_dir: str,
+        all_scores: List = None,
         top_1_idx: list = None,
         replica=0,
         fragment_lib: pd.DataFrame = None,
@@ -85,13 +89,13 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         :param pd.DataFrame fragment_lib: for non-natural amino acids, pass a df containing the non-natural fragments, only for protein FEP and residue scanning oracles. defaults to None
         """
 
-        def query_surrogate(prev_idx: List) -> List:
+        def query_surrogate(prev_idx: List, warmup: bool) -> List:
             query_idx, _ = learner.query(
                 X,
                 n_instances=batch_size,
                 previous_idx=prev_idx,
-                # warmup=warmup,
-                # epsilon=epsilon,
+                warmup=warmup,
+                epsilon=epsilon,
             )
             queried_compounds_per_epoch.append([int(i) for i in query_idx])
             return list(query_idx)
@@ -120,6 +124,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
 
             return scores
+
+        def compute_rmsd() -> float:
+            """Generate rmsd values"""
+            predictions = learner.predict(X)
+            return mean_squared_error(all_scores, predictions)
 
         n_instances = (
             int(self._get_additional_setting(_SALE.FRACTION_PER_EPOCH) * len(lib))
@@ -157,7 +166,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 if rnd == 0
                 else n_instances
             )
-            query_idx = query_surrogate(queried_compound_idx)
+            query_idx = query_surrogate(queried_compound_idx, warmup)
+            rmsd = compute_rmsd() if rnd > 0 else np.inf
+
             self._logger.log(f"queried compound indices are {query_idx}", _LE.DEBUG)
             queried_compound_idx += query_idx
             query_compounds = [lib.iloc[int(idx)] for idx in query_idx]
@@ -175,18 +186,12 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
             if top_1_idx is not None:
-                # what fraction of the top1% hits are in the queried dataset?
-                hits_queried = (
-                    np.isin(
-                        top_1_idx,
-                        queried_compound_idx,
-                    ).sum()
-                    / len(top_1_idx)
-                ) * 100
-                self._logger.log(
-                    f"Fraction of top 1% hits queried by round {rnd}: {hits_queried}%",
-                    _LE.INFO,
-                )
+                hit_count = 0
+                for idx in top_1_idx:
+                    if idx in queried_compound_idx:
+                        hit_count += 1
+                hits_queried = hit_count / len(top_1_idx) * 100
+                print(f"Round {rnd}: top1%: {hits_queried}%, rmsd: {rmsd}")
                 fraction_top1_hits_per_epoch.append(hits_queried)
                 if hits_queried > 99:
                     break
@@ -238,11 +243,18 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             else None
         )
         lib, scores = self._parse_library(criteria=criteria)
+        print(np.min(scores))
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if isinstance(scores, pd.Series):
             top_1_percent = int(0.01 * len(scores))
             # this assumes lowest is best
             top_1_idx = np.argpartition(scores, top_1_percent)[:top_1_percent]
+            self._logger.log(
+                f"Using {len(top_1_idx)} top compounds for validation", _LE.INFO
+            )
+            print(f"top scores are, {scores[top_1_idx]}")
+            for idx, score in enumerate(scores[top_1_idx]):
+                print(idx, score)
         else:
             top_1_idx = []
 
@@ -269,6 +281,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 learner=learner,
                 lib=lib,
                 fragment_lib=fragments_libary,
+                all_scores=scores,
                 tmp_dir=tmp_dir,
                 top_1_idx=list(top_1_idx),
                 replica=replica,

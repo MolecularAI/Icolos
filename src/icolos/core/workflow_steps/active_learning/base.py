@@ -127,7 +127,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 optimizer=torch.optim.Adam,
                 callbacks=[EarlyStopping(patience=5)],
                 warm_start=False,
-                verbose=2,
+                verbose=0,
                 lr=1e-4,
                 device=device,
                 max_epochs=500,

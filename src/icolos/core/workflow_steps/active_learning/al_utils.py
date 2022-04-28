@@ -1,3 +1,4 @@
+from http.client import NOT_IMPLEMENTED
 from typing import List
 import numpy as np
 from icolos.loggers.steplogger import StepLogger
@@ -47,7 +48,12 @@ class FeedForwardNet(nn.Module):
 
 
 def latent_distance(
-    learner: ActiveLearner, X: np.ndarray, previous_idx: List[int], n_instances: int
+    learner: ActiveLearner,
+    X: np.ndarray,
+    previous_idx: List[int],
+    n_instances: int,
+    *args,
+    **kwargs,
 ):
     """Selects new points to acquire based on the UQ approach detailed here https://doi.org/10.1039/C9SC02298H
 
@@ -65,43 +71,47 @@ def latent_distance(
 
     # compute pairwise euclidian distances of each predicted point to the known points, return those indices with the highest distance to known
     known_X = X[previous_idx]
-    # unknown_X = np.delete(X, previous_idx, axis=0)
-    # print("unknown X", unknown_X.shape)
 
-    # need the embedding after the final layer
     # access the skorch object
     estimator: NeuralNetRegressor = learner.estimator
     known_latent_embedding = estimator.module_.get_latent_embedding(
         inputs=torch.from_numpy(known_X).to(estimator.device)
     )
-    print("known_latent_embedding", known_latent_embedding.shape)
     # n_samples, emb_dim
     # include the full dataset here to retain indexing, some norms will be 0, but that is fine
     all_embedding = estimator.module_.get_latent_embedding(
-        inputs=torch.from_numpy(torch.from_numpy(X)).to(estimator.device)
+        inputs=torch.from_numpy(X).to(estimator.device)
     )
     known_latent_embedding, all_embedding = (
         known_latent_embedding.cpu(),
         all_embedding.cpu(),
     )
-    print("unknown_latent_embedding", all_embedding.shape)
 
     # now compute distance to each known embedding vector for each unknown point
     distances = []
+    # print("prev_idx", previous_idx)
+    zero_count = 0
     for idx, embedding in enumerate(all_embedding):
         # min(abs(x), axis=0)
         # return the distance to the closest point in the training set
         # Note, these distances are uncalibrated
-        dist = np.linalg.norm(embedding - known_latent_embedding, ord=-1)
-        if dist < 1:
-            print(idx, dist)
-        distances.append(dist)
-    print(np.array(distances).shape)
-    print(distances)
-    # get indices of the largest
-    sorted_preds = np.argpartition(np.array(distances), n_instances, axis=0).reshape(
-        -1
-    )[:n_instances]
+        # embeddings of dim = 128
+        diff = embedding - known_latent_embedding
+        dist = np.linalg.norm(diff, ord=-1, axis=1)
+        # for now, simply use the minimum distance to a known example as the similarity metric
+        if min(dist) == 0:
+            zero_count += 1
+        distances.append(min(dist))
+    print(f"got {zero_count} zero-distances for {len(previous_idx)} compounds")
+
+    sorted_preds = np.argsort(np.array(distances)).reshape(-1)
+
+    sorted_preds = sorted_preds[zero_count : n_instances + zero_count]
+
+    # distances corresponding to selected indices
+    # final_indices = []
+    # for index in sorted_preds:
+    #     final_indices.append(distances[index])
 
     return sorted_preds
 
@@ -149,7 +159,6 @@ def greedy_acquisition(
     sorted_preds = np.argpartition(predictions, n_instances, axis=0).reshape(-1)[
         :n_instances
     ]
-    print("sorted preds", sorted_preds.shape, predictions[sorted_preds])
 
     if epsilon > 0.0:
         # replace that fraction of the predictions with random samples
