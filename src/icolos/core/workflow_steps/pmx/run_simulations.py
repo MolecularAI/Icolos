@@ -44,9 +44,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             _LE.DEBUG,
         )
         # run everything through in one batch, with multiple edges per call
-        self.execution.parallelization.max_length_sublists = int(
-            np.floor(len(job_pool) / self._get_number_cores())
-        )
+        # self.execution.parallelization.max_length_sublists = int(
+        #     np.floor(len(job_pool) / self._get_number_cores())
+        # )
+
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
         )
