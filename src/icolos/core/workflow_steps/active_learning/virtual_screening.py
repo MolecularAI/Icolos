@@ -128,7 +128,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         def compute_rmsd() -> float:
             """Generate rmsd values"""
             predictions = learner.predict(X)
-            return mean_squared_error(all_scores, predictions)
+            return np.sqrt(mean_squared_error(all_scores, predictions))
 
         n_instances = (
             int(self._get_additional_setting(_SALE.FRACTION_PER_EPOCH) * len(lib))
@@ -243,7 +243,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             else None
         )
         lib, scores = self._parse_library(criteria=criteria)
-        print(np.min(scores))
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if isinstance(scores, pd.Series):
             top_1_percent = int(0.01 * len(scores))

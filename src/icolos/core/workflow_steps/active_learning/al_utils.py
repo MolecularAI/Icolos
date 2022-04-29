@@ -1,4 +1,3 @@
-from http.client import NOT_IMPLEMENTED
 from typing import List
 import numpy as np
 from icolos.loggers.steplogger import StepLogger
@@ -10,6 +9,7 @@ from numpy.linalg import norm
 import torch
 from torch import nn
 from skorch.exceptions import NotInitializedError
+from scipy.spatial import distance
 
 _logger = StepLogger()
 
@@ -18,14 +18,14 @@ class FeedForwardNet(nn.Module):
     def __init__(self) -> None:
         super(FeedForwardNet, self).__init__()
 
-        self.lin1 = nn.Linear(2048, 128)
+        self.lin1 = nn.Linear(2048, 256)
         self.relu1 = nn.LeakyReLU()
-        self.lin2 = nn.Linear(128, 128)
+        self.lin2 = nn.Linear(256, 256)
         self.relu2 = nn.LeakyReLU()
-        self.lin3 = nn.Linear(128, 128)
+        self.lin3 = nn.Linear(256, 256)
         self.relu3 = nn.LeakyReLU()
         self.dropout = nn.Dropout()
-        self.lin4 = nn.Linear(128, 1)
+        self.lin4 = nn.Linear(256, 1)
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         x = self.relu1(self.lin1(inputs))
@@ -91,17 +91,22 @@ def latent_distance(
     distances = []
     # print("prev_idx", previous_idx)
     zero_count = 0
-    for idx, embedding in enumerate(all_embedding):
-        # min(abs(x), axis=0)
-        # return the distance to the closest point in the training set
-        # Note, these distances are uncalibrated
-        # embeddings of dim = 128
-        diff = embedding - known_latent_embedding
-        dist = np.linalg.norm(diff, ord=-1, axis=1)
-        # for now, simply use the minimum distance to a known example as the similarity metric
-        if min(dist) == 0:
-            zero_count += 1
-        distances.append(min(dist))
+    for test_embedding in all_embedding:
+        # distances_to_known = []
+        # for known_emb in known_latent_embedding:
+        #     # min(abs(x), axis=0)
+        #     # return the distance to the closest point in the training set
+        #     # Note, these distances are uncalibrated
+        #     # embeddings of dim = 128
+        diff = test_embedding - known_latent_embedding
+        distances.append(np.linalg.norm(diff))
+
+        #     distances_to_known.append(distance.euclidean(test_embedding, known_emb))
+        # # for now, simply use the minimum distance to a known example as the similarity metric
+        # if min(distances_to_known) == 0:
+        #     zero_count += 1
+        # distances.append(np.mean((distances_to_known)))
+
     print(f"got {zero_count} zero-distances for {len(previous_idx)} compounds")
 
     sorted_preds = np.argsort(np.array(distances)).reshape(-1)
@@ -198,21 +203,46 @@ def expected_improvement(
     :param float epsilon: enable greedy epsilon acquisition, defaults to 0.0
     :return np.ndarray: array of top predictions from the estimator
     """
-    # if no stdev implemented (only rf + GP can do this as std), generate the standard deviation from repeated sampling
-    # TODO: at the moment this will only work with RF
+
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
         return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])
 
     estimator = learner.estimator
-    subestimates = []
-    estimators = estimator.estimators_
+    if not isinstance(estimator, NeuralNetRegressor):
+        subestimates = []
+        estimators = estimator.estimators_
 
-    for i in range(len(estimators)):
-        estimator.estimators_ = estimators[0 : i + 1]
-        subestimates.append(estimator.predict(X))
-    subestimates = np.array(subestimates)
-    stdev = np.std(subestimates, axis=0).reshape((-1))
+        for i in range(len(estimators)):
+            estimator.estimators_ = estimators[0 : i + 1]
+            subestimates.append(estimator.predict(X))
+        subestimates = np.array(subestimates)
+        stdev = np.std(subestimates, axis=0).reshape((-1))
+    # for neural networks, get the calibrated uncertainties from latent distance metrics
+    else:
+        known_X = X[previous_idx]
+
+        # access the skorch object
+        estimator: NeuralNetRegressor = learner.estimator
+        known_latent_embedding = estimator.module_.get_latent_embedding(
+            inputs=torch.from_numpy(known_X).to(estimator.device)
+        )
+        # n_samples, emb_dim
+        # include the full dataset here to retain indexing
+        all_embedding = estimator.module_.get_latent_embedding(
+            inputs=torch.from_numpy(X).to(estimator.device)
+        )
+        known_latent_embedding, all_embedding = (
+            known_latent_embedding.cpu(),
+            all_embedding.cpu(),
+        )
+
+        # now compute distance to each known embedding vector for each unknown point
+        stdev = []
+        for test_embedding in all_embedding:
+            diff = test_embedding - known_latent_embedding
+            stdev.append(np.linalg.norm(diff))
+
     y_hat = np.array(learner.predict(X))
     mu = np.mean(y_hat)
     y_best = np.max(y_hat) if highest_is_best else np.min(y_hat)
