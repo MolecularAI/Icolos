@@ -174,10 +174,10 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
             )
-            rowName = edge
+            rowName = edge.get_edge_id()
 
-            self.results_summary.loc[rowName, "lig1"] = edge.split("_")[0]
-            self.results_summary.loc[rowName, "lig2"] = edge.split("_")[1]
+            self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split("_")[0]
+            self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split("_")[1]
             self.results_summary.loc[rowName, "val"] = dg
             self.results_summary.loc[rowName, "err_analyt"] = erra
             self.results_summary.loc[rowName, "err_boot"] = errb
