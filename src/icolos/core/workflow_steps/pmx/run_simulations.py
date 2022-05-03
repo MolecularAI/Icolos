@@ -43,10 +43,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations",
             _LE.DEBUG,
         )
-        # run everything through in one batch, with multiple edges per call
-        # self.execution.parallelization.max_length_sublists = int(
-        #     np.floor(len(job_pool) / self._get_number_cores())
-        # )
 
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
@@ -160,9 +156,12 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 sim_complete = any(["Finished mdrun" in l for l in lines])
             except FileNotFoundError:
                 sim_complete = False
+
+        # handle transitions
         else:
             # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
+
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
@@ -175,11 +174,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 confout=confout,
                 mdlog=mdlog,
             )
-            job_command = " ".join(job_command)
-            batch_file = self._backend_executor.prepare_batch_script(
-                job_command, arguments=[], location=simpath
-            )
-            return os.path.join(simpath, batch_file)
+            # empty list indicates all transitions completed
+            if job_command:
+                job_command = " ".join(job_command)
+                batch_file = self._backend_executor.prepare_batch_script(
+                    job_command, arguments=[], location=simpath
+                )
+                return os.path.join(simpath, batch_file)
 
         return
 
