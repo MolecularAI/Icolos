@@ -164,7 +164,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 - self.results_all.loc[rowNameWater, "val"]
             )
             edge.ddG = dg
-            edge.node_to.get_conformer().SetProp("ddG", dg)
+            edge.node_to.get_conformer().get_molecule().SetProp("ddG", dg)
             erra = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
