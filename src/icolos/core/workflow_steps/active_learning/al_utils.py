@@ -206,7 +206,8 @@ def expected_improvement(
 
     if warmup:
         _logger.log("Warmup epoch, using random sampling...", _LE.DEBUG)
-        return np.array([np.random.randint(0, X.shape[0]) for _ in range(n_instances)])
+        indices = range(0, X.shape[0])
+        return np.random.choice(indices, replace=False, size=n_instances)
 
     estimator = learner.estimator
     if not isinstance(estimator, NeuralNetRegressor):

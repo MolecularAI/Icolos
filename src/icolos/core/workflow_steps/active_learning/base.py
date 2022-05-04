@@ -116,7 +116,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             )
         elif running_mode == "random_forest":
             learner = ActiveLearner(
-                estimator=RandomForestRegressor(n_estimators=32),
+                estimator=RandomForestRegressor(n_estimators=64),
                 query_strategy=acquisition_function,
             )
         elif running_mode == "ffnn":
