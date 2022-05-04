@@ -123,12 +123,14 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         """
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
-        output_files = [
-            f"ligand/stateA/run1/transitions/ti80.tpr",
-            f"ligand/stateB/run1/transitions/ti80.tpr",
-            f"complex/stateA/run1/transitions/ti80.tpr",
-            f"complex/stateB/run1/transitions/ti80.tpr",
-        ]
+        replicas = self.get_perturbation_map().replicas
+        output_files = []
+        for i in range(1, replicas + 1):
+            output_files.append(f"ligand/stateA/run{i}/transitions/ti80.tpr")
+            output_files.append(f"ligand/stateB/run{i}/transitions/ti80.tpr")
+            output_files.append(f"complex/stateA/run{i}/transitions/ti80.tpr")
+            output_files.append(f"complex/stateB/run{i}/transitions/ti80.tpr")
+
         results = []
         for subjob in batch:
             subjob_results = []
