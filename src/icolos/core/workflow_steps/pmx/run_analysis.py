@@ -156,7 +156,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                         np.var(distrb) / float(self.get_perturbation_map().replicas)
                     )
 
-            #### also collect self.results_summary
+            # also collect self.results_summary
             rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
             rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
             dg = (
@@ -167,12 +167,12 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
             erra = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
+                + np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
             )
             edge.ddG_err = erra
             errb = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
+                + np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
             )
             rowName = edge.get_edge_id()
 
