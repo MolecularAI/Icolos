@@ -241,6 +241,11 @@ class StepDataManipulation(StepIOBase, BaseModel):
             raise NotImplementedError
         elif self.settings.additional[_SDM.ACTION] == _SDM.FILTER:
             self._filter_compounds()
+            n_comp, n_enum, n_conf = self.get_compound_stats()
+            self._logger.log(
+                f"Filtered compounds, resulting in {n_comp} compounds with {n_enum} enumerations with {n_conf} conformers completed.",
+                _LE.INFO,
+            )
         else:
             raise ValueError(
                 f'Action "{self.settings.additional[_SDM.ACTION]}" not supported.'
