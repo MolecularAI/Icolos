@@ -176,7 +176,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             )
         except KeyError:
             # if no input block in the oracle template, add a blank one first,
-            wf_config["workflow"]["steps"][0]["input"] = {}
+            # wf_config["workflow"]["steps"][0]["input"]["compounds"] = {}
             wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
         # inherit header from main workflow
         header = self.get_workflow_object().header

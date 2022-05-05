@@ -185,7 +185,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             new_data = np.array([compound[key] for compound in query_compounds])
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
-            if top_1_idx is not None:
+            if top_1_idx:
                 hit_count = 0
                 for idx in top_1_idx:
                     if idx in queried_compound_idx:
