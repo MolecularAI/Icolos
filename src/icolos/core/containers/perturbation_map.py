@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+import uuid
 from IPython.lib.display import IFrame
 import pandas as pd
 from icolos.core.containers.compound import Compound, Conformer
@@ -103,6 +104,7 @@ class PerturbationMap(BaseModel):
     node_df: pd.DataFrame = None
     # prune subsequent edge calculations on error
     strict_execution: str = False
+    hub_conformer: Conformer = None
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -145,6 +147,30 @@ class PerturbationMap(BaseModel):
                         enumeration_id=int(enumeration_id)
                     )
                     return enum.get_conformers()[0]
+
+    def generate_star_map(self) -> None:
+        """Generates a star topology using a single hub compound"""
+        hub_node = Node(
+            node_id=self.hub_compound.get_index_string(),
+            node_hash=uuid.uuid4().hex,
+            conformer=self.hub_compound.get_molecule(),
+        )
+        for compound in self.compounds:
+            end_node = Node(
+                node_id=compound.get_index_string(),
+                node_hash=uuid.uuid4().hex,
+                conformer=compound.get_enumerations()[0]
+                .get_conformers()[0]
+                .get_molecule(),
+            )
+            edge = Edge(
+                node_from=hub_node,
+                node_to=end_node,
+            )
+            self.edges.append(edge)
+
+        for node in self.nodes:
+            self._attach_node_connectivity(node)
 
     def parse_map_file(self, file_path: str) -> None:
         """Parse map from Schrodinger's fep_mapper log file, build internal graph representation + attach properties from fmp_stats, if provided

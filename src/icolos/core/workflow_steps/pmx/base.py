@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from rdkit.Chem import rdmolops
+from rdkit import Chem
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
@@ -467,12 +468,25 @@ class StepPMXBase(StepBase, BaseModel):
             ) as f:
                 f.writelines(itp_lines)
 
+    def get_hub_conformer(self, hub_conf_path) -> Conformer:
+        """
+
+        :return _type_: _description_
+        """
+
+        with Chem.SDMolSupplier(hub_conf_path) as supplier:
+            hub_mol = supplier[0]
+        return Conformer(conformer=hub_mol)
+
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
-        # construct the perturbation map and load in the log file
-        log_file = self.data.generic.get_argument_by_extension(
-            "log", rtn_file_object=True
-        )
-        log_file.write(work_dir)
+        topology = self._get_additional_setting("topology")
+        # check whether a hub conformer has been supplied (as an sdf file)
+        hub_conf_path = self._get_additional_setting("hub_conformer", default=None)
+        if hub_conf_path is not None:
+            assert hub_conf_path.endswith(
+                ".sdf"
+            ), "Hub conformer must be supplied as an SDF file!"
+
         perturbation_map = PerturbationMap(
             compounds=self.data.compounds,
             protein=self.data.generic.get_argument_by_extension(
@@ -480,10 +494,23 @@ class StepPMXBase(StepBase, BaseModel):
             ),
             replicas=replicas,
             strict_execution=self._get_additional_setting(_SPE.STRICT, default=True),
+            hub_conformer=self.get_hub_conformer(hub_conf_path)
+            if hub_conf_path is not None
+            else None,
         )
-        perturbation_map.parse_map_file(
-            os.path.join(self.work_dir, log_file.get_file_name())
-        )
+        if topology is not None:
+            # construct the perturbation map and load in the log file
+            log_file = self.data.generic.get_argument_by_extension(
+                "log", rtn_file_object=True
+            )
+            log_file.write(work_dir)
+
+            perturbation_map.parse_map_file(
+                os.path.join(self.work_dir, log_file.get_file_name())
+            )
+        elif topology == "star":
+            # manually generate star top, no mapping tool required
+            perturbation_map.generate_star_map()
 
         self._logger.log(
             f"Initialised perturbation map with {len(perturbation_map.get_nodes())} nodes and {len(perturbation_map.get_edges())} edges",
