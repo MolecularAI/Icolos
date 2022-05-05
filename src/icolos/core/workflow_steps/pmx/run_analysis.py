@@ -77,9 +77,11 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     print(l, end="")
 
     def _read_neq_results(self, fname):
-        fp = open(fname, "r")
-        lines = fp.readlines()
-        fp.close()
+        try:
+            with open(fname, "r") as fp:
+                lines = fp.readlines()
+        except FileNotFoundError:
+            return
         out = []
         for l in lines:
             l = l.rstrip()
@@ -195,7 +197,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     )
                     resultsfile = "{0}/results.txt".format(analysispath)
                     res = self._read_neq_results(resultsfile)
-                    self._fill_resultsAll(res, edge, wp, r)
+                    if res is not None:
+                        self._fill_resultsAll(res, edge, wp, r)
 
         # the values have been collected now
         # let's calculate ddGs
