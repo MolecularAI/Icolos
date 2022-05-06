@@ -30,7 +30,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def _parse_library(self, criteria: str = None) -> Tuple[DataFrame, np.ndarray]:
+    def _parse_library(
+        self, lib_path: str, criteria: str = None
+    ) -> Tuple[DataFrame, np.ndarray]:
         """Parse a virtual library to a dataframe
 
         :param str criteria: optional criteria to extract to df column from sdf tags, defaults to None
@@ -38,7 +40,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         :return Tuple[DataFrame, np.ndarray]: tuple containing datafarme of parsed data and scores, empty if no criteria provided
         """
 
-        lib_path = self.settings.additional[_SALE.VIRTUAL_LIB]
         if lib_path.endswith("sdf"):
             # hold the lib in a pandas df
             library = PandasTools.LoadSDF(
@@ -49,6 +50,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 removeHs=False,
                 embedProps=True,
             )
+            library = self.construct_fingerprints(library)
         elif lib_path.endswith("smi"):
             mols, smiles = [], []
             suppl = Chem.rdmolfiles.SmilesMolSupplier(lib_path)
@@ -56,11 +58,11 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 mols.append(mol)
                 smiles.append(Chem.MolToSmiles(mol))
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
+            library = self.construct_fingerprints(library)
         elif lib_path.endswith("pkl"):
             library = pd.read_pickle(lib_path)
         else:
             raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
-        library = self.construct_fingerprints(library)
         # randomly shuffle the compound rows
         library = library.sample(frac=1).reset_index(drop=True)
         scores = (
@@ -167,7 +169,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 else n_instances
             )
             query_idx = query_surrogate(queried_compound_idx, warmup)
-            rmsd = compute_rmsd() if rnd > 0 else np.inf
+            if all_scores:
+                rmsd = compute_rmsd() if rnd > 0 else np.inf
 
             self._logger.log(f"queried compound indices are {query_idx}", _LE.DEBUG)
             queried_compound_idx += query_idx
@@ -237,12 +240,15 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
+        print(tmp_dir)
         criteria = (
             self._get_additional_setting(_SALE.CRITERIA)
             if self._get_additional_setting(_SALE.EVALUATE, default=False)
             else None
         )
-        lib, scores = self._parse_library(criteria=criteria)
+        lib, scores = self._parse_library(
+            self._get_additional_setting(_SALE.VIRTUAL_LIB), criteria=criteria
+        )
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if isinstance(scores, pd.Series):
             top_1_percent = int(0.01 * len(scores))
@@ -258,18 +264,14 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_idx = []
 
         # load fragment lib if provided
-        fragments_libary = (
-            PandasTools.LoadSDF(
-                self._get_additional_setting(_SALE.FRAGMENTS),
-                smilesName=_SALE.SMILES,
-                molColName=_SALE.MOLECULE,
-                includeFingerprints=True,
-                removeHs=False,
-                embedProps=True,
-            )
+        print("Loading fragment lib")
+        fragments_library, _ = (
+            self._parse_library(self._get_additional_setting(_SALE.FRAGMENTS))
             if self._get_additional_setting(_SALE.FRAGMENTS) is not None
             else None
         )
+        if fragments_library is not None:
+            fragments_library.to_pickle(os.path.join(tmp_dir, "fragments.pkl"))
 
         replicas = self._get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):
@@ -279,7 +281,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             self._run_learning_loop(
                 learner=learner,
                 lib=lib,
-                fragment_lib=fragments_libary,
+                fragment_lib=fragments_library,
                 all_scores=scores,
                 tmp_dir=tmp_dir,
                 top_1_idx=list(top_1_idx),

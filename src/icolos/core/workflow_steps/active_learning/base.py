@@ -321,7 +321,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             compound_index = [row.IDX for row in compound_list]
             # retrieve the fragment using the index of the enumerated compound
             frags = [fragment_lib.iloc[idx] for idx in compound_index]
-            letter_strings = string.ascii_uppercase
+            letter_strings = string.ascii_uppercase + "0123456789"
             all_letters = []
             for char1 in letter_strings:
                 for char2 in letter_strings:

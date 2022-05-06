@@ -32,6 +32,7 @@ class StepResidueScanning(StepSchrodingerBase, BaseModel):
                     arguments.append(str(parameters[key]))
         input_file = self.data.generic.get_argument_by_extension("maegz")
         arguments.append(input_file)
+        print(arguments)
         return arguments
 
     def _parse_output(self, tmp_dir: str):
@@ -74,10 +75,11 @@ class StepResidueScanning(StepSchrodingerBase, BaseModel):
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
+        print(tmp_dir)
         args = self._parse_args()
         self.data.generic.write_out_all_files(tmp_dir)
 
-        command = f"$SCHRODINGER/run -FROM psp mut_pred.py"
+        command = f"$SCHRODINGER/run residue_scanning_backend.py"
         self._logger.log("executing residue scanning", _LE.DEBUG)
         result = self._backend_executor.execute(
             command=command, arguments=args, check=True, location=tmp_dir
