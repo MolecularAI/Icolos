@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import abc
 import subprocess
@@ -46,7 +47,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
-        print(time(), "\t", complete_command)
+        print(datetime.now().time(), "\t", complete_command)
         # determine whether this is to be run using local resources or as a batch job
         result = subprocess.run(
             complete_command,
