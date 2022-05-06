@@ -217,13 +217,7 @@ class SlurmExecutor(ExecutorBase):
         # use the entrypoint included in the Icolos install
 
         command = f"sacct -j {job_id} --parsable --noheader -a"
-        result = subprocess.run(
-            command,
-            shell=True,
-            universal_newlines=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        result = super().execute(command=command, arguments=[], check=False)
         if result.stdout:
             state = result.stdout.split("\n")[0].split("|")[5]
         else:
