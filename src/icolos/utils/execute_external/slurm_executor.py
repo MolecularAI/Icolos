@@ -52,7 +52,7 @@ class SlurmExecutor(ExecutorBase):
 
         # check if the machine can reach slurm
         self.slurm_available = self.is_available()
-        if self.slurm_available:
+        if not self.slurm_available:
             logger.log(
                 "Warning - Slurm was not found, jobs will be run locally!",
                 _LE.WARNING,
