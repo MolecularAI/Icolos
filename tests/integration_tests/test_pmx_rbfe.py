@@ -195,7 +195,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06b_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"jobs": 2},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [
@@ -238,7 +238,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06d_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"jobs": 2},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [
@@ -276,7 +276,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "09_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [

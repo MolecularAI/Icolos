@@ -9,7 +9,6 @@ from icolos.utils.enums.program_parameters import (
 )
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
-from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
