@@ -2,6 +2,7 @@ import os
 import abc
 import subprocess
 from shlex import quote
+from time import time
 
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from icolos.loggers.steplogger import StepLogger
@@ -45,7 +46,7 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
-
+        print(time(), "\t", complete_command)
         # determine whether this is to be run using local resources or as a batch job
         result = subprocess.run(
             complete_command,
