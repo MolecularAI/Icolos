@@ -41,6 +41,8 @@ class GromacsState(BaseModel):
     tprs: Dict = {}
     trajectories: Dict = {}
     log: Dict = {}
+    edr: Dict = {}
+    cpt: Dict = {}
     ndx: List = []
     # store computed properties on the topology
     # {property: [val1, val2, val3]}
@@ -278,6 +280,20 @@ class GromacsState(BaseModel):
         with open(os.path.join(path, file), "r") as f:
             self.top_lines = f.readlines()
 
+    def set_cpt(self, path: str, file: str = _SGE.STD_CPT, index: int = 0):
+        with open(os.path.join(path, file), "rb") as f:
+            lines = f.readlines()
+
+        cpt_file = GenericData(file_name=file, file_data=lines)
+        self.cpt[index] = cpt_file
+
+    def set_edr(self, path: str, file: str = _SGE.STD_EDR, index: int = 0):
+        with open(os.path.join(path, file), "rb") as f:
+            lines = f.readlines()
+
+        edr_file = GenericData(file_name=file, file_data=lines)
+        self.edr[index] = edr_file
+
     def set_structure(
         self, path: str, file: str = _SGE.STD_STRUCTURE, sanitize=False, index: int = 0
     ):
@@ -308,6 +324,14 @@ class GromacsState(BaseModel):
     def write_log(self, path: str, file: str = _SGE.STD_LOG, index: int = 0):
         log = self.log[index]
         log.write(os.path.join(path, file), join=False)
+
+    def write_cpt(self, path: str, file: str = _SGE.STD_CPT, index: int = 0):
+        cpt = self.cpt[index]
+        cpt.write(os.path.join(path, file), join=False)
+    
+    def write_edr(self, path: str, file: str = _SGE.STD_EDR, index: int = 0):
+        edr = self.edr[index]
+        edr.write(os.path.join(path, file), join=False)
 
     def set_ndx(self, path: str, file: str = _SGE.STD_INDEX):
         with open(os.path.join(path, file), "r") as f:

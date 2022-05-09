@@ -773,6 +773,8 @@ class StepGromacsEnum:
     LIGAND_MOL2 = "Ligand.mol2"
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
+    STD_EDR = "ener.edr"
+    STD_CPT = "state.cpt"
     STD_TPR = "topol.tpr"
     STD_LOG = "md.log"
     STD_XTC = "traj.xtc"

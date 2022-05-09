@@ -59,6 +59,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             {
                 "-s": _SGE.STD_TPR,
                 "-c": _SGE.STD_STRUCTURE,
+                "-e": _SGE.STD_EDR,
+                "-cpo": _SGE.STD_CPT,
                 "-x": _SGE.STD_XTC,
             }
             if not self.data.generic.get_files_by_extension("cpt")
