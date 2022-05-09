@@ -18,7 +18,7 @@
                 ]
             },
             "global_variables": {
-                "file_base": "{package_dir}/../IcolosData/gromacs/protein",
+                "file_base": "/home/kmzp800/IcolosData/gromacs/protein",
                 "output_dir": "{package_dir}/tests/junk/gromacs"
             }
         },
@@ -242,7 +242,17 @@
 					"gmx_state": {
 						"source": "08_nvt_grompp"
 					}
-				}
+				},
+				"writeout": [
+					{
+						"gmx_state": {
+							"key": "xtc, log, gro, tpr, edr, cpt"
+						},
+						"destination": {
+							"resource": "{output_dir}/nvt"
+						}
+					}
+				]
 			},
 			{
 				"step_id": "10_npt_grompp",
@@ -350,7 +360,7 @@
 				"writeout": [
 					{
 						"gmx_state": {
-							"key": "xtc, log, gro, tpr"
+							"key": "xtc, log, gro, tpr, edr, cpt"
 						},
 						"destination": {
 							"resource": "{output_dir}/production"

@@ -282,14 +282,14 @@ class GromacsState(BaseModel):
 
     def set_cpt(self, path: str, file: str = _SGE.STD_CPT, index: int = 0):
         with open(os.path.join(path, file), "rb") as f:
-            lines = f.readlines()
+            lines = f.read()
 
         cpt_file = GenericData(file_name=file, file_data=lines)
         self.cpt[index] = cpt_file
 
     def set_edr(self, path: str, file: str = _SGE.STD_EDR, index: int = 0):
         with open(os.path.join(path, file), "rb") as f:
-            lines = f.readlines()
+            lines = f.read()
 
         edr_file = GenericData(file_name=file, file_data=lines)
         self.edr[index] = edr_file

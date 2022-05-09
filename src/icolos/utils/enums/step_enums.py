@@ -753,6 +753,7 @@ class StepGromacsEnum:
     FIELD_KEY_ITP = "itp"
     FIELD_KEY_LOG = "log"
     FIELD_KEY_EDR = "edr"
+    FIELD_KEY_CPT = "cpt"
     FIELD_KEY_NDX = "ndx"
     PROPS = "props"
     FILE_SIZE_THRESHOLD = 2000000000
