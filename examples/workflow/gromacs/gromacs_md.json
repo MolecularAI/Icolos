@@ -18,7 +18,7 @@
                 ]
             },
             "global_variables": {
-                "file_base": "/home/kmzp800/IcolosData/gromacs/protein",
+                "file_base": "{package_dir}/../IcolosData/gromacs/protein",
                 "output_dir": "{package_dir}/tests/junk/gromacs"
             }
         },
