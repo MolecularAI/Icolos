@@ -84,7 +84,6 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
                             r=r,
                             sim=prev_type,
                         )
-
                         self._prepare_single_tpr(
                             simpath=simpath,
                             toppath=toppath,

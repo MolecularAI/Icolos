@@ -184,9 +184,15 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True, location=simpath
-            )
+            if not os.path.isfile(tpr):
+                result = executor.execute(
+                    command=_GE.GROMPP,
+                    arguments=grompp_args,
+                    check=True,
+                    location=simpath,
+                )
+            else:
+                self._logger.log(f"tpr file {tpr} already exists, skipping", _LE.DEBUG)
 
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
@@ -213,14 +219,15 @@ class StepPMXBase(StepBase, BaseModel):
                     mdout,
                     ";",
                 ]
-
-                grompp_full_cmd += grompp_args
+                if not os.path.isfile(tpr):
+                    grompp_full_cmd += grompp_args
+                else:
+                    self._logger.log(f"tpr file {tpr} already exists, skipping", _LE.DEBUG)
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
             result = executor.execute(
                 command=grompp_full_cmd, arguments=[], check=False, location=simpath
             )
         self._clean_backup_files(simpath)
-        return result
 
     def _clean_pdb_structure(self, tmp_dir: str) -> None:
         files = [file for file in os.listdir(tmp_dir) if file.endswith("pdb")]

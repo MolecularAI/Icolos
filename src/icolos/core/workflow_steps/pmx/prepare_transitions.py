@@ -83,7 +83,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             sim="transitions",
         )
         self._extract_snapshots(eqpath, tipath)
-        result = self._prepare_single_tpr(
+        self._prepare_single_tpr(
             simpath=tipath,
             toppath=toppath,
             state=state,
