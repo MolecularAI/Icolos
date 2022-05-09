@@ -264,15 +264,14 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_idx = []
 
         # load fragment lib if provided
-        print("Loading fragment lib")
-        fragments_library, _ = (
-            self._parse_library(self._get_additional_setting(_SALE.FRAGMENTS))
-            if self._get_additional_setting(_SALE.FRAGMENTS) is not None
-            else None
-        )
-        if fragments_library is not None:
+        if self._get_additional_setting(_SALE.FRAGMENTS) is not None:
+            print("Loading fragment lib")
+            fragments_library, _ = self._parse_library(
+                self._get_additional_setting(_SALE.FRAGMENTS)
+            )
             fragments_library.to_pickle(os.path.join(tmp_dir, "fragments.pkl"))
-
+        else:
+            fragments_library = None
         replicas = self._get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):
             learner = self._initialize_learner()

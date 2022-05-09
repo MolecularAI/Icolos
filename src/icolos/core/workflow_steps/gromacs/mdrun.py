@@ -125,6 +125,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             self.topol.set_structure(path, file=struct, index=index)
             self.topol.set_trajectory(path, index=index)
             self.topol.set_log(path, index=index)
+            self.topol.set_edr(path, index=index)
+            self.topol.set_cpt(path, index=index)
 
     def run_multidir_sim(self, tmp_dir: str):
         """
@@ -190,7 +192,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
     def execute(self):
 
-        tmp_dir = self._prepare_tmpdir()
+        tmp_dir = self._make_tmpdir()
         self.topol = self.get_topol()
         if self.data.generic.get_files_by_extension("cpt"):
             # a cpt file has been passed, simply restart
