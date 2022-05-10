@@ -59,6 +59,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             {
                 "-s": _SGE.STD_TPR,
                 "-c": _SGE.STD_STRUCTURE,
+                "-e": _SGE.STD_EDR,
+                "-cpo": _SGE.STD_CPT,
                 "-x": _SGE.STD_XTC,
             }
             if not self.data.generic.get_files_by_extension("cpt")
@@ -125,6 +127,11 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             self.topol.set_structure(path, file=struct, index=index)
             self.topol.set_trajectory(path, index=index)
             self.topol.set_log(path, index=index)
+            self.topol.set_edr(path, index=index)
+            try:
+                self.topol.set_cpt(path, index=index)
+            except FileNotFoundError:
+                pass
 
     def run_multidir_sim(self, tmp_dir: str):
         """
@@ -161,6 +168,8 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             self.topol.set_trajectory(work_dir, index=i)
             self.topol.set_tpr(work_dir, index=i)
             self.topol.set_log(work_dir, index=i)
+            self.topol.set_edr(path, index=i)
+            self.topol.set_cpt(path, index=i)
 
     def execute(self):
 
