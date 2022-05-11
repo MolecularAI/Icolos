@@ -170,14 +170,22 @@ class ActiveLearningBase(StepBase, BaseModel):
             "format": "SDF",
         }
         try:
-            # if other compound are already specified, add another entry to the list
+            # if other compound are already specified, try to add another entry to the list
             wf_config["workflow"]["steps"][0]["input"]["compounds"].append(
                 compound_dict
             )
         except KeyError:
-            # if no input block in the oracle template, add a blank one first,
-            # wf_config["workflow"]["steps"][0]["input"]["compounds"] = {}
-            wf_config["workflow"]["steps"][0]["input"]["compounds"] = [compound_dict]
+            try:
+                # if an input block is present but no compounds block is there
+                wf_config["workflow"]["steps"][0]["input"]["compounds"] = [
+                    compound_dict
+                ]
+            except KeyError:
+                # no input block present in json, no risk of overwriting existing compounds
+                wf_config["workflow"]["steps"][0]["input"] = {}
+                wf_config["workflow"]["steps"][0]["input"]["compounds"] = [
+                    compound_dict
+                ]
         # inherit header from main workflow
         header = self.get_workflow_object().header
         oracle_wf = WorkFlow(**wf_config["workflow"])
