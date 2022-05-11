@@ -44,7 +44,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
                 _LE.DEBUG,
             )
-            
+
             self._subtask_container = SubtaskContainer(
                 max_tries=self.execution.failure_policy.n_tries
             )

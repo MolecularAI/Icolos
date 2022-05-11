@@ -4,16 +4,17 @@ from icolos.core.workflow_steps.step import _LE
 
 from icolos.core.workflow_steps.active_learning.surrogate_model import SurrogateModel
 
-from icolos.utils.enums.step_enums import (
-    StepActiveLearningEnum
-)
+from icolos.utils.enums.step_enums import StepActiveLearningEnum
 
 _SALE = StepActiveLearningEnum()
 
 
 class AcquisitionFunction:
     """class to execute all acquisition function heuristics for prospective REINVENT"""
-    def __init__(self, surrogate: SurrogateModel, function: str, acquisition_batch_size: int):
+
+    def __init__(
+        self, surrogate: SurrogateModel, function: str, acquisition_batch_size: int
+    ):
         self.surrogate = surrogate
         self.function = function.lower()
         self.acquisition_batch_size = acquisition_batch_size
@@ -25,10 +26,13 @@ class AcquisitionFunction:
         if self.function == _SALE.RANDOM:
             df = pd.DataFrame({"smiles": original_smiles})
             shuffled = df.sample(frac=1, axis=0)
-            acquired_smiles = list(shuffled["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(shuffled["smiles"][self.acquisition_batch_size:])
+            acquired_smiles = list(shuffled["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(
+                shuffled["smiles"][self.acquisition_batch_size :]
+            )
 
             return acquired_smiles, non_acquired_smiles
+
 
 # TODO: need to somehow keep track of "current best" as we are not storing it in memory, at least for now
 """
@@ -185,4 +189,3 @@ class AcquisitionFunction:
 
             return acq_fps, acq_scores, acq_smiles, nacq_fps, nacq_preds, nacq_scores, nacq_smiles
 """
-

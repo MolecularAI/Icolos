@@ -55,5 +55,3 @@ class Test_Prepwizard(unittest.TestCase):
             f.write(out_file)
         stat_inf = os.stat(out_path)
         self.assertGreater(stat_inf.st_size, 155800)
-
-   

@@ -1068,7 +1068,7 @@ class StepActiveLearningEnum:
     INITIAL_POOLING_EPOCHS = "initial_pooling_epochs"
     ACQUISITION_BATCH_SIZE = "acquisition_batch_size"
     ORACLE_CONFIG = "oracle_config"
-    ORACLE_LABEL= "oracle_label"
+    ORACLE_LABEL = "oracle_label"
     SAVE_DIR = "save_dir"
 
     # Surrogate Models
@@ -1080,11 +1080,10 @@ class StepActiveLearningEnum:
     RANDOM = "random"
     GREEDY = "greedy"
     GREEDY_EPSILON = "greedy_epsilon"
-    PI = "pi"    # probability of improvement
-    EI = "ei"    # expected improvement
-    TS = "ts"    # thompson sampling
+    PI = "pi"  # probability of improvement
+    EI = "ei"  # expected improvement
+    TS = "ts"  # thompson sampling
     UCB = "ucb"  # upper confidence bound
     TANIMOTO = "tanimoto"
     MES = "mes"  # max-value entropy search
     UNCERTAINTY = "uncertainty"
-

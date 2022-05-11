@@ -14,18 +14,18 @@ _SALE = StepActiveLearningEnum()
 
 class SurrogateModel:
     """class for the surrogate model used in prospective REINVENT"""
+
     # TODO: only random forests have been tested so far. Test SVR and maybe deep learning models
     def __init__(self, model_type: str):
         def initialize_RF():
-            model = RandomForestRegressor(n_estimators=100,
-                                          max_depth=8,
-                                          n_jobs=-1,
-                                          criterion='mse')  # the rest of the parameters are left default
+            model = RandomForestRegressor(
+                n_estimators=100, max_depth=8, n_jobs=-1, criterion="mse"
+            )  # the rest of the parameters are left default
 
             return model
 
         def initialize_SVR():
-            model = SVR(kernel="rbf", gamma='scale')
+            model = SVR(kernel="rbf", gamma="scale")
             return model
 
         self.type = model_type.lower()
@@ -47,7 +47,10 @@ class SurrogateModel:
             self.model.fit(np.array(X_train), y_train)
 
     def predict(self, data):
-        if self.type == _SALE.RANDOM_FOREST_REGRESSOR or self.type == _SALE.SUPPORT_VECTOR_REGRESSOR:
+        if (
+            self.type == _SALE.RANDOM_FOREST_REGRESSOR
+            or self.type == _SALE.SUPPORT_VECTOR_REGRESSOR
+        ):
             return self.model.predict(data)
 
     def get_std(self, X):
@@ -57,4 +60,6 @@ class SurrogateModel:
             return np.std(subEstimates, axis=0)
 
         elif self.type == _SALE.SUPPORT_VECTOR_REGRESSOR:
-            raise NotImplementedError("Standard deviation calculation not supported for SVR")
+            raise NotImplementedError(
+                "Standard deviation calculation not supported for SVR"
+            )
