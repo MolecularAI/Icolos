@@ -654,7 +654,8 @@ class StepGlide(StepSchrodingerBase, BaseModel):
             # do the logging
             self._log_execution(grid_id=grid_id, number_grids=len(gridfiles))
 
-        self._fill_dummy_conformers()
+        if self._get_additional_setting(_SGE.FILL_DUMMY_CONFS, default=False):
+            self._fill_dummy_conformers()
 
         # sort the conformers loaded to the enumerations
         self._sort_conformers()

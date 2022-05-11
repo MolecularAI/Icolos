@@ -5,7 +5,6 @@ import unittest
 import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
-from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.utils.general.files_paths import attach_root_path
 
 _SGE = StepGromacsEnum()

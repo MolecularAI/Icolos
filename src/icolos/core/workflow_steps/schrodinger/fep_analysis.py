@@ -21,7 +21,7 @@ class StepFepPlusAnalysis(StepFEPBase, BaseModel):
         """
         Analyses the map produced from an FEP run
         """
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         self.data.generic.write_out_all_files(tmp_dir)
         self._extract_log_file_data(tmp_dir)
         self._remove_temporary(tmp_dir)

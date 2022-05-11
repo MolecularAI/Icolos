@@ -108,7 +108,7 @@ class StepGMXGrompp(StepGromacsBase, BaseModel):
         )
         mdp_file.write(tmp_dir)
 
-        replicas = self.get_additional_setting(_SGE.REPLICAS, default=1)
+        replicas = self._get_additional_setting(_SGE.REPLICAS, default=1)
         # replicas = len(topol.tprs.values())
         topol.write_topol(tmp_dir)
         init_struct = len(topol.structures)

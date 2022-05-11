@@ -55,14 +55,14 @@ class StepPMXBase(StepBase, BaseModel):
         self.therm_cycle_branches = ["ligand", "complex"]
 
         # simulation setup
-        self.run_type = self.get_additional_setting(_SPE.RUN_TYPE, "rbfe")
+        self.run_type = self._get_additional_setting(_SPE.RUN_TYPE, "rbfe")
         self.ff = "amber99sb-star-ildn-mut.ff"
-        self.boxshape = self.get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
-        self.boxd = self.get_additional_setting(_SPE.BOXD, 1.5)
-        self.water = self.get_additional_setting(_SPE.WATER, "tip3p")
-        self.conc = self.get_additional_setting(_SPE.CONC, 0.15)
-        self.pname = self.get_additional_setting(_SPE.PNAME, "NaJ")
-        self.nname = self.get_additional_setting(_SPE.NNAME, "ClJ")
+        self.boxshape = self._get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
+        self.boxd = self._get_additional_setting(_SPE.BOXD, 1.5)
+        self.water = self._get_additional_setting(_SPE.WATER, "tip3p")
+        self.conc = self._get_additional_setting(_SPE.CONC, 0.15)
+        self.pname = self._get_additional_setting(_SPE.PNAME, "NaJ")
+        self.nname = self._get_additional_setting(_SPE.NNAME, "ClJ")
         self.mdp_prefixes = {
             "em": "em",
             "nvt": "nvt",
@@ -185,7 +185,7 @@ class StepPMXBase(StepBase, BaseModel):
                 mdout,
             ]
             result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP, arguments=grompp_args, check=False
             )
         elif sim_type == "transitions":
             # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
@@ -210,12 +210,14 @@ class StepPMXBase(StepBase, BaseModel):
                     "4",
                     "-po",
                     mdout,
-                    "&&",
+                    ";",
                 ]
 
                 grompp_full_cmd += grompp_args
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(command=grompp_full_cmd, arguments=[])
+            result = executor.execute(
+                command=grompp_full_cmd, arguments=[], check=False
+            )
         self._clean_backup_files(simpath)
         return result
 
@@ -235,7 +237,7 @@ class StepPMXBase(StepBase, BaseModel):
         self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
     ):
         # main pipeline for producing GAFF parameters for a ligand
-        charge_method = self.get_additional_setting(
+        charge_method = self._get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
         formal_charge = (
@@ -329,14 +331,13 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
             jobs = self._prepare_edges(next_batch)
+            n_removed = 0
             if prune_completed:
-                n_removed = 0
                 pre_exec_results = result_checker(jobs)
                 for job_sublist, exec_success_sublist, sublist in zip(
                     jobs, pre_exec_results, next_batch
                 ):
                     # we test on the subtask level, not the individual job level, but since jobs are run through with max_len_sublists=1, in practice this doesn't matter
-                    # if all(r is True for r in exec_success):
                     for job, result, task in zip(
                         job_sublist, exec_success_sublist, sublist
                     ):
@@ -348,7 +349,7 @@ class StepPMXBase(StepBase, BaseModel):
                                 f"Removed job {job} from execution batch, good output found",
                                 _LE.DEBUG,
                             )
-                        n_removed += 1
+                            n_removed += 1
                         # if we have emptied entire job queues, remove the queue
                 self._logger.log(
                     f"Executing {step_id} for batch {n}, containing {len(jobs)} * {self.execution.parallelization.max_length_sublists} jobs",
@@ -478,7 +479,7 @@ class StepPMXBase(StepBase, BaseModel):
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
-            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
+            strict_execution=self._get_additional_setting(_SPE.STRICT, default=True),
         )
         perturbation_map.parse_map_file(
             os.path.join(self.work_dir, log_file.get_file_name())

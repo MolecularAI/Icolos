@@ -164,7 +164,11 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 - self.results_all.loc[rowNameWater, "val"]
             )
             edge.ddG = dg
-            edge.node_to.get_conformer().SetProp("ddG", dg)
+            edge.node_to.get_conformer().get_molecule().SetProp("pred_ddG", str(dg))
+            self._logger.log(
+                f"Set tag pred_ddG = {dg} for node {edge.node_to.get_node_id()}",
+                _LE.INFO,
+            )
             erra = np.sqrt(
                 np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
@@ -174,10 +178,10 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
                 - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
             )
-            rowName = edge
+            rowName = edge.get_edge_id()
 
-            self.results_summary.loc[rowName, "lig1"] = edge.split("_")[0]
-            self.results_summary.loc[rowName, "lig2"] = edge.split("_")[1]
+            self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split("_")[0]
+            self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split("_")[1]
             self.results_summary.loc[rowName, "val"] = dg
             self.results_summary.loc[rowName, "err_analyt"] = erra
             self.results_summary.loc[rowName, "err_boot"] = errb

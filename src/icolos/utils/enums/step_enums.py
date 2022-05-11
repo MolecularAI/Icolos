@@ -45,6 +45,7 @@ class StepBaseEnum(str, Enum):
     STEP_DO_DSSP = "DO_DSSP"
     STEP_LIGPREP = "LIGPREP"
     STEP_GLIDE = "GLIDE"
+    STEP_RESIDUE_SCANNING = "RESIDUE_SCANNING"
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
     STEP_GOLD_DOCKING = "GOLD_DOCKING"
@@ -79,6 +80,7 @@ class StepBaseEnum(str, Enum):
     STEP_ESP_SIM = "ESP_SIM"
     STEP_DISPATCHER = "DISPATCHER"
     STEP_ACTIVE_LEARNING = "ACTIVE_LEARNING"
+    STEP_PROSPECTIVE_REINVENT = "PROSPECTIVE_REINVENT"
 
     # flow control blocks
     STEP_ITERATOR = "ITERATOR"
@@ -569,6 +571,8 @@ class StepGlideEnum:
     GLIDE_LOG = ".log"
     GLIDE_SDF = ".sdf"
 
+    FILL_DUMMY_CONFS = "fill_dummy_confs"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:
@@ -1031,7 +1035,7 @@ class StepActiveLearningEnum:
     SMILES = "SMILES"
     MOLECULE = "Molecule"
     VIRTUAL_LIB = "virtual_lib"
-    FRAGMENTS ="fragments"
+    FRAGMENTS = "fragments"
     INIT_SAMPLE_FACTOR = "init_sample_factor"
     MORGAN_FP = "MorganFP"
     SOAP_VECTOR = "soap_vector"
@@ -1043,6 +1047,7 @@ class StepActiveLearningEnum:
     WARMUP = "warmup"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"
+    ACQUISITION_FUNCTION = "acquisition_function"
     MODEL = "model"
     EVALUATE = "evaluate"
     CRITERIA = "criteria"
@@ -1050,3 +1055,35 @@ class StepActiveLearningEnum:
     DYNAMIC_STOP = "dynamic_stop"
     REPLICAS = "replicas"
     EPSILON = "epsilon"
+    LATENT_DISTANCE = "latent_distance"
+    GREEDY = "greedy"
+    EI = "ei"
+
+    # Prospective Active Learning in REINVENT
+    # -----------------------------------------------
+    # General Parameters
+    EPOCHS = "number_of_reinvent_epochs"
+    WARMUP = "warmup"
+    RETRAIN = "retrain"
+    INITIAL_POOLING_EPOCHS = "initial_pooling_epochs"
+    ACQUISITION_BATCH_SIZE = "acquisition_batch_size"
+    ORACLE_CONFIG = "oracle_config"
+    ORACLE_LABEL = "oracle_label"
+    SAVE_DIR = "save_dir"
+
+    # Surrogate Models
+    SURROGATE_MODEL_TYPE = "surrogate_model_type"
+    RANDOM_FOREST_REGRESSOR = "rf"
+    SUPPORT_VECTOR_REGRESSOR = "svr"
+
+    # Acquisition Functions
+    RANDOM = "random"
+    GREEDY = "greedy"
+    GREEDY_EPSILON = "greedy_epsilon"
+    PI = "pi"  # probability of improvement
+    EI = "ei"  # expected improvement
+    TS = "ts"  # thompson sampling
+    UCB = "ucb"  # upper confidence bound
+    TANIMOTO = "tanimoto"
+    MES = "mes"  # max-value entropy search
+    UNCERTAINTY = "uncertainty"
