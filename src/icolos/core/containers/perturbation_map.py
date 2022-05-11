@@ -116,37 +116,18 @@ class PerturbationMap(BaseModel):
         return data.index(line)
 
     def _get_conformer_by_id(self, comp_id: str) -> Conformer:
-        """return the conformer object from self.data.compounds corresponding to the node in the perturbation map
+        """Parses the compound names from the edges specified in the mapper log file, performs a lookup to extract the corresponding compound from the step's compounds
 
         :param str comp_id: id of the compound parsed from the map generation
         :return Conformer: return the conformer object from self.data.compounds
         """
-        try:
-            # if the compounds have come from a previous docking step, they will have this naming convention applied already
-            parts = comp_id.split(":")
-            compound_id = parts[0]
-            enumeration_id = parts[1]
-        except:
-            # a non-standard compound name has been used
-            compound_id = comp_id
         for compound in self.compounds:
-            if compound.get_name().split(":")[0] == compound_id:
-                rtn_compound = compound
-                enums = rtn_compound.get_enumerations()
-
-                if len(enums) == 1:
-                    # easy case, there is only one enumeration, return it's single conformer
-
-                    # at this stage, the docking poses must have been filtered to a single entry
-                    # per enumeration (an enumerations should have been filtered on charge state etc.)
-                    return enums[0].get_conformers()[0]
-                else:
-                    # multiple enumerations, must be using Icolos naming or we cannot infer which
-                    # enumeration should be used
-                    enum = rtn_compound.find_enumeration(
-                        enumeration_id=int(enumeration_id)
-                    )
-                    return enum.get_conformers()[0]
+            # compound could have any arbitrary name - check whether this the node ID from schrodinger, or check the index string
+            if compound.get_name() == comp_id:
+                # there will be one and only one conformer attached to one of the enumerations.  Return the first.
+                for enum in compound.get_enumerations():
+                    if enum.get_conformers():
+                        return enum.get_conformers()[0]
 
     def generate_star_map(self) -> None:
         """Generates a star topology using a single hub compound"""

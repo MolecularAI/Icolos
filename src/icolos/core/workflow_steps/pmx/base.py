@@ -479,7 +479,7 @@ class StepPMXBase(StepBase, BaseModel):
         return Conformer(conformer=hub_mol)
 
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
-        topology = self._get_additional_setting("topology")
+        topology = self._get_additional_setting("topology", default="normal")
         # check whether a hub conformer has been supplied (as an sdf file)
         hub_conf_path = self._get_additional_setting("hub_conformer", default=None)
         if hub_conf_path is not None:
@@ -498,7 +498,7 @@ class StepPMXBase(StepBase, BaseModel):
             if hub_conf_path is not None
             else None,
         )
-        if topology is not None:
+        if topology == "normal":
             # construct the perturbation map and load in the log file
             log_file = self.data.generic.get_argument_by_extension(
                 "log", rtn_file_object=True
