@@ -161,8 +161,8 @@ class StepProspectiveREINVENT(StepBase):
     def _extract_scores_from_oracle(self, original_smiles, oracle_workflow: WorkFlow) -> list:
         """
         extracts the "best" score from the oracle and is particularly relevant in cases where more than 1 score
-        is given to a SMILES. This is usually taken care of by icolos write-out and is down here only because
-        the training data for the surrogate model (SMILES, score pairs) need to be stored
+        is given to a SMILES. This is usually taken care of by icolos write-out and is done here only because
+        the training data for the surrogate model (SMILES, score pairs) needs to be stored
         """
         scores = []
         for smiles, compound in zip(original_smiles, oracle_workflow.get_steps()[-1].get_compounds()):
@@ -226,7 +226,6 @@ class StepProspectiveREINVENT(StepBase):
         # this epoch corresponds to the initial training of the surrogate model and is also the first epoch
         # where we begin saving the pickled surrogate model
         if curr_epoch == (warmup + initial_pooling_epochs + 1) or curr_epoch % retrain == 0:
-            print("trained surrogate")
             surrogate = SurrogateModel(model_type=surrogate_model_type)
             surrogate.fit(self.morgan_fingerprints(smiles=pooled_smiles), pooled_labels)
         # at this point, whether the surrogate was retrained or not, partition the compounds into acquired and
