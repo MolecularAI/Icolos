@@ -38,6 +38,9 @@ from icolos.core.workflow_steps.calculation.shaep import StepShaep
 from icolos.core.workflow_steps.structure_prediction.peptide_embedder import (
     StepPeptideEmbedder,
 )
+
+from icolos.core.workflow_steps.active_learning.prospective_reinvent import StepProspectiveREINVENT
+
 from icolos.core.workflow_steps.structure_prediction.dssp import StepDSSP
 from icolos.utils.enums.step_enums import StepBaseEnum
 
@@ -114,4 +117,5 @@ class StepInitializationEnum:
         _SBE.STEP_PMX_RUN_SIMULATIONS: StepPMXRunSimulations,
         _SBE.STEP_DISPATCHER: StepDispatcher,
         _SBE.STEP_ESP_SIM: StepEspSim,
+        _SBE.STEP_PROSPECTIVE_REINVENT: StepProspectiveREINVENT
     }
