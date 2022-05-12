@@ -4,6 +4,7 @@ from enum import Enum
 class ParallelizationEnum(str, Enum):
 
     STATUS_READY = "ready"
+    STATUS_RUNNING = "running"
     STATUS_SUCCESS = "success"
     STATUS_FAILED = "failed"
 

@@ -51,7 +51,7 @@
 				"settings": {
 					"arguments": {
 						"parameters": {
-							"-num-procs": 24
+							"-num-procs": 1
 						}
 					}
 				},
@@ -103,7 +103,7 @@
 							"extension": "pdb"
 						},
 						{
-							"source": "{file_path}/pmx/run_simulations/input/mdp/",
+							"source": "{file_path}/run_simulations/input/mdp/",
 							"extension": "mdp"
 						}
 					],

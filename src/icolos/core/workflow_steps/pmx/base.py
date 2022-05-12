@@ -1,5 +1,7 @@
+import subprocess
 from subprocess import CompletedProcess
-from typing import Callable, Dict, List
+import time
+from typing import Callable, Deque, Dict, List
 from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
@@ -8,20 +10,22 @@ from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.parallelization import ParallelizationEnum
-from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
+from icolos.utils.enums.program_parameters import GromacsEnum, SlurmEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 import os
-from icolos.utils.general.parallelization import Parallelizer
+from icolos.utils.general.parallelization import Parallelizer, Subtask
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
+from collections import deque
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
 _PE = ParallelizationEnum
+_SE = SlurmEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
@@ -222,7 +226,9 @@ class StepPMXBase(StepBase, BaseModel):
                 if not os.path.isfile(tpr):
                     grompp_full_cmd += grompp_args
                 else:
-                    self._logger.log(f"tpr file {tpr} already exists, skipping", _LE.DEBUG)
+                    self._logger.log(
+                        f"tpr file {tpr} already exists, skipping", _LE.DEBUG
+                    )
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
             result = executor.execute(
                 command=grompp_full_cmd, arguments=[], check=False, location=simpath
@@ -313,6 +319,74 @@ class StepPMXBase(StepBase, BaseModel):
                 os.path.join(tmp_dir, acpype_dir, gro_file),
                 os.path.join(tmp_dir, gro_file),
             )
+
+    def _run_job_pool(self, run_func: Callable):
+        # get the loaded tasks from the subtask container
+
+        # while self._subtask_container.done() is False:
+        job_generator = (j for j in self._subtask_container.get_todo_tasks())
+
+        current_jobs: Deque[Subtask] = deque()
+        # initially fill the queue with N jobs
+        while len(current_jobs) < self.execution.parallelization.jobs:
+            current_jobs.append(next(job_generator))
+
+        _ = [job.increment_tries() for job in current_jobs]
+        # _ = [job.set_status_failed() for job in current_jobs]
+        # submit the initial job pool
+        queue_exhausted = False
+        while self._subtask_container.done() is False:
+            # loop through the jobs:
+            self._logger.log(f"Currently running {len(current_jobs)} jobs", _LE.DEBUG)
+            for job in current_jobs:
+                # job is ready to go, dispatch it to Slurm
+                if job.status == _PE.STATUS_READY:
+                    self._logger.log(f"Running job {job.data}", _LE.DEBUG)
+                    job_id = run_func(job.data)
+                    job.set_job_id(job_id)
+                    job.set_status(_PE.STATUS_RUNNING)
+                # check the job status
+                elif job.status == _PE.STATUS_RUNNING:
+                    # check to see whether it's finished
+                    status = self._check_job_status(job.job_id)
+                    if status == _SE.COMPLETED:
+                        job.set_status_success()
+                    elif status == _SE.FAILED:
+                        job.set_status_failed()
+                    elif status == _SE.RUNNING:
+                        # sleep for a few seconds before proceeding to check the next job
+                        time.sleep(2)
+                # if complete, succesfully or not, remove the job from the queue, prepare another
+                elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
+                    current_jobs.remove(job)
+                    if queue_exhausted is False:
+                        try:
+                            new_job = next(job_generator)
+                            new_job.increment_tries()
+                            current_jobs.append(new_job)
+                        except StopIteration:
+                            self._logger.log("Reached end of job queue", _LE.DEBUG)
+                            queue_exhausted = True
+
+    def _check_job_status(self, job_id):
+        """
+        Monitor the status of a previously submitted job, return the result
+        """
+        # use the entrypoint included in the Icolos install
+
+        command = f"sacct -j {job_id} --parsable --noheader -a"
+        result = subprocess.run(
+            command,
+            shell=True,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if result.stdout:
+            state = result.stdout.split("\n")[0].split("|")[5]
+        else:
+            state = None
+        return state
 
     def _execute_pmx_step_parallel(
         self,

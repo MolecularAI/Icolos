@@ -66,6 +66,7 @@ class SlurmExecutor(ExecutorBase):
         location=None,
         pipe_input=None,
         tmpfile: str = None,
+        wait: bool = True,
     ):
         """
         Creates and executes the batch script using the provided resource requirements
@@ -104,6 +105,8 @@ class SlurmExecutor(ExecutorBase):
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
+            if wait is False:
+                return job_id
             state = self._wait_for_job_completion(job_id=job_id)
         # if using local resources, bash call is blocking, no need to monitor, just wait for result to return
         else:

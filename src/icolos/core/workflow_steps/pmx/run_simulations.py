@@ -3,14 +3,16 @@ from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
+from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
 from icolos.utils.enums.program_parameters import (
     StepPMXEnum,
 )
 from icolos.utils.execute_external.slurm_executor import SlurmExecutor
-from icolos.utils.general.parallelization import SubtaskContainer
+from icolos.utils.general.parallelization import Subtask, SubtaskContainer
 import os
 
 _PSE = StepPMXEnum()
+_EPE = ExecutionPlatformEnum
 
 
 class StepPMXRunSimulations(StepPMXBase, BaseModel):
@@ -53,13 +55,19 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             if self.sim_type == "transitions"
             else self._inspect_log_files
         )
-        self._execute_pmx_step_parallel(
-            run_func=self._execute_command,
-            step_id="pmx_run_simulations",
-            # for run_simulations, because batch efficiency is crucial, we do this prior to batching
-            prune_completed=False,
-            result_checker=result_checker,
-        )
+        # simulations are run without the normal parallelizer
+        # this relies upon job IDs from Slurm
+        if self.execution.platform == _EPE.SLURM:
+            self._run_job_pool(run_func=self._run_single_job)
+        else:
+            # simulations are run locally
+            self._execute_pmx_step_parallel(
+                run_func=self._execute_command,
+                step_id="pmx_run_simulations",
+                # for run_simulations, because batch efficiency is crucial, we do this prior to batching
+                prune_completed=False,
+                result_checker=result_checker,
+            )
 
     def get_mdrun_command(
         self,
@@ -202,10 +210,26 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                             batch_script_paths.append(path)
         return batch_script_paths
 
-    def _execute_command(self, jobs: List[str]):
+    def _run_single_job(self, job: str):
         """
-        Execute the simulations for a batch of edges
+        Execute the simulation for a single batch script
         """
+        # for idx, job in enumerate(jobs):
+        self._logger.log(
+            f"Starting execution of job {job.split('/')[-1]}. ",
+            _LE.DEBUG,
+        )
+        # self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
+        location = os.path.dirname(job)
+        job_id = self._backend_executor.execute(
+            tmpfile=job, location=location, check=False, wait=False
+        )
+        return job_id
+        # self._logger.log(
+        #     f"Execution for job {job} completed with status: {result}", _LE.DEBUG
+        # )
+
+    def _execute_command(self, jobs: List[Subtask]):
         for idx, job in enumerate(jobs):
             self._logger.log(
                 f"Starting execution of job {job.split('/')[-1]}. ",

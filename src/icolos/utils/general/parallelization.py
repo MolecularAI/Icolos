@@ -11,12 +11,16 @@ class Subtask(BaseModel):
     status: _PE = _PE.STATUS_READY
     times_tried: int = 0
     data: Any
+    job_id: str = None
 
     def increment_tries(self):
         self.times_tried += 1
 
     def set_status(self, status: str):
         self.status = status
+
+    def set_job_id(self, job_id: str):
+        self.job_id = job_id
 
     def set_status_failed(self):
         self.set_status(_PE.STATUS_FAILED)
