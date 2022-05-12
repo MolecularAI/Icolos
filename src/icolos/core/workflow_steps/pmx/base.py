@@ -354,9 +354,10 @@ class StepPMXBase(StepBase, BaseModel):
                     f" Execution Summary: PENDING: {ready_count}\tRUNNING: {running_count}\tDONE: {done_count}",
                     _LE.INFO,
                 )
-                get_progress_bar_string(
+                prog_string = get_progress_bar_string(
                     done_count, done_count + running_count + ready_count
                 )
+                self._logger.log(prog_string, _LE.INFO)
             previous_metrics = current_metrics
             for job in current_jobs:
                 # job is ready to go, dispatch it to Slurm
