@@ -1,3 +1,4 @@
+from asyncio import run_coroutine_threadsafe
 import subprocess
 from subprocess import CompletedProcess
 import time
@@ -326,22 +327,35 @@ class StepPMXBase(StepBase, BaseModel):
         # while self._subtask_container.done() is False:
         job_generator = (j for j in self._subtask_container.get_todo_tasks())
 
-        current_jobs: Deque[Subtask] = deque()
+        current_jobs = []
         # initially fill the queue with N jobs
         while len(current_jobs) < self.execution.parallelization.jobs:
-            current_jobs.append(next(job_generator))
+            try:
+                current_jobs.append(next(job_generator))
+            except StopIteration:
+                break
 
         _ = [job.increment_tries() for job in current_jobs]
         # _ = [job.set_status_failed() for job in current_jobs]
         # submit the initial job pool
         queue_exhausted = False
+        previous_metrics = [0, 0, 0, 0]
         while self._subtask_container.done() is False:
             # loop through the jobs:
-            self._logger.log(f"Currently running {len(current_jobs)} jobs", _LE.DEBUG)
+            done_count = len(self._subtask_container.get_done_tasks())
+            running_count = len(self._subtask_container.get_running_tasks())
+            ready_count = len(self._subtask_container.get_todo_tasks())
+
+            current_metrics = [done_count, running_count, ready_count]
+            if current_metrics != previous_metrics:
+                self._logger.log(
+                    f" Execution Summary: PENDING: {ready_count}\tRUNNING: {running_count}\tDONE: {done_count}",
+                    _LE.INFO,
+                )
+            previous_metrics = current_metrics
             for job in current_jobs:
                 # job is ready to go, dispatch it to Slurm
                 if job.status == _PE.STATUS_READY:
-                    self._logger.log(f"Running job {job.data}", _LE.DEBUG)
                     job_id = run_func(job.data)
                     job.set_job_id(job_id)
                     job.set_status(_PE.STATUS_RUNNING)
@@ -350,23 +364,28 @@ class StepPMXBase(StepBase, BaseModel):
                     # check to see whether it's finished
                     status = self._check_job_status(job.job_id)
                     if status == _SE.COMPLETED:
+                        self._logger.log(f"Job {job.job_id} COMPLETED", _LE.DEBUG)
                         job.set_status_success()
                     elif status == _SE.FAILED:
+                        self._logger.log(f"Job {job.job_id} FAILED!", _LE.WARNING)
                         job.set_status_failed()
-                    elif status == _SE.RUNNING:
-                        # sleep for a few seconds before proceeding to check the next job
-                        time.sleep(2)
+                    # elif status in (_SE.RUNNING, _SE.PENDING):
+                    #     # sleep for a few seconds before proceeding to check the next job
+                    #     pass
+
                 # if complete, succesfully or not, remove the job from the queue, prepare another
-                elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
+                if job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
                     current_jobs.remove(job)
                     if queue_exhausted is False:
                         try:
                             new_job = next(job_generator)
+                            self._logger.log(f"Preparing new job {job.data}", _LE.DEBUG)
                             new_job.increment_tries()
                             current_jobs.append(new_job)
                         except StopIteration:
                             self._logger.log("Reached end of job queue", _LE.DEBUG)
                             queue_exhausted = True
+            time.sleep(10)
 
     def _check_job_status(self, job_id):
         """
