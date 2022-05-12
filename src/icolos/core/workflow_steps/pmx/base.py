@@ -22,6 +22,8 @@ import shutil
 import glob
 from collections import deque
 
+from icolos.utils.general.progress_bar import get_progress_bar_string
+
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
@@ -351,6 +353,9 @@ class StepPMXBase(StepBase, BaseModel):
                 self._logger.log(
                     f" Execution Summary: PENDING: {ready_count}\tRUNNING: {running_count}\tDONE: {done_count}",
                     _LE.INFO,
+                )
+                get_progress_bar_string(
+                    done_count, done_count + running_count + ready_count
                 )
             previous_metrics = current_metrics
             for job in current_jobs:
