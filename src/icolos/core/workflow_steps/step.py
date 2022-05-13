@@ -74,8 +74,6 @@ class StepExecutionParameters(BaseModel):
     class StepExecutionParallelizationParameters(BaseModel):
         jobs: int = 1
         max_length_sublists: int = None
-        wait_low: int = 5
-        wait_high: int = 30
 
     prefix_execution: str = None
     binary_location: str = None
@@ -250,8 +248,6 @@ class StepBase(BaseModel):
                 other_args=self.execution.resources.other_args,
                 additional_lines=self.execution.resources.additional_lines,
                 gres=self.execution.resources.gres,
-                wait_low=self.execution.parallelization.wait_low,
-                wait_high=self.execution.parallelization.wait_high,
             )
         else:
             self._backend_executor = executor(

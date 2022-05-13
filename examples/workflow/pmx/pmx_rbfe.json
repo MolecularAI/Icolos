@@ -103,7 +103,7 @@
 							"extension": "pdb"
 						},
 						{
-							"source": "{file_path}/run_simulations/input/mdp/",
+							"source": "{file_path}/pmx/run_simulations/input/mdp/",
 							"extension": "mdp"
 						}
 					],

@@ -31,8 +31,6 @@ class SlurmExecutor(ExecutorBase):
         additional_lines: List,
         prefix_execution=None,
         binary_location=None,
-        wait_low: int = 5,
-        wait_high: int = 30,
     ):
         super().__init__(prefix_execution=None, binary_location=None)
 
@@ -47,8 +45,6 @@ class SlurmExecutor(ExecutorBase):
         self.additional_lines = additional_lines
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
-        self.wait_low = wait_low
-        self.wait_high = wait_high
 
         # check if the machine can reach slurm
         self.slurm_available = self.is_available()
@@ -177,9 +173,7 @@ class SlurmExecutor(ExecutorBase):
         while completed is False:
             state = self._check_job_status(job_id)
             if state in [_SE.PENDING, _SE.RUNNING, None]:
-                # avoid many simultaneous processes pinging slurmd
-                eps = np.random.uniform(-10, 10)
-                time.sleep(60 + eps)
+                time.sleep(60)
                 continue
             elif state == _SE.COMPLETED:
                 completed = True
