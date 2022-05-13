@@ -329,7 +329,7 @@ class StepPMXBase(StepBase, BaseModel):
 
         # while self._subtask_container.done() is False:
         job_generator = (j for j in self._subtask_container.get_todo_tasks())
-
+        n_jobs = len(self._subtask_container.get_todo_tasks())
         current_jobs = []
         # initially fill the queue with N jobs
         while len(current_jobs) < self.execution.parallelization.jobs:
@@ -342,8 +342,9 @@ class StepPMXBase(StepBase, BaseModel):
         # _ = [job.set_status_failed() for job in current_jobs]
         # submit the initial job pool
         queue_exhausted = False
-        previous_metrics = [0, 0, 0, 0]
-        while self._subtask_container.done() is False:
+        previous_metrics = [0, 0, 0]
+        done_count = 0
+        while done_count < n_jobs:
             # loop through the jobs:
             done_count = len(self._subtask_container.get_done_tasks())
             running_count = len(self._subtask_container.get_running_tasks())
