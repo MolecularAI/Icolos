@@ -41,7 +41,7 @@ class StructConvert:
         self.execute(arguments=arguments)
 
     def pdb2mae(self, pdb_file: str, mae_file: str):
-        
+
         arguments = [
             pdb_file,
             mae_file,

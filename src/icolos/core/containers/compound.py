@@ -16,7 +16,6 @@ import numpy as np
 import os
 
 _WE = WriteOutEnum()
-_SEE = SchrodingerExecutablesEnum()
 
 
 class Conformer:

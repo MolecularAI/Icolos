@@ -1,7 +1,7 @@
 from typing import List, Union
 from pydantic import BaseModel
 
-from icolos.core.containers.compound import unroll_conformers
+from icolos.core.containers.compound import Compound, unroll_conformers
 from icolos.core.step_utils.structcat_util import StructcatUtil
 from icolos.core.step_utils.structconvert import StructConvert
 from icolos.utils.enums.program_parameters import (
@@ -66,7 +66,7 @@ class StepDataManipulation(StepIOBase, BaseModel):
 
     def _convert_mae_to_pdb(self):
         converter = StructConvert(prefix_execution=_SEE.SCHRODINGER_MODULE)
-        tmp_dir = self._prepare_tmpdir()
+        tmp_dir = self._make_tmpdir()
 
         # find the mae files from the input step and convert to pdb
         for file in self.data.generic.get_files_by_extension("mae"):
@@ -85,7 +85,7 @@ class StepDataManipulation(StepIOBase, BaseModel):
         )
         assert os.path.isfile(self.settings.additional[_SDM.RECEPTOR])
         # create a tmpdir to work in
-        tmp_dir = self._prepare_tmpdir()
+        tmp_dir = self._make_tmpdir()
         # get compounds from previous step
         conformers = self._unroll_compounds(self.get_compounds(), level="conformers")
         for conf in conformers:
@@ -135,6 +135,8 @@ class StepDataManipulation(StepIOBase, BaseModel):
                     for conf in top_confs:
                         top_conformer_list.append(conf)
         if self.settings.additional[_SFE.FILTER_LEVEL] == _SFE.COMPOUNDS:
+            self._logger.log("Filtering to top conformers per compound", _LE.DEBUG)
+
             # sort the top conformers from each enumeration and attach the top n conformers to their respective enumeration, get rid of the rest
             # sorted_top_confs = sorted(top_conformer_list,
             #                           key=lambda x: x.get_molecule().GetProp(self.settings.additional[_SFE.CRITERIA]),
@@ -146,12 +148,36 @@ class StepDataManipulation(StepIOBase, BaseModel):
                 reverse=reverse,
                 aggregation=aggregation,
             )
+
             for compound in self.data.compounds:
                 for enum in compound.get_enumerations():
                     enum.clear_conformers()
             for conf in sorted_top_confs:
                 enum = conf.get_enumeration_object()
-                enum.add_conformer(conf)
+                # if that enum's compound object already has top_n attached, skip
+                comp: Compound = enum.get_compound_object()
+                total_confs = self.get_conformer_count(comp)
+                if total_confs < top_n:
+                    enum.add_conformer(conf)
+                else:
+                    self._logger.log(
+                        "Already reached max conformers, skipping", _LE.DEBUG
+                    )
+
+            # remove empty conformers
+
+    def get_conformer_count(self, comp: Compound) -> int:
+        """count attached conformers over all enumerations
+
+        :param Compound comp: compound to inspect
+        :return int: number of conformers over all enumerations
+        """
+        total_confs = 0
+        for enum in comp.get_enumerations():
+            for conf in enum.get_conformers():
+                total_confs += 1
+
+        return total_confs
 
     def _sort_conformers(
         self,
@@ -241,6 +267,11 @@ class StepDataManipulation(StepIOBase, BaseModel):
             raise NotImplementedError
         elif self.settings.additional[_SDM.ACTION] == _SDM.FILTER:
             self._filter_compounds()
+            n_comp, n_enum, n_conf = self.get_compound_stats()
+            self._logger.log(
+                f"Filtered compounds, resulting in {n_comp} compounds with {n_enum} enumerations with {n_conf} conformers completed.",
+                _LE.INFO,
+            )
         else:
             raise ValueError(
                 f'Action "{self.settings.additional[_SDM.ACTION]}" not supported.'

@@ -1,21 +1,16 @@
-from typing import Dict, List, Union
+from typing import List, Union
 from icolos.core.containers.compound import Compound
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import (
-    GromacsEnum,
     StepPMXEnum,
 )
-from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.gromacs import GromacsExecutor
-from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
 _PSE = StepPMXEnum()
-_SGE = StepGromacsEnum()
-_GE = GromacsEnum()
 
 
 class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
@@ -44,10 +39,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
 
-    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]):
+    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]) -> None:
         # define some constants that depend on whether this is rbfe/abfe
         # for abfe, edge refers to the ligand index
-        # mdp_path = os.path.join(self.work_dir, "input/mdp")
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
         # FIXME: how do we get the replicas for abfe jobs without requiring input every time? inspect the workdir?
         replicas = (
@@ -57,11 +51,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         )
 
         for edge in jobs:
-
             for state in self.states:
                 for r in range(1, replicas + 1):
                     for wp in self.therm_cycle_branches:
-
                         toppath = self._get_specific_path(
                             workPath=self.work_dir, edge=edge, wp=wp
                         )
@@ -97,8 +89,8 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         """
         Works out where to get starting structure from based on the current run and simulation type
         """
-        if self.get_additional_setting(_PSE.PREV_STEP) is not None:
-            return self.get_additional_setting(_PSE.PREV_STEP)
+        if self._get_additional_setting(_PSE.PREV_STEP) is not None:
+            return self._get_additional_setting(_PSE.PREV_STEP)
         elif self.run_type == _PSE.RBFE:
             if sim_type == "nvt":
                 return "em"

@@ -1,5 +1,4 @@
 import os
-import numpy as np
 from shlex import quote
 from icolos.loggers.steplogger import StepLogger
 from icolos.utils.enums.logging_enums import LoggingConfigEnum
@@ -9,6 +8,7 @@ import subprocess
 from typing import List
 import time
 from tempfile import mkstemp
+import numpy as np
 
 _SE = SlurmEnum()
 logger = StepLogger()
@@ -204,7 +204,7 @@ class SlurmExecutor(ExecutorBase):
                     completed = True
             except FileNotFoundError:
                 logger.log("log file not found, sleeping", _LE.DEBUG)
-                time.sleep(30)
+                time.sleep(10)
         return state
 
     def _check_job_status(self, job_id):

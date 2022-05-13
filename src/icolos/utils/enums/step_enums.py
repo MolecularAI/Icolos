@@ -45,6 +45,7 @@ class StepBaseEnum(str, Enum):
     STEP_DO_DSSP = "DO_DSSP"
     STEP_LIGPREP = "LIGPREP"
     STEP_GLIDE = "GLIDE"
+    STEP_RESIDUE_SCANNING = "RESIDUE_SCANNING"
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
     STEP_GOLD_DOCKING = "GOLD_DOCKING"
@@ -569,6 +570,8 @@ class StepGlideEnum:
     GLIDE_LOG = ".log"
     GLIDE_SDF = ".sdf"
 
+    FILL_DUMMY_CONFS = "fill_dummy_confs"
+
     # try to find the internal value and return
     def __getattr__(self, name):
         if name in self:
@@ -1031,7 +1034,7 @@ class StepActiveLearningEnum:
     SMILES = "SMILES"
     MOLECULE = "Molecule"
     VIRTUAL_LIB = "virtual_lib"
-    FRAGMENTS ="fragments"
+    FRAGMENTS = "fragments"
     INIT_SAMPLE_FACTOR = "init_sample_factor"
     MORGAN_FP = "MorganFP"
     SOAP_VECTOR = "soap_vector"
@@ -1043,6 +1046,7 @@ class StepActiveLearningEnum:
     WARMUP = "warmup"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"
+    ACQUISITION_FUNCTION = "acquisition_function"
     MODEL = "model"
     EVALUATE = "evaluate"
     CRITERIA = "criteria"
@@ -1050,3 +1054,6 @@ class StepActiveLearningEnum:
     DYNAMIC_STOP = "dynamic_stop"
     REPLICAS = "replicas"
     EPSILON = "epsilon"
+    LATENT_DISTANCE = "latent_distance"
+    GREEDY = "greedy"
+    EI = "ei"

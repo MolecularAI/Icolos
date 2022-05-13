@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from icolos.core.containers.compound import Compound
 from icolos.core.workflow_steps.schrodinger.base import StepSchrodingerBase
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -155,10 +156,16 @@ class StepFEPBase(StepSchrodingerBase, BaseModel):
         _, predecessors = shortest_path(
             error_matrix, directed=False, return_predecessors=True, indices=0
         )
-        self._construct_dg_per_compound(ddG_matrix, predecessors, error_matrix)
+        self._construct_dg_per_compound(
+            ddG_matrix, predecessors, error_matrix, self.get_compounds()
+        )
 
     def _construct_dg_per_compound(
-        self, ddG: np.ndarray, predecessors: List, error_matrix: np.ndarray
+        self,
+        ddG: np.ndarray,
+        predecessors: List,
+        error_matrix: np.ndarray,
+        compounds: List[Compound],
     ) -> None:
         """
         Calculate the calibrated binding free energy per compound using a reference value
@@ -182,7 +189,7 @@ class StepFEPBase(StepSchrodingerBase, BaseModel):
                 _calculate_dg(prev_index, dG=dG, err=err)
             else:
                 data = str(round(dG, 2)) + "+-" + str(round(err, 2))
-                self.data.compounds[idx].get_enumerations()[0].get_conformers()[
+                compounds[idx].get_enumerations()[0].get_conformers()[
                     0
                 ].get_molecule().SetProp("map_dG", data)
                 self._logger.log(
@@ -190,7 +197,7 @@ class StepFEPBase(StepSchrodingerBase, BaseModel):
                     _LE.INFO,
                 )
 
-        for comp in self.get_compounds():
+        for comp in compounds:
             idx = comp.get_compound_number()
             # check whether the compound appeared in the final map
             try:

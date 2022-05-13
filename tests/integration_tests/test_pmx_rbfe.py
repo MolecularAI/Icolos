@@ -120,7 +120,6 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEP_TYPE: "pmx_atomMapping",
                     _SBE.EXEC: {
                         "parallelization": {"cores": 8},
-                        "failure_policy": {"n_tries": 5},
                     },
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {

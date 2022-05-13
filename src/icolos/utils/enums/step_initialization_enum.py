@@ -85,6 +85,7 @@ class StepInitializationEnum:
         _SBE.STEP_FEP_PLUS_EXEC: StepFepPlusExec,
         _SBE.STEP_FEP_PLUS_ANALYSIS: StepFepPlusAnalysis,
         _SBE.STEP_PREPWIZARD: StepPrepwizard,
+        _SBE.STEP_RESIDUE_SCANNING: StepResidueScanning,
         _SBE.STEP_MDPOCKET: StepMDpocket,
         _SBE.STEP_PEPTIDE_EMBEDDER: StepPeptideEmbedder,
         _SBE.STEP_PDB_FIXER: StepPdbFixer,

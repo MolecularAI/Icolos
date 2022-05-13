@@ -1,5 +1,4 @@
-from typing import Dict, List
-from icolos.core.containers.perturbation_map import Edge
+from typing import List
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from icolos.core.workflow_steps.step import _LE
 from pydantic import BaseModel
@@ -12,7 +11,6 @@ from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
 
-_PSE = StepPMXEnum()
 _GE = GromacsEnum()
 
 
@@ -60,7 +58,9 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         )
 
         # move frame0.gro to frame80.gro
-        cmd = "mv {0}/frame0.gro {0}/frame80.gro".format(tipath)
+        last_frame = len([f for f in os.listdir(tipath) if f.startswith("frame")]) + 1
+        self._logger.log(f"Extracted {last_frame} frames", _LE.DEBUG)
+        cmd = f"mv {tipath}/frame0.gro {tipath}/frame{last_frame}.gro".format(tipath)
         os.system(cmd)
 
         self._clean_backup_files(tipath)

@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from rdkit.Chem import rdmolops
+from rdkit import Chem
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
@@ -62,14 +63,14 @@ class StepPMXBase(StepBase, BaseModel):
         self.therm_cycle_branches = ["ligand", "complex"]
 
         # simulation setup
-        self.run_type = self.get_additional_setting(_SPE.RUN_TYPE, "rbfe")
+        self.run_type = self._get_additional_setting(_SPE.RUN_TYPE, "rbfe")
         self.ff = "amber99sb-star-ildn-mut.ff"
-        self.boxshape = self.get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
-        self.boxd = self.get_additional_setting(_SPE.BOXD, 1.5)
-        self.water = self.get_additional_setting(_SPE.WATER, "tip3p")
-        self.conc = self.get_additional_setting(_SPE.CONC, 0.15)
-        self.pname = self.get_additional_setting(_SPE.PNAME, "NaJ")
-        self.nname = self.get_additional_setting(_SPE.NNAME, "ClJ")
+        self.boxshape = self._get_additional_setting(_SPE.BOXSHAPE, "dodecahedron")
+        self.boxd = self._get_additional_setting(_SPE.BOXD, 1.5)
+        self.water = self._get_additional_setting(_SPE.WATER, "tip3p")
+        self.conc = self._get_additional_setting(_SPE.CONC, 0.15)
+        self.pname = self._get_additional_setting(_SPE.PNAME, "NaJ")
+        self.nname = self._get_additional_setting(_SPE.NNAME, "ClJ")
         self.mdp_prefixes = {
             "em": "em",
             "nvt": "nvt",
@@ -254,7 +255,7 @@ class StepPMXBase(StepBase, BaseModel):
         self, tmp_dir, conf: Conformer, include_top=False, include_gro=False
     ):
         # main pipeline for producing GAFF parameters for a ligand
-        charge_method = self.get_additional_setting(
+        charge_method = self._get_additional_setting(
             key=_SGE.CHARGE_METHOD, default="bcc"
         )
         formal_charge = (
@@ -437,15 +438,14 @@ class StepPMXBase(StepBase, BaseModel):
             _ = [sub.increment_tries() for element in next_batch for sub in element]
             _ = [sub.set_status_failed() for element in next_batch for sub in element]
 
-            n_removed = 0
             jobs = self._prepare_edges(next_batch)
+            n_removed = 0
             if prune_completed:
                 pre_exec_results = result_checker(jobs)
                 for job_sublist, exec_success_sublist, sublist in zip(
                     jobs, pre_exec_results, next_batch
                 ):
                     # we test on the subtask level, not the individual job level, but since jobs are run through with max_len_sublists=1, in practice this doesn't matter
-                    # if all(r is True for r in exec_success):
                     for job, result, task in zip(
                         job_sublist, exec_success_sublist, sublist
                     ):
@@ -575,23 +575,49 @@ class StepPMXBase(StepBase, BaseModel):
             ) as f:
                 f.writelines(itp_lines)
 
+    def get_hub_conformer(self, hub_conf_path) -> Conformer:
+        """
+
+        :return _type_: _description_
+        """
+
+        with Chem.SDMolSupplier(hub_conf_path) as supplier:
+            hub_mol = supplier[0]
+        return Conformer(conformer=hub_mol)
+
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
-        # construct the perturbation map and load in the log file
-        log_file = self.data.generic.get_argument_by_extension(
-            "log", rtn_file_object=True
-        )
-        log_file.write(work_dir)
+        topology = self._get_additional_setting("topology", default="normal")
+        # check whether a hub conformer has been supplied (as an sdf file)
+        hub_conf_path = self._get_additional_setting("hub_conformer", default=None)
+        if hub_conf_path is not None:
+            assert hub_conf_path.endswith(
+                ".sdf"
+            ), "Hub conformer must be supplied as an SDF file!"
+
         perturbation_map = PerturbationMap(
             compounds=self.data.compounds,
             protein=self.data.generic.get_argument_by_extension(
                 "pdb", rtn_file_object=True
             ),
             replicas=replicas,
-            strict_execution=self.get_additional_setting(_SPE.STRICT, default=True),
+            strict_execution=self._get_additional_setting(_SPE.STRICT, default=True),
+            hub_conformer=self.get_hub_conformer(hub_conf_path)
+            if hub_conf_path is not None
+            else None,
         )
-        perturbation_map.parse_map_file(
-            os.path.join(self.work_dir, log_file.get_file_name())
-        )
+        if topology == "normal":
+            # construct the perturbation map and load in the log file
+            log_file = self.data.generic.get_argument_by_extension(
+                "log", rtn_file_object=True
+            )
+            log_file.write(work_dir)
+
+            perturbation_map.parse_map_file(
+                os.path.join(self.work_dir, log_file.get_file_name())
+            )
+        elif topology == "star":
+            # manually generate star top, no mapping tool required
+            perturbation_map.generate_star_map()
 
         self._logger.log(
             f"Initialised perturbation map with {len(perturbation_map.get_nodes())} nodes and {len(perturbation_map.get_edges())} edges",

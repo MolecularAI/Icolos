@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+import uuid
 from IPython.lib.display import IFrame
 import pandas as pd
 from icolos.core.containers.compound import Compound, Conformer
@@ -16,10 +17,6 @@ _PE = ParallelizationEnum
 
 
 class Node(BaseModel):
-    """
-    Container class for the nodes, wrapper class around a compound object
-    """
-
     class Config:
         arbitrary_types_allowed = True
 
@@ -54,14 +51,8 @@ class Node(BaseModel):
     def get_node_hash(self) -> str:
         return self.node_hash
 
-    # TODO: add methods here to access connectivity and color attributes
-
 
 class Edge(BaseModel):
-    """
-    Simple container class the the edges in the perturbation map, specified entirely by the connected nodes
-    """
-
     class Config:
         arbitrary_types_allowed = True
 
@@ -81,10 +72,10 @@ class Edge(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def get_source_node_name(self):
+    def _get_source_node_name(self):
         return self.node_from.get_node_hash()
 
-    def get_destination_node_name(self):
+    def _get_destination_node_name(self):
         return self.node_to.get_node_hash()
 
     def get_edge_id(self) -> str:
@@ -113,6 +104,7 @@ class PerturbationMap(BaseModel):
     node_df: pd.DataFrame = None
     # prune subsequent edge calculations on error
     strict_execution: str = False
+    hub_conformer: Conformer = None
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -123,42 +115,54 @@ class PerturbationMap(BaseModel):
         line = line[0]
         return data.index(line)
 
-    def _get_conformer_by_id(self, comp_id: str) -> Optional[Conformer]:
-        # get the compund object based on the ID in the ligand table (compound names). At this stage in the workflow we have only one conformer per enumeration
-        try:
-            # standard icolos naming conventino
-            parts = comp_id.split(":")
-            compound_id = parts[0]
-            enumeration_id = parts[1]
-        except:
-            # a non-standard compound name has been used
-            compound_id = comp_id
+    def _get_conformer_by_id(self, comp_id: str) -> Conformer:
+        """Parses the compound names from the edges specified in the mapper log file, performs a lookup to extract the corresponding compound from the step's compounds
+
+        :param str comp_id: id of the compound parsed from the map generation
+        :return Conformer: return the conformer object from self.data.compounds
+        """
         for compound in self.compounds:
-            if compound.get_name().split(":")[0] == compound_id:
-                rtn_compound = compound
-                enums = rtn_compound.get_enumerations()
+            # compound could have any arbitrary name - check whether this the node ID from schrodinger, or check the index string
+            if compound.get_name() == comp_id:
+                # there will be one and only one conformer attached to one of the enumerations.  Return the first.
+                for enum in compound.get_enumerations():
+                    if enum.get_conformers():
+                        return enum.get_conformers()[0]
 
-                if len(enums) == 1:
-                    # easy case, there is only one enumeration, return it's single conformer
+    def generate_star_map(self) -> None:
+        """Generates a star topology using a single hub compound"""
+        hub_node = Node(
+            node_id=self.hub_compound.get_index_string(),
+            node_hash=uuid.uuid4().hex,
+            conformer=self.hub_compound.get_molecule(),
+        )
+        for compound in self.compounds:
+            end_node = Node(
+                node_id=compound.get_index_string(),
+                node_hash=uuid.uuid4().hex,
+                conformer=compound.get_enumerations()[0]
+                .get_conformers()[0]
+                .get_molecule(),
+            )
+            edge = Edge(
+                node_from=hub_node,
+                node_to=end_node,
+            )
+            self.edges.append(edge)
 
-                    # at this stage, the docking poses must have been filtered to a single entry
-                    # per enumeration (an enumerations should have been filtered on charge state etc.)
-                    return enums[0].get_conformers()[0]
-                else:
-                    # multiple enumerations, must be using Icolos naming or we cannot infer which
-                    # enumeration should be used
-                    enum = rtn_compound.find_enumeration(
-                        enumeration_id=int(enumeration_id)
-                    )
-                    return enum.get_conformers()[0]
+        for node in self.nodes:
+            self._attach_node_connectivity(node)
 
-    def parse_map_file(self, file_path) -> None:
+    def parse_map_file(self, file_path: str) -> None:
+        """Parse map from Schrodinger's fep_mapper log file, build internal graph representation + attach properties from fmp_stats, if provided
+
+        :param str file_path: path to the fep_mapper.log file to extract the perturbation map from
+        """
         # we need to do some format enforcement here (schrodinger or otherwise)
 
         with open(file_path, "r") as f:
             data = f.readlines()
 
-        start_edge = self._get_line_idx(data, _SFE.EDGE_HEADER_LINE)
         start_node = self._get_line_idx(data, _SFE.NODE_HEADER_LINE)
         stop_node = self._get_line_idx(data, _SFE.SIMULATION_PROTOCOL)
         edge_info_start = self._get_line_idx(data, _SFE.SIMILARITY)
@@ -260,21 +264,24 @@ class PerturbationMap(BaseModel):
         return self.nodes
 
     def visualise_perturbation_map(self, write_out_path: str) -> None:
-        """method for visualising the data as map with pyvis - Network"""
+        """Generate NetworkX graph for the parsed perturbation map
+
+        :param str write_out_path: directory to write output file
+        """
         vmap = Network(directed=True)
         vmap.barnes_hut()
 
         # this is not an iterable
         for edge in self.edges:
             vmap.add_node(
-                edge.get_source_node_name(), color=edge.node_from.get_node_color()
+                edge._get_source_node_name(), color=edge.node_from.get_node_color()
             )
             vmap.add_node(
-                edge.get_destination_node_name(), color=edge.node_to.get_node_color()
+                edge._get_destination_node_name(), color=edge.node_to.get_node_color()
             )
             vmap.add_edge(
-                source=edge.get_source_node_name(),
-                to=edge.get_destination_node_name(),
+                source=edge._get_source_node_name(),
+                to=edge._get_destination_node_name(),
                 length=edge.total,
                 label="total: " + str(edge.total),
                 title="Mcs: " + str(edge.mcs) + ", SnapCoreRMSD: ",
@@ -285,21 +292,22 @@ class PerturbationMap(BaseModel):
     def get_protein(self) -> GenericData:
         return self.protein
 
-    def get_edge_by_id(self, idx: str) -> Optional[Edge]:
-        """
-        Performs a look up to return the edge.
-        If the idx is a path to a batch file (e.g. for run_simulations), edge is extracted from the filepath
+    def get_edge_by_id(self, id: str) -> Optional[Edge]:
+        """Lookup edge by identifier
+
+        :param str id: edge hash to retrieve
+        :return Optional[Edge]: Return the edge if found, else None
         """
         # handle case where the task is actually a path to a batch script
-        if not isinstance(idx, Edge):
-            parts = idx.split("/")
+        if not isinstance(id, Edge):
+            parts = id.split("/")
 
             for part in parts:
                 for e in self.edges:
                     if part == e:
-                        idx = e
+                        id = e
 
-        match = [e for e in self.edges if e.get_edge_id() == idx]
+        match = [e for e in self.edges if e.get_edge_id() == id]
         if not match:
             return
         else:

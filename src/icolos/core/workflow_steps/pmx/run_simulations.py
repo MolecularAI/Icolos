@@ -34,7 +34,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             edges = [e.get_edge_id() for e in self.get_edges()]
         elif self.run_type == "abfe":
             edges = [c.get_index_string() for c in self.get_compounds()]
-        self.sim_type = self.get_additional_setting(_PSE.SIM_TYPE)
+        self.sim_type = self._get_additional_setting(_PSE.SIM_TYPE)
         assert (
             self.sim_type in self.mdp_prefixes.keys()
         ), f"sim type {self.sim_type} not recognised!"
@@ -78,10 +78,9 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         trr=None,
     ):
 
-        mdrun_binary = self.get_additional_setting(
+        mdrun_binary = self._get_additional_setting(
             _PSE.MDRUN_EXECUTABLE, default="gmx mdrun"
         )
-        # EM
         if self.sim_type in ("em", "eq", "npt", "nvt"):
 
             job_command = [
@@ -105,21 +104,22 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
+            sim_path = os.path.dirname(tpr)
+            tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
-            for i in range(1, 81):
-                # check that the dhdl file does not already exist
+            for i, file in enumerate(tpr_files):
                 dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i}.xvg")
                 if not os.path.isfile(dhdl_file):
                     single_command = [
                         mdrun_binary,
                         "-s",
-                        f"ti{i}.tpr",
+                        file,
                         "-e",
                         ener,
                         "-c",
                         confout,
                         "-dhdl",
-                        f"dhdl{i}.xvg",
+                        f"dhdl{i+1}.xvg",
                         "-o",
                         trr,
                         "-g",
@@ -192,7 +192,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str]):
+    def _prepare_job_pool(self, edges: List[str], branch: str):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -200,14 +200,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         batch_script_paths = []
         for edge in edges:
+            # for branch in self.therm_cycle_branches:
             for r in range(1, replicas + 1):
                 for state in self.states:
-                    for branch in self.therm_cycle_branches:
-                        path = self._prepare_single_job(
-                            edge=edge, wp=branch, state=state, r=r
-                        )
-                        if path is not None:
-                            batch_script_paths.append(path)
+                    path = self._prepare_single_job(
+                        edge=edge, wp=branch, state=state, r=r
+                    )
+                    if path is not None:
+                        batch_script_paths.append(path)
         return batch_script_paths
 
     def _run_single_job(self, job: str):
