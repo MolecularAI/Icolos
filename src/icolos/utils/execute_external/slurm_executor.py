@@ -175,9 +175,7 @@ class SlurmExecutor(ExecutorBase):
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
-            elif state == _SE.COMPLETED:
-                completed = True
-            elif state == _SE.FAILED:
+            elif state in (_SE.COMPLETED, _SE.FAILED, _SE.CANCELLED):
                 completed = True
         return state
 
@@ -222,7 +220,8 @@ class SlurmExecutor(ExecutorBase):
             stderr=subprocess.PIPE,
         )
         if result.stdout:
-            state = result.stdout.split("\n")[0].split("|")[5]
+            state = result.stdout.split("\n")[0].split("|")[5].split(" ")[0]
+
         else:
             state = None
         return state
