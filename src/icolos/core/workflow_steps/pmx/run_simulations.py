@@ -3,14 +3,16 @@ from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
+from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
 from icolos.utils.enums.program_parameters import (
     StepPMXEnum,
 )
 from icolos.utils.execute_external.slurm_executor import SlurmExecutor
-from icolos.utils.general.parallelization import SubtaskContainer
+from icolos.utils.general.parallelization import Subtask, SubtaskContainer
 import os
 
 _PSE = StepPMXEnum()
+_EPE = ExecutionPlatformEnum
 
 
 class StepPMXRunSimulations(StepPMXBase, BaseModel):
@@ -38,22 +40,27 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         ), f"sim type {self.sim_type} not recognised!"
 
         # prepare and pool jobscripts, unroll replicas,  etc
-        for branch in self.therm_cycle_branches:
-            job_pool = self._prepare_job_pool(edges, branch=branch)
-            self._logger.log(
-                f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations, branch {branch}",
-                _LE.DEBUG,
-            )
-            
-            self._subtask_container = SubtaskContainer(
-                max_tries=self.execution.failure_policy.n_tries
-            )
-            self._subtask_container.load_data(job_pool)
-            result_checker = (
-                self._inspect_dhdl_files
-                if self.sim_type == "transitions"
-                else self._inspect_log_files
-            )
+        job_pool = self._prepare_job_pool(edges)
+        self._logger.log(
+            f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations",
+            _LE.DEBUG,
+        )
+
+        self._subtask_container = SubtaskContainer(
+            max_tries=self.execution.failure_policy.n_tries
+        )
+        self._subtask_container.load_data(job_pool)
+        result_checker = (
+            self._inspect_dhdl_files
+            if self.sim_type == "transitions"
+            else self._inspect_log_files
+        )
+        # simulations are run without the normal parallelizer
+        # this relies upon job IDs from Slurm
+        if self.execution.platform == _EPE.SLURM:
+            self._run_job_pool(run_func=self._run_single_job)
+        else:
+            # simulations are run locally
             self._execute_pmx_step_parallel(
                 run_func=self._execute_command,
                 step_id="pmx_run_simulations",
@@ -123,7 +130,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     for key, value in self.settings.arguments.parameters.items():
                         single_command.append(str(key))
                         single_command.append(str(value))
-                    single_command.append(f"\n\nrm {os.path.dirname(tpr)}/*#\n\n")
+                    single_command.append(f"\n\nrm {os.path.dirname(ener)}/*#\n\n")
                     job_command += single_command
                 else:
                     self._logger.log(
@@ -157,10 +164,12 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 sim_complete = any(["Finished mdrun" in l for l in lines])
             except FileNotFoundError:
                 sim_complete = False
+
+        # handle transitions
         else:
             # cannot reliably check that all sims for all edges have completed here, this will be checked in get_mdrun_command which will skip completed perturbations if dhdl exists
             sim_complete = False
-            print("preparing transition")
+
         if not sim_complete:
             self._logger.log(
                 f"Preparing: {wp} {edge} {state} run{r}, simType {self.sim_type}",
@@ -173,11 +182,13 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 confout=confout,
                 mdlog=mdlog,
             )
-            job_command = " ".join(job_command)
-            batch_file = self._backend_executor.prepare_batch_script(
-                job_command, arguments=[], location=simpath
-            )
-            return os.path.join(simpath, batch_file)
+            # empty list indicates all transitions completed
+            if job_command:
+                job_command = " ".join(job_command)
+                batch_file = self._backend_executor.prepare_batch_script(
+                    job_command, arguments=[], location=simpath
+                )
+                return os.path.join(simpath, batch_file)
 
         return
 
@@ -199,10 +210,26 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         batch_script_paths.append(path)
         return batch_script_paths
 
-    def _execute_command(self, jobs: List[str]):
+    def _run_single_job(self, job: str):
         """
-        Execute the simulations for a batch of edges
+        Execute the simulation for a single batch script
         """
+        # for idx, job in enumerate(jobs):
+        self._logger.log(
+            f"Starting execution of job {job.split('/')[-1]}. ",
+            _LE.DEBUG,
+        )
+        # self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
+        location = os.path.dirname(job)
+        job_id = self._backend_executor.execute(
+            tmpfile=job, location=location, check=False, wait=False
+        )
+        return job_id
+        # self._logger.log(
+        #     f"Execution for job {job} completed with status: {result}", _LE.DEBUG
+        # )
+
+    def _execute_command(self, jobs: List[Subtask]):
         for idx, job in enumerate(jobs):
             self._logger.log(
                 f"Starting execution of job {job.split('/')[-1]}. ",

@@ -46,6 +46,14 @@ class SlurmExecutor(ExecutorBase):
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
 
+        # check if the machine can reach slurm
+        self.slurm_available = self.is_available()
+        if not self.slurm_available:
+            logger.log(
+                "Warning - Slurm was not found, jobs will be run locally!",
+                _LE.WARNING,
+            )
+
     def execute(
         self,
         command: str = None,
@@ -54,6 +62,7 @@ class SlurmExecutor(ExecutorBase):
         location=None,
         pipe_input=None,
         tmpfile: str = None,
+        wait: bool = True,
     ):
         """
         Creates and executes the batch script using the provided resource requirements
@@ -64,16 +73,20 @@ class SlurmExecutor(ExecutorBase):
             tmpfile = self.prepare_batch_script(
                 command, arguments, pipe_input, location
             )
-        if self.is_available():
+
+        if self.slurm_available:
             launch_command = f"sbatch {tmpfile}"
         else:
-            logger.log(
-                "Warning - Slurm was not found, falling back to local execution!",
-                _LE.WARNING,
-            )
+
             launch_command = f"bash {tmpfile}"
+
+        # prevent slurm from being overloaded, add a random delay from a uniform distribution
+        # delay = np.random.uniform(self.wait_low, self.wait_high)
+        # time.sleep(delay)
+
         # execute the batch script
         result = super().execute(
+            # do not enforce checking here,
             command=launch_command,
             arguments=[],
             location=location,
@@ -85,10 +98,11 @@ class SlurmExecutor(ExecutorBase):
                 f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
                 _LE.WARNING,
             )
-
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
+            if wait is False:
+                return job_id
             state = self._wait_for_job_completion(job_id=job_id)
         # if using local resources, bash call is blocking, no need to monitor, just wait for result to return
         else:
@@ -161,9 +175,7 @@ class SlurmExecutor(ExecutorBase):
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
-            elif state == _SE.COMPLETED:
-                completed = True
-            elif state == _SE.FAILED:
+            elif state in (_SE.COMPLETED, _SE.FAILED, _SE.CANCELLED):
                 completed = True
         return state
 
@@ -208,7 +220,8 @@ class SlurmExecutor(ExecutorBase):
             stderr=subprocess.PIPE,
         )
         if result.stdout:
-            state = result.stdout.split("\n")[0].split("|")[5]
+            state = result.stdout.split("\n")[0].split("|")[5].split(" ")[0]
+
         else:
             state = None
         return state

@@ -51,7 +51,7 @@
 				"settings": {
 					"arguments": {
 						"parameters": {
-							"-num-procs": 24
+							"-num-procs": 1
 						}
 					}
 				},

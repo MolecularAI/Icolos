@@ -77,9 +77,11 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     print(l, end="")
 
     def _read_neq_results(self, fname):
-        fp = open(fname, "r")
-        lines = fp.readlines()
-        fp.close()
+        try:
+            with open(fname, "r") as fp:
+                lines = fp.readlines()
+        except FileNotFoundError:
+            return
         out = []
         for l in lines:
             l = l.rstrip()
@@ -113,78 +115,82 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     def _summarize_results(self, edges: List[Edge]):
         bootnum = 1000
         for edge in edges:
-            for wp in self.therm_cycle_branches:
-                dg = []
-                erra = []
-                errb = []
-                distra = []
-                distrb = []
-                for r in range(1, self.get_perturbation_map().replicas + 1):
-                    rowName = "{0}_{1}_{2}".format(edge.get_edge_id(), wp, r)
-                    dg.append(self.results_all.loc[rowName, "val"])
-                    erra.append(self.results_all.loc[rowName, "err_analyt"])
-                    errb.append(self.results_all.loc[rowName, "err_boot"])
-                    distra.append(
-                        np.random.normal(
-                            self.results_all.loc[rowName, "val"],
-                            self.results_all.loc[rowName, "err_analyt"],
-                            size=bootnum,
+            try:
+                for wp in self.therm_cycle_branches:
+                    dg = []
+                    erra = []
+                    errb = []
+                    distra = []
+                    distrb = []
+                    for r in range(1, self.get_perturbation_map().replicas + 1):
+                        rowName = "{0}_{1}_{2}".format(edge.get_edge_id(), wp, r)
+                        dg.append(self.results_all.loc[rowName, "val"])
+                        erra.append(self.results_all.loc[rowName, "err_analyt"])
+                        errb.append(self.results_all.loc[rowName, "err_boot"])
+                        distra.append(
+                            np.random.normal(
+                                self.results_all.loc[rowName, "val"],
+                                self.results_all.loc[rowName, "err_analyt"],
+                                size=bootnum,
+                            )
                         )
-                    )
-                    distrb.append(
-                        np.random.normal(
-                            self.results_all.loc[rowName, "val"],
-                            self.results_all.loc[rowName, "err_boot"],
-                            size=bootnum,
+                        distrb.append(
+                            np.random.normal(
+                                self.results_all.loc[rowName, "val"],
+                                self.results_all.loc[rowName, "err_boot"],
+                                size=bootnum,
+                            )
                         )
-                    )
 
-                rowName = "{0}_{1}".format(edge.get_edge_id(), wp)
-                distra = np.array(distra).flatten()
-                distrb = np.array(distrb).flatten()
+                    rowName = "{0}_{1}".format(edge.get_edge_id(), wp)
+                    distra = np.array(distra).flatten()
+                    distrb = np.array(distrb).flatten()
 
-                if self.get_perturbation_map().replicas == 1:
-                    self.results_all.loc[rowName, "val"] = dg[0]
-                    self.results_all.loc[rowName, "err_analyt"] = erra[0]
-                    self.results_all.loc[rowName, "err_boot"] = errb[0]
-                else:
-                    self.results_all.loc[rowName, "val"] = np.mean(dg)
-                    self.results_all.loc[rowName, "err_analyt"] = np.sqrt(
-                        np.var(distra) / float(self.get_perturbation_map().replicas)
-                    )
-                    self.results_all.loc[rowName, "err_boot"] = np.sqrt(
-                        np.var(distrb) / float(self.get_perturbation_map().replicas)
-                    )
+                    if self.get_perturbation_map().replicas == 1:
+                        self.results_all.loc[rowName, "val"] = dg[0]
+                        self.results_all.loc[rowName, "err_analyt"] = erra[0]
+                        self.results_all.loc[rowName, "err_boot"] = errb[0]
+                    else:
+                        self.results_all.loc[rowName, "val"] = np.mean(dg)
+                        self.results_all.loc[rowName, "err_analyt"] = np.sqrt(
+                            np.var(distra) / float(self.get_perturbation_map().replicas)
+                        )
+                        self.results_all.loc[rowName, "err_boot"] = np.sqrt(
+                            np.var(distrb) / float(self.get_perturbation_map().replicas)
+                        )
 
-            #### also collect self.results_summary
-            rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
-            rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
-            dg = (
-                self.results_all.loc[rowNameProtein, "val"]
-                - self.results_all.loc[rowNameWater, "val"]
-            )
-            edge.ddG = dg
-            edge.node_to.get_conformer().get_molecule().SetProp("pred_ddG", str(dg))
-            self._logger.log(
-                f"Set tag pred_ddG = {dg} for node {edge.node_to.get_node_id()}",
-                _LE.INFO,
-            )
-            erra = np.sqrt(
-                np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
-            )
-            edge.ddG_err = erra
-            errb = np.sqrt(
-                np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
-            )
-            rowName = edge.get_edge_id()
+                # also collect self.results_summary
+                rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
+                rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
+                dg = (
+                    self.results_all.loc[rowNameProtein, "val"]
+                    - self.results_all.loc[rowNameWater, "val"]
+                )
+                edge.ddG = dg
+                edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
+                erra = np.sqrt(
+                    np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
+                    + np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
+                )
+                edge.ddG_err = erra
+                errb = np.sqrt(
+                    np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
+                    + np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
+                )
+                rowName = edge.get_edge_id()
 
-            self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split("_")[0]
-            self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split("_")[1]
-            self.results_summary.loc[rowName, "val"] = dg
-            self.results_summary.loc[rowName, "err_analyt"] = erra
-            self.results_summary.loc[rowName, "err_boot"] = errb
+                self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split(
+                    "_"
+                )[0]
+                self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split(
+                    "_"
+                )[1]
+                self.results_summary.loc[rowName, "val"] = dg
+                self.results_summary.loc[rowName, "err_analyt"] = erra
+                self.results_summary.loc[rowName, "err_boot"] = errb
+
+            except KeyError:
+                continue
 
     def analysis_summary(self, edges: List[Edge]):
         edge_ids = [e.get_edge_id() for e in edges]
@@ -199,7 +205,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     )
                     resultsfile = "{0}/results.txt".format(analysispath)
                     res = self._read_neq_results(resultsfile)
-                    self._fill_resultsAll(res, edge, wp, r)
+                    if res is not None:
+                        self._fill_resultsAll(res, edge, wp, r)
 
         # the values have been collected now
         # let's calculate ddGs
