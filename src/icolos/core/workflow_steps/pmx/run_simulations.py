@@ -192,7 +192,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         return
 
-    def _prepare_job_pool(self, edges: List[str], branch: str):
+    def _prepare_job_pool(self, edges: List[str]):
         replicas = (
             self.get_perturbation_map().replicas
             if self.get_perturbation_map() is not None
@@ -203,11 +203,12 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             # for branch in self.therm_cycle_branches:
             for r in range(1, replicas + 1):
                 for state in self.states:
-                    path = self._prepare_single_job(
-                        edge=edge, wp=branch, state=state, r=r
-                    )
-                    if path is not None:
-                        batch_script_paths.append(path)
+                    for branch in self.therm_cycle_branches:
+                        path = self._prepare_single_job(
+                            edge=edge, wp=branch, state=state, r=r
+                        )
+                        if path is not None:
+                            batch_script_paths.append(path)
         return batch_script_paths
 
     def _run_single_job(self, job: str):
