@@ -1,5 +1,5 @@
 import pickle
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import os
 from modAL.models.learners import ActiveLearner
 from pydantic.main import BaseModel
@@ -33,7 +33,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
 
     def _parse_library(
         self, lib_path: str, criteria: str = None
-    ) -> Tuple[DataFrame, np.ndarray]:
+    ) -> Tuple[DataFrame, Optional[pd.Series]]:
         """Parse a virtual library to a dataframe
 
         :param str criteria: optional criteria to extract to df column from sdf tags, defaults to None
@@ -67,7 +67,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         # randomly shuffle the compound rows
         library = library.sample(frac=1).reset_index(drop=True)
         scores = (
-            pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else []
+            pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else None
         )
 
         return library, scores
@@ -170,7 +170,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 else n_instances
             )
             query_idx = query_surrogate(queried_compound_idx, warmup)
-            if all_scores:
+            if all_scores is not None:
                 rmsd = compute_rmsd() if rnd > 0 else np.inf
 
             self._logger.log(f"queried compound indices are {query_idx}", _LE.DEBUG)
@@ -200,7 +200,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 if hits_queried > 99:
                     break
 
-            df = lib.iloc[queried_compound_idx]
+            df = lib.iloc[query_idx]
+            df["oracle_scores"] = scores
             df.to_pickle(
                 os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
             )
@@ -210,7 +211,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 molColName=_SALE.MOLECULE,
             )
             # pickle the model
-            with open(f"model_{replica}_{rnd}.pkl", "wb") as f:
+            with open(os.path.join(tmp_dir, f"model_{replica}_{rnd}.pkl"), "wb") as f:
                 pickle.dump(learner.estimator, f)
             if (
                 self._get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
