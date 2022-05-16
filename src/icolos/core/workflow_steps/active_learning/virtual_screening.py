@@ -1,3 +1,4 @@
+import pickle
 from typing import List, Tuple
 import os
 from modAL.models.learners import ActiveLearner
@@ -208,6 +209,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 os.path.join(tmp_dir, f"compounds_{replica}_{rnd}.sdf"),
                 molColName=_SALE.MOLECULE,
             )
+            # pickle the model
+            with open(f"model_{replica}_{rnd}.pkl", "wb") as f:
+                pickle.dump(learner.estimator, f)
             if (
                 self._get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
                 and rnd > 4
