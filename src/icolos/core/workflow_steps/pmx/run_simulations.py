@@ -199,11 +199,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             else 1
         )
         batch_script_paths = []
-        for edge in edges:
-            # for branch in self.therm_cycle_branches:
-            for r in range(1, replicas + 1):
-                for state in self.states:
-                    for branch in self.therm_cycle_branches:
+        # load in the protein jobs first, queue is FIFO
+        for branch in self.therm_cycle_branches:
+            for edge in edges:
+                for r in range(1, replicas + 1):
+                    for state in self.states:
                         path = self._prepare_single_job(
                             edge=edge, wp=branch, state=state, r=r
                         )

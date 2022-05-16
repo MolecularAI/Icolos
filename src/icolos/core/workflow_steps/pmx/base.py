@@ -60,7 +60,7 @@ class StepPMXBase(StepBase, BaseModel):
         self.states = ["stateA", "stateB"]
         # for a normal pmx run this would be "water" and "protein"
         # here we rename for compatibility across abfe/rbfe simulations
-        self.therm_cycle_branches = ["ligand", "complex"]
+        self.therm_cycle_branches = ["complex", "ligand"]
 
         # simulation setup
         self.run_type = self._get_additional_setting(_SPE.RUN_TYPE, "rbfe")
