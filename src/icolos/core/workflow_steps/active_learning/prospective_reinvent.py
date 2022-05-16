@@ -16,6 +16,7 @@ from icolos.core.composite_agents.workflow import WorkFlow
 
 from rdkit import Chem
 from rdkit.Chem import AllChem
+from rdkit.DataStructs.cDataStructs import ExplicitBitVect
 import pandas as pd
 import numpy as np
 
@@ -102,13 +103,28 @@ class StepProspectiveREINVENT(StepBase):
                 acquisition_batch_size=acquisition_batch_size,
             )
 
-    def morgan_fingerprints(self, smiles) -> list:
-        """returns morgan fingerprints for a list of smiles"""
+    def _get_morgan_fingerprints(self, smiles) -> list:
+        """returns Morgan fingerprints for a list of smiles"""
         molecules = [Chem.MolFromSmiles(s) for s in smiles]
         return [
             Chem.AllChem.GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
             for mol in molecules
         ]
+
+    def _fingerprints_to_base64(self, fingerprints) -> list:
+        """returns base64 string representation of Morgan fingerprints"""
+        return [fp.ToBase64() for fp in fingerprints]
+
+    def _reconstruct_morgan_fingerprints(self, fingerprints) -> list:
+        """returns reconstructed Morgan fingerprints from saved base64 strings"""
+        empty_bit_vects = [ExplicitBitVect(2048) for idx in range(len(fingerprints))]
+        # list comprehension does not return the reconstructed fingerprints
+        reconstructed_fingerprints = []
+        for bit_vect, fp in zip(empty_bit_vects, fingerprints):
+            bit_vect.FromBase64(fp)
+            reconstructed_fingerprints.append(bit_vect)
+
+        return reconstructed_fingerprints
 
     def _get_curr_epoch(self) -> int:
         """get the current REINVENT epoch number to determine which stage of active learning to execute"""
@@ -120,12 +136,14 @@ class StepProspectiveREINVENT(StepBase):
 
     def _save_state(
         self,
-        curr_epoch,
+        curr_epoch: int,
         save_path: str,
-        original_smiles,
-        labels,
+        original_smiles: list,
+        fingerprints: list,
+        labels: list,
         pooled_smiles=None,
         pooled_labels=None,
+        pooled_fingerprints=None,
         surrogate=None,
         save_pool=False,
         non_acquired_smiles=None,
@@ -136,9 +154,10 @@ class StepProspectiveREINVENT(StepBase):
         if save_pool:
             # make sure pooled_compounds are smiles, but we should also save the enumerated forms too?
             pooled_smiles.extend(original_smiles)
+            pooled_fingerprints.extend(fingerprints)
             pooled_labels.extend(labels)
-            df = pd.DataFrame({"smiles": pooled_smiles, "labels": pooled_labels})
-            df.to_csv(os.path.join(save_path, f"pooled_smiles/epoch_{curr_epoch}.csv"))
+            df = pd.DataFrame({"smiles": pooled_smiles, "fingerprints": pooled_fingerprints, "labels": pooled_labels})
+            df.to_csv(os.path.join(save_path, f"pooled_data/epoch_{curr_epoch}.csv"))
 
         # save the non-acquired SMILES and the predicted labels, if applicable
         if non_acquired_smiles is not None:
@@ -163,12 +182,12 @@ class StepProspectiveREINVENT(StepBase):
         try:
             # curr_epoch - 1 to ensure the previous state prior to the current active learning iteration is read
             df = pd.read_csv(
-                os.path.join(save_path, f"pooled_smiles/epoch_{curr_epoch-1}.csv")
+                os.path.join(save_path, f"pooled_data/epoch_{curr_epoch-1}.csv")
             )
             # TODO: could replace these magic strings
-            pooled_smiles, pooled_labels = list(df["smiles"]), list(df["labels"])
+            pooled_smiles, pooled_fingerprints, pooled_labels = list(df["smiles"]), list(df["fingerprints"]), list(df["labels"])
         except Exception:
-            pooled_smiles, pooled_labels = [], []
+            pooled_smiles, pooled_fingerprints, pooled_labels = [], [], []
 
         try:
             surrogate = pickle.load(
@@ -182,7 +201,7 @@ class StepProspectiveREINVENT(StepBase):
         except Exception:
             surrogate = None
 
-        return pooled_smiles, pooled_labels, surrogate
+        return pooled_smiles, pooled_fingerprints, pooled_labels, surrogate
 
     def _query_oracle(self, save_path: str, original_smiles, oracle_config) -> list:
         """executes the oracle Workflow object and returns the scores"""
@@ -226,16 +245,21 @@ class StepProspectiveREINVENT(StepBase):
             original_smiles, oracle_workflow.get_steps()[-1].get_compounds()
         ):
             # TODO: assumes lower the score the better. Change this to be general by including a boolean parameter
-            scores_tracker = []
-            for enumeration in compound.get_enumerations():
-                for conformer in enumeration.get_conformers():
-                    # TODO: set property string name in icolos json for generalization
-                    score = float(
-                        conformer.get_molecule().GetProp(_SGE.GLIDE_DOCKING_SCORE)
-                    )
-                    scores_tracker.append(score)
-
-            scores.append(min(scores_tracker))
+            try:
+                    scores_tracker = []
+                    for enumeration in compound.get_enumerations():
+                        for conformer in enumeration.get_conformers():
+                            # TODO: set property string name in icolos json for generalization
+                            # docking scores here are with Epik corrections
+                            score = float(
+                                conformer.get_molecule().GetProp(_SGE.GLIDE_DOCKING_SCORE)
+                            )
+                            scores_tracker.append(score)
+                    # TODO: this may cause an error if list is empty --> enumeration not added in dummy conf?
+                    #  try block handles this for the time being
+                    scores.append(min(scores_tracker))
+            except Exception:
+                scores.append(float(0.0))
 
         return scores
 
@@ -270,6 +294,7 @@ class StepProspectiveREINVENT(StepBase):
         self._save_state(
             curr_epoch=curr_epoch,
             original_smiles=original_smiles,
+            fingerprints=None,
             labels=scores,
             save_path=save_path,
         )
@@ -280,7 +305,7 @@ class StepProspectiveREINVENT(StepBase):
     ):
         """runs a normal REINVENT epoch and stores all (SMILES, scores) pairs as training data for the surrogate"""
         # read the current state
-        pooled_smiles, pooled_labels, surrogate = self._read_state(
+        pooled_smiles, pooled_labels, pooled_fingerprints, surrogate = self._read_state(
             curr_epoch=curr_epoch, save_path=save_path
         )
 
@@ -290,12 +315,17 @@ class StepProspectiveREINVENT(StepBase):
             oracle_config=oracle_config,
         )
 
+        # generate the base64 Morgan fingerprints of the SMILES for saving
+        fingerprints = self._fingerprints_to_base64(self._get_morgan_fingerprints(smiles=original_smiles))
+
         self._save_state(
             curr_epoch=curr_epoch,
             original_smiles=original_smiles,
+            fingerprints=fingerprints,
             labels=scores,
             pooled_smiles=pooled_smiles,
             pooled_labels=pooled_labels,
+            pooled_fingerprints=pooled_fingerprints,
             save_pool=True,
             save_path=save_path,
         )
@@ -317,7 +347,7 @@ class StepProspectiveREINVENT(StepBase):
     ):
         """runs active learning REINVENT"""
         # read the current state
-        pooled_smiles, pooled_labels, surrogate = self._read_state(
+        pooled_smiles, pooled_fingerprints, pooled_labels, surrogate = self._read_state(
             curr_epoch=curr_epoch, save_path=save_path
         )
         # model training is controlled by the "retrain" parameter. The only exception to this is when
@@ -328,8 +358,10 @@ class StepProspectiveREINVENT(StepBase):
             curr_epoch == (warmup + initial_pooling_epochs + 1)
             or curr_epoch % retrain == 0
         ):
+            # reconstruct the pooled Morgan fingerprints to generate the training data for the surrogate model
+            X_train, y_train = self._reconstruct_morgan_fingerprints(pooled_fingerprints), pooled_labels
             surrogate = SurrogateModel(model_type=surrogate_model_type)
-            surrogate.fit(self.morgan_fingerprints(smiles=pooled_smiles), pooled_labels)
+            surrogate.fit(X_train, y_train)
         # at this point, whether the surrogate was retrained or not, partition the compounds into acquired and
         # non-acquired. Send acquired to oracle, predict the rest, and send the concatenated data back to REINVENT
         acquisition_function = AcquisitionFunction(
@@ -338,8 +370,9 @@ class StepProspectiveREINVENT(StepBase):
             acquisition_batch_size=acquisition_batch_size,
         )
         # select points to acquire based on acquisition function
+        fingerprints_pool = self._reconstruct_morgan_fingerprints(pooled_fingerprints)
         acquired_smiles, non_acquired_smiles = acquisition_function.partition_compounds(
-            original_smiles=original_smiles
+            original_smiles=original_smiles, fingerprints_pool=fingerprints_pool
         )
 
         # send the acquired compounds to the oracle
@@ -350,8 +383,11 @@ class StepProspectiveREINVENT(StepBase):
         )
         # predict the non-acquired compounds and cast to type list from np.array for compatibility with other methods
         non_acquired_labels = list(
-            surrogate.predict(self.morgan_fingerprints(smiles=non_acquired_smiles))
+            surrogate.predict(self._get_morgan_fingerprints(smiles=non_acquired_smiles))
         )
+
+        # generate the Morgan fingerprints of the acquired compounds for saving
+        acquired_fingerprints = self._fingerprints_to_base64(self._get_morgan_fingerprints(smiles=acquired_smiles))
         # save the current state for the next iteration
         # note: original_smiles and labels here correspond to the ***acquired*** data.
         # Concatenating the acquired data to the current pool is handled by save_state.
@@ -360,9 +396,11 @@ class StepProspectiveREINVENT(StepBase):
             curr_epoch=curr_epoch,
             save_path=save_path,
             original_smiles=acquired_smiles,
+            fingerprints=acquired_fingerprints,
             labels=acquired_labels,
             pooled_smiles=pooled_smiles,
             pooled_labels=pooled_labels,
+            pooled_fingerprints=pooled_fingerprints,
             non_acquired_smiles=non_acquired_smiles,
             non_acquired_labels=non_acquired_labels,
             surrogate=surrogate,
@@ -430,8 +468,8 @@ class StepProspectiveREINVENT(StepBase):
         if not os.path.exists(save_path):
             os.mkdir(save_path)
 
-        if not os.path.exists(os.path.join(save_path, "pooled_smiles")):
-            os.mkdir(os.path.join(save_path, "pooled_smiles"))
+        if not os.path.exists(os.path.join(save_path, "pooled_data")):
+            os.mkdir(os.path.join(save_path, "pooled_data"))
 
         if not os.path.exists(os.path.join(save_path, "predicted_smiles")):
             os.mkdir(os.path.join(save_path, "predicted_smiles"))
