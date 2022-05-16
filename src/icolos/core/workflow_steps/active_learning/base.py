@@ -7,7 +7,7 @@ from typing import Callable, List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.compound import Compound, Conformer, Enumeration
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -256,7 +256,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             #         output_compounds.append(conf)
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
-            # # we have a fully initialized step with the compounds loaded.  Execute them
+            # # # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
 
             output_compounds = [
@@ -307,6 +307,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             # move the old dir to backup
             try:
                 shutil.move("output", f"output_{round}")
+                os.makedirs("output")
             except Exception as e:
                 print("Could not back up output files!, error was ", e)
             return np.array(final_scores, dtype=np.float32)
