@@ -67,7 +67,7 @@ class StepResidueScanning(StepSchrodingerBase, BaseModel):
                     f"Parsed properties for mol {mol_name}: {mol.GetProp('r_bioluminate_delta_Affinity')}, {mol.GetProp('r_bioluminate_delta_Stability')}",
                     _LE.DEBUG,
                 )
-            except KeyError:
+            except (KeyError, TypeError):
                 self._logger.log("Failed to parse results df", _LE.WARNING)
                 mol.SetProp(
                     "r_bioluminate_delta_Stability",
