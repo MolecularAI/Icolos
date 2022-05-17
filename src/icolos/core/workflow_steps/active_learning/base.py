@@ -141,7 +141,9 @@ class ActiveLearningBase(StepBase, BaseModel):
             raise KeyError(f"running mode: {running_mode} not supported")
         return learner
 
-    def _initialize_oracle_workflow(self, compound_list: List[pd.Series]) -> WorkFlow:
+    def _initialize_oracle_workflow(
+        self, compound_list: List[pd.Series], compound_file: str = None
+    ) -> WorkFlow:
         """Initialize the oracle workflow
 
         :param List[pd.Series] compound_list: List of rows from the library df containing comounds to query
@@ -152,20 +154,24 @@ class ActiveLearningBase(StepBase, BaseModel):
         with open(oracle_conf, "r") as f:
             wf_config = json.load(f)
 
-        # manually attach the compound objects to the oracle's lead step
-        with Chem.SDWriter(os.path.join(self.work_dir, "compounds.sdf")) as writer:
-            for idx, comp in enumerate(compound_list):
-                mol = comp[_SALE.MOLECULE]
-                try:
-                    name = comp[_SALE.ID]
-                    mol.SetProp("original_name", name)
-                except KeyError:
-                    pass
-                mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
-                mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
-                writer.write(mol)
+        if compound_file is None:
+            # if no compound file already created (resi scanning already has the database file), create it.
+            compound_file = os.path.join(self.work_dir, "compounds.sdf")
+            # manually attach the compound objects to the oracle's lead step
+            with Chem.SDWriter(compound_file) as writer:
+                for idx, comp in enumerate(compound_list):
+                    mol = comp[_SALE.MOLECULE]
+                    try:
+                        name = comp[_SALE.ID]
+                        mol.SetProp("original_name", name)
+                    except KeyError:
+                        pass
+                    mol.SetProp(_WOE.RDKIT_NAME, f"{idx}:0")
+                    mol.SetProp(_WOE.COMPOUND_NAME, f"{idx}:0")
+                    writer.write(mol)
+
         compound_dict = {
-            "source": os.path.join(self.work_dir, "compounds.sdf"),
+            "source": compound_file,
             "source_type": "file",
             "format": "SDF",
         }
@@ -338,7 +344,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             line_stub = self._get_additional_setting("mut_res")
             # create mutations file simultaneously
             with open("mutations.txt", "w") as f, Chem.SDWriter(
-                "database.sdf"
+                "compounds.sdf"
             ) as writer:
                 for idx, frag in enumerate(frags):
                     mol = frag.Molecule
@@ -348,14 +354,17 @@ class ActiveLearningBase(StepBase, BaseModel):
                     f.write(f"{line_stub}->{all_letters[idx]}\n")
                     idx += 1
 
-            command = "$SCHRODINGER/run python3 $NSR_LIB_SCRIPT database.sdf"
+            command = "$SCHRODINGER/run python3 $NSR_LIB_SCRIPT compounds.sdf"
 
             executor = Executor(prefix_execution="ml schrodinger")
             executor.execute(command, arguments=[], check=True, location=tmp_dir)
             # now ncaa_nca.maegz will be in the tmpdir
 
             # execution is the same for both cases, just different oracle
-            oracle_wf = self._initialize_oracle_workflow(compound_list=compound_list)
+            oracle_wf = self._initialize_oracle_workflow(
+                compound_list=compound_list,
+                compound_file=os.path.join(tmp_dir, "compounds.sdf"),
+            )
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf, work_dir=tmp_dir)
             final_compounds = oracle_wf._initialized_steps[-1].data.compounds
             os.chdir(orig_dir)
@@ -372,7 +381,7 @@ class ActiveLearningBase(StepBase, BaseModel):
     def _extract_final_scores_from_compounds(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
     ) -> np.ndarray:
-        """Extract final scores from compounds
+        """Extract final scores from compounds: attempts first search on the enumerations, falling back to conformers
 
         :param List[Compound] compounds: compounds extracted from final step in workflow
         :param str criteria: tag to extract score by
@@ -384,16 +393,27 @@ class ActiveLearningBase(StepBase, BaseModel):
             # extract top score per compound
             scores = []
             for enum in comp.get_enumerations():
-                # if conformers attached ,extract from there
-                if enum.get_conformers():
+                # look in the enumeratino's mol first
+                try:
+
+                    score = enum.get_molecule().GetProp(criteria)
+                    scores.append(score)
+                    self._logger.log(
+                        f"Got score: {score} for enum {enum.get_index_string()}",
+                        _LE.DEBUG,
+                    )
+                except KeyError:
+                    # no score attached to enumeration, search through conformers
                     for conf in enum.get_conformers():
                         try:
                             conf_score = conf.get_molecule().GetProp(criteria)
                             scores.append(float(conf_score))
                         except KeyError:
+                            self._logger.log(
+                                "Property not attached to either enum or conformer, score is 0.0",
+                                _LE.WARNING,
+                            )
                             scores.append(0.0)
-                else:
-                    scores = [0.0]
 
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
