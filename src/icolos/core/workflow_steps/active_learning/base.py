@@ -125,7 +125,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                 FeedForwardNet,
                 criterion=nn.MSELoss,
                 optimizer=torch.optim.Adam,
-                callbacks=[EarlyStopping(patience=10)],
+                callbacks=[EarlyStopping(patience=20)],
                 warm_start=False,
                 verbose=1,
                 lr=1e-4,
