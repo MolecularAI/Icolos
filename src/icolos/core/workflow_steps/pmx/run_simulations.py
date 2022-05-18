@@ -130,7 +130,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     for key, value in self.settings.arguments.parameters.items():
                         single_command.append(str(key))
                         single_command.append(str(value))
-                    single_command.append(f"\n\nrm {os.path.dirname(ener)}/*#\n\n")
+                    backup_files = [
+                        f for f in os.listdir(os.path.dirname(ener)) if f.endswith("#")
+                    ]
+                    if backup_files:
+                        single_command.append(f"\n\nrm {os.path.dirname(ener)}/*#\n\n")
                     job_command += single_command
                 else:
                     self._logger.log(
