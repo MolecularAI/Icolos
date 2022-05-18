@@ -108,7 +108,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
             for i, file in enumerate(tpr_files):
-                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i}.xvg")
+                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i+1}.xvg")
                 if not os.path.isfile(dhdl_file):
                     single_command = [
                         mdrun_binary,
@@ -134,7 +134,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     job_command += single_command
                 else:
                     self._logger.log(
-                        f"dhdl file for transition {i} in {os.path.dirname(mdlog)} already exists, skipping",
+                        f"dhdl file for transition {i+1} in {os.path.dirname(mdlog)} already exists, skipping",
                         _LE.DEBUG,
                     )
 
