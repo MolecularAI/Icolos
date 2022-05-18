@@ -75,7 +75,7 @@ class StepProspectiveREINVENT(StepBase):
                 curr_epoch=curr_epoch,
                 save_path=save_path,
                 original_smiles=original_smiles,
-                oracle_config=oracle_config,
+                oracle_config=oracle_config
             )
 
         elif curr_epoch <= (warmup + initial_pooling_epochs):
@@ -110,23 +110,6 @@ class StepProspectiveREINVENT(StepBase):
             Chem.AllChem.GetMorganFingerprintAsBitVect(mol, radius=3, nBits=2048)
             for mol in molecules
         ]
-
-    # TODO: removed usage for now
-    def _fingerprints_to_base64(self, fingerprints) -> list:
-        """returns base64 string representation of Morgan fingerprints"""
-        return [fp.ToBase64() for fp in fingerprints]
-
-    # TODO: removed usage for now
-    def _reconstruct_morgan_fingerprints(self, fingerprints) -> list:
-        """returns reconstructed Morgan fingerprints from saved base64 strings"""
-        empty_bit_vects = [ExplicitBitVect(2048) for idx in range(len(fingerprints))]
-        # list comprehension does not return the reconstructed fingerprints
-        reconstructed_fingerprints = []
-        for bit_vect, fp in zip(empty_bit_vects, fingerprints):
-            bit_vect.FromBase64(fp)
-            reconstructed_fingerprints.append(bit_vect)
-
-        return reconstructed_fingerprints
 
     def _get_curr_epoch(self) -> int:
         """get the current REINVENT epoch number to determine which stage of active learning to execute"""
@@ -292,12 +275,23 @@ class StepProspectiveREINVENT(StepBase):
     def _run_normal_reinvent(
         self, curr_epoch, save_path, original_smiles, oracle_config
     ):
+        self._logger.log("we get to run normal reinvent", _LE.DEBUG)
         """runs a normal REINVENT epoch"""
         scores = self._query_oracle(
             save_path=save_path,
             original_smiles=original_smiles,
             oracle_config=oracle_config,
         )
+
+        fraction_noise = self._get_additional_setting("fraction_noise", default=False)
+        noise_stdev = self._get_additional_setting("noise_stdev")
+
+        if fraction_noise:
+            fraction = int(len(scores) * 0.66)
+            noisy_scores = [(score + np.random.normal(0, noise_stdev)) for score in scores[:fraction]]
+            noisy_scores.extend(scores[fraction:])
+        else:
+            noisy_scores = [(score + np.random.normal(0, noise_stdev)) for score in scores]
 
         # TODO: bottom doesn't store the compounds' enumeration SMILES - should we do this?
         self._save_state(
@@ -307,7 +301,7 @@ class StepProspectiveREINVENT(StepBase):
             labels=scores,
             save_path=save_path,
         )
-        self._write_reinvent_feedback(original_smiles=original_smiles, labels=scores)
+        self._write_reinvent_feedback(original_smiles=original_smiles, labels=noisy_scores)
 
     def _run_normal_reinvent_with_pooling(
         self, curr_epoch, save_path: str, original_smiles, oracle_config
