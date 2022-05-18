@@ -285,9 +285,10 @@ class StepProspectiveREINVENT(StepBase):
 
         fraction_noise = self._get_additional_setting("fraction_noise", default=False)
         noise_stdev = self._get_additional_setting("noise_stdev")
+        fraction_to_corrupt = self._get_additional_setting("fraction_to_corrupt")
 
         if fraction_noise:
-            fraction = int(len(scores) * 0.66)
+            fraction = int(len(scores) * fraction_to_corrupt)
             noisy_scores = [(score + np.random.normal(0, noise_stdev)) for score in scores[:fraction]]
             noisy_scores.extend(scores[fraction:])
         else:
