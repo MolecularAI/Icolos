@@ -107,8 +107,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             sim_path = os.path.dirname(tpr)
             tpr_files = [f for f in os.listdir(sim_path) if f.endswith("tpr")]
             job_command = []
-            for i, file in enumerate(tpr_files):
-                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{i+1}.xvg")
+            # note, these will not be returned in numerical order!
+            for file in tpr_files:
+                # grab the index in the tpr file
+                tpr_idx = file.split(".tpr")[0][2:]
+                dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{tpr_idx}.xvg")
                 if not os.path.isfile(dhdl_file):
                     single_command = [
                         mdrun_binary,
@@ -119,7 +122,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         "-c",
                         confout,
                         "-dhdl",
-                        f"dhdl{i+1}.xvg",
+                        f"dhdl{tpr_idx}.xvg",
                         "-o",
                         trr,
                         "-g",
@@ -219,20 +222,15 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         """
         Execute the simulation for a single batch script
         """
-        # for idx, job in enumerate(jobs):
         self._logger.log(
-            f"Starting execution of job {job.split('/')[-1]}. ",
+            f"Starting execution of job {job.split('/')[-1]}.",
             _LE.DEBUG,
         )
-        # self._logger.log(f"Batch progress: {idx+1}/{len(jobs)}", _LE.DEBUG)
         location = os.path.dirname(job)
         job_id = self._backend_executor.execute(
             tmpfile=job, location=location, check=False, wait=False
         )
         return job_id
-        # self._logger.log(
-        #     f"Execution for job {job} completed with status: {result}", _LE.DEBUG
-        # )
 
     def _execute_command(self, jobs: List[Subtask]):
         for idx, job in enumerate(jobs):

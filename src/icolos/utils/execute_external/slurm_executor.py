@@ -80,10 +80,6 @@ class SlurmExecutor(ExecutorBase):
 
             launch_command = f"bash {tmpfile}"
 
-        # prevent slurm from being overloaded, add a random delay from a uniform distribution
-        # delay = np.random.uniform(self.wait_low, self.wait_high)
-        # time.sleep(delay)
-
         # execute the batch script
         result = super().execute(
             # do not enforce checking here,
