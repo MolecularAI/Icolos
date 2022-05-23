@@ -127,6 +127,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         trr,
                         "-g",
                         mdlog,
+                        "\n",
                     ]
                     for flag in self.settings.arguments.flags:
                         single_command.append(str(flag))
@@ -141,7 +142,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                     job_command += single_command
                 else:
                     self._logger.log(
-                        f"dhdl file for transition {i+1} in {os.path.dirname(mdlog)} already exists, skipping",
+                        f"dhdl file for transition {tpr_idx} in {os.path.dirname(mdlog)} already exists, skipping",
                         _LE.DEBUG,
                     )
 
