@@ -173,6 +173,8 @@ class PATHS_EXAMPLEDATA:
     PREPARE_TRANSITIONS_TEST_DIR = expand_path("pmx/prepare_transitions")
     RUN_ANALYSIS_TEST_DIR = expand_path("pmx/analyse")
     PMX_MDP_FILES = expand_path("pmx/assemble_systems/input/mdp")
+    PMX_MUTATIONS_LIST = expand_path("pmx/mutate/mutations.mut")
+    PMX_MUTATIONS_PROTEIN = expand_path("pmx/mutate/2flu.pdb")
 
     RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations")
     PMX_TNKS_TEST_DIR = expand_path("pmx")
