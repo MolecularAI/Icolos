@@ -127,13 +127,14 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         trr,
                         "-g",
                         mdlog,
-                        "\n",
                     ]
                     for flag in self.settings.arguments.flags:
                         single_command.append(str(flag))
                     for key, value in self.settings.arguments.parameters.items():
                         single_command.append(str(key))
                         single_command.append(str(value))
+
+                    single_command.append("\n\n")
                     backup_files = [
                         f for f in os.listdir(os.path.dirname(ener)) if f.endswith("#")
                     ]
