@@ -46,14 +46,15 @@ class StepPMXmutate(StepPMXBase, BaseModel):
         # run pdb2gmx on the protein, generate a good gro file
         pdb2gmx_args = [
             "-f",
-            os.path.join(self.data.generic.get_argument_by_extension("pdb")),
+            self.data.generic.get_argument_by_extension("pdb"),
             "-ignh",
             "-water",
             self.settings.additional["water"],
             "-ff",
             self.settings.additional["forcefield"],
             "-o",
-            os.path.join(setup_dir, "wt.gro"),
+            # use pdb here to retain chain IDs for pmx mutate
+            os.path.join(setup_dir, "wt.pdb"),
         ]
         # run the
         self._gromacs_executor.execute(
@@ -76,28 +77,48 @@ class StepPMXmutate(StepPMXBase, BaseModel):
 
         # in the form "P 76 TYR\n X 45 GLY"
         for mut in mut_lines:
-            print(mut)
             chain, resid, new_res = mut.split()
+            edge_dir = os.path.join(self.work_dir, f"wt_{chain}{resid}{new_res}")
+            os.makedirs(
+                edge_dir,
+                exist_ok=True,
+            )
             mutate_args = [
                 "-f",
-                "wt.gro",
+                os.path.join(setup_dir, "wt.pdb"),
                 "-o",
                 f"{chain}{resid}{new_res}.gro",
                 "-ff",
                 self._get_additional_setting(_SGE.FORCEFIELD),
             ]
-            self._backend_executor.execute(
+            result = self._backend_executor.execute(
                 command=_PE.MUTATE,
                 arguments=mutate_args,
-                location=setup_dir,
+                location=edge_dir,
                 check=True,
                 pipe_input=f'echo -e "{chain}\n{resid}\n{new_res}\nn"',
             )
-            # now make the directory in the main workdir to  for that mutation and copy the input files over
-            os.makedirs(
-                os.path.join(self.work_dir, f"wt_{chain}{resid}{new_res}"),
-                exist_ok=True,
+            for line in result.stdout.split("\n"):
+                print(line)
+
+            # run pdb2gmx on the resulting structure
+
+            pdb2gmx_args = [
+                "-f",
+                f"{chain}{resid}{new_res}.gro",
+                "-water",
+                self.settings.additional["water"],
+                "-ff",
+                self.settings.additional["forcefield"],
+                "-ignh",
+            ]
+            self._backend_executor.execute(
+                command=_GE.PDB2GMX,
+                arguments=pdb2gmx_args,
+                location=edge_dir,
+                check=True,
             )
+            # now make the directory in the main workdir to  for that mutation and copy the input files over
 
             # now we have a single mutated structure file per system.
             node = Node(
@@ -110,9 +131,6 @@ class StepPMXmutate(StepPMXBase, BaseModel):
             # generate connectivity (just a star map), now we have an initialized perturbation map, relying on file paths only, not attached structures for now
             for node in perturbation_map.nodes:
                 perturbation_map._attach_node_connectivity(node)
-
-            for edge in perturbation_map.get_edges():
-                print(edge)
 
 
 help_string = """
