@@ -3,6 +3,7 @@ import unittest
 import os
 from icolos.core.composite_agents.workflow import WorkFlow
 from icolos.core.containers.generic import GenericData
+from icolos.core.workflow_steps.pmx.gentop import StepPMXgentop
 from icolos.core.workflow_steps.pmx.mutate import StepPMXmutate
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
@@ -31,10 +32,13 @@ class Test_PMXmutate(unittest.TestCase):
         with open(PATHS_EXAMPLEDATA.PMX_MUTATIONS_LIST, "r") as f:
             muts = f.read()
         self.muts = GenericData(file_name="mutations.mut", file_data=muts)
+        with open(PATHS_EXAMPLEDATA.PMX_GENTOP_TOPOLOGY, "r") as f:
+            top = f.read()
+        self.top = GenericData(file_name="topol.top", file_data=top)
 
     def test_pmx_mutate(self):
-        step_conf = {
-            _SBE.STEPID: "01_PMX_SETUP",
+        mutate_conf = {
+            _SBE.STEPID: "01_PMX_MUTATE",
             _SBE.STEP_TYPE: _SBE.STEP_PMX_MUTATE,
             _SBE.EXEC: {
                 _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
@@ -52,10 +56,58 @@ class Test_PMXmutate(unittest.TestCase):
             },
         }
 
-        step_mutate = StepPMXmutate(**step_conf)
+        step_mutate = StepPMXmutate(**mutate_conf)
         step_mutate.data.generic.add_file(self.muts)
         step_mutate.data.generic.add_file(self.system)
 
         step_mutate.work_dir = self._test_dir
         step_mutate._workflow_object = WorkFlow()
         step_mutate.execute()
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P79ASP/bound/topol.top"))
+        self.assertGreater(stat_inf.st_size, 1500)
+
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P79ASP/bound/init.pdb"))
+        self.assertGreater(stat_inf.st_size, 2800)
+
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P77TYR/bound/topol.top"))
+        self.assertGreater(stat_inf.st_size, 1500)
+
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P77TYR/bound/init.pdb"))
+        self.assertGreater(stat_inf.st_size, 2800)
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P76GLY/bound/topol.top"))
+        self.assertGreater(stat_inf.st_size, 1500)
+
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P76GLY/bound/init.pdb"))
+        self.assertGreater(stat_inf.st_size, 2800)
+
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P76GLY/unbound/init.pdb"))
+        self.assertGreater(stat_inf.st_size, 2800)
+
+        gentop_conf = {
+            _SBE.STEPID: "01_PMX_GENTOP",
+            _SBE.STEP_TYPE: _SBE.STEP_PMX_MUTATE,
+            _SBE.EXEC: {
+                _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+                _SBE.EXEC_PARALLELIZATION: {
+                    _SBE.EXEC_PARALLELIZATION_CORES: 8,
+                    _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
+                },
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ADDITIONAL: {},
+            },
+        }
+
+        step_gentop = StepPMXgentop(**gentop_conf)
+        step_gentop.data.generic.add_file(self.top)
+
+        step_gentop.work_dir = self._test_dir
+        wf = step_mutate.get_workflow_object()
+
+        step_gentop.set_workflow_object(wf)
+
+        step_gentop.execute()
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P76GLY/bound/pmxtop.top"))
+        self.assertGreater(stat_inf.st_size, 300)
+        stat_inf = os.stat(os.path.join(self._test_dir, "wt_P76GLY/unbound/pmxtop.top"))
+        self.assertGreater(stat_inf.st_size, 300)

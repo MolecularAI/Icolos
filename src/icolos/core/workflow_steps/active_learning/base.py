@@ -371,7 +371,9 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         else:
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
-        self._logger.log("Extracting final scores", _LE.DEBUG)
+        self._logger.log(
+            f"Extracting final scores for {len(final_compounds)} compounds", _LE.DEBUG
+        )
 
         scores = self._extract_final_scores_from_compounds(
             final_compounds, self.settings.additional[_SALE.CRITERIA]
@@ -414,6 +416,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                                 _LE.WARNING,
                             )
                             scores.append(0.0)
+            # if no enumeration attached to the compounds i.e. ligprep failed
+            if not scores:
+                scores.append(0.0)
 
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)

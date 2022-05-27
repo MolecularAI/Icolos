@@ -175,6 +175,7 @@ class PATHS_EXAMPLEDATA:
     PMX_MDP_FILES = expand_path("pmx/assemble_systems/input/mdp")
     PMX_MUTATIONS_LIST = expand_path("pmx/mutate/mutations.mut")
     PMX_MUTATIONS_PROTEIN = expand_path("pmx/mutate/2flu.pdb")
+    PMX_GENTOP_TOPOLOGY = expand_path("pmx/gentop/topol.top")
 
     RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations")
     PMX_TNKS_TEST_DIR = expand_path("pmx")

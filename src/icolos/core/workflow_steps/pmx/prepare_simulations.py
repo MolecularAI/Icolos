@@ -112,10 +112,10 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         replicas = self.get_perturbation_map().replicas
         output_files = []
         for i in range(1, replicas + 1):
-            output_files.append(f"ligand/stateA/run{i}/{sim_type}/tpr.tpr")
-            output_files.append(f"ligand/stateB/run{i}/{sim_type}/tpr.tpr")
-            output_files.append(f"complex/stateA/run{i}/{sim_type}/tpr.tpr")
-            output_files.append(f"complex/stateB/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"unbound/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"unbound/stateB/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"bound/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"bound/stateB/run{i}/{sim_type}/tpr.tpr")
         results = []
         for subjob in batch:
             subjob_results = []
