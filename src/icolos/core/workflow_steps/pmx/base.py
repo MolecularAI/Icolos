@@ -234,9 +234,11 @@ class StepPMXBase(StepBase, BaseModel):
                         f"tpr file {tpr} already exists, skipping", _LE.DEBUG
                     )
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(
-                command=grompp_full_cmd, arguments=[], check=False, location=simpath
-            )
+            # check all transitions have not been skipped
+            if grompp_full_cmd:
+                result = executor.execute(
+                    command=grompp_full_cmd, arguments=[], check=False, location=simpath
+                )
         self._clean_backup_files(simpath)
 
     def _clean_pdb_structure(self, tmp_dir: str) -> None:
