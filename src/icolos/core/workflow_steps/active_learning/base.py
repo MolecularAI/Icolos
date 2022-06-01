@@ -77,6 +77,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             ),
             axis=1,
         )
+        library["fragment_id"] = [mol.GetProp("_Name") for mol in library.Molecule]
 
         library[_SALE.IDX] = [i for i in range(len(library))]
 
@@ -415,6 +416,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                                 _LE.WARNING,
                             )
                             scores.append(0.0)
+            # if no enumeration attached to the compounds i.e. ligprep failed
+            if not scores:
+                scores.append(0.0)
 
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
