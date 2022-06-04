@@ -334,9 +334,17 @@ class ActiveLearningBase(StepBase, BaseModel):
             os.chdir(tmp_dir)
 
             # extract the relevant amino acids using compound indices from the ncaa library
-            compound_index = [row.IDX for row in compound_list]
+            fragment_ids = [row.ID for row in compound_list]
             # retrieve the fragment using the index of the enumerated compound
-            frags = [fragment_lib.iloc[idx] for idx in compound_index]
+            # frags = [fragment_lib.iloc[idx] for idx in compound_index]
+            print("fragment ids", fragment_ids)
+            frags = []
+            for frag_id in fragment_ids:
+                for _, frag in fragment_lib.iterrows():
+                    if frag.fragment_id == frag_id:
+                        frags.append(frag.Molecule)
+                        print(f"found frag {frag_id}")
+                        break
             letter_strings = string.ascii_uppercase + "0123456789"
             all_letters = []
             for char1 in letter_strings:
@@ -349,10 +357,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                 "compounds.sdf"
             ) as writer:
                 for idx, frag in enumerate(frags):
-                    mol = frag.Molecule
-                    # rename the molecule
-                    mol.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
-                    writer.write(frag.Molecule)
+                    # rename the molecule to align with what biolumiate will call i
+                    frag.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
+                    writer.write(frag)
                     f.write(f"{line_stub}->{all_letters[idx]}\n")
                     idx += 1
 
