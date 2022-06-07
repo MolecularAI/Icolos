@@ -377,12 +377,23 @@ class StepPMXBase(StepBase, BaseModel):
                     elif status == _SE.FAILED:
                         self._logger.log(f"Job {job.job_id} FAILED!", _LE.WARNING)
                         job.set_status_failed()
+                    elif status == _SE.CANCELLED:
+                        self._logger.log(
+                            f"Job {job.job_id} was CANCELLED!", _LE.WARNING
+                        )
+                        job.set_status_failed()
+                    else:
+                        self._logger.log(
+                            f"Warning: unhandled slurm state found: {status}!",
+                            _LE.WARNING,
+                        )
+
                     # elif status in (_SE.RUNNING, _SE.PENDING):
                     #     # sleep for a few seconds before proceeding to check the next job
                     #     pass
 
                 # if complete, succesfully or not, remove the job from the queue, prepare another
-                if job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
+                elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
                     current_jobs.remove(job)
                     if queue_exhausted is False:
                         try:
