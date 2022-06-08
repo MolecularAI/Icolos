@@ -326,6 +326,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         output_files = ["integ0.dat", "integ1.dat", "results.txt", "wplot.png"]
+        analyse_folders = [
+            f"analyse{i}" for i in range(1, self.get_perturbation_map().replicas + 1)
+        ]
         results = []
         for subjob in batch:
             subjob_results = []
@@ -334,11 +337,10 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(
-                                    self.work_dir, job, "complex", "analyse1", f
-                                )
+                                os.path.join(self.work_dir, job, "complex", folder, f)
                             )
                             for f in output_files
+                            for folder in analyse_folders
                         ]
                     )
                 )
