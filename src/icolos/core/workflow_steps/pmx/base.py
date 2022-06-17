@@ -382,11 +382,13 @@ class StepPMXBase(StepBase, BaseModel):
                             f"Job {job.job_id} was CANCELLED!", _LE.WARNING
                         )
                         job.set_status_failed()
-                    else:
-                        self._logger.log(
-                            f"Warning: unhandled slurm state found: {status}!",
-                            _LE.WARNING,
-                        )
+                    # if the job is pending or running, do nothing
+                    
+                    # elif status != _SE.RUNNING:
+                    #     self._logger.log(
+                    #         f"Warning: unhandled slurm state found: {status}!",
+                    #         _LE.WARNING,
+                    #     )
 
                     # elif status in (_SE.RUNNING, _SE.PENDING):
                     #     # sleep for a few seconds before proceeding to check the next job
