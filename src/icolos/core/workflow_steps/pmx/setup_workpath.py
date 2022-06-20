@@ -23,7 +23,6 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     """
 
     _gromacs_executor: GromacsExecutor = None
-    # _antechamber_executor: Executor = None
 
     def __init__(self, **data):
         super().__init__(**data)

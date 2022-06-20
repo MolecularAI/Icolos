@@ -380,7 +380,9 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         else:
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
-        self._logger.log("Extracting final scores", _LE.DEBUG)
+        self._logger.log(
+            f"Extracting final scores for {len(final_compounds)} compounds", _LE.DEBUG
+        )
 
         scores = self._extract_final_scores_from_compounds(
             final_compounds, self.settings.additional[_SALE.CRITERIA]

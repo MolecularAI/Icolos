@@ -45,7 +45,6 @@ class ExecutorBase(metaclass=abc.ABCMeta):
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
-
         # determine whether this is to be run using local resources or as a batch job
         result = subprocess.run(
             complete_command,

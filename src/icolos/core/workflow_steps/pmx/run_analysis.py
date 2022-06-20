@@ -160,14 +160,19 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                         )
 
                 # also collect self.results_summary
-                rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
-                rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
+                rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "unbound")
+                rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "bound")
                 dg = (
                     self.results_all.loc[rowNameProtein, "val"]
                     - self.results_all.loc[rowNameWater, "val"]
                 )
                 edge.ddG = dg
-                edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
+                try:
+                    edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
+                except AttributeError as e:
+                    print(
+                        f"Could not attach score to mol for edge {edge.get_edge_id()}"
+                    )
                 erra = np.sqrt(
                     np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
                     + np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
@@ -189,8 +194,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 self.results_summary.loc[rowName, "err_analyt"] = erra
                 self.results_summary.loc[rowName, "err_boot"] = errb
 
-            except KeyError:
-                continue
+            except KeyError as e:
+                print(f"Error in generating summary, error was {e}")
 
     def analysis_summary(self, edges: List[Edge]):
         edge_ids = [e.get_edge_id() for e in edges]
@@ -269,7 +274,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             for r in range(1, self.get_perturbation_map().replicas + 1):
 
                 # ligand
-                wp = "ligand"
+                wp = "unbound"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,
@@ -295,7 +300,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     analysispath, stateApath, stateBpath, bVerbose=bVerbose
                 )
                 # protein
-                wp = "complex"
+                wp = "bound"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,
@@ -334,9 +339,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(
-                                    self.work_dir, job, "complex", "analyse1", f
-                                )
+                                os.path.join(self.work_dir, job, "bound", "analyse1", f)
                             )
                             for f in output_files
                         ]

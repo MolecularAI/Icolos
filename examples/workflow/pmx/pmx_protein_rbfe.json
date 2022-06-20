@@ -1,0 +1,327 @@
+{
+	"workflow": {
+		"header": {
+			"version": "1.9.0",
+			"workflow_id": "Full PMX workflow - rbfe",
+			"description": "PMX full map calculation with parallel GPU sims.",
+			"environment": {
+				"export": [
+					{
+						"key": "GMX_GPU_DD_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_GPU_PME_PP_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
+						"value": "true"
+					},
+					{
+						"key": "PMX_PYTHON",
+						"value": "${CONDA}/envs/pmx/bin/python"
+					},
+					{
+						"key": "PMX",
+						"value": "/home/kmzp800/miniconda3/envs/pmx/bin/pmx"
+					},
+					{
+						"key": "GMXLIB",
+						"value": "/projects/cc/mai/pmx/src/pmx/data/mutff/"
+					}
+				]
+			},
+			"global_variables": {
+				"file_path": "{package_dir}/../IcolosData/pmx",
+				"output_dir": "{work_dir}/tests/junk/pmx/protein_pmx"
+			},
+			"global_settings": {
+				"single_directory": true,
+				"remove_temporary_files": false
+			}
+		},
+		"steps": [
+			
+			{
+				"step_id": "01_pmx_mutate",
+				"type": "pmx_mutate",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"water": "tip3p",
+						"forcefield": "amber14sbmut"
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{file_path}/mutate/2flu.pdb",
+							"extension": "pdb"
+						},
+						{
+							"source": "{file_path}/mutate/mutations.mut",
+							"extension": "mut"
+						},
+						{
+							"source": "{file_path}/run_simulations/input/mdp/",
+							"extension": "mdp"
+						}
+					],
+					"work_dir": "{output_dir}"
+				}
+			},
+			{
+				"step_id": "02_pmx_gentop",
+				"type": "pmx_gentop",
+				"execution": {
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						
+					}
+				}
+			},
+			{
+				"step_id": "05_box_water_ions",
+				"type": "pmx_box_water_ions",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				}
+			},
+			{
+				"step_id": "06_prepare_simulations",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 8
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "em"
+					}
+				}
+			},
+			{
+				"step_id": "06b_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"cores": "8",
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 1
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "em"
+					}
+				}
+			},
+			{
+				"step_id": "06c_prepare_simulations_nvt",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
+				"step_id": "06d_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "core",
+						"cores": 16,
+						"mem": "8g",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 1
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-ntomp": 16,
+							"-ntmpi": 1
+						}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
+				"step_id": "07_prepare_simulations",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "eq"
+					}
+				}
+			},
+			{
+				"step_id": "07b_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 1
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "eq"
+					}
+				}
+			},
+			{
+				"step_id": "08_prep_transitions",
+				"type": "pmx_prepare_transitions",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "transitions"
+					}
+				}
+			},
+			{
+				"step_id": "09_run_transitions",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "core",
+						"cores": 16,
+						"mem": "8g",
+						"time": "48:00:00",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 1
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "transitions"
+					}
+				},
+				"input": {
+					"generic": []
+				}
+			},
+			{
+				"step_id": "pmx_analyse",
+				"type": "pmx_run_analysis",
+				"execution": {
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				}
+			}
+		]
+	}
+}
