@@ -52,29 +52,48 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
     ):
         fA = " ".join(glob.glob("{0}/*xvg".format(stateApath)))
         fB = " ".join(glob.glob("{0}/*xvg".format(stateBpath)))
-        oA = "{0}/integ0.dat".format(analysispath)
-        oB = "{0}/integ1.dat".format(analysispath)
-        wplot = "{0}/wplot.png".format(analysispath)
-        o = "{0}/results.txt".format(analysispath)
+        oA = "integ0.dat"
+        oB = "integ1.dat"
+        wplot = "wplot.png"
+        o = "results.txt"
         # TODO: at the moment we ignore flags from the command line
         # args = " ".join(self.settings.arguments.flags)
 
-        cmd = "$PMX analyse  --quiet -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
-            fA, fB, o, oA, oB, wplot, 298, 100
-        )
+        cmd = "$PMX analyse"
+        args = [
+            "--quiet",
+            "-fA",
+            fA,
+            "-fB",
+            fB,
+            "-o",
+            o,
+            "-oA",
+            oA,
+            "-oB",
+            oB,
+            "-w",
+            wplot,
+            "-t",
+            298,
+            "-b",
+            100,
+        ]
         # subprocess complains that the command is too long
-        os.system(cmd)
+        result = self._backend_executor.execute(
+            command=cmd, arguments=args, location=analysispath, check=True
+        )
 
-        if bVerbose == True:
-            fp = open(o, "r")
-            lines = fp.readlines()
-            fp.close()
-            bPrint = False
-            for l in lines:
-                if "ANALYSIS" in l:
-                    bPrint = True
-                if bPrint == True:
-                    print(l, end="")
+        # if bVerbose == True:
+        #     fp = open(o, "r")
+        #     lines = fp.readlines()
+        #     fp.close()
+        #     bPrint = False
+        #     for l in lines:
+        #         if "ANALYSIS" in l:
+        #             bPrint = True
+        #         if bPrint == True:
+        #             print(l, end="")
 
     def _read_neq_results(self, fname):
         try:
