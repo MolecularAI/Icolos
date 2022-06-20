@@ -57,11 +57,8 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System", check=False
         )
 
-        # move frame0.gro to frame80.gro
-        last_frame = len([f for f in os.listdir(tipath) if f.startswith("frame")]) + 1
+        last_frame = len([f for f in os.listdir(tipath) if f.startswith("frame")])
         self._logger.log(f"Extracted {last_frame} frames", _LE.DEBUG)
-        cmd = f"mv {tipath}/frame0.gro {tipath}/frame{last_frame}.gro".format(tipath)
-        os.system(cmd)
 
         self._clean_backup_files(tipath)
 
@@ -88,14 +85,9 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             toppath=toppath,
             state=state,
             sim_type="transitions",
-            framestart=1,
-            framestop=81,
             executor=self._backend_executor,
         )
-        # if result.returncode != 0:
-        #     self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
-        #     for line in result.stderr.split("\n"):
-        #         self._logger.log(line, _LE.DEBUG)
+
         self._clean_backup_files(tipath)
 
     def prepare_transitions(self, jobs: List[str]):

@@ -150,8 +150,6 @@ class StepPMXBase(StepBase, BaseModel):
         sim_type,
         executor,
         empath=None,
-        framestart=0,
-        framestop=1,
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -203,11 +201,12 @@ class StepPMXBase(StepBase, BaseModel):
                 self._logger.log(f"tpr file {tpr} already exists, skipping", _LE.DEBUG)
 
         elif sim_type == "transitions":
-            # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
             grompp_full_cmd = []
-            for frame in range(framestart, framestop):
-                inStr = "{0}/frame{1}.gro".format(simpath, frame)
-                tpr = "{0}/ti{1}.tpr".format(simpath, frame)
+            # 80 frames = 0 - 79
+            num_frames = len([f for f in os.listdir(simpath) if f.startswith("frame")])
+            for frame in range(num_frames):
+                inStr = f"{simpath}/frame{frame}.gro"
+                tpr = f"{simpath}/ti{frame}.tpr".format(simpath, frame)
 
                 grompp_args = [
                     "gmx grompp",
@@ -382,17 +381,6 @@ class StepPMXBase(StepBase, BaseModel):
                             f"Job {job.job_id} was CANCELLED!", _LE.WARNING
                         )
                         job.set_status_failed()
-                    # if the job is pending or running, do nothing
-                    
-                    # elif status != _SE.RUNNING:
-                    #     self._logger.log(
-                    #         f"Warning: unhandled slurm state found: {status}!",
-                    #         _LE.WARNING,
-                    #     )
-
-                    # elif status in (_SE.RUNNING, _SE.PENDING):
-                    #     # sleep for a few seconds before proceeding to check the next job
-                    #     pass
 
                 # if complete, succesfully or not, remove the job from the queue, prepare another
                 elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
