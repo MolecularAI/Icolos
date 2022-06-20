@@ -19,10 +19,10 @@ _SBE = StepBaseEnum
 _SPE = StepPrepwizEnum()
 
 
-class Test_Prepwizard(unittest.TestCase):
+class Test_ResiScanning(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._test_dir = attach_root_path("tests/junk/prepwizard")
+        cls._test_dir = attach_root_path("tests/junk/residue_scanning")
         if not os.path.isdir(cls._test_dir):
             os.makedirs(cls._test_dir)
 
