@@ -4,12 +4,10 @@ from icolos.core.workflow_steps.step import _LE
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
-    StepPMXEnum,
 )
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
-
 
 _GE = GromacsEnum()
 
@@ -61,6 +59,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         self._logger.log(f"Extracted {last_frame} frames", _LE.DEBUG)
 
         self._clean_backup_files(tipath)
+        # once frames are extracted, remove the large trr file from the equilibrium run
+        files_to_remove = [trr, tpr, os.path.join(eqpath, "frame.gro")]
+        for f in files_to_remove:
+            os.remove(f)
 
     def _prepare_system(self, edge: str, state: str, wp: str, r: int, toppath: str):
         eqpath = self._get_specific_path(
@@ -79,6 +81,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             r=r,
             sim="transitions",
         )
+        # if the trr file exists and snapshots have not been extracted in a previous run
         self._extract_snapshots(eqpath, tipath)
         self._prepare_single_tpr(
             simpath=tipath,
@@ -116,24 +119,42 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         replicas = self.get_perturbation_map().replicas
-        output_files = []
+        output_paths = []
         for i in range(1, replicas + 1):
-            output_files.append(f"ligand/stateA/run{i}/transitions/ti80.tpr")
-            output_files.append(f"ligand/stateB/run{i}/transitions/ti80.tpr")
-            output_files.append(f"complex/stateA/run{i}/transitions/ti80.tpr")
-            output_files.append(f"complex/stateB/run{i}/transitions/ti80.tpr")
+            output_paths.append(f"ligand/stateA/run{i}/transitions")
+            output_paths.append(f"ligand/stateB/run{i}/transitions")
+            output_paths.append(f"complex/stateA/run{i}/transitions")
+            output_paths.append(f"complex/stateB/run{i}/transitions")
 
         results = []
         for subjob in batch:
             subjob_results = []
             for job in subjob:
-                subjob_results.append(
-                    all(
+                # check number of frames extracted == number tpr files for each leg
+
+                num_frames = [
+                    len(
                         [
-                            os.path.isfile(os.path.join(self.work_dir, job, f))
-                            for f in output_files
+                            f
+                            for f in os.listdir(os.path.join(self.work_dir, job, f))
+                            if f.startswith("frame")
                         ]
                     )
+                    for f in output_paths
+                ]
+                num_tprs = [
+                    len(
+                        [
+                            f
+                            for f in os.listdir(os.path.join(self.work_dir, job, f))
+                            if f.startswith("ti")
+                        ]
+                    )
+                    for f in output_paths
+                ]
+                # confirms that frames have been extracted, and we have a tpr file generated for each ti frame
+                subjob_results.append(
+                    num_tprs == num_frames and all(n > 0 for n in num_frames)
                 )
             results.append(subjob_results)
         return results
