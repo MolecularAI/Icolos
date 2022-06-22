@@ -135,7 +135,7 @@ class StepPMXBase(StepBase, BaseModel):
             "-o",
             os.path.join(self.work_dir, path, output),
         ]
-        self._gromacs_executor.execute(
+        self._backend_executor.execute(
             command=_GE.PDB2GMX,
             arguments=pdb2gmx_args,
             check=True,
@@ -338,7 +338,6 @@ class StepPMXBase(StepBase, BaseModel):
                 break
 
         _ = [job.increment_tries() for job in current_jobs]
-        # _ = [job.set_status_failed() for job in current_jobs]
         # submit the initial job pool
         queue_exhausted = False
         previous_metrics = [0, 0, 0]
