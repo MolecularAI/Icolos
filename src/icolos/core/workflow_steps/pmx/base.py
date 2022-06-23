@@ -204,6 +204,7 @@ class StepPMXBase(StepBase, BaseModel):
             grompp_full_cmd = []
             # 80 frames = 0 - 79
             num_frames = len([f for f in os.listdir(simpath) if f.startswith("frame")])
+            self._logger.log(f"Generating transition tpr files for {num_frames} frames", _LE.DEBUG)
             for frame in range(num_frames):
                 inStr = f"{simpath}/frame{frame}.gro"
                 tpr = f"{simpath}/ti{frame}.tpr".format(simpath, frame)

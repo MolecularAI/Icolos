@@ -68,6 +68,17 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 prune_completed=False,
                 result_checker=result_checker,
             )
+        # clean up large files from completed transition jobs only
+        # if self.sim_type == "transitions":
+        #     self._logger.log("Cleaning up transition output files", _LE.DEBUG)
+        #     to_clean_list = []
+        #     for job in job_pool:
+        #         # search branch, state, run
+        #         to_clean_list.append(
+        #             glob(f"{self.work_dir}/{job}/*/*/*/transitions/frame*.gro")
+        #         )
+        #     for file in to_clean_list:
+        #         os.remove(file)
 
     def get_mdrun_command(
         self,

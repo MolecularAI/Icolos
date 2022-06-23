@@ -82,7 +82,13 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             sim="transitions",
         )
         # if the trr file exists and snapshots have not been extracted in a previous run
-        self._extract_snapshots(eqpath, tipath)
+        if os.path.isfile(os.path.join(eqpath, "traj.trr")) and not os.path.isfile(
+            os.path.join(tipath, "frame0.gro")
+        ):
+            self._extract_snapshots(eqpath, tipath)
+        else:
+            self._logger.log("Skipping frame extraction, already present")
+
         self._prepare_single_tpr(
             simpath=tipath,
             toppath=toppath,
