@@ -158,9 +158,13 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                     )
                     for f in output_paths
                 ]
+                self._logger.log(
+                    f"Found {num_tprs} tpr files and {num_frames} frame files for edge {job}",
+                    _LE.DEBUG,
+                )
                 # confirms that frames have been extracted, and we have a tpr file generated for each ti frame
                 subjob_results.append(
-                    num_tprs == num_frames and all(n > 0 for n in num_frames)
+                    num_tprs == num_frames and all(n > 10 for n in num_frames)
                 )
             results.append(subjob_results)
         return results
