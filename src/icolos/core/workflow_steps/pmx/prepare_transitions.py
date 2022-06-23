@@ -87,7 +87,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         ):
             self._extract_snapshots(eqpath, tipath)
         else:
-            self._logger.log("Skipping frame extraction, already present")
+            self._logger.log("Skipping frame extraction, already present", _LE.DEBUG)
 
         self._prepare_single_tpr(
             simpath=tipath,
