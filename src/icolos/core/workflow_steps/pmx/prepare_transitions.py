@@ -62,7 +62,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         # once frames are extracted, remove the large trr file from the equilibrium run
         files_to_remove = [trr, tpr, os.path.join(eqpath, "frame.gro")]
         for f in files_to_remove:
-            os.remove(f)
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
 
     def _prepare_system(self, edge: str, state: str, wp: str, r: int, toppath: str):
         eqpath = self._get_specific_path(
