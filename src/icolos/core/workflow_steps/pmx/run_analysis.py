@@ -81,7 +81,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         ]
         # subprocess complains that the command is too long
         result = self._backend_executor.execute(
-            command=cmd, arguments=args, location=analysispath, check=True
+            command=cmd, arguments=args, location=analysispath, check=False
         )
 
         # if bVerbose == True:
