@@ -90,7 +90,6 @@ class Test_PMXRunSimulations(unittest.TestCase):
     #     self.assertEqual(stat_inf.st_size, 434940)
 
     def test_run_simulations_transitions(self):
-        pass
         step_conf = {
             _SBE.STEPID: "prepare_simulations",
             _SBE.STEP_TYPE: "pmx_prepare_simulations",

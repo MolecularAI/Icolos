@@ -57,7 +57,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         # simulations are run without the normal parallelizer
         # this relies upon job IDs from Slurm
-        if self.execution.platform == _EPE.SLURM:
+        if (
+            self.execution.platform == _EPE.SLURM
+            and self._backend_executor.is_available()
+        ):
             self._run_job_pool(run_func=self._run_single_job)
         else:
             # simulations are run locally
@@ -93,8 +96,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             _PSE.MDRUN_EXECUTABLE, default="gmx mdrun"
         )
         if self.sim_type in ("em", "eq", "npt", "nvt"):
-
+            # add some logic to each commands to handle restarts
             job_command = [
+                f"FILE={os.path.dirname(tpr)}/state.cpt\nif [ -f $FILE ]; then\n{mdrun_binary} -cpi state\nelse\n"
+            ]
+            job_command += [
                 mdrun_binary,
                 "-s",
                 tpr,
@@ -112,6 +118,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
             for key, value in self.settings.arguments.parameters.items():
                 job_command.append(str(key))
                 job_command.append(str(value))
+            job_command.append("\nfi\n")
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
@@ -124,7 +131,11 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 tpr_idx = file.split(".tpr")[0][2:]
                 dhdl_file = os.path.join(os.path.dirname(mdlog), f"dhdl{tpr_idx}.xvg")
                 if not os.path.isfile(dhdl_file):
+                    # handles aws spot restarts
                     single_command = [
+                        f"FILE={sim_path}/dhdl{tpr_idx}.xvg\nif [ ! -f $FILE ]; then\n"
+                    ]
+                    single_command += [
                         mdrun_binary,
                         "-s",
                         file,
@@ -145,7 +156,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         single_command.append(str(key))
                         single_command.append(str(value))
 
-                    single_command.append("\n")
+                    single_command.append("\nfi\n")
                     single_command.append(f"\nrm {os.path.dirname(ener)}/*#\n")
                     job_command += single_command
                 else:
@@ -153,7 +164,6 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         f"dhdl file for transition {tpr_idx} in {os.path.dirname(mdlog)} already exists, skipping",
                         _LE.DEBUG,
                     )
-
         return job_command
 
     def _prepare_single_job(self, edge: str, wp: str, state: str, r: int):

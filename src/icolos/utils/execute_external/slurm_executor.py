@@ -75,7 +75,7 @@ class SlurmExecutor(ExecutorBase):
             )
 
         if self.slurm_available:
-            launch_command = f"sbatch {tmpfile}"
+            launch_command = f"sbatch {tmpfile} --no-requeue"
         else:
 
             launch_command = f"bash {tmpfile}"

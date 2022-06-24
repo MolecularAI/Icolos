@@ -381,6 +381,11 @@ class StepPMXBase(StepBase, BaseModel):
                             f"Job {job.job_id} was CANCELLED!", _LE.WARNING
                         )
                         job.set_status_failed()
+                    elif status == _SE.NODE_FAIL:
+                        # aws revoked the spot instance.  Resubmit the job
+                        self._logger.log(f"Job {job.job_id} was revoked, resubmitting...", _LE.DEBUG)
+                        job.set_status(_PE.STATUS_READY)
+                        
 
                 # if complete, succesfully or not, remove the job from the queue, prepare another
                 elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
