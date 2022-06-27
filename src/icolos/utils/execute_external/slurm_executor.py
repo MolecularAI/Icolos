@@ -237,7 +237,10 @@ class SlurmExecutor(ExecutorBase):
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
-            header.append(f"#SBATCH {key}={value}")
+            if len(value) > 0:
+                header.append(f"#SBATCH {key}={value}")
+            else:
+                header.append(f"#SBATCH {key}")
 
         for module in self.modules:
             header.append(f"module load {module}")
