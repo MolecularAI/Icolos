@@ -204,7 +204,9 @@ class StepPMXBase(StepBase, BaseModel):
             grompp_full_cmd = []
             # 80 frames = 0 - 79
             num_frames = len([f for f in os.listdir(simpath) if f.startswith("frame")])
-            self._logger.log(f"Generating transition tpr files for {num_frames} frames", _LE.DEBUG)
+            self._logger.log(
+                f"Generating transition tpr files for {num_frames} frames", _LE.DEBUG
+            )
             for frame in range(num_frames):
                 inStr = f"{simpath}/frame{frame}.gro"
                 tpr = f"{simpath}/ti{frame}.tpr".format(simpath, frame)
@@ -383,12 +385,16 @@ class StepPMXBase(StepBase, BaseModel):
                         job.set_status_failed()
                     elif status == _SE.NODE_FAIL:
                         # aws revoked the spot instance.  Resubmit the job
-                        self._logger.log(f"Job {job.job_id} was revoked, resubmitting...", _LE.DEBUG)
+                        self._logger.log(
+                            f"Job {job.job_id} was revoked, resubmitting...", _LE.DEBUG
+                        )
                         job.set_status(_PE.STATUS_READY)
                     elif status not in (_SE.RUNNING, _SE.PENDING):
-                        self._logger.log(f"Unhandled job state {status} for job {job.job_id}", _LE.WARNING)
-                        job.set_status(_PE.STATUS_FAILED)
-                        
+                        self._logger.log(
+                            f"Unhandled job state {status} for job {job.job_id}",
+                            _LE.WARNING,
+                        )
+                        job.set_status_failed()
 
                 # if complete, succesfully or not, remove the job from the queue, prepare another
                 elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
