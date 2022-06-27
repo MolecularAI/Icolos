@@ -97,10 +97,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         if self.sim_type in ("em", "eq", "npt", "nvt"):
             # add some logic to each commands to handle restarts
-            job_command = [
-                f"FILE={os.path.dirname(tpr)}/state.cpt\nif [ -f $FILE ]; then\n{mdrun_binary} -cpi state\nelse\n"
-            ]
-            job_command += [
+            mdrun_call = [
                 mdrun_binary,
                 "-s",
                 tpr,
@@ -114,11 +111,18 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                 mdlog,
             ]
             for flag in self.settings.arguments.flags:
-                job_command.append(str(flag))
+                mdrun_call.append(str(flag))
             for key, value in self.settings.arguments.parameters.items():
-                job_command.append(str(key))
-                job_command.append(str(value))
-            job_command.append("\nfi\n")
+                mdrun_call.append(str(key))
+                mdrun_call.append(str(value))
+
+            job_command = (
+                [f"FILE={os.path.dirname(tpr)}/state.cpt\nif [ -f $FILE ]; then\n"]
+                + mdrun_call
+                + ["-cpi state.cpt\nelse\n"]
+                + mdrun_call
+                + ["\nfi\n"]
+            )
 
         elif self.sim_type == "transitions":
             # need to add many job commands to the slurm file, one for each transition
