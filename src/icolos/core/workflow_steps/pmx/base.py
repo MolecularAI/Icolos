@@ -385,6 +385,9 @@ class StepPMXBase(StepBase, BaseModel):
                         # aws revoked the spot instance.  Resubmit the job
                         self._logger.log(f"Job {job.job_id} was revoked, resubmitting...", _LE.DEBUG)
                         job.set_status(_PE.STATUS_READY)
+                    elif status not in (_SE.RUNNING, _SE.PENDING):
+                        self._logger.log(f"Unhandled job state {status} for job {job.job_id}", _LE.WARNING)
+                        job.set_status(_PE.STATUS_FAILED)
                         
 
                 # if complete, succesfully or not, remove the job from the queue, prepare another
