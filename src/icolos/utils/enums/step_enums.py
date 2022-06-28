@@ -350,6 +350,7 @@ class StepDataManipulationEnum:
     ASSEMBLE_COMPLEXES = "assemble_complexes"
     ACTION_ATTACH_CONFORMERS_AS_EXTRA = "attach_conformers_as_extra"
     COLLECT_ITERATOR_RESULTS = "collect_iterator_results"
+    COMPUTE_MCS = "compute_mcs"
     FILTER = "filter"
 
     # --> For ACTION_ATTACH_CONFORMERS_AS_EXTRA

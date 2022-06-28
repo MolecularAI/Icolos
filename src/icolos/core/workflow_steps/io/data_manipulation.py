@@ -17,6 +17,10 @@ from icolos.core.workflow_steps.io.base import StepIOBase
 import os
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
+import pandas as pd
+from rdkit import Chem
+from rdkit.Chem import rdFMCS, AllChem, Draw
+from rdkit.Chem.Draw import DrawingOptions
 
 _SBE = StepBaseEnum
 _SDM = StepDataManipulationEnum()
@@ -166,6 +170,36 @@ class StepDataManipulation(StepIOBase, BaseModel):
 
             # remove empty conformers
 
+    def _compute_mcs(self):
+        """Performs mcs calculation with a reference structure, attaches rmsd tag to conformers in place"""
+        # modify compounds inplace
+
+        suppl = Chem.SDMolSupplier(self.settings.additional["ref_lig"])
+
+        ref = list(suppl)
+        assert len(ref) == 1
+        ref = ref[0]
+
+        for comp in self.get_compounds():
+            for enum in comp.get_enumerations():
+                for conf in enum.get_conformers():
+                    mol = conf.get_molecule()
+                    r = rdFMCS.FindMCS([mol, ref])
+                    a = mol.GetSubstructMatch(Chem.MolFromSmarts(r.smartsString))
+                    b = ref.GetSubstructMatch(Chem.MolFromSmarts(r.smartsString))
+                    atom_map = list(zip(a, b))
+                    distances = []
+                    for atomA, atomB in atom_map:
+                        pos_A = mol.GetConformer().GetAtomPosition(atomA)
+                        pos_B = ref.GetConformer().GetAtomPosition(atomB)
+                        coord_A = np.array((pos_A.x, pos_A.y, pos_A.z))
+                        coord_B = np.array((pos_B.x, pos_B.y, pos_B.z))
+                        dist = np.linalg.norm(coord_A - coord_B)
+                        distances.append(dist)
+                    rmsd = np.sqrt(1 / len(distances) * sum([i * i for i in distances]))
+                    mol.SetProp("rmsd", str(rmsd))
+                    # these can be filtered in a second data manipulation step
+
     def get_conformer_count(self, comp: Compound) -> int:
         """count attached conformers over all enumerations
 
@@ -272,6 +306,9 @@ class StepDataManipulation(StepIOBase, BaseModel):
                 f"Filtered compounds, resulting in {n_comp} compounds with {n_enum} enumerations with {n_conf} conformers completed.",
                 _LE.INFO,
             )
+        elif self.settings.additional[_SDM.ACTION] == _SDM.COMPUTE_MCS:
+            self._compute_mcs()
+
         else:
             raise ValueError(
                 f'Action "{self.settings.additional[_SDM.ACTION]}" not supported.'
