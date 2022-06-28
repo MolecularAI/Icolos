@@ -237,7 +237,7 @@ class SlurmExecutor(ExecutorBase):
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
-            if len(value) > 0:
+            if len(str(value)) > 0:
                 header.append(f"#SBATCH {key}={value}")
             else:
                 header.append(f"#SBATCH {key}")
