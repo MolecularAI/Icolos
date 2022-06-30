@@ -5,7 +5,7 @@ from icolos.core.containers.generic import GenericContainer, GenericData
 import multiprocessing
 import shutil
 import tempfile
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, List, Dict, Optional, Tuple
 
 from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
@@ -177,7 +177,7 @@ class StepBase(BaseModel):
     def execute(self):
         raise NotImplementedError
 
-    def get_compound_by_name(self, name: str) -> Compound:
+    def get_compound_by_name(self, name: str) -> Optional[Compound]:
         for compound in self.data.compounds:
             if compound.get_name() == name:
                 return compound

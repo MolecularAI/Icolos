@@ -582,9 +582,17 @@ class StepPMXBase(StepBase, BaseModel):
         return Conformer(conformer=hub_mol)
 
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
+        if self.get_perturbation_map() is not None:
+            self._logger.log("Perturbation map already constructed", _LE.DEBUG)
+            self.get_perturbation_map().protein = (
+                self.data.generic.get_argument_by_extension("pdb", rtn_file_object=True)
+            )
+            self.get_perturbation_map().replicas = replicas
+            return
         topology = self._get_additional_setting("topology", default="normal")
         # check whether a hub conformer has been supplied (as an sdf file)
         hub_conf_path = self._get_additional_setting("hub_conformer", default=None)
+
         if hub_conf_path is not None:
             assert hub_conf_path.endswith(
                 ".sdf"

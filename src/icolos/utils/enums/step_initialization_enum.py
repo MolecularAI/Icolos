@@ -5,6 +5,7 @@ from icolos.core.workflow_steps.autodockvina.target_preparation import (
 )
 from icolos.core.workflow_steps.calculation.jazzy import StepJazzy
 from icolos.core.workflow_steps.calculation.kallisto import StepKallisto
+from icolos.core.workflow_steps.calculation.lomap import StepLomap
 from icolos.core.workflow_steps.ccdc.docking import StepGold
 from icolos.core.workflow_steps.calculation.esp_sim import StepEspSim
 from icolos.core.workflow_steps.calculation.feature_counter import StepFeatureCounter
@@ -114,4 +115,5 @@ class StepInitializationEnum:
         _SBE.STEP_PMX_RUN_SIMULATIONS: StepPMXRunSimulations,
         _SBE.STEP_DISPATCHER: StepDispatcher,
         _SBE.STEP_ESP_SIM: StepEspSim,
+        _SBE.STEP_LOMAP: StepLomap,
     }

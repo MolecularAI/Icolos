@@ -115,7 +115,9 @@ class PerturbationMap(BaseModel):
         line = line[0]
         return data.index(line)
 
-    def _get_conformer_by_id(self, comp_id: str) -> Conformer:
+    def _get_conformer_by_id(
+        self, comp_name: str = None, comp_idx: int = None
+    ) -> Conformer:
         """Parses the compound names from the edges specified in the mapper log file, performs a lookup to extract the corresponding compound from the step's compounds
 
         :param str comp_id: id of the compound parsed from the map generation
@@ -123,11 +125,71 @@ class PerturbationMap(BaseModel):
         """
         for compound in self.compounds:
             # compound could have any arbitrary name - check whether this the node ID from schrodinger, or check the index string
-            if compound.get_name() == comp_id:
+            if (
+                compound.get_name() == comp_name
+                or compound.get_compound_number() == comp_idx
+            ):
                 # there will be one and only one conformer attached to one of the enumerations.  Return the first.
                 for enum in compound.get_enumerations():
                     if enum.get_conformers():
                         return enum.get_conformers()[0]
+
+    def generate_from_lomap_output(self, file: str):
+        output_table = pd.read_csv(file, delimiter="   ,", index_col=False)
+        output_table = output_table[output_table["Connect"].str.contains("Yes") == True]
+        output_table.set_axis(
+            [
+                "Index_1",
+                "Index_2",
+                "Filename_1",
+                "Filename_2",
+                "Str_sim",
+                "Eff_sim",
+                "Loose_sim",
+                "Connect",
+            ],
+            axis=1,
+            inplace=True,
+        )
+        # generate a unique hash for each compound number, then we have mapping from compound number to node hash
+        compound_df = pd.read_csv("out.txt", delimiter="\t", index_col="#ID")
+        unique_hashes = [uuid.uuid4().hex for _ in compound_df.FileName]
+        compound_df["NodeHash"] = unique_hashes
+
+        # construct hash_ids for each edge
+        hash_ids = []
+        for node_from, node_to in zip(
+            output_table["Filename_1"], output_table["Filename_2"]
+        ):
+            node_from = node_from.strip()
+            node_to = node_to.strip()
+            hash_from = compound_df[
+                compound_df["FileName"] == node_from
+            ].NodeHash.values[0]
+            hash_to = compound_df[compound_df["FileName"] == node_to].NodeHash.values[0]
+            hash_ids.append(f"{hash_from}_{hash_to}")
+        output_table["EdgeHash"] = hash_ids
+
+        for _, row in compound_df.iterrows():
+            compound_id = row.FileName.split(".")[0].split(":")[0]
+            self.nodes.append(
+                Node(
+                    node_id=compound_id,
+                    node_hash=row.NodeHash,
+                    conformer=self._get_conformer_by_id(comp_idx=int(compound_id)),
+                )
+            )
+
+        for _, edge in output_table.iterrows():
+            edge = Edge(
+                node_from=self._get_node_by_hash_id(edge.EdgeHash.split("_")[0]),
+                node_to=self._get_node_by_hash_id(edge.EdgeHash.split("_")[1]),
+                mcs=float(edge.Str_sim),
+            )
+            self.edges.append(edge)
+
+        for node in self.nodes:
+            self._attach_node_connectivity(node)
 
     def generate_star_map(self) -> None:
         """Generates a star topology using a single hub compound"""

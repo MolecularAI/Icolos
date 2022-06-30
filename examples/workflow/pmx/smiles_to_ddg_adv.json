@@ -1,0 +1,527 @@
+{
+	"workflow": {
+		"header": {
+			"version": "1.9.0",
+			"workflow_id": "Full PMX workflow - rbfe",
+			"description": "End to end smiles to ddG calculation using AutoDock Vina with MCS Filtering",
+			"environment": {
+				"export": [
+					{
+						"key": "GMX_GPU_DD_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_GPU_PME_PP_COMMS",
+						"value": "true"
+					},
+					{
+						"key": "GMX_FORCE_UPDATE_DEFAULT_GPU",
+						"value": "true"
+					},
+					{
+						"key": "PMX_PYTHON",
+						"value": "${CONDA}/envs/pmx/bin/python"
+					},
+					{
+						"key": "PMX",
+						"value": "${CONDA}/envs/pmx/bin/pmx"
+					},
+					{
+						"key": "GMXLIB",
+						"value": "/home/kmzp800/pmx/src/pmx/data/mutff"
+					}
+				]
+			},
+			"global_variables": {
+				"file_path": "{package_dir}/../IcolosData/pmx",
+				"output_dir": "{work_dir}/tests/junk/pmx",
+				"smiles": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks2_ligands.smi",
+				"reflig": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks2_lig.sdf",
+				"receptor_path": "/projects/mai/users/kmzp800_harry/IcolosData/AutoDockVina/tnks2_vina.pdbqt",
+				"protein": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks.pdb"
+			},
+			"global_settings": {}
+		},
+		"steps": [
+			{
+				"step_id": "rdkit_embedding",
+				"type": "embedding",
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"protonate": true,
+							"method": "rdkit"
+						}
+					},
+					"additional": {}
+				},
+				"input": {
+					"compounds": [
+						{
+							"source": "{smiles}",
+							"source_type": "file"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "ADV",
+				"type": "vina_docking",
+				"execution": {
+					"prefix_execution": "module load AutoDock_Vina",
+					"parallelization": {
+						"jobs": 8
+					},
+					"failure_policy": {
+						"n_tries": 3
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"configuration": {
+							"seed": 42,
+							"receptor_path": "{receptor_path}",
+							"number_poses": 2,
+							"search_space": {
+								"--center_x": -14.98,
+								"--center_y": -19.13,
+								"--center_z": -26.26,
+								"--size_x": 15,
+								"--size_y": 10,
+								"--size_z": 10
+							}
+						},
+						"grid_ids": [
+							"tnks2"
+						]
+					}
+				},
+				"input": {
+					"compounds": [
+						{
+							"source": "rdkit_embedding",
+							"source_type": "step"
+						}
+					]
+				},
+				"writeout": [
+					{
+						"compounds": {
+							"category": "conformers"
+						},
+						"destination": {
+							"resource": "{output_dir}/adv_docked_conformers.sdf",
+							"type": "file",
+							"format": "SDF"
+						}
+					},
+					{
+						"compounds": {
+							"category": "conformers",
+							"selected_tags": [
+								"docking_score",
+								"grid_id"
+							],
+							"aggregation": {
+								"mode": "best_per_compound",
+								"key": "docking_score"
+							}
+						},
+						"destination": {
+							"resource": "{output_dir}/adv_docked_conformers.csv",
+							"type": "file",
+							"format": "CSV"
+						}
+					}
+				]
+			},
+			{
+				"step_id": "compute_mcs",
+				"type": "data_manipulation",
+				"settings": {
+					"additional": {
+						"action": "compute_mcs",
+						"ref_lig": "{reflig}"
+					}
+				},
+				"input": {
+					"compounds": [
+						{
+							"source": "ADV",
+							"source_type": "step"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "filter_docking",
+				"type": "data_manipulation",
+				"settings": {
+					"additional": {
+						"action": "filter",
+						"return_n": 1,
+						"criteria": "rmsd",
+						"highest_is_best": false,
+						"filter_level": "compounds"
+					}
+				},
+				"input": {
+					"compounds": [
+						{
+							"source": "compute_mcs",
+							"source_type": "step"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "lomap",
+				"type": "lomap",
+				"execution": {
+					"parallelization": {
+						"jobs": 8
+					}
+				},
+				"settings": {
+					"arguments": {
+						"parameters": {}
+					},
+					"additional": {
+						"topology": "mcs"
+					}
+				},
+				"input": {
+					"compounds": [
+						{
+							"source": "filter_docking",
+							"source_type": "step"
+						}
+					]
+				}
+			},
+			{
+				"step_id": "01_pmx_setup",
+				"type": "pmx_setup",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"water": "tip3p",
+						"forcefield": "amber99sb-star-ildn-mut",
+						"replicas": 1
+					}
+				},
+				"input": {
+					"generic": [
+						{
+							"source": "{protein}",
+							"extension": "pdb"
+						},
+						{
+							"source": "{file_path}/run_simulations/input/mdp/",
+							"extension": "mdp"
+						}
+					],
+					"compounds": [
+						{
+							"source": "lomap",
+							"source_type": "step"
+						}
+					],
+					"work_dir": "{output_dir}"
+				}
+			},
+			{
+				"step_id": "02_pmx_atomMapping",
+				"type": "pmx_atomMapping",
+				"execution": {
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"water": "tip3p",
+						"forcefield": "amber99sb-star-ildn-mut"
+					}
+				}
+			},
+			{
+				"step_id": "03_pmx_ligandHybrid",
+				"type": "pmx_ligandHybrid",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-cs": "spc216.gro"
+						}
+					},
+					"additional": {}
+				}
+			},
+			{
+				"step_id": "04_assemble_systems",
+				"type": "pmx_assemble_systems",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"binary_location": "$PMX_PYTHON <fill_pmx_path>/src/pmx/scripts/icolos_entrypoints/",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"edges": []
+					}
+				}
+			},
+			{
+				"step_id": "05_box_water_ions",
+				"type": "pmx_box_water_ions",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				}
+			},
+			{
+				"step_id": "06_prepare_simulations",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "em"
+					}
+				}
+			},
+			{
+				"step_id": "06b_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"cores": "8",
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 16
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "em"
+					}
+				}
+			},
+			{
+				"step_id": "06c_prepare_simulations_nvt",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
+				"step_id": "06d_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "core",
+						"cores": 16,
+						"mem": "8g",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 96
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {
+							"-ntomp": 16,
+							"-ntmpi": 1
+						}
+					},
+					"additional": {
+						"sim_type": "nvt"
+					}
+				}
+			},
+			{
+				"step_id": "07_prepare_simulations",
+				"type": "pmx_prepare_simulations",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "eq"
+					}
+				}
+			},
+			{
+				"step_id": "07b_run_simulations",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "gpu",
+						"gres": "gpu:1",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 16
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "eq"
+					}
+				}
+			},
+			{
+				"step_id": "08_prep_transitions",
+				"type": "pmx_prepare_transitions",
+				"execution": {
+					"prefix_execution": "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "transitions"
+					}
+				}
+			},
+			{
+				"step_id": "09_run_transitions",
+				"type": "pmx_run_simulations",
+				"execution": {
+					"platform": "slurm",
+					"resources": {
+						"partition": "core",
+						"cores": 16,
+						"mem": "8g",
+						"time": "48:00:00",
+						"modules": [
+							"GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+						]
+					},
+					"parallelization": {
+						"jobs": 96
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {
+						"sim_type": "transitions"
+					}
+				},
+				"input": {
+					"generic": []
+				}
+			},
+			{
+				"step_id": "pmx_analyse",
+				"type": "pmx_run_analysis",
+				"execution": {
+					"parallelization": {
+						"jobs": 24
+					}
+				},
+				"settings": {
+					"arguments": {
+						"flags": [],
+						"parameters": {}
+					},
+					"additional": {}
+				}
+			}
+		]
+	}
+}
