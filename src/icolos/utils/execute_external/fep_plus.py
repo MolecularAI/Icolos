@@ -20,6 +20,7 @@ class FepPlusExecutor(ExecutorBase):
         if command not in [
             FE.FEP_MAPPER,
             FE.FEP_EXECUTOR,
+            FE.FEP_ABSOLUTE_EXECUTOR,
             FE.JSC_LIST,
             FE.JSC_TAIL_FILE,
         ]:

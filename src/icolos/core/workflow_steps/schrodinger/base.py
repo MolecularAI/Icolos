@@ -108,7 +108,7 @@ class StepSchrodingerBase(StepBase, BaseModel):
             with open(os.path.join(tmp_dir, file_name), "w") as f:
                 f.write(config)
 
-    def _parse_arguments(self, defaults):
+    def _parse_arguments(self, defaults: Dict = {}):
         args = []
 
         for flag in self.settings.arguments.flags:

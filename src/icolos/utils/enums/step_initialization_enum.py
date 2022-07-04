@@ -13,6 +13,9 @@ from icolos.core.workflow_steps.gromacs.mmpbsa import StepGMXmmpbsa
 from icolos.core.workflow_steps.fpocket.mdpocket import StepMDpocket
 from icolos.core.workflow_steps.gromacs.trajcat import StepGMXTrjcat
 from icolos.core.workflow_steps.io.data_manipulation import StepDataManipulation
+from icolos.core.workflow_steps.schrodinger.fep_absolute import (
+    StepSchrodingerAbsoluteFEP,
+)
 from icolos.core.workflow_steps.schrodinger.fep_analysis import StepFepPlusAnalysis
 from icolos.core.workflow_steps.structure_prediction.pdb_fixer import StepPdbFixer
 from icolos.core.workflow_steps.gromacs import *
@@ -38,6 +41,11 @@ from icolos.core.workflow_steps.calculation.shaep import StepShaep
 from icolos.core.workflow_steps.structure_prediction.peptide_embedder import (
     StepPeptideEmbedder,
 )
+
+from icolos.core.workflow_steps.active_learning.prospective_reinvent import (
+    StepProspectiveREINVENT,
+)
+
 from icolos.core.workflow_steps.structure_prediction.dssp import StepDSSP
 from icolos.utils.enums.step_enums import StepBaseEnum
 
@@ -83,6 +91,7 @@ class StepInitializationEnum:
         _SBE.STEP_GLIDE: StepGlide,
         _SBE.STEP_FEP_PLUS_SETUP: StepFepPlusSetup,
         _SBE.STEP_FEP_PLUS_EXEC: StepFepPlusExec,
+        _SBE.STEP_FEP_ABSOLUTE: StepSchrodingerAbsoluteFEP,
         _SBE.STEP_FEP_PLUS_ANALYSIS: StepFepPlusAnalysis,
         _SBE.STEP_PREPWIZARD: StepPrepwizard,
         _SBE.STEP_RESIDUE_SCANNING: StepResidueScanning,
@@ -114,4 +123,5 @@ class StepInitializationEnum:
         _SBE.STEP_PMX_RUN_SIMULATIONS: StepPMXRunSimulations,
         _SBE.STEP_DISPATCHER: StepDispatcher,
         _SBE.STEP_ESP_SIM: StepEspSim,
+        _SBE.STEP_PROSPECTIVE_REINVENT: StepProspectiveREINVENT,
     }
