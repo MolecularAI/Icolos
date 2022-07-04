@@ -57,7 +57,10 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
         )
         # simulations are run without the normal parallelizer
         # this relies upon job IDs from Slurm
-        if self.execution.platform == _EPE.SLURM:
+        if (
+            self.execution.platform == _EPE.SLURM
+            and self._backend_executor.is_available()
+        ):
             self._run_job_pool(run_func=self._run_single_job)
         else:
             # simulations are run locally

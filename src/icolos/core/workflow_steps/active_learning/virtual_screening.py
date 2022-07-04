@@ -229,16 +229,20 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         self._logger.log("Generating results dataframe...", _LE.DEBUG)
 
         # we have a list of compound IDs per epoch, we want the transpose
-        queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
-        col_dict = {
-            "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
-            "top_1%_per_epoch": fraction_top1_hits_per_epoch,
-        }
-        for idx, row in enumerate(queried_compounds_per_position):
-            col_dict[f"seq_idx_pos_{idx}"] = list(row)
-        resuts_df = pd.DataFrame(col_dict)
-        resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
-
+        try:
+            queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
+            col_dict = {
+                "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
+                "top_1%_per_epoch": fraction_top1_hits_per_epoch,
+            }
+            for idx, row in enumerate(queried_compounds_per_position):
+                col_dict[f"seq_idx_pos_{idx}"] = list(row)
+            resuts_df = pd.DataFrame(col_dict)
+            resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
+        except ValueError as e:
+            self._logger.log(
+                f"Failed to generate results csv, error was {e}", _LE.WARNING
+            )
         # return the enriched df
         enriched_lib = lib.iloc[queried_compound_idx]
         enriched_lib.to_pickle(os.path.join(tmp_dir, f"enriched_lib_rep_{replica}.pkl"))

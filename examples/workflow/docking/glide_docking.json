@@ -16,7 +16,7 @@
                 "step_id": "Ligprep",
                 "type": "ligprep",
                 "execution": {
-                    "prefix_execution": "module load schrodinger/2020-4",
+                    "prefix_execution": "module load schrodinger/2021-4-js-aws",
                     "parallelization": {
                         "jobs": 2,
                         "max_length_sublists": 1
@@ -29,6 +29,7 @@
                     "arguments": {
                         "flags": ["-epik"],
                         "parameters": {
+							"-HOST": "cpu-only",
                             "-ph": 7.0,
                             "-pht": 2.0,
                             "-s": 10,

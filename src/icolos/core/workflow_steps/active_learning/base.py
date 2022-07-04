@@ -7,7 +7,7 @@ from typing import Callable, List
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.compound import Compound, Conformer
+from icolos.core.containers.compound import Compound, Conformer, Enumeration
 from icolos.core.workflow_steps.step import StepBase
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
@@ -77,6 +77,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             ),
             axis=1,
         )
+        library["fragment_id"] = [mol.GetProp("_Name") for mol in library.Molecule]
 
         library[_SALE.IDX] = [i for i in range(len(library))]
 
@@ -262,7 +263,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             #         output_compounds.append(conf)
 
             oracle_wf = self._initialize_oracle_workflow(compound_list)
-            # # we have a fully initialized step with the compounds loaded.  Execute them
+            # # # we have a fully initialized step with the compounds loaded.  Execute them
             oracle_wf = self._run_oracle_wf(oracle_wf=oracle_wf)
 
             output_compounds = [
@@ -313,6 +314,7 @@ class ActiveLearningBase(StepBase, BaseModel):
             # move the old dir to backup
             try:
                 shutil.move("output", f"output_{round}")
+                os.makedirs("output")
             except Exception as e:
                 print("Could not back up output files!, error was ", e)
             return np.array(final_scores, dtype=np.float32)
@@ -332,9 +334,17 @@ class ActiveLearningBase(StepBase, BaseModel):
             os.chdir(tmp_dir)
 
             # extract the relevant amino acids using compound indices from the ncaa library
-            compound_index = [row.IDX for row in compound_list]
+            fragment_ids = [row.ID for row in compound_list]
             # retrieve the fragment using the index of the enumerated compound
-            frags = [fragment_lib.iloc[idx] for idx in compound_index]
+            # frags = [fragment_lib.iloc[idx] for idx in compound_index]
+            print("fragment ids", fragment_ids)
+            frags = []
+            for frag_id in fragment_ids:
+                for _, frag in fragment_lib.iterrows():
+                    if frag.fragment_id == frag_id:
+                        frags.append(frag.Molecule)
+                        print(f"found frag {frag_id}")
+                        break
             letter_strings = string.ascii_uppercase + "0123456789"
             all_letters = []
             for char1 in letter_strings:
@@ -347,10 +357,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                 "compounds.sdf"
             ) as writer:
                 for idx, frag in enumerate(frags):
-                    mol = frag.Molecule
-                    # rename the molecule
-                    mol.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
-                    writer.write(frag.Molecule)
+                    # rename the molecule to align with what biolumiate will call i
+                    frag.SetProp(_WOE.RDKIT_NAME, f"{all_letters[idx]}")
+                    writer.write(frag)
                     f.write(f"{line_stub}->{all_letters[idx]}\n")
                     idx += 1
 
@@ -371,7 +380,9 @@ class ActiveLearningBase(StepBase, BaseModel):
 
         else:
             raise NotImplementedError(f"Oracle type {oracle_type} not implemented")
-        self._logger.log("Extracting final scores", _LE.DEBUG)
+        self._logger.log(
+            f"Extracting final scores for {len(final_compounds)} compounds", _LE.DEBUG
+        )
 
         scores = self._extract_final_scores_from_compounds(
             final_compounds, self.settings.additional[_SALE.CRITERIA]
@@ -414,6 +425,9 @@ class ActiveLearningBase(StepBase, BaseModel):
                                 _LE.WARNING,
                             )
                             scores.append(0.0)
+            # if no enumeration attached to the compounds i.e. ligprep failed
+            if not scores:
+                scores.append(0.0)
 
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
