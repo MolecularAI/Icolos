@@ -47,10 +47,10 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
 
         for edge in jobs:
             outLigPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="ligand"
+                workPath=self.work_dir, edge=edge, wp="unbound"
             )
             outProtPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="complex"
+                workPath=self.work_dir, edge=edge, wp="bound"
             )
 
             # box ligand
@@ -204,10 +204,7 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
         """
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
-        output_files = [
-            "ligand/tpr.tpr",
-            "complex/tpr.tpr",
-        ]
+        output_files = [f"{f}/tpr.tpr" for f in self.therm_cycle_branches]
         results = []
         for subjob in batch:
             subjob_results = []

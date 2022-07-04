@@ -3,7 +3,7 @@ from distutils.dir_util import copy_tree
 import json
 import os
 import sys
-from typing import Any, List, Dict, Union
+from typing import Any, List, Dict, Optional, Union
 from copy import Error
 
 
@@ -147,7 +147,7 @@ class GenericContainer:
     def get_all_files(self) -> Dict[str, List]:
         return self._file_dict
 
-    def get_files_by_extension(self, ext: str) -> List[GenericData]:
+    def get_files_by_extension(self, ext: str) -> List[Optional[GenericData]]:
         if ext in self._file_dict.keys():
             return self._file_dict[ext]
         else:

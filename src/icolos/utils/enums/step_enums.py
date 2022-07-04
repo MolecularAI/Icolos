@@ -52,6 +52,7 @@ class StepBaseEnum(str, Enum):
     STEP_FEP_PLUS_SETUP = "FEP_PLUS_SETUP"
     STEP_FEP_PLUS_EXEC = "FEP_PLUS_EXEC"
     STEP_FEP_PLUS_ANALYSIS = "FEP_PLUS_ANALYSIS"
+    STEP_FEP_ABSOLUTE = "FEP_ABSOLUTE"
     STEP_PREPWIZARD = "PREPWIZARD"
     STEP_MDPOCKET = "MDPOCKET"
     STEP_PDB_FIXER = "PDB_FIXER"
@@ -82,6 +83,7 @@ class StepBaseEnum(str, Enum):
     STEP_ESP_SIM = "ESP_SIM"
     STEP_DISPATCHER = "DISPATCHER"
     STEP_ACTIVE_LEARNING = "ACTIVE_LEARNING"
+    STEP_PROSPECTIVE_REINVENT = "PROSPECTIVE_REINVENT"
 
     # flow control blocks
     STEP_ITERATOR = "ITERATOR"
@@ -1060,3 +1062,32 @@ class StepActiveLearningEnum:
     LATENT_DISTANCE = "latent_distance"
     GREEDY = "greedy"
     EI = "ei"
+
+    # Prospective Active Learning in REINVENT
+    # -----------------------------------------------
+    # General Parameters
+    EPOCHS = "number_of_reinvent_epochs"
+    WARMUP = "warmup"
+    RETRAIN = "retrain"
+    INITIAL_POOLING_EPOCHS = "initial_pooling_epochs"
+    ACQUISITION_BATCH_SIZE = "acquisition_batch_size"
+    ORACLE_CONFIG = "oracle_config"
+    ORACLE_LABEL = "oracle_label"
+    SAVE_DIR = "save_dir"
+
+    # Surrogate Models
+    SURROGATE_MODEL_TYPE = "surrogate_model_type"
+    RANDOM_FOREST_REGRESSOR = "rf"
+    SUPPORT_VECTOR_REGRESSOR = "svr"
+
+    # Acquisition Functions
+    RANDOM = "random"
+    GREEDY = "greedy"
+    GREEDY_EPSILON = "greedy_epsilon"
+    PI = "pi"  # probability of improvement
+    EI = "ei"  # expected improvement
+    TS = "ts"  # thompson sampling
+    UCB = "ucb"  # upper confidence bound
+    TANIMOTO = "tanimoto"
+    MES = "mes"  # max-value entropy search
+    UNCERTAINTY = "uncertainty"

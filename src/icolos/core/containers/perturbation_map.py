@@ -22,7 +22,7 @@ class Node(BaseModel):
 
     node_id: str = None
     node_hash: str = None
-    conformer: Conformer = Conformer()
+    conformer: Optional[Conformer] = None
     node_connectivity: List = []
 
     def __init__(self, **data) -> None:
@@ -324,6 +324,12 @@ class PerturbationMap(BaseModel):
 
     def get_nodes(self) -> List[Node]:
         return self.nodes
+
+    def add_edge(self, edge: Edge) -> None:
+        self.edges.append(edge)
+
+    def add_node(self, node: Node) -> None:
+        self.nodes.append(node)
 
     def visualise_perturbation_map(self, write_out_path: str) -> None:
         """Generate NetworkX graph for the parsed perturbation map

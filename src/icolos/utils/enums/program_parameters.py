@@ -1549,6 +1549,7 @@ class PMXLigandHybridEnum:
 class FepPlusEnum:
     FEP_MAPPER = "$SCHRODINGER/run -FROM scisol fep_mapper.py"
     FEP_EXECUTOR = "$SCHRODINGER/fep_plus"
+    FEP_ABSOLUTE_EXECUTOR = "$SCHRODINGER/fep_absolute_binding"
     FEP_HELP = "-h"
     JSC_LIST = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc list"'
     JSC_TAIL_FILE = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc tail-file'
