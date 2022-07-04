@@ -9,6 +9,7 @@ from tests.tests_paths import (
     get_ligands_as_compounds_with_conformers,
 )
 from icolos.utils.general.files_paths import attach_root_path
+from icolos.core.composite_agents.workflow import WorkFlow
 
 _SBE = StepBaseEnum
 
@@ -43,7 +44,11 @@ class Test_Lomap(unittest.TestCase):
                 _SBE.SETTINGS_ADDITIONAL: {"topology": "mcs"},
             },
         }
-
+        w_flow = WorkFlow()
         step_lomap = StepLomap(**step_conf)
+        step_lomap.set_workflow_object(w_flow)
         step_lomap.data.compounds = self.compounds
         step_lomap.execute()
+        p_map = step_lomap.get_perturbation_map()
+        self.assertEqual(len(p_map.edges), 16)
+        self.assertEqual(len(p_map.nodes), 12)
