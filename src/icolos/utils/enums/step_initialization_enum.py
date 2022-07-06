@@ -18,6 +18,9 @@ from icolos.core.workflow_steps.schrodinger.fep_absolute import (
     StepSchrodingerAbsoluteFEP,
 )
 from icolos.core.workflow_steps.schrodinger.fep_analysis import StepFepPlusAnalysis
+from icolos.core.workflow_steps.schrodinger.protein_interaction import (
+    StepProteinInteraction,
+)
 from icolos.core.workflow_steps.structure_prediction.pdb_fixer import StepPdbFixer
 from icolos.core.workflow_steps.gromacs import *
 from icolos.core.workflow_steps.calculation.boltzmann_weighting import (
@@ -126,4 +129,5 @@ class StepInitializationEnum:
         _SBE.STEP_ESP_SIM: StepEspSim,
         _SBE.STEP_LOMAP: StepLomap,
         _SBE.STEP_PROSPECTIVE_REINVENT: StepProspectiveREINVENT,
+        _SBE.STEP_PROTEIN_INTERACTIONS: StepProteinInteraction,
     }

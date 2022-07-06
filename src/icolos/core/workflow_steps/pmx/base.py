@@ -497,30 +497,6 @@ class StepPMXBase(StepBase, BaseModel):
             self._log_execution_progress()
             n += 1
 
-    def get_arguments(self, defaults: dict = None) -> list:
-        """
-        Construct pmx-specific arguments from the step defaults,
-        overridden by arguments specified in the config file
-        """
-        arguments = []
-
-        # add flags
-        for flag in self.settings.arguments.flags:
-            arguments.append(flag)
-
-        # flatten the dictionary into a list for command-line execution
-        for key in self.settings.arguments.parameters.keys():
-            arguments.append(key)
-            arguments.append(self.settings.arguments.parameters[key])
-
-        # add defaults, if not already present
-        if defaults is not None:
-            for key, value in defaults.items():
-                if key not in arguments:
-                    arguments.append(key)
-                    arguments.append(value)
-        return arguments
-
     def get_edges(self):
         """
         Inspect the map object  passed to the step and extract the edge info

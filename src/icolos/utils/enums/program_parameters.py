@@ -942,6 +942,8 @@ class SchrodingerExecutablesEnum:
     FMP_STATS = "fmp_stats"
     FMP_STATS_CALL = "$SCHRODINGER/run -FROM scisol fmp_stats.py"
     STRUCTCAT_HELP = "-h"
+    PROTEIN_INTERACTION_CALL = "$SCHRODINGER/run protein_interaction_analysis.py"
+    PROTEIN_INTERACTION = "protein_interaction"
     STRUCTCAT_HELP_IDENTIFICATION_STRING = "<format> must be one of"
     # input; note that the format is directly appended (e.g. "-isd")
     STRUCTCAT_I = "-i"
