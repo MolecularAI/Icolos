@@ -73,9 +73,14 @@ class StepProteinInteraction(StepBase, BaseModel):
             base = self._get_additional_setting("base_residue")
             for interaction in self._get_additional_setting("target_residues"):
                 interact_summary = df.loc[df["Residue"].str.contains(base)]["Specific Interactions"]
-                if not f"hb to {interaction}" in interact_summary.values[0]:
-                    self._logger.log(f"Penalizing docking score for conf {conf.get_index_string()}", _LE.DEBUG)
-                    self._penalize_docking_score(conf, penalty)
+                print(interact_summary)
+                try:
+                    if not f"hb to {interaction}" in interact_summary.values[0]:
+                        self._logger.log(f"Penalizing docking score for conf {conf.get_index_string()}", _LE.DEBUG)
+                        self._penalize_docking_score(conf, penalty)
+                except:
+                    # either no interaction summary, or something else went wrong
+                    continue
         
 
 

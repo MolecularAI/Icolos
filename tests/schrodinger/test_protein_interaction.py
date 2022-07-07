@@ -66,7 +66,14 @@ class TestProteinInteraction(unittest.TestCase):
             .get_conformers()[0]
             .get_extra_data()["interaction_summary"]
         )
-        self.assertEqual()
+        score = (
+            step_protein_interaction.data.compounds[0]
+            .get_enumerations()[0]
+            .get_conformers()[0]
+            .get_molecule()
+            .GetProp("docking_score")
+        )
+        self.assertEqual(float(score), -11.434)
         # out_path = os.path.join(self._test_dir, "test_out.pdb")
         # with open(out_path, "w") as f:
         #     f.write(out_file)
