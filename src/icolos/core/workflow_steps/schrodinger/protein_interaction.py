@@ -1,3 +1,4 @@
+from typing import List
 from icolos.core.containers.compound import Conformer
 from icolos.core.workflow_steps.step import StepBase
 from pydantic import BaseModel
@@ -47,14 +48,14 @@ class StepProteinInteraction(StepBase, BaseModel):
     def _penalize_docking_score(self, conf: Conformer, penalty: float):
         # take the docking score, add a penalty
         docking_score = conf.get_molecule().GetProp("docking_score")
-        conf.get_molecule().SetProp("penalized_docking_score", str(float(docking_score) - penalty))
+        conf.get_molecule().SetProp("docking_score", str(float(docking_score) + penalty))
 
     def execute(self):
         """Runs schrodinger's protein_interaction_analysis script"""
         # requies structure file + group 1/2 identifications
 
         # unroll conformers
-        all_confs = []
+        all_confs: List[Conformer] = []
         for comp in self.get_compounds():
             for enum in comp.get_enumerations():
                 for conf in enum.get_conformers():
@@ -69,10 +70,11 @@ class StepProteinInteraction(StepBase, BaseModel):
         for conf in all_confs:
             df = conf.get_extra_data()["interaction_summary"]
             # penalize for every interaction that is not met
-            for base, interaction in self.settings.additional.items():
-                interact_summary = df.loc[df["Residue"] == base]["Specific Interactions"]
+            base = self._get_additional_setting("base_residue")
+            for interaction in self._get_additional_setting("target_residues"):
+                interact_summary = df.loc[df["Residue"].str.contains(base)]["Specific Interactions"]
                 if not f"hb to {interaction}" in interact_summary.values[0]:
-                    self._logger.log("Penalizing docking score!", _LE.DEBUG)
+                    self._logger.log(f"Penalizing docking score for conf {conf.get_index_string()}", _LE.DEBUG)
                     self._penalize_docking_score(conf, penalty)
         
 
