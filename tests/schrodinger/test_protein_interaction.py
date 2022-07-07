@@ -47,7 +47,12 @@ class TestProteinInteraction(unittest.TestCase):
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-group1": "A", "-group2": "A"}
-                }
+                },
+                _SBE.SETTINGS_ADDITIONAL: {
+                    # specify the hydrogen bond to check for
+                    "A:9:Asp": "A:11:Leu",
+                    "A:9:Asp": "A:12:Thr",
+                },
             },
         }
 

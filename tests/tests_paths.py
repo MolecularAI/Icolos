@@ -299,6 +299,7 @@ def get_ligands_as_compounds_with_conformers(
             smile=to_smiles(mol), original_smile=to_smiles(mol), molecule=mol
         )
         conf = Conformer(conformer=mol)
+        conf.get_molecule().SetProp("docking_score", "-12.434")
         if poseviewer is not None:
             conf.add_extra_data("structures_pv.maegz", data=poseviewer)
         enum.add_conformer(conf)
