@@ -1,6 +1,4 @@
-import pandas as pd
 import numpy as np
-from icolos.core.workflow_steps.step import _LE
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
@@ -19,8 +17,10 @@ class SurrogateModel:
     def __init__(self, model_type: str):
         def initialize_RF():
             model = RandomForestRegressor(
-                n_estimators=100, max_depth=8, n_jobs=-1, criterion="mse"
-            )  # the rest of the parameters are left default
+                # enforcing max-depth may cause trees to be unable to predict extreme values
+                # due to under-representation in the training data
+                n_estimators=100, n_jobs=-1, criterion="mse"
+            )
 
             return model
 
@@ -40,13 +40,14 @@ class SurrogateModel:
             raise ValueError("Model not supported.")
 
     def fit(self, X_train, y_train):
+        """train surrogate model from scratch. No online learning for random forest and support vectors"""
         if self.type == _SALE.RANDOM_FOREST_REGRESSOR:
-            # TODO: setting a seed would allow reproducibility, add if needed --> np.random.seed(0)
             self.model.fit(X_train, y_train)
         if self.type == _SALE.SUPPORT_VECTOR_REGRESSOR:
             self.model.fit(np.array(X_train), y_train)
 
     def predict(self, data):
+        """make predictions given query fingerprints"""
         if (
             self.type == _SALE.RANDOM_FOREST_REGRESSOR
             or self.type == _SALE.SUPPORT_VECTOR_REGRESSOR
@@ -54,6 +55,10 @@ class SurrogateModel:
             return self.model.predict(data)
 
     def get_std(self, X):
+        """
+        get standard deviation. This method is only implemented for random forests and is calculated
+        using the prediction differences of each individual tree in the ensemble.
+        """
         if self.type == _SALE.RANDOM_FOREST_REGRESSOR:
             individual_trees = self.model.estimators_
             subEstimates = np.array([tree.predict(X) for tree in individual_trees])

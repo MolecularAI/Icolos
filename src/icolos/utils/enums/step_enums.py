@@ -1086,5 +1086,4 @@ class StepActiveLearningEnum:
     TS = "ts"  # thompson sampling
     UCB = "ucb"  # upper confidence bound
     TANIMOTO = "tanimoto"
-    MES = "mes"  # max-value entropy search
-    UNCERTAINTY = "uncertainty"
+    TANIMOTO_TRUE_BELIEVER = "tanimoto_true_believer"
