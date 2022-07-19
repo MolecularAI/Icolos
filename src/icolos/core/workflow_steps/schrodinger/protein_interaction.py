@@ -77,8 +77,11 @@ class StepProteinInteraction(StepBase, BaseModel):
                 try:
                     if not f"hb to {interaction}" in interact_summary.values[0]:
                         self._logger.log(f"Penalizing docking score for conf {conf.get_index_string()}", _LE.DEBUG)
+                        print(f"Penalizing docking score for conf {conf.get_index_string()}", _LE.DEBUG)
+
                         self._penalize_docking_score(conf, penalty)
-                except:
+                except Exception as e:
+                    print(e)
                     # either no interaction summary, or something else went wrong
                     continue
         
