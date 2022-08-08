@@ -38,7 +38,9 @@ class StepPMXSetup(StepPMXBase, BaseModel):
             if "replicas" in self.settings.additional.keys()
             else 3
         )
-        assert self.work_dir is not None and os.path.isdir(self.work_dir)
+        if self.work_dir is None:
+            self.work_dir = self._make_tmpdir()
+            self._logger.log(f"Set workflow directory to {self.work_dir}", _LE.DEBUG)
         self._construct_perturbation_map(self.work_dir, replicas)
         # create the directory structure for subsequent calculations
         edges = self.get_edges()
