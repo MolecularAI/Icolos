@@ -54,7 +54,7 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
         )
 
     def _check_results(self, batch: List[List[str]]) -> List[List[bool]]:
-        output_files = ["complex/init.pdb", "ligand/init.pdb"]
+        output_files = ["bound/init.pdb", "unbound/init.pdb"]
         results = []
         for subjob in batch:
             subjob_results = []

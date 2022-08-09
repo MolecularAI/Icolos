@@ -1,4 +1,3 @@
-from http.client import TEMPORARY_REDIRECT
 import os
 from typing import List
 from pydantic import BaseModel
@@ -9,6 +8,7 @@ from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
+from icolos.core.workflow_steps.step import _LE
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
