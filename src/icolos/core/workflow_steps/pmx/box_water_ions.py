@@ -7,7 +7,6 @@ from icolos.utils.enums.program_parameters import (
     GromacsEnum,
     StepPMXEnum,
 )
-from icolos.core.workflow_steps.step import _LE
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 
@@ -44,6 +43,7 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
 
     def boxWaterIons(self, jobs: List[str]):
         mdp_path = os.path.join(self.work_dir, "input/mdp")
+        print("work_dir", self.work_dir)
 
         for edge in jobs:
             outLigPath = self._get_specific_path(
@@ -90,13 +90,20 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
             outStr = "{0}/water.pdb".format(outLigPath)
             top = "{0}/topol.top".format(outLigPath)
             solvate_args = ["-cp", inStr, "-cs", "spc216.gro", "-p", top, "-o", outStr]
-            self._gromacs_executor.execute(command=_GE.SOLVATE, arguments=solvate_args)
+            self._gromacs_executor.execute(
+                command=_GE.SOLVATE,
+                arguments=solvate_args,
+                check=True,
+                location=self.work_dir,
+            )
             # water protein
             inStr = "{0}/box.pdb".format(outProtPath)
             outStr = "{0}/water.pdb".format(outProtPath)
             top = "{0}/topol.top".format(outProtPath)
             solvate_args = ["-cp", inStr, "-cs", "spc216.gro", "-p", top, "-o", outStr]
-            self._gromacs_executor.execute(command=_GE.SOLVATE, arguments=solvate_args)
+            self._gromacs_executor.execute(
+                command=_GE.SOLVATE, arguments=solvate_args, location=self.work_dir
+            )
 
             # ions ligand
             inStr = "{0}/water.pdb".format(outLigPath)
@@ -123,7 +130,10 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
             ]
 
             self._gromacs_executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP,
+                arguments=grompp_args,
+                check=True,
+                location=self.work_dir,
             )
             genion_args = [
                 "-s",
@@ -145,6 +155,7 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
                 arguments=genion_args,
                 check=True,
                 pipe_input="echo SOL",
+                location=self.work_dir,
             )
             # ions protein
             inStr = "{0}/water.pdb".format(outProtPath)
@@ -171,7 +182,10 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
             ]
 
             self._gromacs_executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=True
+                command=_GE.GROMPP,
+                arguments=grompp_args,
+                check=True,
+                location=self.work_dir,
             )
             genion_args = [
                 "-s",
@@ -193,6 +207,7 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
                 arguments=genion_args,
                 check=True,
                 pipe_input="echo SOL",
+                location=self.work_dir,
             )
 
             # clean backed files
