@@ -113,10 +113,19 @@ class SlurmExecutor(ExecutorBase):
         return state
 
     def prepare_batch_script(
-        self, command, arguments: List, pipe_input: str = None, location=None
-    ):
-        """
-        Write a batch script to the specified location
+        self,
+        command: str,
+        arguments: List,
+        pipe_input: str = None,
+        location: str = None,
+    ) -> str:
+        """Generate the batch script for a specific job and write to disk
+
+        :param str command: command to be executed
+        :param List arguments: List of arguments to be appended to the command
+        :param str pipe_input: string to be piped to the program being executed, defaults to None
+        :param str location: directory where batch script will be written, defaults to None
+        :return str : path to the batch script
         """
         batch_script = self._construct_slurm_header()
         command = self._prepare_command(command, arguments, pipe_input)

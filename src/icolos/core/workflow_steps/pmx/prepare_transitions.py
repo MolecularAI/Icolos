@@ -130,10 +130,10 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
         replicas = self.get_perturbation_map().replicas
         output_paths = []
         for i in range(1, replicas + 1):
-            output_paths.append(f"ligand/stateA/run{i}/transitions")
-            output_paths.append(f"ligand/stateB/run{i}/transitions")
-            output_paths.append(f"complex/stateA/run{i}/transitions")
-            output_paths.append(f"complex/stateB/run{i}/transitions")
+            output_paths.append(f"unbound/stateA/run{i}/transitions")
+            output_paths.append(f"unbound/stateB/run{i}/transitions")
+            output_paths.append(f"bound/stateA/run{i}/transitions")
+            output_paths.append(f"bound/stateB/run{i}/transitions")
 
         results = []
         for subjob in batch:
