@@ -46,10 +46,10 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
         self.analysis_summary(self.get_edges())
+        # reattach compounds from perturbation map to step for writeout
+        self.data.compounds = self.get_perturbation_map().compounds
 
-    def _run_analysis_script(
-        self, analysispath, stateApath, stateBpath, bVerbose=False
-    ):
+    def _run_analysis_script(self, analysispath, stateApath, stateBpath):
         fA = " ".join(glob.glob("{0}/*xvg".format(stateApath)))
         fB = " ".join(glob.glob("{0}/*xvg".format(stateBpath)))
         oA = "integ0.dat"
@@ -80,20 +80,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             100,
         ]
         # subprocess complains that the command is too long
-        result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=cmd, arguments=args, location=analysispath, check=False
         )
-
-        # if bVerbose == True:
-        #     fp = open(o, "r")
-        #     lines = fp.readlines()
-        #     fp.close()
-        #     bPrint = False
-        #     for l in lines:
-        #         if "ANALYSIS" in l:
-        #             bPrint = True
-        #         if bPrint == True:
-        #             print(l, end="")
 
     def _read_neq_results(self, fname):
         try:

@@ -100,3 +100,6 @@ class Test_PMXanalyse(unittest.TestCase):
         stat_inf = os.stat(os.path.join(self._test_dir, "resultsSummary.csv"))
 
         self.assertGreater(stat_inf.st_size, 130)
+
+
+        self.assertEqual(step_pmx_analyse.data.compounds[0].get_enumerations()[0].get_conformers()[0].get_molecule().GetProp("ddG"), -9.45)
