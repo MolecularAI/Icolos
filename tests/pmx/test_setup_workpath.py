@@ -78,7 +78,7 @@ class Test_PMX_setup(unittest.TestCase):
 
         assert os.path.isdir(os.path.join(self._test_dir, "input"))
         assert os.path.isdir(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateA/run1/em")
         )
         # stat some of the ligand files and check they've been deposited in the right directory
 
@@ -130,7 +130,7 @@ class Test_PMX_setup(unittest.TestCase):
 
         assert os.path.isdir(os.path.join(self._test_dir, "input"))
         assert os.path.isdir(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateA/run1/em")
         )
         # stat some of the ligand files and check they've been deposited in the right directory
 

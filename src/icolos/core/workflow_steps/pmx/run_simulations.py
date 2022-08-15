@@ -41,6 +41,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
 
         # prepare and pool jobscripts, unroll replicas,  etc
         job_pool = self._prepare_job_pool(edges)
+        print(job_pool)
         self._logger.log(
             f"Prepared {len(job_pool)} jobs for {self.sim_type} simulations",
             _LE.DEBUG,
@@ -237,6 +238,7 @@ class StepPMXRunSimulations(StepPMXBase, BaseModel):
                         path = self._prepare_single_job(
                             edge=edge, wp=branch, state=state, r=r
                         )
+                        print(path)
                         if path is not None:
                             batch_script_paths.append(path)
         return batch_script_paths

@@ -72,11 +72,11 @@ class Test_PMXAssembleSystems(unittest.TestCase):
         step_assembleSystems.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/init.pdb")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/init.pdb")
         )
         self.assertGreater(stat_inf.st_size, 141300)
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/init.pdb")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/unbound/init.pdb")
         )
         self.assertGreater(stat_inf.st_size, 2800)
