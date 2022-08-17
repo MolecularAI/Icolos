@@ -178,9 +178,14 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 try:
                     edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
                 except AttributeError as e:
-                    print(
-                        f"Could not attach score to mol for edge {edge.get_edge_id()}"
+                    self._logger.log(
+                        f"Could not attach score to mol for edge {edge.get_edge_id()}, defaulting to zero",
+                        _LE.WARNING,
                     )
+                    edge.node_to.get_conformer().get_molecule().SetProp(
+                        "ddG", str(0.00)
+                    )
+
                 erra = np.sqrt(
                     np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
                     + np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
@@ -304,9 +309,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     r=r,
                     sim="transitions",
                 )
-                self._run_analysis_script(
-                    analysispath, stateApath, stateBpath, bVerbose=bVerbose
-                )
+                self._run_analysis_script(analysispath, stateApath, stateBpath)
                 # protein
                 wp = "bound"
                 analysispath = "{0}/analyse{1}".format(
@@ -330,9 +333,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     r=r,
                     sim="transitions",
                 )
-                self._run_analysis_script(
-                    analysispath, stateApath, stateBpath, bVerbose=bVerbose
-                )
+                self._run_analysis_script(analysispath, stateApath, stateBpath)
 
     def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
         """
