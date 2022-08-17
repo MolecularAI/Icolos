@@ -238,8 +238,9 @@ class StepPMXBase(StepBase, BaseModel):
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
             # check all transitions have not been skipped
             if grompp_full_cmd:
+                print("running grompp")
                 result = executor.execute(
-                    command=grompp_full_cmd, arguments=[], check=False, location=simpath
+                    command=grompp_full_cmd, arguments=[], check=True, location=simpath
                 )
         self._clean_backup_files(simpath)
 

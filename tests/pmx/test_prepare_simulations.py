@@ -61,16 +61,14 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
 
         stat_inf = os.stat(
             os.path.join(
-                self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em/tpr.tpr"
+                self._test_dir, "0ec09ef_4afa8f9/unbound/stateA/run1/em/tpr.tpr"
             )
         )
 
         self.assertGreater(stat_inf.st_size, 168400)
 
         stat_inf = os.stat(
-            os.path.join(
-                self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/tpr.tpr"
-            )
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateB/run1/em/tpr.tpr")
         )
         self.assertGreater(stat_inf.st_size, 1317000)
 
@@ -109,15 +107,13 @@ class Test_PMXPrepareSimulations(unittest.TestCase):
 
         stat_inf = os.stat(
             os.path.join(
-                self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em/tpr.tpr"
+                self._test_dir, "0ec09ef_4afa8f9/unbound/stateA/run1/em/tpr.tpr"
             )
         )
 
         self.assertGreater(stat_inf.st_size, 168400)
 
         stat_inf = os.stat(
-            os.path.join(
-                self._test_dir, "0ec09ef_4afa8f9/complex/stateB/run1/em/tpr.tpr"
-            )
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateB/run1/em/tpr.tpr")
         )
         self.assertGreater(stat_inf.st_size, 1317000)

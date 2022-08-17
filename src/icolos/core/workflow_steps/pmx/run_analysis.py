@@ -3,15 +3,12 @@ from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
-from icolos.utils.enums.program_parameters import StepPMXEnum
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import numpy as np
 import glob
 import pandas as pd
 import os
-
-_PSE = StepPMXEnum()
 
 
 class StepPMXRunAnalysis(StepPMXBase, BaseModel):
@@ -79,7 +76,6 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             "-b",
             100,
         ]
-        # subprocess complains that the command is too long
         self._backend_executor.execute(
             command=cmd, arguments=args, location=analysispath, check=False
         )
@@ -238,7 +234,6 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     self.settings.additional["exp_results"],
                     converters={"Ligand": lambda x: str(x).split(".")[0]},
                 )
-                print(exp_data)
                 # compute the experimental ddG and append to resultsSummary
                 node_data = self.get_perturbation_map().node_df
                 self.results_summary["exp_ddG"] = self.results_summary.apply(
@@ -281,7 +276,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         )
         return lig2_dG - lig1_dG
 
-    def run_analysis(self, jobs: List[str], bVerbose=True):
+    def run_analysis(self, jobs: List[str]):
         for idx, edge in enumerate(jobs):
 
             for r in range(1, self.get_perturbation_map().replicas + 1):

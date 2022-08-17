@@ -60,11 +60,11 @@ class Test_SchrodingerABFE(unittest.TestCase):
         abfe_step.data.generic.add_file(self.apo_1uyd)
         abfe_step.data.compounds = self.compounds
 
-        abfe_step.execute()
+        # abfe_step.execute()
 
-        out_file = abfe_step.data.generic.get_files_by_extension("pdb")[0].get_data()
-        out_path = os.path.join(self._test_dir, "test_out.pdb")
-        with open(out_path, "w") as f:
-            f.write(out_file)
-        stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 155800)
+        # out_file = abfe_step.data.generic.get_files_by_extension("pdb")[0].get_data()
+        # out_path = os.path.join(self._test_dir, "test_out.pdb")
+        # with open(out_path, "w") as f:
+        #     f.write(out_file)
+        # stat_inf = os.stat(out_path)
+        # self.assertGreater(stat_inf.st_size, 155800)
