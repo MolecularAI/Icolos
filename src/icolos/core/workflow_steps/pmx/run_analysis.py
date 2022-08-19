@@ -44,7 +44,18 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         )
         self.analysis_summary(self.get_edges())
         # reattach compounds from perturbation map to step for writeout
-        self.data.compounds = self.get_perturbation_map().compounds
+        for comp in self.get_perturbation_map().compounds:
+            # the hub compound will not have data attached, this will be pruned here
+            try:
+                _ = (
+                    comp.get_enumerations()[0]
+                    .get_conformers()[0]
+                    .get_molecule()
+                    .GetProp("ddG")
+                )
+                self.data.compounds.append(comp)
+            except KeyError:
+                continue
 
     def _run_analysis_script(self, analysispath, stateApath, stateBpath):
         fA = " ".join(glob.glob("{0}/*xvg".format(stateApath)))
@@ -173,6 +184,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 edge.ddG = dg
                 try:
                     edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
+                    self._logger.log(
+                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_molecule()}", _LE.DEBUG
+                    )
                 except AttributeError as e:
                     self._logger.log(
                         f"Could not attach score to mol for edge {edge.get_edge_id()}, defaulting to zero",
