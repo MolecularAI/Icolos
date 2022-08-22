@@ -28,17 +28,17 @@
 					},
 					{
 						"key": "GMXLIB",
-						"value": "/home/kmzp800/pmx/src/pmx/data/mutff"
+						"value": "/path/to/pmx/src/pmx/data/mutff"
 					}
 				]
 			},
 			"global_variables": {
-				"file_path": "{package_dir}/../IcolosData/pmx",
-				"output_dir": "{work_dir}/tests/junk/pmx",
-				"smiles": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks2_ligands.smi",
-				"reflig": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks2_lig.sdf",
-				"receptor_path": "/projects/mai/users/kmzp800_harry/IcolosData/AutoDockVina/tnks2_vina.pdbqt",
-				"protein": "/projects/mai/users/kmzp800_harry/IcolosData/pmx/tnks.pdb"
+				"file_path": "/path/to/input_files",
+				"output_dir": "{work_dir}/output",
+				"smiles": "{file_path}/ligands.smi",
+				"reflig": "{file_path}/lig.sdf",
+				"receptor_path": "{file_path}/vina.pdbqt",
+				"protein": "{file_path}/protein.pdb"
 			},
 			"global_settings": {}
 		},
@@ -97,7 +97,7 @@
 							}
 						},
 						"grid_ids": [
-							"tnks2"
+							"system1"
 						]
 					}
 				},
@@ -180,19 +180,16 @@
 				}
 			},
 			{
-				"step_id": "lomap",
-				"type": "lomap",
+				"step_id": "fep_setup",
+				"type": "fep_plus_setup",
 				"execution": {
-					"parallelization": {
-						"jobs": 8
-					}
+					"prefix_execution": "module load schrodinger/2021-2-js-aws"
 				},
 				"settings": {
 					"arguments": {
-						"parameters": {}
-					},
-					"additional": {
-						"topology": "mcs"
+						"parameters": {
+							"-num-procs": 1
+						}
 					}
 				},
 				"input": {
@@ -200,6 +197,12 @@
 						{
 							"source": "filter_docking",
 							"source_type": "step"
+						}
+					],
+					"generic": [
+						{
+							"source": "{protein}",
+							"extension": "pdb"
 						}
 					]
 				}
@@ -231,13 +234,13 @@
 							"extension": "pdb"
 						},
 						{
-							"source": "{file_path}/run_simulations/input/mdp/",
+							"source": "{file_path}/mdp/",
 							"extension": "mdp"
 						}
 					],
 					"compounds": [
 						{
-							"source": "lomap",
+							"source": "fep_plus_setup",
 							"source_type": "step"
 						}
 					],

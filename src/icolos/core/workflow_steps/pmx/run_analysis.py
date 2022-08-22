@@ -54,7 +54,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     .GetProp("ddG")
                 )
                 self.data.compounds.append(comp)
-            except KeyError:
+            except (IndexError, KeyError):
                 continue
 
     def _run_analysis_script(self, analysispath, stateApath, stateBpath):
