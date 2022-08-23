@@ -442,7 +442,7 @@ class WriteOutHandler(BaseModel):
                     try:
                         values.append(
                             float(
-                                conf.get_molecul().GetProp(
+                                conf.get_molecule().GetProp(
                                     self.config.compounds.aggregation.key
                                 )
                             )
