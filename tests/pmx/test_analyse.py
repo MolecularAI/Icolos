@@ -52,6 +52,7 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.work_dir = self._test_dir
         step_pmx_analyse._workflow_object = WorkFlow()
         step_pmx_analyse._workflow_object.workflow_data.perturbation_map = self.p_map
+        step_pmx_analyse.data.compounds = self.compounds
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
@@ -85,6 +86,7 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.work_dir = self._test_dir
         step_pmx_analyse._workflow_object = WorkFlow()
         step_pmx_analyse._workflow_object.workflow_data.perturbation_map = self.p_map
+        step_pmx_analyse.data.compounds = self.compounds
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
@@ -103,7 +105,7 @@ class Test_PMXanalyse(unittest.TestCase):
         print(step_pmx_analyse.data.compounds)
 
         self.assertEqual(
-            step_pmx_analyse.data.compounds[0]
+            step_pmx_analyse.data.compounds[9]
             .get_enumerations()[0]
             .get_conformers()[0]
             .get_molecule()

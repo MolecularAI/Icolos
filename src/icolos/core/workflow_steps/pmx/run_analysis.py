@@ -1,4 +1,5 @@
 from typing import Dict, List
+from icolos.core.containers.compound import Compound, Enumeration
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
@@ -47,13 +48,17 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         # REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score
         for edge in self.get_perturbation_map().edges:
 
-            output_conf = edge.node_to().conformer
-            comp, enum, conf = output_conf.get_index_string().split(":")
-
+            output_conf = edge.node_to.conformer
+            enum: Enumeration = output_conf.get_enumeration_object()
+            comp: Compound = enum.get_compound_object()
+            self.data.compounds[comp.get_compound_number()].get_enumerations()[
+                enum.get_enumeration_id()
+            ].get_conformers()[0].set_molecule(output_conf.get_molecule())
+            # print(comp, enum, conf)
             # match the output conformer to the compounds attached to the step from docking
-            self.data.compounds[comp].get_enumerations[enum].get_conformers[
-                conf
-            ] = output_conf
+            # self.data.compounds[int(comp)].get_enumerations[int(enum)].get_conformers[
+            #     int(conf)
+            # ] = output_conf
             self._logger.log(
                 f"attached conf to step data for {output_conf.get_index_string()}",
                 _LE.DEBUG,
