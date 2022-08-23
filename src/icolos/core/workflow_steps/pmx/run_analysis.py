@@ -44,18 +44,33 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         )
         self.analysis_summary(self.get_edges())
         # reattach compounds from perturbation map to step for writeout
-        for comp in self.get_perturbation_map().compounds:
-            # the hub compound will not have data attached, this will be pruned here
-            try:
-                _ = (
-                    comp.get_enumerations()[0]
-                    .get_conformers()[0]
-                    .get_molecule()
-                    .GetProp("ddG")
-                )
-                self.data.compounds.append(comp)
-            except (IndexError, KeyError):
-                continue
+        # REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score
+        for edge in self.get_perturbation_map().edges:
+
+            output_conf = edge.node_to().conformer
+            comp, enum, conf = output_conf.get_index_string().split(":")
+
+            # match the output conformer to the compounds attached to the step from docking
+            self.data.compounds[comp].get_enumerations[enum].get_conformers[
+                conf
+            ] = output_conf
+            self._logger.log(
+                f"attached conf to step data for {output_conf.get_index_string()}",
+                _LE.DEBUG,
+            )
+
+        # Edges that failed will have 0.00 attached, compounds that failed to dock and were never part of the map will get caught by the writeout method and set to 0.00
+
+        # # the hub compound will not have data attached, this will be pruned here
+        # all_confs = comp.unroll_conformers()
+        # attached_prop = False
+        # # check all conformers attached to compound, if ddG tag was attached, append to step compounds
+        # if any(["ddG" in conf.get_molecule().GetPropNames() for conf in all_confs]):
+
+        #     self.data.compounds.append(comp)
+
+        # # self._logger.log(f"Failed to attach compound {comp.get_index_string()}, error was {e}", _LE.WARNING)
+        # continue
 
     def _run_analysis_script(self, analysispath, stateApath, stateBpath):
         fA = " ".join(glob.glob("{0}/*xvg".format(stateApath)))
@@ -185,7 +200,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 try:
                     edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
                     self._logger.log(
-                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_molecule()}", _LE.DEBUG
+                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_conformer_id()}",
+                        _LE.DEBUG,
                     )
                 except AttributeError as e:
                     self._logger.log(
