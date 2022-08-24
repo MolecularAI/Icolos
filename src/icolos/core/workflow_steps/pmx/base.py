@@ -1,27 +1,35 @@
+from asyncio import run_coroutine_threadsafe
+import subprocess
 from subprocess import CompletedProcess
-from typing import Callable, Dict, List
+import time
+from typing import Callable, Deque, Dict, List
 from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from rdkit.Chem import rdmolops
+from rdkit import Chem
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.parallelization import ParallelizationEnum
-from icolos.utils.enums.program_parameters import GromacsEnum, StepPMXEnum
+from icolos.utils.enums.program_parameters import GromacsEnum, SlurmEnum, StepPMXEnum
 from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 import os
-from icolos.utils.general.parallelization import Parallelizer
+from icolos.utils.general.parallelization import Parallelizer, Subtask
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
+from collections import deque
+
+from icolos.utils.general.progress_bar import get_progress_bar_string
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _SPE = StepPMXEnum()
 _PE = ParallelizationEnum
+_SE = SlurmEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
@@ -51,8 +59,8 @@ class StepPMXBase(StepBase, BaseModel):
         self.sim_types = ["em", "nvt", "eq", "transitions"]
         self.states = ["stateA", "stateB"]
         # for a normal pmx run this would be "water" and "protein"
-        # here we rename for compatibility across abfe/rbfe simulations
-        self.therm_cycle_branches = ["ligand", "complex"]
+        # unbound -> ligand, bound -> complex
+        self.therm_cycle_branches = ["unbound", "bound"]
 
         # simulation setup
         self.run_type = self._get_additional_setting(_SPE.RUN_TYPE, "rbfe")
@@ -127,7 +135,7 @@ class StepPMXBase(StepBase, BaseModel):
             "-o",
             os.path.join(self.work_dir, path, output),
         ]
-        self._gromacs_executor.execute(
+        self._backend_executor.execute(
             command=_GE.PDB2GMX,
             arguments=pdb2gmx_args,
             check=True,
@@ -142,8 +150,6 @@ class StepPMXBase(StepBase, BaseModel):
         sim_type,
         executor,
         empath=None,
-        framestart=0,
-        framestop=1,
     ) -> CompletedProcess:
         mdp_path = os.path.join(self.work_dir, "input/mdp")
         mdp_prefix = self.mdp_prefixes[sim_type]
@@ -184,15 +190,26 @@ class StepPMXBase(StepBase, BaseModel):
                 "-po",
                 mdout,
             ]
-            result = executor.execute(
-                command=_GE.GROMPP, arguments=grompp_args, check=False
-            )
+            if not os.path.isfile(tpr):
+                result = executor.execute(
+                    command=_GE.GROMPP,
+                    arguments=grompp_args,
+                    check=True,
+                    location=simpath,
+                )
+            else:
+                self._logger.log(f"tpr file {tpr} already exists, skipping", _LE.DEBUG)
+
         elif sim_type == "transitions":
-            # significant overhead running 81 different subprocesses, limit to a single call with a very long string (might have to use relative paths)
             grompp_full_cmd = []
-            for frame in range(framestart, framestop):
-                inStr = "{0}/frame{1}.gro".format(simpath, frame)
-                tpr = "{0}/ti{1}.tpr".format(simpath, frame)
+            # 80 frames = 0 - 79
+            num_frames = len([f for f in os.listdir(simpath) if f.startswith("frame")])
+            self._logger.log(
+                f"Generating transition tpr files for {num_frames} frames", _LE.DEBUG
+            )
+            for frame in range(num_frames):
+                inStr = f"{simpath}/frame{frame}.gro"
+                tpr = f"{simpath}/ti{frame}.tpr".format(simpath, frame)
 
                 grompp_args = [
                     "gmx grompp",
@@ -212,14 +229,20 @@ class StepPMXBase(StepBase, BaseModel):
                     mdout,
                     ";",
                 ]
-
-                grompp_full_cmd += grompp_args
+                if not os.path.isfile(tpr):
+                    grompp_full_cmd += grompp_args
+                else:
+                    self._logger.log(
+                        f"tpr file {tpr} already exists, skipping", _LE.DEBUG
+                    )
             grompp_full_cmd = " ".join(grompp_full_cmd[:-1])
-            result = executor.execute(
-                command=grompp_full_cmd, arguments=[], check=False
-            )
+            # check all transitions have not been skipped
+            if grompp_full_cmd:
+                print("running grompp")
+                result = executor.execute(
+                    command=grompp_full_cmd, arguments=[], check=True, location=simpath
+                )
         self._clean_backup_files(simpath)
-        return result
 
     def _clean_pdb_structure(self, tmp_dir: str) -> None:
         files = [file for file in os.listdir(tmp_dir) if file.endswith("pdb")]
@@ -306,6 +329,90 @@ class StepPMXBase(StepBase, BaseModel):
                 os.path.join(tmp_dir, gro_file),
             )
 
+    def _run_job_pool(self, run_func: Callable):
+        # get the loaded tasks from the subtask container
+
+        # while self._subtask_container.done() is False:
+        job_generator = (j for j in self._subtask_container.get_todo_tasks())
+        n_jobs = len(self._subtask_container.get_todo_tasks())
+        current_jobs = []
+        # initially fill the queue with N jobs
+        while len(current_jobs) < self.execution.parallelization.jobs:
+            try:
+                current_jobs.append(next(job_generator))
+            except StopIteration:
+                break
+
+        _ = [job.increment_tries() for job in current_jobs]
+        # submit the initial job pool
+        queue_exhausted = False
+        previous_metrics = [0, 0, 0]
+        done_count = 0
+        while done_count < n_jobs:
+            # loop through the jobs:
+            done_count = len(self._subtask_container.get_done_tasks())
+            running_count = len(self._subtask_container.get_running_tasks())
+            ready_count = len(self._subtask_container.get_todo_tasks())
+
+            current_metrics = [done_count, running_count, ready_count]
+            if current_metrics != previous_metrics:
+                self._logger.log(
+                    f" Execution Summary: PENDING: {ready_count}\tRUNNING: {running_count}\tDONE: {done_count}",
+                    _LE.INFO,
+                )
+                prog_string = get_progress_bar_string(
+                    done_count, done_count + running_count + ready_count
+                )
+                self._logger.log(prog_string, _LE.INFO)
+            previous_metrics = current_metrics
+            for job in current_jobs:
+                # job is ready to go, dispatch it to Slurm
+                if job.status == _PE.STATUS_READY:
+                    job_id = run_func(job.data)
+                    job.set_job_id(job_id)
+                    job.set_status(_PE.STATUS_RUNNING)
+                # check the job status
+                elif job.status == _PE.STATUS_RUNNING:
+                    # check to see whether it's finished
+                    status = self._backend_executor._check_job_status(job.job_id)
+                    if status == _SE.COMPLETED:
+                        self._logger.log(f"Job {job.job_id} COMPLETED", _LE.DEBUG)
+                        job.set_status_success()
+                    elif status == _SE.FAILED:
+                        self._logger.log(f"Job {job.job_id} FAILED!", _LE.WARNING)
+                        job.set_status_failed()
+                    elif status == _SE.CANCELLED:
+                        self._logger.log(
+                            f"Job {job.job_id} was CANCELLED!", _LE.WARNING
+                        )
+                        job.set_status_failed()
+                    elif status == _SE.NODE_FAIL:
+                        # aws revoked the spot instance.  Resubmit the job
+                        self._logger.log(
+                            f"Job {job.job_id} was revoked, resubmitting...", _LE.DEBUG
+                        )
+                        job.set_status(_PE.STATUS_READY)
+                    elif status not in (_SE.RUNNING, _SE.PENDING):
+                        self._logger.log(
+                            f"Unhandled job state {status} for job {job.job_id}",
+                            _LE.WARNING,
+                        )
+                        job.set_status_failed()
+
+                # if complete, succesfully or not, remove the job from the queue, prepare another
+                elif job.status in (_PE.STATUS_SUCCESS, _PE.STATUS_FAILED):
+                    current_jobs.remove(job)
+                    if queue_exhausted is False:
+                        try:
+                            new_job = next(job_generator)
+                            self._logger.log(f"Preparing new job {job.data}", _LE.DEBUG)
+                            new_job.increment_tries()
+                            current_jobs.append(new_job)
+                        except StopIteration:
+                            self._logger.log("Reached end of job queue", _LE.DEBUG)
+                            queue_exhausted = True
+            time.sleep(10)
+
     def _execute_pmx_step_parallel(
         self,
         run_func: Callable,
@@ -391,30 +498,6 @@ class StepPMXBase(StepBase, BaseModel):
             self._log_execution_progress()
             n += 1
 
-    def get_arguments(self, defaults: dict = None) -> list:
-        """
-        Construct pmx-specific arguments from the step defaults,
-        overridden by arguments specified in the config file
-        """
-        arguments = []
-
-        # add flags
-        for flag in self.settings.arguments.flags:
-            arguments.append(flag)
-
-        # flatten the dictionary into a list for command-line execution
-        for key in self.settings.arguments.parameters.keys():
-            arguments.append(key)
-            arguments.append(self.settings.arguments.parameters[key])
-
-        # add defaults, if not already present
-        if defaults is not None:
-            for key, value in defaults.items():
-                if key not in arguments:
-                    arguments.append(key)
-                    arguments.append(value)
-        return arguments
-
     def get_edges(self):
         """
         Inspect the map object  passed to the step and extract the edge info
@@ -467,12 +550,33 @@ class StepPMXBase(StepBase, BaseModel):
             ) as f:
                 f.writelines(itp_lines)
 
+    def get_hub_conformer(self, hub_conf_path) -> Conformer:
+        """
+
+        :return _type_: _description_
+        """
+
+        with Chem.SDMolSupplier(hub_conf_path) as supplier:
+            hub_mol = supplier[0]
+        return Conformer(conformer=hub_mol)
+
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
-        # construct the perturbation map and load in the log file
-        log_file = self.data.generic.get_argument_by_extension(
-            "log", rtn_file_object=True
-        )
-        log_file.write(work_dir)
+        if self.get_perturbation_map() is not None:
+            self._logger.log("Perturbation map already constructed", _LE.DEBUG)
+            self.get_perturbation_map().protein = (
+                self.data.generic.get_argument_by_extension("pdb", rtn_file_object=True)
+            )
+            self.get_perturbation_map().replicas = replicas
+            return
+        topology = self._get_additional_setting("topology", default="normal")
+        # check whether a hub conformer has been supplied (as an sdf file)
+        hub_conf_path = self._get_additional_setting("hub_conformer", default=None)
+
+        if hub_conf_path is not None:
+            assert hub_conf_path.endswith(
+                ".sdf"
+            ), "Hub conformer must be supplied as an SDF file!"
+
         perturbation_map = PerturbationMap(
             compounds=self.data.compounds,
             protein=self.data.generic.get_argument_by_extension(
@@ -480,10 +584,23 @@ class StepPMXBase(StepBase, BaseModel):
             ),
             replicas=replicas,
             strict_execution=self._get_additional_setting(_SPE.STRICT, default=True),
+            hub_conformer=self.get_hub_conformer(hub_conf_path)
+            if hub_conf_path is not None
+            else None,
         )
-        perturbation_map.parse_map_file(
-            os.path.join(self.work_dir, log_file.get_file_name())
-        )
+        if topology == "normal":
+            # construct the perturbation map and load in the log file
+            log_file = self.data.generic.get_argument_by_extension(
+                "log", rtn_file_object=True
+            )
+            log_file.write(work_dir)
+
+            perturbation_map.parse_map_file(
+                os.path.join(self.work_dir, log_file.get_file_name())
+            )
+        elif topology == "star":
+            # manually generate star top, no mapping tool required
+            perturbation_map.generate_star_map()
 
         self._logger.log(
             f"Initialised perturbation map with {len(perturbation_map.get_nodes())} nodes and {len(perturbation_map.get_edges())} edges",

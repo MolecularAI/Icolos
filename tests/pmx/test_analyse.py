@@ -52,13 +52,14 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.work_dir = self._test_dir
         step_pmx_analyse._workflow_object = WorkFlow()
         step_pmx_analyse._workflow_object.workflow_data.perturbation_map = self.p_map
+        step_pmx_analyse.data.compounds = self.compounds
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/analyse1/results.txt")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/analyse1/results.txt")
         )
 
-        self.assertGreater(stat_inf.st_size, 19000)
+        self.assertGreater(stat_inf.st_size, 18000)
 
         stat_inf = os.stat(os.path.join(self._test_dir, "resultsAll.csv"))
 
@@ -85,13 +86,14 @@ class Test_PMXanalyse(unittest.TestCase):
         step_pmx_analyse.work_dir = self._test_dir
         step_pmx_analyse._workflow_object = WorkFlow()
         step_pmx_analyse._workflow_object.workflow_data.perturbation_map = self.p_map
+        step_pmx_analyse.data.compounds = self.compounds
         step_pmx_analyse.execute()
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/complex/analyse1/results.txt")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/analyse1/results.txt")
         )
 
-        self.assertGreater(stat_inf.st_size, 19000)
+        self.assertGreater(stat_inf.st_size, 18000)
 
         stat_inf = os.stat(os.path.join(self._test_dir, "resultsAll.csv"))
 
@@ -100,3 +102,13 @@ class Test_PMXanalyse(unittest.TestCase):
         stat_inf = os.stat(os.path.join(self._test_dir, "resultsSummary.csv"))
 
         self.assertGreater(stat_inf.st_size, 130)
+        print(step_pmx_analyse.data.compounds)
+
+        self.assertEqual(
+            step_pmx_analyse.data.compounds[9]
+            .get_enumerations()[0]
+            .get_conformers()[0]
+            .get_molecule()
+            .GetProp("ddG"),
+            "11.21",
+        )

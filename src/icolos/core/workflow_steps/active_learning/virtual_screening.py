@@ -1,4 +1,5 @@
-from typing import List, Tuple
+import pickle
+from typing import List, Optional, Tuple
 import os
 from modAL.models.learners import ActiveLearner
 from pydantic.main import BaseModel
@@ -30,7 +31,9 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    def _parse_library(self, criteria: str = None) -> Tuple[DataFrame, np.ndarray]:
+    def _parse_library(
+        self, lib_path: str, criteria: str = None
+    ) -> Tuple[DataFrame, Optional[pd.Series]]:
         """Parse a virtual library to a dataframe
 
         :param str criteria: optional criteria to extract to df column from sdf tags, defaults to None
@@ -38,7 +41,6 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         :return Tuple[DataFrame, np.ndarray]: tuple containing datafarme of parsed data and scores, empty if no criteria provided
         """
 
-        lib_path = self.settings.additional[_SALE.VIRTUAL_LIB]
         if lib_path.endswith("sdf"):
             # hold the lib in a pandas df
             library = PandasTools.LoadSDF(
@@ -49,6 +51,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 removeHs=False,
                 embedProps=True,
             )
+            library = self.construct_fingerprints(library)
         elif lib_path.endswith("smi"):
             mols, smiles = [], []
             suppl = Chem.rdmolfiles.SmilesMolSupplier(lib_path)
@@ -56,15 +59,15 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 mols.append(mol)
                 smiles.append(Chem.MolToSmiles(mol))
             library = pd.DataFrame({_SALE.SMILES: smiles, _SALE.MOLECULE: mols})
+            library = self.construct_fingerprints(library)
         elif lib_path.endswith("pkl"):
             library = pd.read_pickle(lib_path)
         else:
             raise ValueError(f"File {lib_path} must of of type smi, pkl or sdf")
-        library = self.construct_fingerprints(library)
         # randomly shuffle the compound rows
         library = library.sample(frac=1).reset_index(drop=True)
         scores = (
-            pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else []
+            pd.to_numeric(library[criteria].fillna(0)) if criteria is not None else None
         )
 
         return library, scores
@@ -167,7 +170,8 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 else n_instances
             )
             query_idx = query_surrogate(queried_compound_idx, warmup)
-            rmsd = compute_rmsd() if rnd > 0 else np.inf
+            if all_scores is not None:
+                rmsd = compute_rmsd() if rnd > 0 else np.inf
 
             self._logger.log(f"queried compound indices are {query_idx}", _LE.DEBUG)
             queried_compound_idx += query_idx
@@ -185,7 +189,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             new_data = np.array([compound[key] for compound in query_compounds])
             learner.teach(new_data, scores, only_new=False)
             # calculate percentage of top-1% compounds queried
-            if top_1_idx is not None:
+            if top_1_idx:
                 hit_count = 0
                 for idx in top_1_idx:
                     if idx in queried_compound_idx:
@@ -196,15 +200,20 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
                 if hits_queried > 99:
                     break
 
-            df = lib.iloc[queried_compound_idx]
+            df = lib.iloc[query_idx]
+            # save the scores in the dataframe
+            df["oracle_score"] = scores
             df.to_pickle(
-                os.path.join(tmp_dir, f"enriched_lib_rep_{replica}round_{rnd+1}.pkl")
+                os.path.join(tmp_dir, f"enriched_lib_rep_{replica}_round_{rnd+1}.pkl")
             )
             PandasTools.WriteSDF(
                 df,
                 os.path.join(tmp_dir, f"compounds_{replica}_{rnd}.sdf"),
                 molColName=_SALE.MOLECULE,
             )
+            # pickle the model
+            with open(os.path.join(tmp_dir, f"model_{replica}_{rnd}.pkl"), "wb") as f:
+                pickle.dump(learner.estimator, f)
             if (
                 self._get_additional_setting(_SALE.DYNAMIC_STOP, default=False) is True
                 and rnd > 4
@@ -221,28 +230,35 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
         self._logger.log("Generating results dataframe...", _LE.DEBUG)
 
         # we have a list of compound IDs per epoch, we want the transpose
-        queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
-        col_dict = {
-            "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
-            "top_1%_per_epoch": fraction_top1_hits_per_epoch,
-        }
-        for idx, row in enumerate(queried_compounds_per_position):
-            col_dict[f"seq_idx_pos_{idx}"] = list(row)
-        resuts_df = pd.DataFrame(col_dict)
-        resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
-
+        try:
+            queried_compounds_per_position = np.array(queried_compounds_per_epoch).T
+            col_dict = {
+                "epoch": [i for i in range(len(fraction_top1_hits_per_epoch))],
+                "top_1%_per_epoch": fraction_top1_hits_per_epoch,
+            }
+            for idx, row in enumerate(queried_compounds_per_position):
+                col_dict[f"seq_idx_pos_{idx}"] = list(row)
+            resuts_df = pd.DataFrame(col_dict)
+            resuts_df.to_csv(os.path.join(tmp_dir, f"results_rep_{replica}.csv"))
+        except ValueError as e:
+            self._logger.log(
+                f"Failed to generate results csv, error was {e}", _LE.WARNING
+            )
         # return the enriched df
         enriched_lib = lib.iloc[queried_compound_idx]
         enriched_lib.to_pickle(os.path.join(tmp_dir, f"enriched_lib_rep_{replica}.pkl"))
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
+        print(tmp_dir)
         criteria = (
             self._get_additional_setting(_SALE.CRITERIA)
             if self._get_additional_setting(_SALE.EVALUATE, default=False)
             else None
         )
-        lib, scores = self._parse_library(criteria=criteria)
+        lib, scores = self._parse_library(
+            self._get_additional_setting(_SALE.VIRTUAL_LIB), criteria=criteria
+        )
         lib.to_pickle(os.path.join(tmp_dir, "starting_lib.pkl"))
         if isinstance(scores, pd.Series):
             top_1_percent = int(0.01 * len(scores))
@@ -258,19 +274,14 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             top_1_idx = []
 
         # load fragment lib if provided
-        fragments_libary = (
-            PandasTools.LoadSDF(
-                self._get_additional_setting(_SALE.FRAGMENTS),
-                smilesName=_SALE.SMILES,
-                molColName=_SALE.MOLECULE,
-                includeFingerprints=True,
-                removeHs=False,
-                embedProps=True,
+        if self._get_additional_setting(_SALE.FRAGMENTS) is not None:
+            print("Loading fragment lib")
+            fragments_library, _ = self._parse_library(
+                self._get_additional_setting(_SALE.FRAGMENTS)
             )
-            if self._get_additional_setting(_SALE.FRAGMENTS) is not None
-            else None
-        )
-
+            fragments_library.to_pickle(os.path.join(tmp_dir, "fragments.pkl"))
+        else:
+            fragments_library = None
         replicas = self._get_additional_setting(_SALE.REPLICAS, default=1)
         for replica in range(replicas):
             learner = self._initialize_learner()
@@ -279,7 +290,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             self._run_learning_loop(
                 learner=learner,
                 lib=lib,
-                fragment_lib=fragments_libary,
+                fragment_lib=fragments_library,
                 all_scores=scores,
                 tmp_dir=tmp_dir,
                 top_1_idx=list(top_1_idx),

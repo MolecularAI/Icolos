@@ -24,6 +24,8 @@ dependencies:
   - acpype>=2022
   - openff-toolkit>=0.10.2
   - dill>=0.3.4
+  - lomap2>=2.0.0
+  - pygraphviz
   - pytorch
   - pip:
     - black

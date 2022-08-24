@@ -323,3 +323,34 @@ class Test_DataManipulation(unittest.TestCase):
         )
         # check we can get single values pack properly
         self.assertEqual(int(dG_bind_max), -2900)
+
+    def test_compute_mcs(self):
+        step_conf = {
+            _SBE.STEPID: "01_compute_mcs",
+            _SBE.STEP_TYPE: _SBE.STEP_DATA_MANIPULATION,
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ADDITIONAL: {
+                    _SDM.ACTION: _SDM.COMPUTE_MCS,
+                    "ref_lig": PATHS_1UYD.NATIVE_LIGAND_SDF,
+                }
+            },
+        }
+
+        step_filter = StepDataManipulation(**step_conf)
+        step_filter.data.compounds = self._compounds
+
+        step_filter.execute()
+        rmsd = (
+            step_filter.data.compounds[0]
+            .get_enumerations()[0]
+            .get_conformers()[0]
+            .get_molecule()
+            .GetProp("rmsd")
+        )
+        step_filter.write_conformers(
+            path=os.path.join(self._test_dir, "filtered_confs_mcs.sdf")
+        )
+        out_path = os.path.join(self._test_dir, "filtered_confs_mcs.sdf")
+        stat_inf = os.stat(out_path)
+        self.assertEqual(stat_inf.st_size, 67138)
+        self.assertEqual(float(rmsd), 28.046017292153728)

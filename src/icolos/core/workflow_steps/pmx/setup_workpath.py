@@ -1,4 +1,3 @@
-from http.client import TEMPORARY_REDIRECT
 import os
 from typing import List
 from pydantic import BaseModel
@@ -9,6 +8,7 @@ from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
+from icolos.core.workflow_steps.step import _LE
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -23,7 +23,6 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     """
 
     _gromacs_executor: GromacsExecutor = None
-    # _antechamber_executor: Executor = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -39,7 +38,9 @@ class StepPMXSetup(StepPMXBase, BaseModel):
             if "replicas" in self.settings.additional.keys()
             else 3
         )
-        assert self.work_dir is not None and os.path.isdir(self.work_dir)
+        if self.work_dir is None:
+            self.work_dir = self._make_tmpdir()
+            self._logger.log(f"Set workflow directory to {self.work_dir}", _LE.DEBUG)
         self._construct_perturbation_map(self.work_dir, replicas)
         # create the directory structure for subsequent calculations
         edges = self.get_edges()

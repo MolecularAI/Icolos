@@ -32,6 +32,7 @@ class StepResidueScanning(StepSchrodingerBase, BaseModel):
                     arguments.append(str(parameters[key]))
         input_file = self.data.generic.get_argument_by_extension("maegz")
         arguments.append(input_file)
+        print(arguments)
         return arguments
 
     def _parse_output(self, tmp_dir: str):
@@ -45,24 +46,45 @@ class StepResidueScanning(StepSchrodingerBase, BaseModel):
         # parse csv file, attach to compounds
         compounds = self.get_compounds()
         props_df = pd.read_csv("props_out.csv")
-        for idx, comp in enumerate(compounds):
+        for comp in compounds:
             mol = comp.get_enumerations()[0].get_molecule()
-            # row 0 is the wild type
-            row = props_df.iloc[idx + 1]
-            mol.SetProp(
-                "r_bioluminate_delta_Stability",
-                str(row["r_bioluminate_delta_Stability"]),
-            )
-            mol.SetProp(
-                "r_bioluminate_delta_Affinity", str(row["r_bioluminate_delta_Affinity"])
-            )
+
+            # find the row by the name
+            mol_name = mol.GetProp("_Name")
+            row = props_df.loc[
+                props_df["s_bioluminate_Mutations"].str.contains(mol_name)
+            ]
+            try:
+                mol.SetProp(
+                    "r_bioluminate_delta_Stability",
+                    str(float(row["r_bioluminate_delta_Stability"])),
+                )
+                mol.SetProp(
+                    "r_bioluminate_delta_Affinity",
+                    str(float(row["r_bioluminate_delta_Affinity"])),
+                )
+                self._logger.log(
+                    f"Parsed properties for mol {mol_name}: {mol.GetProp('r_bioluminate_delta_Affinity')}, {mol.GetProp('r_bioluminate_delta_Stability')}",
+                    _LE.DEBUG,
+                )
+            except (KeyError, TypeError):
+                self._logger.log("Failed to parse results df", _LE.WARNING)
+                mol.SetProp(
+                    "r_bioluminate_delta_Stability",
+                    str(0.00),
+                )
+                mol.SetProp(
+                    "r_bioluminate_delta_Affinity",
+                    str(0.00),
+                )
 
     def execute(self):
         tmp_dir = self._make_tmpdir()
+        print(tmp_dir)
         args = self._parse_args()
         self.data.generic.write_out_all_files(tmp_dir)
 
-        command = f"$SCHRODINGER/run -FROM psp mut_pred.py"
+        command = f"$SCHRODINGER/run residue_scanning_backend.py"
         self._logger.log("executing residue scanning", _LE.DEBUG)
         result = self._backend_executor.execute(
             command=command, arguments=args, check=True, location=tmp_dir

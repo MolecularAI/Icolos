@@ -194,7 +194,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06b_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [
@@ -222,7 +222,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06c_prepare_simulations",
                     _SBE.STEP_TYPE: "pmx_prepare_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 8},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 8},
                         _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                     },
                     _SBE.SETTINGS: {
@@ -237,7 +237,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06d_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [

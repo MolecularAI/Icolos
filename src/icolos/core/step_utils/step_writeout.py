@@ -437,14 +437,31 @@ class WriteOutHandler(BaseModel):
                 unrolled_conformers = self._unroll_conformers([comp])
                 if len(unrolled_conformers) == 0:
                     continue
-                values = [
-                    float(
-                        conf.get_molecule().GetProp(
-                            self.config.compounds.aggregation.key
+                values = []
+                for conf in unrolled_conformers:
+                    try:
+                        values.append(
+                            float(
+                                conf.get_molecule().GetProp(
+                                    self.config.compounds.aggregation.key
+                                )
+                            )
                         )
-                    )
-                    for conf in unrolled_conformers
-                ]
+                    except KeyError as e:
+                        self._logger.log(
+                            f"Error {e} for conf {conf.get_index_string()}, setting value to 0.00 in writeout!",
+                            _LE.WARNING,
+                        )
+                        values.append(0.00)
+
+                # values = [
+                #     float(
+                #         conf.get_molecule().GetProp(
+                #             self.config.compounds.aggregation.key
+                #         )
+                #     )
+                #     for conf in unrolled_conformers
+                # ]
                 index_best = (
                     values.index(max(values))
                     if self.config.compounds.aggregation.highest_is_best

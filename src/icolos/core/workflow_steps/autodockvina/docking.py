@@ -289,15 +289,30 @@ class StepAutoDockVina(StepBase, BaseModel):
         )
         self._delay_file_system(path=tmp_pdbqt_docked)
 
-        # translate the parsed output PDBQT into an SDF
+        # translate the parsed output PDBQT into an SDF, via regular pdb to retain hydrogens!
+        # This appears to be a bug in obabel 3.1
+        # TODO: move to a direct conversino once the obabel bug is fixed
         arguments = [
             tmp_pdbqt_docked,
             _OBE.OBABEL_INPUTFORMAT_PDBQT,
-            _OBE.OBABEL_OUTPUT_FORMAT_SDF,
-            "".join([_OBE.OBABEL_O, output_path_sdf]),
+            _OBE.OBABEL_OUTPUT_FORMAT_PDB,
+            # clip the extension to pdb
+            "".join([_OBE.OBABEL_O, tmp_pdbqt_docked[:-2]]),
         ]
         self._openbabel_executor.execute(
-            command=_OBE.OBABEL, arguments=arguments, check=False
+            command=_OBE.OBABEL, arguments=arguments, check=True
+        )
+        # convert resulting pdb to sdf
+        arguments = [
+            _OBE.OBABEL_INPUTFORMAT_PDB,
+            tmp_pdbqt_docked[:-2],
+            _OBE.OBABEL_OUTPUT_FORMAT_SDF,
+            # clip the extension to pdb
+            "".join([_OBE.OBABEL_O, output_path_sdf]),
+            "-h",
+        ]
+        self._openbabel_executor.execute(
+            command=_OBE.OBABEL, arguments=arguments, check=True
         )
         self._delay_file_system(path=output_path_sdf)
 

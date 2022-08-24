@@ -5,7 +5,7 @@ from icolos.core.containers.generic import GenericContainer, GenericData
 import multiprocessing
 import shutil
 import tempfile
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, List, Dict, Optional, Tuple
 
 from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
@@ -177,7 +177,7 @@ class StepBase(BaseModel):
     def execute(self):
         raise NotImplementedError
 
-    def get_compound_by_name(self, name: str) -> Compound:
+    def get_compound_by_name(self, name: str) -> Optional[Compound]:
         for compound in self.data.compounds:
             if compound.get_name() == name:
                 return compound
@@ -398,6 +398,30 @@ class StepBase(BaseModel):
                 _LE.WARNING,
             )
         return cores
+    
+    def get_arguments(self, defaults: dict = None) -> list:
+        """
+        Construct pmx-specific arguments from the step defaults,
+        overridden by arguments specified in the config file
+        """
+        arguments = []
+
+        # add flags
+        for flag in self.settings.arguments.flags:
+            arguments.append(flag)
+
+        # flatten the dictionary into a list for command-line execution
+        for key in self.settings.arguments.parameters.keys():
+            arguments.append(key)
+            arguments.append(self.settings.arguments.parameters[key])
+
+        # add defaults, if not already present
+        if defaults is not None:
+            for key, value in defaults.items():
+                if key not in arguments:
+                    arguments.append(key)
+                    arguments.append(value)
+        return arguments
 
     def _print_log_file(self, path: str):
         if os.path.isfile(path):

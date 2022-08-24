@@ -78,7 +78,59 @@ class Test_PMX_setup(unittest.TestCase):
 
         assert os.path.isdir(os.path.join(self._test_dir, "input"))
         assert os.path.isdir(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateA/run1/em")
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateA/run1/em")
+        )
+        # stat some of the ligand files and check they've been deposited in the right directory
+
+        stat_inf = os.stat(
+            os.path.join(self._test_dir, "input/ligands/0ec09ef/ffMOL.itp")
+        )
+        self.assertGreater(stat_inf.st_size, 850)
+
+    def test_setup_workpath_slurm(self):
+        step_conf = {
+            _SBE.STEPID: "01_PMX_SETUP",
+            _SBE.STEP_TYPE: _SBE.STEP_PMX_SETUP,
+            _SBE.EXEC: {
+                _SBE.EXEC_PLATFORM: "slurm",
+                _SBE.EXEC_RESOURCES: {
+                    _SBE.EXEC_RESOURCES_MODULES: [
+                        "GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2"
+                    ]
+                },
+                _SBE.EXEC_PARALLELIZATION: {
+                    _SBE.EXEC_PARALLELIZATION_CORES: 8,
+                    _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
+                },
+            },
+            _SBE.SETTINGS: {
+                _SBE.SETTINGS_ADDITIONAL: {
+                    # settings for protein parametrisation
+                    "forcefield": "amber03",
+                    "water": "tip3p",
+                    _SGE.CHARGE_METHOD: "gas",
+                },
+            },
+        }
+
+        step_setup = StepPMXSetup(**step_conf)
+        step_setup.data.compounds = self.compounds
+        step_setup.data.generic.add_file(self.protein)
+        step_setup.data.generic.add_file(self.log_file)
+        step_setup.data.generic.add_file(
+            GenericData(
+                file_name="mdp_files",
+                extension="mdp",
+                file_data=PATHS_EXAMPLEDATA.PMX_MDP_FILES,
+            )
+        )
+        step_setup.work_dir = self._test_dir
+        step_setup._workflow_object = WorkFlow()
+        step_setup.execute()
+
+        assert os.path.isdir(os.path.join(self._test_dir, "input"))
+        assert os.path.isdir(
+            os.path.join(self._test_dir, "0ec09ef_4afa8f9/bound/stateA/run1/em")
         )
         # stat some of the ligand files and check they've been deposited in the right directory
 

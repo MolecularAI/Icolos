@@ -1,17 +1,15 @@
 from typing import Dict, List
+from icolos.core.containers.compound import Compound, Enumeration
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.core.workflow_steps.step import _LE
-from icolos.utils.enums.program_parameters import StepPMXEnum
 from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import numpy as np
 import glob
 import pandas as pd
 import os
-
-_PSE = StepPMXEnum()
 
 
 class StepPMXRunAnalysis(StepPMXBase, BaseModel):
@@ -46,40 +44,84 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
         self.analysis_summary(self.get_edges())
+        # reattach compounds from perturbation map to step for writeout
+        # REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score
+        print(self.data.compounds)
+        # for edge in self.get_perturbation_map().edges:
 
-    def _run_analysis_script(
-        self, analysispath, stateApath, stateBpath, bVerbose=False
-    ):
+        # discard the hub compound
+        self.data.compounds = self.get_perturbation_map().compounds[1:]
+
+        #     output_conf = edge.node_to.conformer
+        #     enum: Enumeration = output_conf.get_enumeration_object()
+        #     comp: Compound = enum.get_compound_object()
+        #     print(enum, comp)
+        #     self.data.compounds[comp.get_compound_number()].get_enumerations()[
+        #         enum.get_enumeration_id()
+        #     ].get_conformers()[0].set_molecule(output_conf.get_molecule())
+        #     # print(comp, enum, conf)
+        #     # match the output conformer to the compounds attached to the step from docking
+        #     # self.data.compounds[int(comp)].get_enumerations[int(enum)].get_conformers[
+        #     #     int(conf)
+        #     # ] = output_conf
+        #     self._logger.log(
+        #         f"attached conf to step data for {output_conf.get_index_string()}",
+        #         _LE.DEBUG,
+        #     )
+
+        # Edges that failed will have 0.00 attached, compounds that failed to dock and were never part of the map will get caught by the writeout method and set to 0.00
+
+        # # the hub compound will not have data attached, this will be pruned here
+        # all_confs = comp.unroll_conformers()
+        # attached_prop = False
+        # # check all conformers attached to compound, if ddG tag was attached, append to step compounds
+        # if any(["ddG" in conf.get_molecule().GetPropNames() for conf in all_confs]):
+
+        #     self.data.compounds.append(comp)
+
+        # # self._logger.log(f"Failed to attach compound {comp.get_index_string()}, error was {e}", _LE.WARNING)
+        # continue
+
+    def _run_analysis_script(self, analysispath, stateApath, stateBpath):
         fA = " ".join(glob.glob("{0}/*xvg".format(stateApath)))
         fB = " ".join(glob.glob("{0}/*xvg".format(stateBpath)))
-        oA = "{0}/integ0.dat".format(analysispath)
-        oB = "{0}/integ1.dat".format(analysispath)
-        wplot = "{0}/wplot.png".format(analysispath)
-        o = "{0}/results.txt".format(analysispath)
+        oA = "integ0.dat"
+        oB = "integ1.dat"
+        wplot = "wplot.png"
+        o = "results.txt"
         # TODO: at the moment we ignore flags from the command line
         # args = " ".join(self.settings.arguments.flags)
 
-        cmd = "$PMX analyse  --quiet -fA {0} -fB {1} -o {2} -oA {3} -oB {4} -w {5} -t {6} -b {7}".format(
-            fA, fB, o, oA, oB, wplot, 298, 100
+        cmd = "$PMX analyse"
+        args = [
+            "--quiet",
+            "-fA",
+            fA,
+            "-fB",
+            fB,
+            "-o",
+            o,
+            "-oA",
+            oA,
+            "-oB",
+            oB,
+            "-w",
+            wplot,
+            "-t",
+            298,
+            "-b",
+            100,
+        ]
+        self._backend_executor.execute(
+            command=cmd, arguments=args, location=analysispath, check=False
         )
-        # subprocess complains that the command is too long
-        os.system(cmd)
-
-        if bVerbose == True:
-            fp = open(o, "r")
-            lines = fp.readlines()
-            fp.close()
-            bPrint = False
-            for l in lines:
-                if "ANALYSIS" in l:
-                    bPrint = True
-                if bPrint == True:
-                    print(l, end="")
 
     def _read_neq_results(self, fname):
-        fp = open(fname, "r")
-        lines = fp.readlines()
-        fp.close()
+        try:
+            with open(fname, "r") as fp:
+                lines = fp.readlines()
+        except FileNotFoundError:
+            return
         out = []
         for l in lines:
             l = l.rstrip()
@@ -111,80 +153,99 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             )
 
     def _summarize_results(self, edges: List[Edge]):
+        fail_score = self._get_additional_setting("fail_score", default=100.0)
         bootnum = 1000
         for edge in edges:
-            for wp in self.therm_cycle_branches:
-                dg = []
-                erra = []
-                errb = []
-                distra = []
-                distrb = []
-                for r in range(1, self.get_perturbation_map().replicas + 1):
-                    rowName = "{0}_{1}_{2}".format(edge.get_edge_id(), wp, r)
-                    dg.append(self.results_all.loc[rowName, "val"])
-                    erra.append(self.results_all.loc[rowName, "err_analyt"])
-                    errb.append(self.results_all.loc[rowName, "err_boot"])
-                    distra.append(
-                        np.random.normal(
-                            self.results_all.loc[rowName, "val"],
-                            self.results_all.loc[rowName, "err_analyt"],
-                            size=bootnum,
+            try:
+                for wp in self.therm_cycle_branches:
+                    dg = []
+                    erra = []
+                    errb = []
+                    distra = []
+                    distrb = []
+                    for r in range(1, self.get_perturbation_map().replicas + 1):
+                        rowName = "{0}_{1}_{2}".format(edge.get_edge_id(), wp, r)
+                        dg.append(self.results_all.loc[rowName, "val"])
+                        erra.append(self.results_all.loc[rowName, "err_analyt"])
+                        errb.append(self.results_all.loc[rowName, "err_boot"])
+                        distra.append(
+                            np.random.normal(
+                                self.results_all.loc[rowName, "val"],
+                                self.results_all.loc[rowName, "err_analyt"],
+                                size=bootnum,
+                            )
                         )
-                    )
-                    distrb.append(
-                        np.random.normal(
-                            self.results_all.loc[rowName, "val"],
-                            self.results_all.loc[rowName, "err_boot"],
-                            size=bootnum,
+                        distrb.append(
+                            np.random.normal(
+                                self.results_all.loc[rowName, "val"],
+                                self.results_all.loc[rowName, "err_boot"],
+                                size=bootnum,
+                            )
                         )
+
+                    rowName = "{0}_{1}".format(edge.get_edge_id(), wp)
+                    distra = np.array(distra).flatten()
+                    distrb = np.array(distrb).flatten()
+
+                    if self.get_perturbation_map().replicas == 1:
+                        self.results_all.loc[rowName, "val"] = dg[0]
+                        self.results_all.loc[rowName, "err_analyt"] = erra[0]
+                        self.results_all.loc[rowName, "err_boot"] = errb[0]
+                    else:
+                        self.results_all.loc[rowName, "val"] = np.mean(dg)
+                        self.results_all.loc[rowName, "err_analyt"] = np.sqrt(
+                            np.var(distra) / float(self.get_perturbation_map().replicas)
+                        )
+                        self.results_all.loc[rowName, "err_boot"] = np.sqrt(
+                            np.var(distrb) / float(self.get_perturbation_map().replicas)
+                        )
+
+                # also collect self.results_summary
+                rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "unbound")
+                rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "bound")
+                dg = (
+                    self.results_all.loc[rowNameProtein, "val"]
+                    - self.results_all.loc[rowNameWater, "val"]
+                )
+                edge.ddG = dg
+                try:
+                    edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
+                    self._logger.log(
+                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_index_string()}",
+                        _LE.DEBUG,
+                    )
+                except AttributeError as e:
+                    self._logger.log(
+                        f"Could not attach score to mol for edge {edge.get_edge_id()}, defaulting to {fail_score}",
+                        _LE.WARNING,
+                    )
+                    edge.node_to.get_conformer().get_molecule().SetProp(
+                        "ddG", str(fail_score)
                     )
 
-                rowName = "{0}_{1}".format(edge.get_edge_id(), wp)
-                distra = np.array(distra).flatten()
-                distrb = np.array(distrb).flatten()
+                erra = np.sqrt(
+                    np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
+                    + np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
+                )
+                edge.ddG_err = erra
+                errb = np.sqrt(
+                    np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
+                    + np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
+                )
+                rowName = edge.get_edge_id()
 
-                if self.get_perturbation_map().replicas == 1:
-                    self.results_all.loc[rowName, "val"] = dg[0]
-                    self.results_all.loc[rowName, "err_analyt"] = erra[0]
-                    self.results_all.loc[rowName, "err_boot"] = errb[0]
-                else:
-                    self.results_all.loc[rowName, "val"] = np.mean(dg)
-                    self.results_all.loc[rowName, "err_analyt"] = np.sqrt(
-                        np.var(distra) / float(self.get_perturbation_map().replicas)
-                    )
-                    self.results_all.loc[rowName, "err_boot"] = np.sqrt(
-                        np.var(distrb) / float(self.get_perturbation_map().replicas)
-                    )
+                self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split(
+                    "_"
+                )[0]
+                self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split(
+                    "_"
+                )[1]
+                self.results_summary.loc[rowName, "val"] = dg
+                self.results_summary.loc[rowName, "err_analyt"] = erra
+                self.results_summary.loc[rowName, "err_boot"] = errb
 
-            #### also collect self.results_summary
-            rowNameWater = "{0}_{1}".format(edge.get_edge_id(), "ligand")
-            rowNameProtein = "{0}_{1}".format(edge.get_edge_id(), "complex")
-            dg = (
-                self.results_all.loc[rowNameProtein, "val"]
-                - self.results_all.loc[rowNameWater, "val"]
-            )
-            edge.ddG = dg
-            edge.node_to.get_conformer().get_molecule().SetProp("pred_ddG", str(dg))
-            self._logger.log(
-                f"Set tag pred_ddG = {dg} for node {edge.node_to.get_node_id()}",
-                _LE.INFO,
-            )
-            erra = np.sqrt(
-                np.power(self.results_all.loc[rowNameProtein, "err_analyt"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_analyt"], 2.0)
-            )
-            edge.ddG_err = erra
-            errb = np.sqrt(
-                np.power(self.results_all.loc[rowNameProtein, "err_boot"], 2.0)
-                - np.power(self.results_all.loc[rowNameWater, "err_boot"], 2.0)
-            )
-            rowName = edge.get_edge_id()
-
-            self.results_summary.loc[rowName, "lig1"] = edge.get_edge_id().split("_")[0]
-            self.results_summary.loc[rowName, "lig2"] = edge.get_edge_id().split("_")[1]
-            self.results_summary.loc[rowName, "val"] = dg
-            self.results_summary.loc[rowName, "err_analyt"] = erra
-            self.results_summary.loc[rowName, "err_boot"] = errb
+            except KeyError as e:
+                print(f"Error in generating summary, error was {e}")
 
     def analysis_summary(self, edges: List[Edge]):
         edge_ids = [e.get_edge_id() for e in edges]
@@ -199,7 +260,8 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     )
                     resultsfile = "{0}/results.txt".format(analysispath)
                     res = self._read_neq_results(resultsfile)
-                    self._fill_resultsAll(res, edge, wp, r)
+                    if res is not None:
+                        self._fill_resultsAll(res, edge, wp, r)
 
         # the values have been collected now
         # let's calculate ddGs
@@ -213,7 +275,6 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     self.settings.additional["exp_results"],
                     converters={"Ligand": lambda x: str(x).split(".")[0]},
                 )
-                print(exp_data)
                 # compute the experimental ddG and append to resultsSummary
                 node_data = self.get_perturbation_map().node_df
                 self.results_summary["exp_ddG"] = self.results_summary.apply(
@@ -256,13 +317,13 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         )
         return lig2_dG - lig1_dG
 
-    def run_analysis(self, jobs: List[str], bVerbose=True):
+    def run_analysis(self, jobs: List[str]):
         for idx, edge in enumerate(jobs):
 
             for r in range(1, self.get_perturbation_map().replicas + 1):
 
                 # ligand
-                wp = "ligand"
+                wp = "unbound"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,
@@ -284,11 +345,9 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     r=r,
                     sim="transitions",
                 )
-                self._run_analysis_script(
-                    analysispath, stateApath, stateBpath, bVerbose=bVerbose
-                )
+                self._run_analysis_script(analysispath, stateApath, stateBpath)
                 # protein
-                wp = "complex"
+                wp = "bound"
                 analysispath = "{0}/analyse{1}".format(
                     self._get_specific_path(workPath=self.work_dir, edge=edge, wp=wp),
                     r,
@@ -310,15 +369,16 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     r=r,
                     sim="transitions",
                 )
-                self._run_analysis_script(
-                    analysispath, stateApath, stateBpath, bVerbose=bVerbose
-                )
+                self._run_analysis_script(analysispath, stateApath, stateBpath)
 
     def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
         """
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         output_files = ["integ0.dat", "integ1.dat", "results.txt", "wplot.png"]
+        analyse_folders = [
+            f"analyse{i}" for i in range(1, self.get_perturbation_map().replicas + 1)
+        ]
         results = []
         for subjob in batch:
             subjob_results = []
@@ -327,11 +387,11 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                     all(
                         [
                             os.path.isfile(
-                                os.path.join(
-                                    self.work_dir, job, "complex", "analyse1", f
-                                )
+                                os.path.join(self.work_dir, job, branch, folder, f)
                             )
                             for f in output_files
+                            for branch in self.therm_cycle_branches
+                            for folder in analyse_folders
                         ]
                     )
                 )

@@ -9,7 +9,7 @@ from numpy.linalg import norm
 import torch
 from torch import nn
 from skorch.exceptions import NotInitializedError
-from scipy.spatial import distance
+from scipy import stats
 
 _logger = StepLogger()
 
@@ -248,7 +248,7 @@ def expected_improvement(
     mu = np.mean(y_hat)
     y_best = np.max(y_hat) if highest_is_best else np.min(y_hat)
     gamma = (mu - y_best) / stdev
-    ei = stdev * gamma * norm.cdf(gamma) + stdev * norm.pdf(gamma)
+    ei = stdev * gamma * stats.norm.cdf(gamma) + stdev * stats.norm.pdf(gamma)
 
     for idx in previous_idx:
         ei[idx] = 0

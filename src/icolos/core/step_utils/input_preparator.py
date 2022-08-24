@@ -353,6 +353,12 @@ class InputPreparator(BaseModel):
         return self._enforce_ids(list_compounds, inp)
 
     def _read_in_SDF_file(self, inp: StepInputSource) -> List[Compound]:
+        """Loads compounds from an SDF file.  Icolos naming conventions will be parsed, if provided, such that compound structures can be reconstructed directly from a previously written sdf
+
+        :param StepInputSource inp: input block from the config file
+        :return List[Compound]: List of initialized compounds.  If Icolos-type naming was used, enumerations and conformers will be generated and attached automatically
+        """
+
         def _get_existing_enumeration(comp_id, enum_id):
             comp = _get_existing_compound(comp_id)
             for enum in comp.get_enumerations():

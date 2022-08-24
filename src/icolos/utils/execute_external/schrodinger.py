@@ -30,6 +30,8 @@ class SchrodingerExecutor(ExecutorBase):
             command = _SEE.PREPWIZARD_CALL
         elif command == _SEE.MULTISIM_EXEC:
             command = _SEE.MULTISIM_EXEC
+        elif command == _SEE.PROTEIN_INTERACTION:
+            command = _SEE.PROTEIN_INTERACTION_CALL
         else:
             raise ValueError(
                 "Parameter command must be an dictionary of the internal Schrodinger entry point list."

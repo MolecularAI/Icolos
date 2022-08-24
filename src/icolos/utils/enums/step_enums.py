@@ -76,6 +76,9 @@ class StepBaseEnum(str, Enum):
     STEP_PMX_ASSEMBLE_SYSTEMS = "PMX_ASSEMBLE_SYSTEMS"
     STEP_PMX_RUN_ANALYSIS = "PMX_RUN_ANALYSIS"
 
+    STEP_PROTEIN_INTERACTIONS = "PROTEIN_INTERACTION"
+    STEP_LOMAP = "LOMAP"
+
     STEP_DSSP = "DSSP"
     STEP_TS_CLUSTER = "TS_CLUSTER"
     STEP_ESP_SIM = "ESP_SIM"
@@ -352,6 +355,7 @@ class StepDataManipulationEnum:
     ASSEMBLE_COMPLEXES = "assemble_complexes"
     ACTION_ATTACH_CONFORMERS_AS_EXTRA = "attach_conformers_as_extra"
     COLLECT_ITERATOR_RESULTS = "collect_iterator_results"
+    COMPUTE_MCS = "compute_mcs"
     FILTER = "filter"
 
     # --> For ACTION_ATTACH_CONFORMERS_AS_EXTRA

@@ -426,14 +426,12 @@ class OpenBabelEnum:
     # note, that this overwrites "--addpolarh", which is thus not used
     # specifies the output path (directly pasted afterwards, e.g. "-Omypath.pdb")
     OBABEL_O = "-O"
-    OBABEL_OUTPUT_FORMAT_PDBQT = (
-        # sets the output format to "PDBQT" (input for "AutoDock Vina")
-        "-opdbqt"
-    )
+    # sets the output format to "PDBQT" (input for "AutoDock Vina")
+    OBABEL_OUTPUT_FORMAT_PDBQT = "-opdbqt"
     OBABEL_OUTPUT_FORMAT_SDF = "-osdf"  # sets the output format to "SDF"
-    OBABEL_OUTPUT_FORMAT_XYZ = (
-        "-oxyz"  # sets the output format to "XYZ" (format in XTB/TM)
-    )
+    # sets the output format to "XYZ" (format in XTB/TM)
+    OBABEL_OUTPUT_FORMAT_XYZ = "-oxyz"
+    OBABEL_OUTPUT_FORMAT_PDB = "-opdb"
     OBABEL_X = "-x"  # specifies generation options
     OBABEL_M = "-m"  # produce multiple output files
     # one of the 'X' options ("-x"), which disables the tree construction of the receptor
@@ -944,6 +942,8 @@ class SchrodingerExecutablesEnum:
     FMP_STATS = "fmp_stats"
     FMP_STATS_CALL = "$SCHRODINGER/run -FROM scisol fmp_stats.py"
     STRUCTCAT_HELP = "-h"
+    PROTEIN_INTERACTION_CALL = "$SCHRODINGER/run protein_interaction_analysis.py"
+    PROTEIN_INTERACTION = "protein_interaction"
     STRUCTCAT_HELP_IDENTIFICATION_STRING = "<format> must be one of"
     # input; note that the format is directly appended (e.g. "-isd")
     STRUCTCAT_I = "-i"
@@ -1574,4 +1574,6 @@ class SlurmEnum:
     COMPLETED = "COMPLETED"
     RUNNING = "RUNNING"
     PENDING = "PENDING"
+    CANCELLED = "CANCELLED"
+    NODE_FAIL = "NODE_FAIL"
     FAILED = "FAILED"
