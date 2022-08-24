@@ -46,23 +46,28 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         self.analysis_summary(self.get_edges())
         # reattach compounds from perturbation map to step for writeout
         # REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score
-        for edge in self.get_perturbation_map().edges:
+        print(self.data.compounds)
+        # for edge in self.get_perturbation_map().edges:
 
-            output_conf = edge.node_to.conformer
-            enum: Enumeration = output_conf.get_enumeration_object()
-            comp: Compound = enum.get_compound_object()
-            self.data.compounds[comp.get_compound_number()].get_enumerations()[
-                enum.get_enumeration_id()
-            ].get_conformers()[0].set_molecule(output_conf.get_molecule())
-            # print(comp, enum, conf)
-            # match the output conformer to the compounds attached to the step from docking
-            # self.data.compounds[int(comp)].get_enumerations[int(enum)].get_conformers[
-            #     int(conf)
-            # ] = output_conf
-            self._logger.log(
-                f"attached conf to step data for {output_conf.get_index_string()}",
-                _LE.DEBUG,
-            )
+        # discard the hub compound
+        self.data.compounds = self.get_perturbation_map().compounds[1:]
+
+        #     output_conf = edge.node_to.conformer
+        #     enum: Enumeration = output_conf.get_enumeration_object()
+        #     comp: Compound = enum.get_compound_object()
+        #     print(enum, comp)
+        #     self.data.compounds[comp.get_compound_number()].get_enumerations()[
+        #         enum.get_enumeration_id()
+        #     ].get_conformers()[0].set_molecule(output_conf.get_molecule())
+        #     # print(comp, enum, conf)
+        #     # match the output conformer to the compounds attached to the step from docking
+        #     # self.data.compounds[int(comp)].get_enumerations[int(enum)].get_conformers[
+        #     #     int(conf)
+        #     # ] = output_conf
+        #     self._logger.log(
+        #         f"attached conf to step data for {output_conf.get_index_string()}",
+        #         _LE.DEBUG,
+        #     )
 
         # Edges that failed will have 0.00 attached, compounds that failed to dock and were never part of the map will get caught by the writeout method and set to 0.00
 
@@ -148,6 +153,7 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
             )
 
     def _summarize_results(self, edges: List[Edge]):
+        fail_score = self._get_additional_setting("fail_score", default=100.0)
         bootnum = 1000
         for edge in edges:
             try:
@@ -205,16 +211,16 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
                 try:
                     edge.node_to.get_conformer().get_molecule().SetProp("ddG", str(dg))
                     self._logger.log(
-                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_conformer_id()}",
+                        f"Attached score {dg} to conformer {edge.node_to.get_conformer().get_index_string()}",
                         _LE.DEBUG,
                     )
                 except AttributeError as e:
                     self._logger.log(
-                        f"Could not attach score to mol for edge {edge.get_edge_id()}, defaulting to zero",
+                        f"Could not attach score to mol for edge {edge.get_edge_id()}, defaulting to {fail_score}",
                         _LE.WARNING,
                     )
                     edge.node_to.get_conformer().get_molecule().SetProp(
-                        "ddG", str(0.00)
+                        "ddG", str(fail_score)
                     )
 
                 erra = np.sqrt(
