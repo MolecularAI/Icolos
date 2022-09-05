@@ -205,7 +205,6 @@ class StepAutoDockVina(StepBase, BaseModel):
         for i in range(len(next_batch)):
             subtask = next_batch[i][0]
             tmp_output_path = tmp_output_paths[i]
-            tmp_input_path = tmp_input_paths[i]
             enumeration_id = enumeration_ids[i]
             grid_id = self.adv_additional.grid_ids[0]
             grid_path = self.adv_additional.configuration.receptor_path
@@ -222,7 +221,6 @@ class StepAutoDockVina(StepBase, BaseModel):
             for mol in mol_supplier:
                 if mol is None:
                     continue
-                cur_enumeration_name = str(mol.GetProp("_Name"))
 
                 # add the information on the actual grid used
                 mol.SetProp(_SBE.ANNOTATION_GRID_ID, str(grid_id))
@@ -286,20 +284,35 @@ class StepAutoDockVina(StepBase, BaseModel):
             config.number_poses,
         ]
 
-        execution_result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_ADE.VINA, arguments=arguments, check=True
         )
         self._delay_file_system(path=tmp_pdbqt_docked)
 
-        # translate the parsed output PDBQT into an SDF
+        # translate the parsed output PDBQT into an SDF, via regular pdb to retain hydrogens!
+        # This appears to be a bug in obabel 3.1
+        # TODO: move to a direct conversino once the obabel bug is fixed
         arguments = [
             tmp_pdbqt_docked,
             _OBE.OBABEL_INPUTFORMAT_PDBQT,
-            _OBE.OBABEL_OUTPUT_FORMAT_SDF,
-            "".join([_OBE.OBABEL_O, output_path_sdf]),
+            _OBE.OBABEL_OUTPUT_FORMAT_PDB,
+            # clip the extension to pdb
+            "".join([_OBE.OBABEL_O, tmp_pdbqt_docked[:-2]]),
         ]
         self._openbabel_executor.execute(
-            command=_OBE.OBABEL, arguments=arguments, check=False
+            command=_OBE.OBABEL, arguments=arguments, check=True
+        )
+        # convert resulting pdb to sdf
+        arguments = [
+            _OBE.OBABEL_INPUTFORMAT_PDB,
+            tmp_pdbqt_docked[:-2],
+            _OBE.OBABEL_OUTPUT_FORMAT_SDF,
+            # clip the extension to pdb
+            "".join([_OBE.OBABEL_O, output_path_sdf]),
+            "-h",
+        ]
+        self._openbabel_executor.execute(
+            command=_OBE.OBABEL, arguments=arguments, check=True
         )
         self._delay_file_system(path=output_path_sdf)
 

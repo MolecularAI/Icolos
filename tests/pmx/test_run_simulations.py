@@ -90,7 +90,6 @@ class Test_PMXRunSimulations(unittest.TestCase):
         self.assertEqual(stat_inf.st_size, 434940)
 
     def test_run_simulations_transitions(self):
-        pass
         step_conf = {
             _SBE.STEPID: "prepare_simulations",
             _SBE.STEP_TYPE: "pmx_prepare_simulations",
@@ -125,21 +124,24 @@ class Test_PMXRunSimulations(unittest.TestCase):
             glob(
                 os.path.join(
                     self._test_dir,
-                    "0ec09ef_4afa8f9/complex/stateB/run1/transitions/*.sh",
+                    "0ec09ef_4afa8f9/bound/stateB/run1/transitions/*.sh",
                 )
             )[0]
         )
-        self.assertEqual(stat_inf.st_size, 43014)
+        self.assertEqual(stat_inf.st_size, 42290)
 
         stat_inf = os.stat(
-            os.path.join(self._test_dir, "0ec09ef_4afa8f9/ligand/stateB/run1/em/md.log")
+            os.path.join(
+                self._test_dir, "0ec09ef_4afa8f9/unbound/stateB/run1/transitions/md.log"
+            )
         )
 
         self.assertGreater(stat_inf.st_size, 1339800)
 
         stat_inf = os.stat(
             os.path.join(
-                self._test_dir, "0cd4b47_4f2ffa1/complex/stateB/run1/em/traj.trr"
+                self._test_dir,
+                "0cd4b47_4f2ffa1/bound/stateB/run1/transitions/dhdl1.xvg",
             )
         )
         self.assertEqual(stat_inf.st_size, 72216)

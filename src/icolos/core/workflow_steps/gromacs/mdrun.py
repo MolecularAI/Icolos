@@ -1,8 +1,9 @@
 import tempfile
-from typing import List
+from typing import Callable, List
+from icolos.core.containers.generic import GenericData
 from icolos.core.containers.gmx_state import GromacsState
 from icolos.utils.enums.execution_enums import ExecutionPlatformEnum
-from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.enums.program_parameters import GromacsEnum
 from icolos.core.workflow_steps.gromacs.base import StepGromacsBase
 from pydantic import BaseModel
@@ -14,7 +15,6 @@ from icolos.utils.general.parallelization import Parallelizer, SubtaskContainer
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
-_SBE = StepBaseEnum
 _ERE = ExecutionPlatformEnum
 
 
@@ -64,7 +64,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
                 "-x": _SGE.STD_XTC,
             }
             if not self.data.generic.get_files_by_extension("cpt")
-            else {"-cpi", self.data.generic.get_argument_by_extension("cpt")}
+            else {"-cpi", os.path.join(path, "state.cpt")}
         )
 
         arguments = self._parse_arguments(flag_dict)
@@ -72,14 +72,14 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             command=_GE.MDRUN, arguments=arguments, location=path, check=True
         )
 
-    def execute_parallel_simulations(self, work_dirs):
+    def execute_parallel_simulations(self, work_dirs, run_func: Callable):
         # attach the index of the workdir
         work_dirs = [(idx, wkdir) for idx, wkdir in enumerate(work_dirs)]
         self._subtask_container = SubtaskContainer(
             max_tries=self.execution.failure_policy.n_tries
         )
         self._subtask_container.load_data(work_dirs)
-        parallelizer = Parallelizer(func=self.execute_mdrun)
+        parallelizer = Parallelizer(func=run_func)
         n = 1
         while self._subtask_container.done() is False:
             next_batch = self._get_sublists(get_first_n_lists=self._get_number_cores())
@@ -175,6 +175,11 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
         tmp_dir = self._make_tmpdir()
         self.topol = self.get_topol()
+        if self.data.generic.get_files_by_extension("cpt"):
+            # a cpt file has been passed, simply restart
+            print(self.data.generic.get_file_names_by_extension("gpt"))
+            self._run_checkpoint_files(self.data.generic.get_files_by_extension("cpt"))
+
         self.execution.parallelization.max_length_sublists = 1
         # pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object
         self.pickle_topol(self.topol, tmp_dir)

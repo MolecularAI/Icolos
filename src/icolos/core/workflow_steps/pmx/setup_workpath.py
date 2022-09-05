@@ -8,6 +8,7 @@ from icolos.utils.enums.step_enums import StepGromacsEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
+from icolos.core.workflow_steps.step import _LE
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
@@ -22,13 +23,13 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     """
 
     _gromacs_executor: GromacsExecutor = None
-    _antechamber_executor: Executor = None
 
     def __init__(self, **data):
         super().__init__(**data)
         self._gromacs_executor = GromacsExecutor(
             prefix_execution=self.execution.prefix_execution
         )
+        self._initialize_backend(executor=Executor)
 
     def execute(self):
         # sets the number of replicas to be used throughput the pmx run
@@ -37,7 +38,9 @@ class StepPMXSetup(StepPMXBase, BaseModel):
             if "replicas" in self.settings.additional.keys()
             else 3
         )
-        assert self.work_dir is not None and os.path.isdir(self.work_dir)
+        if self.work_dir is None:
+            self.work_dir = self._make_tmpdir()
+            self._logger.log(f"Set workflow directory to {self.work_dir}", _LE.DEBUG)
         self._construct_perturbation_map(self.work_dir, replicas)
         # create the directory structure for subsequent calculations
         edges = self.get_edges()
@@ -53,6 +56,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
         protein = (
             self.get_workflow_object().workflow_data.perturbation_map.get_protein()
         )
+
         protein.write(os.path.join(self.work_dir, "input/protein"))
 
         self._parametrise_protein(protein=protein.get_file_name(), path="input/protein")

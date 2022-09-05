@@ -1,7 +1,7 @@
 from typing import List, Union
 from pydantic import BaseModel
 
-from icolos.core.containers.compound import unroll_conformers
+from icolos.core.containers.compound import Compound, unroll_conformers
 from icolos.core.step_utils.structcat_util import StructcatUtil
 from icolos.core.step_utils.structconvert import StructConvert
 from icolos.utils.enums.program_parameters import (
@@ -17,6 +17,8 @@ from icolos.core.workflow_steps.io.base import StepIOBase
 import os
 from icolos.core.workflow_steps.step import _LE
 import numpy as np
+from rdkit import Chem
+from rdkit.Chem import rdFMCS
 
 _SBE = StepBaseEnum
 _SDM = StepDataManipulationEnum()
@@ -90,7 +92,6 @@ class StepDataManipulation(StepIOBase, BaseModel):
         conformers = self._unroll_compounds(self.get_compounds(), level="conformers")
         for conf in conformers:
             path = os.path.join(tmp_dir, f"{conf.get_index_string()}.sdf")
-            mol = conf.get_molecule()
             conf.write(path)
             concatenator.concatenate(
                 input_files=[
@@ -136,6 +137,8 @@ class StepDataManipulation(StepIOBase, BaseModel):
                     for conf in top_confs:
                         top_conformer_list.append(conf)
         if self.settings.additional[_SFE.FILTER_LEVEL] == _SFE.COMPOUNDS:
+            self._logger.log("Filtering to top conformers per compound", _LE.DEBUG)
+
             # sort the top conformers from each enumeration and attach the top n conformers to their respective enumeration, get rid of the rest
             # sorted_top_confs = sorted(top_conformer_list,
             #                           key=lambda x: x.get_molecule().GetProp(self.settings.additional[_SFE.CRITERIA]),
@@ -147,12 +150,66 @@ class StepDataManipulation(StepIOBase, BaseModel):
                 reverse=reverse,
                 aggregation=aggregation,
             )
+
             for compound in self.data.compounds:
                 for enum in compound.get_enumerations():
                     enum.clear_conformers()
             for conf in sorted_top_confs:
                 enum = conf.get_enumeration_object()
-                enum.add_conformer(conf)
+                # if that enum's compound object already has top_n attached, skip
+                comp: Compound = enum.get_compound_object()
+                total_confs = self.get_conformer_count(comp)
+                if total_confs < top_n:
+                    enum.add_conformer(conf)
+                else:
+                    self._logger.log(
+                        "Already reached max conformers, skipping", _LE.DEBUG
+                    )
+
+            # remove empty conformers
+
+    def _compute_mcs(self):
+        """Performs mcs calculation with a reference structure, attaches rmsd tag to conformers in place"""
+        # modify compounds inplace
+
+        suppl = Chem.SDMolSupplier(self.settings.additional["ref_lig"])
+
+        ref = list(suppl)
+        assert len(ref) == 1
+        ref = ref[0]
+
+        for comp in self.get_compounds():
+            for enum in comp.get_enumerations():
+                for conf in enum.get_conformers():
+                    mol = conf.get_molecule()
+                    r = rdFMCS.FindMCS([mol, ref])
+                    a = mol.GetSubstructMatch(Chem.MolFromSmarts(r.smartsString))
+                    b = ref.GetSubstructMatch(Chem.MolFromSmarts(r.smartsString))
+                    atom_map = list(zip(a, b))
+                    distances = []
+                    for atomA, atomB in atom_map:
+                        pos_A = mol.GetConformer().GetAtomPosition(atomA)
+                        pos_B = ref.GetConformer().GetAtomPosition(atomB)
+                        coord_A = np.array((pos_A.x, pos_A.y, pos_A.z))
+                        coord_B = np.array((pos_B.x, pos_B.y, pos_B.z))
+                        dist = np.linalg.norm(coord_A - coord_B)
+                        distances.append(dist)
+                    rmsd = np.sqrt(1 / len(distances) * sum([i * i for i in distances]))
+                    mol.SetProp("rmsd", str(rmsd))
+                    # these can be filtered in a second data manipulation step
+
+    def get_conformer_count(self, comp: Compound) -> int:
+        """count attached conformers over all enumerations
+
+        :param Compound comp: compound to inspect
+        :return int: number of conformers over all enumerations
+        """
+        total_confs = 0
+        for enum in comp.get_enumerations():
+            for conf in enum.get_conformers():
+                total_confs += 1
+
+        return total_confs
 
     def _sort_conformers(
         self,
@@ -242,6 +299,14 @@ class StepDataManipulation(StepIOBase, BaseModel):
             raise NotImplementedError
         elif self.settings.additional[_SDM.ACTION] == _SDM.FILTER:
             self._filter_compounds()
+            n_comp, n_enum, n_conf = self.get_compound_stats()
+            self._logger.log(
+                f"Filtered compounds, resulting in {n_comp} compounds with {n_enum} enumerations with {n_conf} conformers completed.",
+                _LE.INFO,
+            )
+        elif self.settings.additional[_SDM.ACTION] == _SDM.COMPUTE_MCS:
+            self._compute_mcs()
+
         else:
             raise ValueError(
                 f'Action "{self.settings.additional[_SDM.ACTION]}" not supported.'

@@ -1,15 +1,217 @@
+import os
+import shutil
+import tempfile
+from icolos.core.containers.perturbation_map import Edge, Node, PerturbationMap
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
+from icolos.utils.enums.program_parameters import (
+    GromacsEnum,
+    PMXAtomMappingEnum,
+    PMXEnum,
+)
+from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.utils.execute_external.execute import Executor
+
+from icolos.utils.execute_external.gromacs import GromacsExecutor
+
+_SGE = StepGromacsEnum()
+_GE = GromacsEnum()
+_PE = PMXEnum()
+_PAE = PMXAtomMappingEnum()
+_LE = LoggingConfigEnum()
 
 
 class StepPMXmutate(StepPMXBase, BaseModel):
-    """Mutate protein or DNA/RNA."""
+    """This is the de facto entrypoint for a protein FEP workflow
+
+    This step does the legwork for setting up the output dir structure, similar to pmx_setup for the small molecule case
+    """
 
     def __init__(self, **data):
         super().__init__(**data)
+        self._initialize_backend(Executor)
 
     def execute(self):
-        pass
+        # start with a pdb file, parametrize with pdb2gmx
+        replicas = (
+            self.settings.additional["replicas"]
+            if "replicas" in self.settings.additional.keys()
+            else 3
+        )
+        assert self.work_dir is not None
+
+        # this is a bit awkward putting them in the ligand dir, we adopt the same structure as the small molecule approach
+        os.makedirs(os.path.join(self.work_dir, "input"), exist_ok=True)
+        for folder in ["ligands", "mdp", "protein"]:
+            os.makedirs(os.path.join(self.work_dir, "input", folder), exist_ok=True)
+        setup_dir = os.path.join(self.work_dir, _PAE.LIGAND_DIR)
+        self.data.generic.write_out_all_files(setup_dir)
+
+        mdp_dir = self.data.generic.get_argument_by_extension(
+            ext="mdp", rtn_file_object=True
+        )
+        mdp_dir.write(os.path.join(self.work_dir, "input/mdp"))
+
+        # run pdb2gmx on the protein, generate a good input file
+        pdb2gmx_args = [
+            "-f",
+            self.data.generic.get_argument_by_extension("pdb"),
+            "-water",
+            self.settings.additional["water"],
+            "-ff",
+            self.settings.additional["forcefield"],
+            "-o",
+            # use pdb here to retain chain IDs for pmx mutate
+            os.path.join(setup_dir, "wt.pdb"),
+            "-ignh",
+        ]
+        # run the
+        self._gromacs_executor.execute(
+            command=_GE.PDB2GMX, arguments=pdb2gmx_args, check=True, location=setup_dir
+        )
+        # now we have the prepared structure to pass to pmx mutate
+
+        # parse mutant file, note that pdb2gmx will remove chain IDs
+        with open(
+            os.path.join(setup_dir, self.data.generic.get_argument_by_extension("mut")),
+            "r",
+        ) as f:
+            mut_lines = [l for l in f.readlines() if l.strip()]
+
+        perturbation_map = PerturbationMap()
+        wt_node = Node(node_id="wt", node_hash="wt")
+        perturbation_map.add_node(wt_node)
+        # all we need is the identities of the mutants
+
+        # in the form "P 76 TYR\n X 45 GLY"
+        for mut in mut_lines:
+            chain, resid, new_res = mut.split()
+            edge_dir = os.path.join(self.work_dir, f"wt_{chain}{resid}{new_res}")
+            os.makedirs(
+                edge_dir,
+                exist_ok=True,
+            )
+            for branch in self.therm_cycle_branches:
+                for state in self.states:
+                    for r in range(1, replicas + 1):
+                        for sim in self.sim_types:
+                            os.makedirs(
+                                os.path.join(
+                                    self.work_dir,
+                                    edge_dir,
+                                    branch,
+                                    state,
+                                    f"run{r}",
+                                    sim,
+                                ),
+                                exist_ok=True,
+                            )
+            mutate_args = [
+                "-f",
+                os.path.join(setup_dir, "wt.pdb"),
+                "--ref",
+                os.path.join(setup_dir, "wt.pdb"),
+                "-o",
+                f"{chain}{resid}{new_res}.pdb",
+                "-ff",
+                self._get_additional_setting(_SGE.FORCEFIELD),
+            ]
+            self._logger.log(
+                f"Generating mutation {chain}{resid}->{new_res}", _LE.DEBUG
+            )
+            result = self._backend_executor.execute(
+                command=_PE.MUTATE,
+                arguments=mutate_args,
+                location=os.path.join(edge_dir, "bound"),
+                check=True,
+                pipe_input=f'echo -e "{chain}\n{resid}\n{new_res}\nn"',
+            )
+
+            # run pdb2gmx on the resulting structure, resulting structures are for the bound states
+
+            pdb2gmx_args = [
+                "-f",
+                f"{chain}{resid}{new_res}.pdb",
+                "-water",
+                self.settings.additional["water"],
+                "-ff",
+                self.settings.additional["forcefield"],
+                "-o",
+                "init.pdb",
+            ]
+            self._backend_executor.execute(
+                command=_GE.PDB2GMX,
+                arguments=pdb2gmx_args,
+                location=os.path.join(edge_dir, "bound"),
+                check=True,
+            )
+            # now make the directory in the main workdir to  for that mutation and copy the input files over
+
+            # now we have a single mutated structure file per system.
+            node = Node(
+                node_id=f"{chain}{resid}{new_res}",
+                node_hash=f"{chain}{resid}{new_res}",
+            )
+            perturbation_map.add_node(node)
+            perturbation_map.add_edge(Edge(node_from=wt_node, node_to=node))
+
+            # generate connectivity (just a star map), now we have an initialized perturbation map, relying on file paths only, not attached structures for now
+            for node in perturbation_map.nodes:
+                perturbation_map._attach_node_connectivity(node)
+
+            self.get_workflow_object().set_perturbation_map(perturbation_map)
+
+            # TODO: we need to generate mutatinos for the bound state and the unbound state, by separating the pdb file
+
+            # we have the chain being mutated, extract this to its own file
+
+            # create the index file
+            make_ndx_args = ["-f", "init.pdb"]
+            self._backend_executor.execute(
+                command=_GE.MAKE_NDX,
+                arguments=make_ndx_args,
+                location=os.path.join(edge_dir, "bound"),
+                pipe_input=f'echo -e "chain {chain}\nq"',
+                check=True,
+            )
+            # index.ndx in the bound state directory
+
+            editconf_args = [
+                "-f",
+                "init.pdb",
+                "-n",
+                "index.ndx",
+                "-o",
+                os.path.join(
+                    edge_dir, "unbound", f"{chain}{resid}{new_res}_unbound.pdb"
+                ),
+            ]
+            self._backend_executor.execute(
+                command=_GE.EDITCONF,
+                arguments=editconf_args,
+                location=os.path.join(edge_dir, "bound"),
+                check=True,
+                pipe_input=f'echo -e "ch{chain}\n"',
+            )
+
+            # generate topology for the unbound state
+            pdb2gmx_args = [
+                "-f",
+                f"{chain}{resid}{new_res}_unbound.pdb",
+                "-water",
+                self.settings.additional["water"],
+                "-ff",
+                self.settings.additional["forcefield"],
+                "-o",
+                "init.pdb",
+            ]
+            self._backend_executor.execute(
+                command=_GE.PDB2GMX,
+                arguments=pdb2gmx_args,
+                location=os.path.join(edge_dir, "unbound"),
+                check=True,
+            )
 
 
 help_string = """

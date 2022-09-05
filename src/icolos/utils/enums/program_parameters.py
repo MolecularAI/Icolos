@@ -426,14 +426,12 @@ class OpenBabelEnum:
     # note, that this overwrites "--addpolarh", which is thus not used
     # specifies the output path (directly pasted afterwards, e.g. "-Omypath.pdb")
     OBABEL_O = "-O"
-    OBABEL_OUTPUT_FORMAT_PDBQT = (
-        # sets the output format to "PDBQT" (input for "AutoDock Vina")
-        "-opdbqt"
-    )
+    # sets the output format to "PDBQT" (input for "AutoDock Vina")
+    OBABEL_OUTPUT_FORMAT_PDBQT = "-opdbqt"
     OBABEL_OUTPUT_FORMAT_SDF = "-osdf"  # sets the output format to "SDF"
-    OBABEL_OUTPUT_FORMAT_XYZ = (
-        "-oxyz"  # sets the output format to "XYZ" (format in XTB/TM)
-    )
+    # sets the output format to "XYZ" (format in XTB/TM)
+    OBABEL_OUTPUT_FORMAT_XYZ = "-oxyz"
+    OBABEL_OUTPUT_FORMAT_PDB = "-opdb"
     OBABEL_X = "-x"  # specifies generation options
     OBABEL_M = "-m"  # produce multiple output files
     # one of the 'X' options ("-x"), which disables the tree construction of the receptor
@@ -944,6 +942,8 @@ class SchrodingerExecutablesEnum:
     FMP_STATS = "fmp_stats"
     FMP_STATS_CALL = "$SCHRODINGER/run -FROM scisol fmp_stats.py"
     STRUCTCAT_HELP = "-h"
+    PROTEIN_INTERACTION_CALL = "$SCHRODINGER/run protein_interaction_analysis.py"
+    PROTEIN_INTERACTION = "protein_interaction"
     STRUCTCAT_HELP_IDENTIFICATION_STRING = "<format> must be one of"
     # input; note that the format is directly appended (e.g. "-isd")
     STRUCTCAT_I = "-i"
@@ -1067,22 +1067,26 @@ class JazzyEnum:
     HELP_IDENTIFICATION_STRING = "Show this message"
 
     # "vec" command
-    VEC = "vec"      # "generating properties" mode
-    VEC_OPT = "--opt"   # optimization
+    VEC = "vec"  # "generating properties" mode
+    VEC_OPT = "--opt"  # optimization
     VEC_OPT_MMF94 = "MMF94"
     VEC_OPT_MMF94S = "MMF94s"
     VEC_OPT_UFF = "UFF"
     VEC_STRENGHT_ONLY = "--strength_only"
 
     # "vis" command
-    VIS = "vis"      # "generating graphics" mode
+    VIS = "vis"  # "generating graphics" mode
     VIS_OPT = "--opt"
     VIS_OPT_MMF94 = "MMF94"
     VIS_OPT_MMF94S = "MMF94s"
     VIS_OPT_UFF = "UFF"
-    VIS_FIG_SIZE = "--fig_size"    # Size of SVG image in pixels.  [default: 500, 500]
-    VIS_SDC_THRESHOLD = "--sdc_threshold"    # Treshold strength to depic Carbon donors. [default: 0.0]
-    VIS_SA_THRESHOLD = "--sa_threshold"    # Treshold strength to depic acceptors. [default: 0.0]
+    VIS_FIG_SIZE = "--fig_size"  # Size of SVG image in pixels.  [default: 500, 500]
+    VIS_SDC_THRESHOLD = (
+        "--sdc_threshold"  # Treshold strength to depic Carbon donors. [default: 0.0]
+    )
+    VIS_SA_THRESHOLD = (
+        "--sa_threshold"  # Treshold strength to depic acceptors. [default: 0.0]
+    )
     VIS_BASE64 = "--base64"
     VIS_FLATTEN_MOLECULE = "--flatten_molecule"
     VIS_HIGHLIGHT_ATOMS = "--highlight_atoms"
@@ -1547,9 +1551,10 @@ class PMXLigandHybridEnum:
 class FepPlusEnum:
     FEP_MAPPER = "$SCHRODINGER/run -FROM scisol fep_mapper.py"
     FEP_EXECUTOR = "$SCHRODINGER/fep_plus"
+    FEP_ABSOLUTE_EXECUTOR = "$SCHRODINGER/fep_absolute_binding"
     FEP_HELP = "-h"
-    JSC_LIST = 'ssh <location> "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc list"'
-    JSC_TAIL_FILE = 'ssh <location> "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc tail-file'
+    JSC_LIST = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc list"'
+    JSC_TAIL_FILE = 'ssh $SCHRODINGER_JOBSERVER "export SCHRODINGER=/opt/schrodinger/suite/installations/default && /opt/schrodinger/suite/installations/default/jsc tail-file'
     DICT = "dict"
     PATH = "path"
     FEP_MAPPER_HELP_SUCCESS_STRING = "If given, the match will be allowed"
@@ -1569,4 +1574,6 @@ class SlurmEnum:
     COMPLETED = "COMPLETED"
     RUNNING = "RUNNING"
     PENDING = "PENDING"
+    CANCELLED = "CANCELLED"
+    NODE_FAIL = "NODE_FAIL"
     FAILED = "FAILED"

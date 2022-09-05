@@ -41,7 +41,7 @@ class StepGMXCluster(StepGromacsBase, BaseModel):
                         "-o",
                         _SGE.STD_INDEX,
                     ]
-                    result = self._backend_executor.execute(
+                    self._backend_executor.execute(
                         command=_GE.MAKE_NDX,
                         arguments=ndx_arguments,
                         location=tmp_dir,

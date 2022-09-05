@@ -1,7 +1,6 @@
 from typing import Dict, List
 
 from pydantic import BaseModel, PrivateAttr
-from icolos.core.containers.gmx_state import GromacsState
 from icolos.core.containers.perturbation_map import PerturbationMap
 from icolos.core.flow_control.flow_control import FlowControlBase
 from icolos.core.workflow_steps.step import StepBase
@@ -43,8 +42,6 @@ class WorkFlow(BaseAgent, BaseModel):
         self._initialized_steps = []
 
     def initialize(self):
-        # this feels hacky but it fixes a circular import and allows a step in the workflow
-        # to create other workflows
         from icolos.core.steps_utils import initialize_step_from_dict
 
         super().initialize()

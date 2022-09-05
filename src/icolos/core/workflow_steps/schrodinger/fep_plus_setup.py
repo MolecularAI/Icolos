@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List
 from icolos.core.containers.generic import GenericData
 from icolos.core.step_utils.structconvert import StructConvert
@@ -202,7 +203,8 @@ class StepFepPlusSetup(StepSchrodingerBase, BaseModel):
                 # use the docked conformer
                 for enumeration in compound.get_enumerations():
                     for conformer in enumeration.get_conformers():
-                        mol = conformer.get_molecule()
+                        mol = deepcopy(conformer.get_molecule())
+                        mol.SetProp("_Name", conformer.get_compound_name())
                         writer.write(mol)
 
     def _parse_arguments(self, io_dict: dict) -> List[str]:

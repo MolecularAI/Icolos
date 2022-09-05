@@ -4,6 +4,7 @@ channels:
   - conda-forge
   - defaults
   - rdkit
+  - pytorch
 dependencies:
   - biopython>=1.79
   - ipython
@@ -23,10 +24,13 @@ dependencies:
   - acpype>=2022
   - openff-toolkit>=0.10.2
   - dill>=0.3.4
-  - dscribe>=1.2.1
+  - lomap2>=2.0.0
+  - pygraphviz
+  - pytorch
   - pip:
     - black
     - regex
     - peptidebuilder>=1.1
     - pytest
     - pytest-xdist
+    - skorch>=0.11

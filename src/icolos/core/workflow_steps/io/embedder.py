@@ -46,6 +46,7 @@ class StepEmbedding(StepIOBase, BaseModel):
             embed_code = AllChem.EmbedMolecule(
                 molecule, randomSeed=42, useRandomCoords=True
             )
+        # TODO: what's the exception here?
         except:
             self._logger.log(
                 f'Could not embed molecule with SMILES "{smile}", critical error in "RDkit".',

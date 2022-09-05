@@ -63,7 +63,7 @@ class StepPMXatomMapping(StepPMXBase, BaseModel):
         output_dir = os.path.join(self.work_dir, edge, _PE.HYBRID_STR_TOP)
         arguments = self._prepare_arguments(args=arguments, output_dir=output_dir)
 
-        result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_PE.ATOMMAPPING,
             arguments=arguments,
             check=True,

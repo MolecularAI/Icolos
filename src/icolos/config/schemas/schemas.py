@@ -13,7 +13,7 @@ def _load_schema(path: str) -> dict:
         with open(path, "r") as f:
             schema_data = f.read()
         schema = json.loads(schema_data)
-    except:
+    except json.JSONDecodeError:
         print(f"Could not load or parse schema file {path}, skipping.")
         schema = {}
     return schema

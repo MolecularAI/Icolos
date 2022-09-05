@@ -8,6 +8,7 @@ import subprocess
 from typing import List
 import time
 from tempfile import mkstemp
+import numpy as np
 
 _SE = SlurmEnum()
 logger = StepLogger()
@@ -45,6 +46,14 @@ class SlurmExecutor(ExecutorBase):
         self._script_prefix_execution = prefix_execution
         self._script_binary_location = binary_location
 
+        # check if the machine can reach slurm
+        self.slurm_available = self.is_available()
+        if not self.slurm_available:
+            logger.log(
+                "Warning - Slurm was not found, jobs will be run locally!",
+                _LE.WARNING,
+            )
+
     def execute(
         self,
         command: str = None,
@@ -53,6 +62,7 @@ class SlurmExecutor(ExecutorBase):
         location=None,
         pipe_input=None,
         tmpfile: str = None,
+        wait: bool = True,
     ):
         """
         Creates and executes the batch script using the provided resource requirements
@@ -63,22 +73,32 @@ class SlurmExecutor(ExecutorBase):
             tmpfile = self.prepare_batch_script(
                 command, arguments, pipe_input, location
             )
-        if self.is_available():
-            launch_command = f"sbatch {tmpfile}"
+
+        if self.slurm_available:
+            launch_command = f"sbatch {tmpfile} --no-requeue"
         else:
-            logger.log(
-                "Warning - Slurm was not found, falling back to local execution!",
-                _LE.WARNING,
-            )
+
             launch_command = f"bash {tmpfile}"
+
         # execute the batch script
         result = super().execute(
-            command=launch_command, arguments=[], location=location, check=check
+            # do not enforce checking here,
+            command=launch_command,
+            arguments=[],
+            location=location,
+            check=False,
         )
-
+        if result.returncode != 0:
+            # something has gone wrong with submitting the slurm script
+            logger.log(
+                f"Batch script submission failed with exit code {result.returncode}, error was {result.stderr}",
+                _LE.WARNING,
+            )
         # either monitor the job id, or resort to parsing the log file
         if self.is_available():
             job_id = result.stdout.split()[-1]
+            if wait is False:
+                return job_id
             state = self._wait_for_job_completion(job_id=job_id)
         # if using local resources, bash call is blocking, no need to monitor, just wait for result to return
         else:
@@ -93,10 +113,19 @@ class SlurmExecutor(ExecutorBase):
         return state
 
     def prepare_batch_script(
-        self, command, arguments: List, pipe_input: str = None, location=None
-    ):
-        """
-        Write a batch script to the specified location
+        self,
+        command: str,
+        arguments: List,
+        pipe_input: str = None,
+        location: str = None,
+    ) -> str:
+        """Generate the batch script for a specific job and write to disk
+
+        :param str command: command to be executed
+        :param List arguments: List of arguments to be appended to the command
+        :param str pipe_input: string to be piped to the program being executed, defaults to None
+        :param str location: directory where batch script will be written, defaults to None
+        :return str : path to the batch script
         """
         batch_script = self._construct_slurm_header()
         command = self._prepare_command(command, arguments, pipe_input)
@@ -151,9 +180,7 @@ class SlurmExecutor(ExecutorBase):
             if state in [_SE.PENDING, _SE.RUNNING, None]:
                 time.sleep(60)
                 continue
-            elif state == _SE.COMPLETED:
-                completed = True
-            elif state == _SE.FAILED:
+            elif state in (_SE.COMPLETED, _SE.FAILED, _SE.CANCELLED):
                 completed = True
         return state
 
@@ -198,7 +225,8 @@ class SlurmExecutor(ExecutorBase):
             stderr=subprocess.PIPE,
         )
         if result.stdout:
-            state = result.stdout.split("\n")[0].split("|")[5]
+            state = result.stdout.split("\n")[0].split("|")[5].split(" ")[0]
+
         else:
             state = None
         return state
@@ -218,7 +246,10 @@ class SlurmExecutor(ExecutorBase):
         if self.gres is not None:
             header.append(f"#SBATCH --gres={self.gres}")
         for key, value in self.other_args.items():
-            header.append(f"#SBATCH {key}={value}")
+            if len(str(value)) > 0:
+                header.append(f"#SBATCH {key}={value}")
+            else:
+                header.append(f"#SBATCH {key}")
 
         for module in self.modules:
             header.append(f"module load {module}")

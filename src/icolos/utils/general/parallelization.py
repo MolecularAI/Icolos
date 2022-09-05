@@ -11,12 +11,16 @@ class Subtask(BaseModel):
     status: _PE = _PE.STATUS_READY
     times_tried: int = 0
     data: Any
+    job_id: str = None
 
     def increment_tries(self):
         self.times_tried += 1
 
     def set_status(self, status: str):
         self.status = status
+
+    def set_job_id(self, job_id: str):
+        self.job_id = job_id
 
     def set_status_failed(self):
         self.set_status(_PE.STATUS_FAILED)
@@ -58,12 +62,19 @@ class SubtaskContainer(BaseModel):
     def get_done_tasks(self) -> List[Subtask]:
         done_subtasks = []
         for subtask in self.subtasks:
-            if (
-                subtask.status == _PE.STATUS_SUCCESS
-                or subtask.times_tried >= self.max_tries
+            if subtask.status == _PE.STATUS_SUCCESS or (
+                subtask.times_tried >= self.max_tries
+                and subtask.status not in (_PE.STATUS_RUNNING, _PE.STATUS_READY)
             ):
                 done_subtasks.append(subtask)
         return done_subtasks
+
+    def get_running_tasks(self) -> List[Subtask]:
+        running_subtasks = []
+        for subtask in self.subtasks:
+            if subtask.status == _PE.STATUS_RUNNING:
+                running_subtasks.append(subtask)
+        return running_subtasks
 
     def get_sublists(
         self, partitions=None, slice_size=None, get_first_n_lists=None

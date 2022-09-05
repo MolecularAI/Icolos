@@ -248,7 +248,7 @@ class StepLigprep(StepSchrodingerBase, BaseModel):
         ]
 
         # 4) run "Ligprep" backend and add log file to "debug" mode logging
-        result = self._backend_executor.execute(
+        self._backend_executor.execute(
             command=_EE.LIGPREP,
             arguments=arguments,
             location=tmp_output_dir,

@@ -1,4 +1,7 @@
 from icolos.core.flow_control.iterator import StepIterator
+from icolos.core.workflow_steps.active_learning.virtual_screening import (
+    StepActiveLearning,
+)
 from icolos.utils.enums.step_enums import StepBaseEnum
 
 _SBE = StepBaseEnum
@@ -10,4 +13,5 @@ class FlowControlInitializationEnum:
 
     FLOW_CONTROL_INIT_DICT = {
         _SBE.STEP_ITERATOR: StepIterator,
+        _SBE.STEP_ACTIVE_LEARNING: StepActiveLearning,
     }

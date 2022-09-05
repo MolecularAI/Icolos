@@ -72,7 +72,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
 
     def _run_mmpbsa(self, args, tmp_dir) -> CompletedProcess:
         command = _GE.MMPBSA
-        threads = self.get_additional_setting(_SGE.THREADS, default=1)
+        threads = self._get_additional_setting(_SGE.THREADS, default=1)
         if threads > 1:
             command = f"mpirun -np {threads} " + command
         self._logger.log(
@@ -121,6 +121,10 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
         return file[0]
 
     def parse_results(self, wkdirs: List[str]):
+        """Parse the .dat files from the workdirs, extract results and attach to topol
+
+        :param List[str] wkdirs: list of workdirs to walk through
+        """
         for wkdir in wkdirs:
             results_file = os.path.join(wkdir, "FINAL_RESULTS_MMPBSA.dat")
             with open(results_file, "r") as f:
@@ -140,7 +144,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
                 f.write(str(idx) + "," + str(val))
 
     def execute(self) -> None:
-        tmp_dir = self._make_tmpdir()
+        tmp_dir = self._prepare_tmpdir()
         topol = self.get_topol()
         self._generate_amber_input_file()
         self.write_input_files(tmp_dir, topol=topol)
@@ -181,7 +185,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
 
             flag_list = self._parse_arguments(flag_dict=flag_dict)
 
-            result = self._run_mmpbsa(args=flag_list, tmp_dir=wkdir)
+            self._run_mmpbsa(args=flag_list, tmp_dir=wkdir)
         self.parse_results(wkdirs)
 
         # parse and delete generated output

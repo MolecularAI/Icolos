@@ -153,13 +153,13 @@ class PATHS_EXAMPLEDATA:
     MODEL_BUILDER_TEST_INPUT_SDF = expand_path("model_building/test_input_data.sdf")
     COX2_ACTIVES_DOCKED = expand_path("molecules/1CX2/docked_actives.sdf")
 
-    CAVITY_TRJ_FOLDER = expand_path("cavity_explorer/parch_align_trj")
-    CAVITY_DTR_FILE = expand_path("cavity_explorer/parch_align_trj/clickme.dtr")
-    CAVITY_CMS_FILE = expand_path("cavity_explorer/parch_align_trj/out.cms")
-    MDPOCKET_XTC_FILE = expand_path("cavity_explorer/structure_out_0.xtc")
-    MDPOCKET_PDB_FILE = expand_path("cavity_explorer/structure_0_wet.pdb")
-    MDPOCKET_PDB_FILE_DRY = expand_path("cavity_explorer/structure_0.pdb")
-    MD_POCKET_DESMOND_TOP = expand_path("cavity_explorer/top.pdb")
+    CAVITY_TRJ_FOLDER = expand_path("fpocket/parch_align_trj")
+    CAVITY_DTR_FILE = expand_path("fpocket/parch_align_trj/clickme.dtr")
+    CAVITY_CMS_FILE = expand_path("fpocket/parch_align_trj/out.cms")
+    MDPOCKET_XTC_FILE = expand_path("fpocket/1BVG_apo.xtc")
+    MDPOCKET_PDB_FILE = expand_path("fpocket/1BVG_apo.pdb")
+    MDPOCKET_PDB_FILE_DRY = expand_path("fpocket/structure_0.pdb")
+    MD_POCKET_DESMOND_TOP = expand_path("fpocket/top.pdb")
 
     DESMOND_SETUP_PDB = expand_path("desmond/1cx2.pdb")
     DESMOND_PRODUCTION_CMS = expand_path("desmond/setup.cms")
@@ -173,6 +173,10 @@ class PATHS_EXAMPLEDATA:
     PREPARE_TRANSITIONS_TEST_DIR = expand_path("pmx/prepare_transitions")
     RUN_ANALYSIS_TEST_DIR = expand_path("pmx/analyse")
     PMX_MDP_FILES = expand_path("pmx/assemble_systems/input/mdp")
+    PMX_MUTATIONS_LIST = expand_path("pmx/mutate/mutations.mut")
+    PMX_MUTATIONS_PROTEIN = expand_path("pmx/mutate/2flu.pdb")
+    PROTIEN_INTERACTION_9MER = expand_path("pmx/mutate/2flu_p.sdf")
+    PMX_GENTOP_TOPOLOGY = expand_path("pmx/gentop/topol.top")
 
     RUN_SIMULATIONS_TEST_DIR = expand_path("pmx/run_simulations")
     PMX_TNKS_TEST_DIR = expand_path("pmx")
@@ -295,6 +299,7 @@ def get_ligands_as_compounds_with_conformers(
             smile=to_smiles(mol), original_smile=to_smiles(mol), molecule=mol
         )
         conf = Conformer(conformer=mol)
+        conf.get_molecule().SetProp("docking_score", "-12.434")
         if poseviewer is not None:
             conf.add_extra_data("structures_pv.maegz", data=poseviewer)
         enum.add_conformer(conf)

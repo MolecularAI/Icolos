@@ -5,7 +5,7 @@ from icolos.core.containers.generic import GenericContainer, GenericData
 import multiprocessing
 import shutil
 import tempfile
-from typing import Callable, List, Dict, Tuple
+from typing import Callable, List, Dict, Optional, Tuple
 
 from pydantic import BaseModel, PrivateAttr
 from rdkit import Chem
@@ -131,6 +131,7 @@ class StepBase(BaseModel):
     # @staticmethod
     def _make_tmpdir(self):
         if self.work_dir is not None:
+            self._logger.log(f"Using specified work_dir {self.work_dir}", _LE.DEBUG)
             return self.work_dir
         else:
             self.work_dir = tempfile.mkdtemp()
@@ -176,7 +177,7 @@ class StepBase(BaseModel):
     def execute(self):
         raise NotImplementedError
 
-    def get_compound_by_name(self, name: str) -> Compound:
+    def get_compound_by_name(self, name: str) -> Optional[Compound]:
         for compound in self.data.compounds:
             if compound.get_name() == name:
                 return compound
@@ -291,11 +292,21 @@ class StepBase(BaseModel):
         writeout_handler.write()
 
     def write_generic_by_extension(self, path: str, ext: str, join=True):
-        """writes all files of a specific file type to the specified directory, retaining original files names"""
+        """Write all generic data objects with a given extension
+
+        :param str path: path to write object to, by default just a directory
+        :param str ext: extension
+        :param bool join: controls join behaviour, if True, joins existing filename to path, defaults to True
+        """
         for file in self.data.generic.get_files_by_extension(ext):
             file.write(path, join=join)
 
-    def write_generic_by_name(self, path, name: str):
+    def write_generic_by_name(self, path: str, name: str):
+        """Write a generic file by name
+
+        :param str path: directory to write to
+        :param str name: name of file to be written out
+        """
         file = self.data.generic.get_file_by_name(name)
         file.write(path)
 
@@ -381,7 +392,36 @@ class StepBase(BaseModel):
             # subtract the number of cores (neg. value, thus add up) from total number of cores, e.g. -1 will
             # use all available cores minus 1
             cores = multiprocessing.cpu_count() + cores
+        if cores > multiprocessing.cpu_count():
+            self._logger.log(
+                f"WARNING: running {cores} processes on {multiprocessing.cpu_count()} logical cores!",
+                _LE.WARNING,
+            )
         return cores
+    
+    def get_arguments(self, defaults: dict = None) -> list:
+        """
+        Construct pmx-specific arguments from the step defaults,
+        overridden by arguments specified in the config file
+        """
+        arguments = []
+
+        # add flags
+        for flag in self.settings.arguments.flags:
+            arguments.append(flag)
+
+        # flatten the dictionary into a list for command-line execution
+        for key in self.settings.arguments.parameters.keys():
+            arguments.append(key)
+            arguments.append(self.settings.arguments.parameters[key])
+
+        # add defaults, if not already present
+        if defaults is not None:
+            for key, value in defaults.items():
+                if key not in arguments:
+                    arguments.append(key)
+                    arguments.append(value)
+        return arguments
 
     def _print_log_file(self, path: str):
         if os.path.isfile(path):
@@ -513,7 +553,7 @@ class StepBase(BaseModel):
         for line in result.stdout.split("\n"):
             self._logger_blank.log(line, _LE.DEBUG)
 
-    def get_additional_setting(self, key: str, default: str = None):
+    def _get_additional_setting(self, key: str, default: str = None):
         """
         Query settings.additional with the key, if not set use the default
         """

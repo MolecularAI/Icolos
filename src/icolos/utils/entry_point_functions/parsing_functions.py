@@ -87,14 +87,14 @@ def get_version_number() -> str:
         from importlib import metadata
 
         return metadata.version("icolos")
-    except:
+    except ImportError:
         return None
 
 
 def get_config_version_number(conf: dict) -> str:
     try:
         return str(conf[_WE.WORKFLOW][_WE.HEADER][_WE.VERSION])
-    except:
+    except KeyError:
         return None
 
 

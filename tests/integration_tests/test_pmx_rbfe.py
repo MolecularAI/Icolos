@@ -1,6 +1,10 @@
 import unittest
 import os
 from icolos.core.composite_agents.workflow import WorkFlow
+from icolos.utils.entry_point_functions.logging_helper_functions import (
+    initialize_logging,
+)
+from icolos.utils.enums.logging_enums import LoggingConfigEnum
 from tests.tests_paths import (
     MAIN_CONFIG,
     PATHS_1UYD,
@@ -14,6 +18,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 _WE = WorkflowEnum()
 _SBE = StepBaseEnum
 _SGE = StepGromacsEnum()
+_LE = LoggingConfigEnum()
 
 
 class TestPMXrbfe(unittest.TestCase):
@@ -189,7 +194,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06b_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [
@@ -217,7 +222,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06c_prepare_simulations",
                     _SBE.STEP_TYPE: "pmx_prepare_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 8},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 8},
                         _SBE.EXEC_PREFIXEXECUTION: "module load GROMACS/2021-fosscuda-2019a-PLUMED-2.7.1-Python-3.7.2",
                     },
                     _SBE.SETTINGS: {
@@ -232,7 +237,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.STEPID: "06d_run_simulations",
                     _SBE.STEP_TYPE: "pmx_run_simulations",
                     _SBE.EXEC: {
-                        _SBE.EXEC_PARALLELIZATION: {"cores": 1},
+                        _SBE.EXEC_PARALLELIZATION: {"jobs": 1},
                         _SBE.EXEC_PLATFORM: "slurm",
                         _SBE.EXEC_RESOURCES: {
                             _SBE.EXEC_RESOURCES_MODULES: [
@@ -343,6 +348,8 @@ class TestPMXrbfe(unittest.TestCase):
         wflow = WorkFlow(**conf)
         wflow.initialize()
 
+        log_conf = attach_root_path(_LE.PATH_CONFIG_DEBUG)
+        _ = initialize_logging(log_conf_path=log_conf, workflow_conf=conf)
         self.assertEqual(len(wflow.steps), 14)
         wflow.execute()
         out_path = os.path.join(self._test_dir, "resultsAll.csv")

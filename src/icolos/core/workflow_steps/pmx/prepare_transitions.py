@@ -1,18 +1,14 @@
-from typing import Dict, List
-from icolos.core.containers.perturbation_map import Edge
+from typing import List
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from icolos.core.workflow_steps.step import _LE
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
-    StepPMXEnum,
 )
-from icolos.utils.execute_external.pmx import PMXExecutor
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
-
-_PSE = StepPMXEnum()
 _GE = GromacsEnum()
 
 
@@ -24,7 +20,7 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=PMXExecutor)
+        self._initialize_backend(executor=GromacsExecutor)
 
     def execute(self):
         edges = [e.get_edge_id() for e in self.get_edges()]
@@ -55,15 +51,21 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             "-b": 2000,
         }
         trjconv_args = self.get_arguments(trjconv_args)
-        self._gromacs_executor.execute(
-            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System"
+        self._backend_executor.execute(
+            _GE.TRJCONV, arguments=trjconv_args, pipe_input="echo System", check=False
         )
 
-        # move frame0.gro to frame80.gro
-        cmd = "mv {0}/frame0.gro {0}/frame80.gro".format(tipath)
-        os.system(cmd)
+        last_frame = len([f for f in os.listdir(tipath) if f.startswith("frame")])
+        self._logger.log(f"Extracted {last_frame} frames", _LE.DEBUG)
 
         self._clean_backup_files(tipath)
+        # once frames are extracted, remove the large trr file from the equilibrium run
+        files_to_remove = [trr, tpr, os.path.join(eqpath, "frame.gro")]
+        for f in files_to_remove:
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
 
     def _prepare_system(self, edge: str, state: str, wp: str, r: int, toppath: str):
         eqpath = self._get_specific_path(
@@ -82,28 +84,32 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
             r=r,
             sim="transitions",
         )
-        self._extract_snapshots(eqpath, tipath)
-        result = self._prepare_single_tpr(
+        # if the trr file exists and snapshots have not been extracted in a previous run
+        if os.path.isfile(os.path.join(eqpath, "traj.trr")) and not os.path.isfile(
+            os.path.join(tipath, "frame0.gro")
+        ):
+            self._extract_snapshots(eqpath, tipath)
+        else:
+            self._logger.log("Skipping frame extraction, already present", _LE.DEBUG)
+        print("preparing tpr files")
+
+        self._prepare_single_tpr(
             simpath=tipath,
             toppath=toppath,
             state=state,
             sim_type="transitions",
-            framestart=1,
-            framestop=81,
+            executor=self._backend_executor,
         )
-        if result.returncode != 0:
-            self._logger.log(f"WARNING, grompp has failed in {tipath}", _LE.WARNING)
-            for line in result.stderr.split("\n"):
-                self._logger.log(line, _LE.DEBUG)
+
         self._clean_backup_files(tipath)
 
     def prepare_transitions(self, jobs: List[str]):
         for edge in jobs:
             ligTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="ligand"
+                workPath=self.work_dir, edge=edge, wp="unbound"
             )
             protTopPath = self._get_specific_path(
-                workPath=self.work_dir, edge=edge, wp="complex"
+                workPath=self.work_dir, edge=edge, wp="bound"
             )
             for state in self.states:
                 for r in range(1, self.get_perturbation_map().replicas + 1):
@@ -112,33 +118,57 @@ class StepPMXPrepareTransitions(StepPMXBase, BaseModel):
                         f"Preparing transitions: {edge}, {state}, run {r}", _LE.DEBUG
                     )
                     self._prepare_system(
-                        edge=edge, state=state, wp="ligand", r=r, toppath=ligTopPath
+                        edge=edge, state=state, wp="unbound", r=r, toppath=ligTopPath
                     )
                     self._prepare_system(
-                        edge=edge, state=state, wp="complex", r=r, toppath=protTopPath
+                        edge=edge, state=state, wp="bound", r=r, toppath=protTopPath
                     )
 
     def _check_result(self, batch: List[List[str]]) -> List[List[bool]]:
         """
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
-        output_files = [
-            f"ligand/stateA/run1/transitions/ti80.tpr",
-            f"ligand/stateB/run1/transitions/ti80.tpr",
-            f"complex/stateA/run1/transitions/ti80.tpr",
-            f"complex/stateB/run1/transitions/ti80.tpr",
-        ]
+        replicas = self.get_perturbation_map().replicas
+        output_paths = []
+        for i in range(1, replicas + 1):
+            output_paths.append(f"unbound/stateA/run{i}/transitions")
+            output_paths.append(f"unbound/stateB/run{i}/transitions")
+            output_paths.append(f"bound/stateA/run{i}/transitions")
+            output_paths.append(f"bound/stateB/run{i}/transitions")
+
         results = []
         for subjob in batch:
             subjob_results = []
             for job in subjob:
-                subjob_results.append(
-                    all(
+                # check number of frames extracted == number tpr files for each leg
+
+                num_frames = [
+                    len(
                         [
-                            os.path.isfile(os.path.join(self.work_dir, job, f))
-                            for f in output_files
+                            f
+                            for f in os.listdir(os.path.join(self.work_dir, job, f))
+                            if f.startswith("frame")
                         ]
                     )
+                    for f in output_paths
+                ]
+                num_tprs = [
+                    len(
+                        [
+                            f
+                            for f in os.listdir(os.path.join(self.work_dir, job, f))
+                            if f.startswith("ti")
+                        ]
+                    )
+                    for f in output_paths
+                ]
+                self._logger.log(
+                    f"Found {num_tprs} tpr files and {num_frames} frame files for edge {job}",
+                    _LE.DEBUG,
+                )
+                # confirms that frames have been extracted, and we have a tpr file generated for each ti frame
+                subjob_results.append(
+                    num_tprs == num_frames and all(n > 10 for n in num_frames)
                 )
             results.append(subjob_results)
         return results

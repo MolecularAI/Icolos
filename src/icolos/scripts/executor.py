@@ -30,7 +30,6 @@ from icolos.utils.general.files_paths import attach_root_path
 def main():
     # enums
     _LE = LoggingConfigEnum()
-    _EE = ExecutorEnum()
     _WE = WorkflowEnum()
 
     # get the input parameters and parse them

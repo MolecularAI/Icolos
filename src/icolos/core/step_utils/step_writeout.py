@@ -247,7 +247,6 @@ class WriteOutHandler(BaseModel):
                 resource = os.path.join("/".join(resource.split("/")[:-1]), file_name)
                 file.write(resource, join=False)
             elif self.config.destination.mode == _SBE.WRITEOUT_DESTINATION_DIR:
-                resource = resource
                 assert os.path.isdir(resource)
                 file.write(resource, join=True, final_writeout=True)
 
@@ -442,14 +441,31 @@ class WriteOutHandler(BaseModel):
                 unrolled_conformers = self._unroll_conformers([comp])
                 if len(unrolled_conformers) == 0:
                     continue
-                values = [
-                    float(
-                        conf.get_molecule().GetProp(
-                            self.config.compounds.aggregation.key
+                values = []
+                for conf in unrolled_conformers:
+                    try:
+                        values.append(
+                            float(
+                                conf.get_molecule().GetProp(
+                                    self.config.compounds.aggregation.key
+                                )
+                            )
                         )
-                    )
-                    for conf in unrolled_conformers
-                ]
+                    except KeyError as e:
+                        self._logger.log(
+                            f"Error {e} for conf {conf.get_index_string()}, setting value to 0.00 in writeout!",
+                            _LE.WARNING,
+                        )
+                        values.append(0.00)
+
+                # values = [
+                #     float(
+                #         conf.get_molecule().GetProp(
+                #             self.config.compounds.aggregation.key
+                #         )
+                #     )
+                #     for conf in unrolled_conformers
+                # ]
                 index_best = (
                     values.index(max(values))
                     if self.config.compounds.aggregation.highest_is_best
@@ -481,7 +497,14 @@ class WriteOutHandler(BaseModel):
 
         # initialize a dictionary with all tags as keys and filled with NA for every position
         dict_result = self._initialize_dict_csv(
-            keys=[_WE.RDKIT_NAME, _WE.COMPOUND_NAME] + tags, nrow=len(confs_unrolled)
+            keys=[
+                _WE.RDKIT_NAME,
+                _WE.COMPOUND_NAME,
+                "original_smiles",
+                "enumerated_smiles",
+            ]
+            + tags,
+            nrow=len(confs_unrolled),
         )
 
         # resolve resource
@@ -502,6 +525,14 @@ class WriteOutHandler(BaseModel):
             # add the compound name, if specified
             name = conf.get_compound_name()
             dict_result[_WE.COMPOUND_NAME][irow] = "" if name is None else name
+            dict_result["original_smiles"][
+                irow
+            ] = conf.get_enumeration_object().get_original_smile()
+
+            dict_result["enumerated_smiles"][irow] = Chem.rdmolfiles.MolToSmiles(
+                conf.get_molecule()
+            )
+
             for tag in tags:
                 try:
                     value = conf.get_molecule().GetProp(tag).strip()

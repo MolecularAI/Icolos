@@ -45,12 +45,14 @@ class StepBaseEnum(str, Enum):
     STEP_DO_DSSP = "DO_DSSP"
     STEP_LIGPREP = "LIGPREP"
     STEP_GLIDE = "GLIDE"
+    STEP_RESIDUE_SCANNING = "RESIDUE_SCANNING"
     STEP_AUTODOCKVINA_DOCKING = "VINA_DOCKING"
     STEP_AUTODOCKVINA_TARGET_PREPARATION = "VINA_TARGET_PREPARATION"
     STEP_GOLD_DOCKING = "GOLD_DOCKING"
     STEP_FEP_PLUS_SETUP = "FEP_PLUS_SETUP"
     STEP_FEP_PLUS_EXEC = "FEP_PLUS_EXEC"
     STEP_FEP_PLUS_ANALYSIS = "FEP_PLUS_ANALYSIS"
+    STEP_FEP_ABSOLUTE = "FEP_ABSOLUTE"
     STEP_PREPWIZARD = "PREPWIZARD"
     STEP_MDPOCKET = "MDPOCKET"
     STEP_PDB_FIXER = "PDB_FIXER"
@@ -74,11 +76,15 @@ class StepBaseEnum(str, Enum):
     STEP_PMX_ASSEMBLE_SYSTEMS = "PMX_ASSEMBLE_SYSTEMS"
     STEP_PMX_RUN_ANALYSIS = "PMX_RUN_ANALYSIS"
 
+    STEP_PROTEIN_INTERACTIONS = "PROTEIN_INTERACTION"
+    STEP_LOMAP = "LOMAP"
+
     STEP_DSSP = "DSSP"
     STEP_TS_CLUSTER = "TS_CLUSTER"
     STEP_ESP_SIM = "ESP_SIM"
     STEP_DISPATCHER = "DISPATCHER"
     STEP_ACTIVE_LEARNING = "ACTIVE_LEARNING"
+    STEP_PROSPECTIVE_REINVENT = "PROSPECTIVE_REINVENT"
 
     # flow control blocks
     STEP_ITERATOR = "ITERATOR"
@@ -349,6 +355,7 @@ class StepDataManipulationEnum:
     ASSEMBLE_COMPLEXES = "assemble_complexes"
     ACTION_ATTACH_CONFORMERS_AS_EXTRA = "attach_conformers_as_extra"
     COLLECT_ITERATOR_RESULTS = "collect_iterator_results"
+    COMPUTE_MCS = "compute_mcs"
     FILTER = "filter"
 
     # --> For ACTION_ATTACH_CONFORMERS_AS_EXTRA
@@ -568,6 +575,8 @@ class StepGlideEnum:
     GLIDE_SDF_DEFAULT_EXTENSION = "_lib.sdfgz"
     GLIDE_LOG = ".log"
     GLIDE_SDF = ".sdf"
+
+    FILL_DUMMY_CONFS = "fill_dummy_confs"
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -1029,13 +1038,59 @@ class StepGoldTargetPreparationEnum:
 
 class StepActiveLearningEnum:
 
+    ORACLE_TYPE = "oracle_type"
     ORACLE_CONFIG = "oracle_config"
     SMILES = "SMILES"
-    MOLECULE = "Moleucle"
+    MOLECULE = "Molecule"
     VIRTUAL_LIB = "virtual_lib"
-    INIT_SAMPLES = "init_samples"
+    FRAGMENTS = "fragments"
+    INIT_SAMPLE_FACTOR = "init_sample_factor"
     MORGAN_FP = "MorganFP"
+    SOAP_VECTOR = "soap_vector"
+    ID = "ID"
+    IDX = "IDX"
+    GRAPH = "graph"
+    FRACTION_PER_EPOCH = "fraction_per_epoch"
+    MAX_SAMPLED_FRACTION = "max_sampled_fraction"
+    WARMUP = "warmup"
     N_ROUNDS = "n_rounds"
     BATCH_SIZE = "batch_size"
+    ACQUISITION_FUNCTION = "acquisition_function"
+    MODEL = "model"
+    EVALUATE = "evaluate"
     CRITERIA = "criteria"
     VALIDATION_LIB = "validation_lib"
+    DYNAMIC_STOP = "dynamic_stop"
+    REPLICAS = "replicas"
+    EPSILON = "epsilon"
+    LATENT_DISTANCE = "latent_distance"
+    GREEDY = "greedy"
+    EI = "ei"
+
+    # Prospective Active Learning in REINVENT
+    # -----------------------------------------------
+    # General Parameters
+    EPOCHS = "number_of_reinvent_epochs"
+    WARMUP = "warmup"
+    RETRAIN = "retrain"
+    INITIAL_POOLING_EPOCHS = "initial_pooling_epochs"
+    ACQUISITION_BATCH_SIZE = "acquisition_batch_size"
+    ORACLE_CONFIG = "oracle_config"
+    ORACLE_LABEL = "oracle_label"
+    SAVE_DIR = "save_dir"
+
+    # Surrogate Models
+    SURROGATE_MODEL_TYPE = "surrogate_model_type"
+    RANDOM_FOREST_REGRESSOR = "rf"
+    SUPPORT_VECTOR_REGRESSOR = "svr"
+
+    # Acquisition Functions
+    RANDOM = "random"
+    GREEDY = "greedy"
+    GREEDY_EPSILON = "greedy_epsilon"
+    PI = "pi"  # probability of improvement
+    EI = "ei"  # expected improvement
+    TS = "ts"  # thompson sampling
+    UCB = "ucb"  # upper confidence bound
+    TANIMOTO = "tanimoto"
+    TANIMOTO_TRUE_BELIEVER = "tanimoto_true_believer"

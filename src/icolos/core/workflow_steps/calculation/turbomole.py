@@ -55,7 +55,10 @@ class StepTurbomole(StepCalculationBase, BaseModel):
 
     def get_original_conformer(self, conformer: Conformer) -> Conformer:
         for compound in self.get_compounds():
-            if conformer.get_enumeration_object()._compound_object.get_compound_number() == compound.get_compound_number():
+            if (
+                conformer.get_enumeration_object()._compound_object.get_compound_number()
+                == compound.get_compound_number()
+            ):
                 for enum in compound.get_enumerations():
                     if (
                         enum._enumeration_id

@@ -40,12 +40,11 @@ class ExecutorBase(metaclass=abc.ABCMeta):
 
         # execute; if "location" is set, change to this directory and execute there
         complete_command = command + " " + " ".join(str(e) for e in arguments)
-        complete_command = [complete_command.replace("'", "")]
-
+        if "_asl" not in complete_command:
+            complete_command = [complete_command.replace("'", "")]
         old_cwd = os.getcwd()
         if location is not None:
             os.chdir(location)
-
         # determine whether this is to be run using local resources or as a batch job
         result = subprocess.run(
             complete_command,

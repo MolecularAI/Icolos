@@ -45,9 +45,7 @@ class StepSchrodingerBase(StepBase, BaseModel):
             "".join([_EE.SDCONVERT_O, _EE.SDCONVERT_FORMAT_MAE]),
             mae_path,
         ]
-        execution_result = executor.execute(
-            command=_EE.SDCONVERT, arguments=arguments, check=True
-        )
+        executor.execute(command=_EE.SDCONVERT, arguments=arguments, check=True)
 
     def _translate_MAE_to_SDF(
         self, mae_path: str, sdf_path: str, executor: SchrodingerExecutor
@@ -61,9 +59,7 @@ class StepSchrodingerBase(StepBase, BaseModel):
             "".join([_EE.SDCONVERT_O, _EE.SDCONVERT_FORMAT_SD]),
             sdf_path,
         ]
-        execution_result = executor.execute(
-            command=_EE.SDCONVERT, arguments=arguments, check=True
-        )
+        executor.execute(command=_EE.SDCONVERT, arguments=arguments, check=True)
 
     def _translate_PDB_to_MAE(
         self, pdb_path: str, mae_path: str, executor: SchrodingerExecutor
@@ -77,9 +73,7 @@ class StepSchrodingerBase(StepBase, BaseModel):
             "".join([_EE.SDCONVERT_O, _EE.SDCONVERT_FORMAT_MAE]),
             mae_path,
         ]
-        execution_result = executor.execute(
-            command=_EE.STRUCTCONVERT, arguments=arguments, check=True
-        )
+        executor.execute(command=_EE.STRUCTCONVERT, arguments=arguments, check=True)
 
     def _replace_config_value(self, key, value, config):
         value = str(value)
@@ -114,7 +108,7 @@ class StepSchrodingerBase(StepBase, BaseModel):
             with open(os.path.join(tmp_dir, file_name), "w") as f:
                 f.write(config)
 
-    def _parse_arguments(self, defaults):
+    def _parse_arguments(self, defaults: Dict = {}):
         args = []
 
         for flag in self.settings.arguments.flags:

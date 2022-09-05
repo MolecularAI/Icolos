@@ -54,7 +54,7 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
         )
 
     def _check_results(self, batch: List[List[str]]) -> List[List[bool]]:
-        output_files = ["ffmerged.itp"]
+        output_files = ["bound/init.pdb", "unbound/init.pdb"]
         results = []
         for subjob in batch:
             subjob_results = []
@@ -62,9 +62,7 @@ class StepPMXAssembleSystems(StepPMXBase, BaseModel):
                 subjob_results.append(
                     all(
                         [
-                            os.path.isfile(
-                                os.path.join(self.work_dir, job, "hybridStrTop", f)
-                            )
+                            os.path.isfile(os.path.join(self.work_dir, job, f))
                             for f in output_files
                         ]
                     )

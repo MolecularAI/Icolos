@@ -154,8 +154,7 @@ class StepIterator(FlowControlBase, BaseModel):
 
         elif self.iter_settings.iter_mode == _IE.SINGLE:
             raise NotImplementedError
-            # for n different settings, iterate through each, returning n steps
-            steps += self._initialize_settings()
+
         else:
             raise NotImplementedError
 

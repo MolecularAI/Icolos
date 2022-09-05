@@ -60,7 +60,7 @@ class StepEspSim(StepBase, BaseModel):
 
         # All atom alignment of the two
 
-        charge_method = self.get_additional_setting("charge_method", default="am1-bcc")
+        charge_method = self._get_additional_setting("charge_method", default="am1-bcc")
         esp_sim = GetEspSim(trg_mol, ref, partialCharges=charge_method)
         shape_sim = GetShapeSim(trg_mol, ref)
         self._logger.log(
@@ -150,12 +150,11 @@ class StepEspSim(StepBase, BaseModel):
         for compound in self.get_compounds():
             for enumeration in compound:
                 all_enums.append(deepcopy(enumeration))
-        if self.get_additional_setting("charge_method", default="am1-bcc") == "resp":
+        if self._get_additional_setting("charge_method", default="am1-bcc") == "resp":
             # resp doesn#t play well with Icolos parallelization
             ref_compound = Chem.AddHs(
                 Chem.MolFromSmiles(self.settings.additional["ref_smiles"])
             )
-            tmp_dir = tempfile.mkdtemp()
             tmp_dirs = []
             for enum in all_enums:
                 tmp_dir = tempfile.mkdtemp()

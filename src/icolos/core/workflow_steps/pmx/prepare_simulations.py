@@ -1,20 +1,16 @@
-from typing import Dict, List, Union
+from typing import List, Union
 from icolos.core.containers.compound import Compound
 from icolos.core.containers.perturbation_map import Edge
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
 from pydantic import BaseModel
 from icolos.utils.enums.program_parameters import (
-    GromacsEnum,
     StepPMXEnum,
 )
-from icolos.utils.enums.step_enums import StepGromacsEnum
-from icolos.utils.execute_external.pmx import PMXExecutor
+from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 import os
 
 _PSE = StepPMXEnum()
-_SGE = StepGromacsEnum()
-_GE = GromacsEnum()
 
 
 class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
@@ -25,7 +21,7 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self._initialize_backend(executor=PMXExecutor)
+        self._initialize_backend(executor=GromacsExecutor)
 
     def execute(self):
         if self.run_type == _PSE.RBFE:
@@ -43,10 +39,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
             result_checker=self._check_result,
         )
 
-    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]):
+    def prepare_simulation(self, jobs: List[Union[Edge, Compound]]) -> None:
         # define some constants that depend on whether this is rbfe/abfe
         # for abfe, edge refers to the ligand index
-        # mdp_path = os.path.join(self.work_dir, "input/mdp")
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
         # FIXME: how do we get the replicas for abfe jobs without requiring input every time? inspect the workdir?
         replicas = (
@@ -56,11 +51,9 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         )
 
         for edge in jobs:
-
             for state in self.states:
                 for r in range(1, replicas + 1):
                     for wp in self.therm_cycle_branches:
-
                         toppath = self._get_specific_path(
                             workPath=self.work_dir, edge=edge, wp=wp
                         )
@@ -83,17 +76,21 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
                             r=r,
                             sim=prev_type,
                         )
-
                         self._prepare_single_tpr(
-                            simpath, toppath, state, sim_type, empath
+                            simpath=simpath,
+                            toppath=toppath,
+                            state=state,
+                            sim_type=sim_type,
+                            empath=empath,
+                            executor=self._backend_executor,
                         )
 
     def _get_previous_sim_type(self, sim_type: str):
         """
         Works out where to get starting structure from based on the current run and simulation type
         """
-        if self.get_additional_setting(_PSE.PREV_STEP) is not None:
-            return self.get_additional_setting(_PSE.PREV_STEP)
+        if self._get_additional_setting(_PSE.PREV_STEP) is not None:
+            return self._get_additional_setting(_PSE.PREV_STEP)
         elif self.run_type == _PSE.RBFE:
             if sim_type == "nvt":
                 return "em"
@@ -112,12 +109,13 @@ class StepPMXPrepareSimulations(StepPMXBase, BaseModel):
         Look in each hybridStrTop dir and check the output pdb files exist for the edges
         """
         sim_type = self.settings.additional[_PSE.SIM_TYPE]
-        output_files = [
-            f"ligand/stateA/run1/{sim_type}/tpr.tpr",
-            f"ligand/stateB/run1/{sim_type}/tpr.tpr",
-            f"complex/stateA/run1/{sim_type}/tpr.tpr",
-            f"complex/stateB/run1/{sim_type}/tpr.tpr",
-        ]
+        replicas = self.get_perturbation_map().replicas
+        output_files = []
+        for i in range(1, replicas + 1):
+            output_files.append(f"unbound/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"unbound/stateB/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"bound/stateA/run{i}/{sim_type}/tpr.tpr")
+            output_files.append(f"bound/stateB/run{i}/{sim_type}/tpr.tpr")
         results = []
         for subjob in batch:
             subjob_results = []
