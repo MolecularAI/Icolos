@@ -38,7 +38,7 @@ class Test_Prepwizard(unittest.TestCase):
             _SBE.STEPID: "01_ligprep",
             _SBE.STEP_TYPE: _SBE.STEP_PREPWIZARD,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2020-4",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {_SBE.SETTINGS_ARGUMENTS_PARAMETERS: {}}

@@ -303,7 +303,7 @@ class TestPMXrbfe(unittest.TestCase):
                     _SBE.SETTINGS: {
                         _SBE.SETTINGS_ARGUMENTS: {
                             _SBE.SETTINGS_ARGUMENTS_FLAGS: [],
-                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {},
+                            _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {"-b": "0"},
                         },
                         _SBE.SETTINGS_ADDITIONAL: {"sim_type": "transitions"},
                     },
@@ -354,4 +354,4 @@ class TestPMXrbfe(unittest.TestCase):
         wflow.execute()
         out_path = os.path.join(self._test_dir, "resultsAll.csv")
         stat_inf = os.stat(out_path)
-        self.assertEqual(stat_inf.st_size, 223)
+        self.assertGreater(stat_inf.st_size, 200)

@@ -46,8 +46,6 @@ class StepPMXRunAnalysis(StepPMXBase, BaseModel):
         self.analysis_summary(self.get_edges())
         # reattach compounds from perturbation map to step for writeout
         # REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score
-        print(self.data.compounds)
-        # for edge in self.get_perturbation_map().edges:
 
         # discard the hub compound
         self.data.compounds = self.get_perturbation_map().compounds[1:]

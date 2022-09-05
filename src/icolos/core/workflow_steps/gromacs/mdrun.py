@@ -111,7 +111,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
 
         # if > 1, instantiate a parallelizer, load the paths in and execute in parallel, user should be using the slurm/SGE interface to request extern resources
         if len(work_dirs) > 1:
-            self.execute_parallel_simulations(work_dirs)
+            self.execute_parallel_simulations(work_dirs, run_func=self.execute_mdrun)
         else:
             tmp_dir = work_dirs[0]
             self.execute_mdrun(tmp_dir, index=0)
@@ -131,7 +131,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             try:
                 self.topol.set_cpt(path, index=index)
             except FileNotFoundError:
-                pass
+                self._logger.log("No checkpoint file generated", _LE.DEBUG)
 
     def run_multidir_sim(self, tmp_dir: str):
         """
@@ -169,7 +169,10 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
             self.topol.set_tpr(work_dir, index=i)
             self.topol.set_log(work_dir, index=i)
             self.topol.set_edr(path, index=i)
-            self.topol.set_cpt(path, index=i)
+            try:
+                self.topol.set_cpt(path, index=i)
+            except FileNotFoundError:
+                self._logger.log("No checkpoint file generated", _LE.DEBUG)
 
     def execute(self):
 
@@ -183,7 +186,7 @@ class StepGMXMDrun(StepGromacsBase, BaseModel):
         self.execution.parallelization.max_length_sublists = 1
         # pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object
         self.pickle_topol(self.topol, tmp_dir)
-        multidir = self.get_additional_setting(_SGE.MULTIDIR, default=False)
+        multidir = self._get_additional_setting(_SGE.MULTIDIR, default=False)
         if multidir:
             self.run_multidir_sim(tmp_dir)
         else:
