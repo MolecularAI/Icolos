@@ -38,6 +38,7 @@ jobs:
         python --version
         pip --version
         pip list
+        
     - name: Check icolos installation
     - run: |
         icolos -h
