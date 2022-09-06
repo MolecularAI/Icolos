@@ -114,19 +114,19 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             )
             return scores
 
-        def get_scores_from_oracle():
+        def get_scores_and_conformers_from_oracle():
             self._logger.log(
                 f"Querying oracle with {len(query_idx)} compounds", _LE.INFO
             )
 
-            scores = self.query_oracle(
+            scores, conformers = self.query_oracle(
                 query_compounds,
                 fragment_lib=fragment_lib,
                 oracle_type=oracle_type,
                 round=rnd,
             )
 
-            return scores
+            return scores, conformers
 
         def compute_rmsd() -> float:
             """Generate rmsd values"""
@@ -181,7 +181,7 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             if self._get_additional_setting(_SALE.EVALUATE, default=False):
                 scores = get_precomputed_scores()
             else:
-                scores = get_scores_from_oracle()
+                scores, output_conformers = get_scores_and_conformers_from_oracle()
             if self.settings.additional["model"] == "ffnn":
                 scores = scores.reshape(-1, 1)
 
@@ -203,13 +203,15 @@ class StepActiveLearning(ActiveLearningBase, BaseModel):
             df = lib.iloc[query_idx]
             # save the scores in the dataframe
             df["oracle_score"] = scores
+            # TODO: save the new conformers in the dataframe
+            df["output_conformers"] = output_conformers
             df.to_pickle(
                 os.path.join(tmp_dir, f"enriched_lib_rep_{replica}_round_{rnd+1}.pkl")
             )
             PandasTools.WriteSDF(
                 df,
                 os.path.join(tmp_dir, f"compounds_{replica}_{rnd}.sdf"),
-                molColName=_SALE.MOLECULE,
+                molColName="output_conformers",
             )
             # pickle the model
             with open(os.path.join(tmp_dir, f"model_{replica}_{rnd}.pkl"), "wb") as f:

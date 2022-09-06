@@ -2,26 +2,17 @@ import unittest
 from icolos.core.workflow_steps.schrodinger.protein_interaction import (
     StepProteinInteraction,
 )
-
 from icolos.utils.enums.step_enums import StepBaseEnum
-from icolos.core.workflow_steps.schrodinger.prepwizard import StepPrepwizard
-from icolos.core.containers.generic import GenericData
 from tests.tests_paths import (
-    MAIN_CONFIG,
-    PATHS_1UYD,
     PATHS_EXAMPLEDATA,
     get_ligands_as_compounds_with_conformers,
-    get_mol_as_Compound,
 )
 import os
 from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum, StepPrepwizEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA
 from icolos.utils.general.files_paths import attach_root_path
-from icolos.core.workflow_steps.schrodinger.prepwizard import StepPrepwizard
 
-_SGE = StepGromacsEnum()
 _SBE = StepBaseEnum
-_SPE = StepPrepwizEnum()
 
 
 class TestProteinInteraction(unittest.TestCase):

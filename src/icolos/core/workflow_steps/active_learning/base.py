@@ -3,7 +3,7 @@ import os
 import shutil
 import string
 import tempfile
-from typing import Callable, List
+from typing import Callable, List, Tuple
 from pydantic import BaseModel
 import pandas as pd
 from icolos.core.composite_agents.workflow import WorkFlow
@@ -237,7 +237,7 @@ class ActiveLearningBase(StepBase, BaseModel):
         oracle_type: str = "docking",
         fragment_lib: pd.DataFrame = None,
         round: int = 0,
-    ) -> np.ndarray:
+    ) -> Tuple[np.ndarray, List[Chem.Mol]]:
         """Main interface method with the oracle, controls initialization and executino
 
         :param List[pd.Series] compound_list: list of rows from library df to be queried by the oracle
@@ -384,31 +384,34 @@ class ActiveLearningBase(StepBase, BaseModel):
             f"Extracting final scores for {len(final_compounds)} compounds", _LE.DEBUG
         )
 
-        scores = self._extract_final_scores_from_compounds(
+        scores, conformers = self._extract_final_scores_from_compounds(
             final_compounds, self.settings.additional[_SALE.CRITERIA]
         )
-        return scores
+        return scores, conformers
 
     def _extract_final_scores_from_compounds(
         self, compounds: List[Compound], criteria: str, highest_is_best: bool = False
-    ) -> np.ndarray:
+    ) -> Tuple[np.ndarray, List[Chem.Mol]]:
         """Extract final scores from compounds: attempts first search on the enumerations, falling back to conformers
 
         :param List[Compound] compounds: compounds extracted from final step in workflow
         :param str criteria: tag to extract score by
-        :param bool highest_is_best: control whether highest vals correspond to best scores, negative for docking scores, affinities etc, defaults to False
+        :param bool highest_is_best: control w-hether highest vals correspond to best scores, negative for docking scores, affinities etc, defaults to False
         :return np.ndarray: array containing final scores per compound
         """
         top_scores = []
+        final_conformers: List[Chem.Mol] = []
         for comp in compounds:
             # extract top score per compound
             scores = []
+            conformers = []
             for enum in comp.get_enumerations():
                 # look in the enumeratino's mol first
                 try:
 
                     score = enum.get_molecule().GetProp(criteria)
                     scores.append(score)
+                    conformers.append(enum.get_molecule())
                     self._logger.log(
                         f"Got score: {score} for enum {enum.get_index_string()}",
                         _LE.DEBUG,
@@ -419,6 +422,7 @@ class ActiveLearningBase(StepBase, BaseModel):
                         try:
                             conf_score = conf.get_molecule().GetProp(criteria)
                             scores.append(float(conf_score))
+                            conformers.append(conf.get_molecule())
                         except KeyError:
                             self._logger.log(
                                 "Property not attached to either enum or conformer, score is 0.0",
@@ -431,5 +435,7 @@ class ActiveLearningBase(StepBase, BaseModel):
 
             best_score = max(scores) if highest_is_best else min(scores)
             top_scores.append(best_score)
+            score_index = scores.index(best_score)
+            final_conformers.append(conformers[score_index])
 
-        return np.array(top_scores, dtype=np.float32)
+        return (np.array(top_scores, dtype=np.float32), final_conformers)

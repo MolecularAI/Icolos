@@ -25,7 +25,6 @@ class StepProteinInteraction(StepBase, BaseModel):
 
     def _compute_interactions(self, conf: Conformer):
         tmp_dir = self._make_tmpdir()
-        print(tmp_dir)
         conf.write(os.path.join(tmp_dir, "structure.sdf"), format_="pdb")
         command = _SEE.PROTEIN_INTERACTION
         args = self.get_arguments(
@@ -56,12 +55,7 @@ class StepProteinInteraction(StepBase, BaseModel):
         """Runs schrodinger's protein_interaction_analysis script"""
         # requies structure file + group 1/2 identifications
 
-        # unroll conformers
-        all_confs: List[Conformer] = []
-        for comp in self.get_compounds():
-            for enum in comp.get_enumerations():
-                for conf in enum.get_conformers():
-                    all_confs.append(conf)
+        all_confs = self._unroll_compounds()
 
         # attach the interaction information to the conformer
         for conf in all_confs:
@@ -77,20 +71,20 @@ class StepProteinInteraction(StepBase, BaseModel):
                 interact_summary = df.loc[df["Residue"].str.contains(base)][
                     "Specific Interactions"
                 ]
-                print(interact_summary)
+                self._logger_blank.log(interact_summary, _LE.INFO)
                 try:
                     if not f"hb to {interaction}" in interact_summary.values[0]:
                         self._logger.log(
                             f"Penalizing docking score for conf {conf.get_index_string()}",
                             _LE.DEBUG,
                         )
-                        print(
+                        self._logger.log(
                             f"Penalizing docking score for conf {conf.get_index_string()}",
                             _LE.DEBUG,
                         )
 
                         self._penalize_docking_score(conf, penalty)
                 except Exception as e:
-                    print(e)
+                    self._logger.log(e, _LE.ERROR)
                     # either no interaction summary, or something else went wrong
                     continue
