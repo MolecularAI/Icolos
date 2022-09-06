@@ -398,7 +398,7 @@ class StepBase(BaseModel):
                 _LE.WARNING,
             )
         return cores
-    
+
     def get_arguments(self, defaults: dict = None) -> list:
         """
         Construct pmx-specific arguments from the step defaults,

@@ -21,7 +21,7 @@ class Test_PMXgentop(unittest.TestCase):
         export_unit_test_env_vars()
 
     def setUp(self):
-        pass 
+        pass
 
     def test_pmx_gentop(self):
-        pass        
+        pass

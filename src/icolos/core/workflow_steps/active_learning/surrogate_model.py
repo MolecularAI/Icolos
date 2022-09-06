@@ -19,7 +19,9 @@ class SurrogateModel:
             model = RandomForestRegressor(
                 # enforcing max-depth may cause trees to be unable to predict extreme values
                 # due to under-representation in the training data
-                n_estimators=100, n_jobs=-1, criterion="mse"
+                n_estimators=100,
+                n_jobs=-1,
+                criterion="mse",
             )
 
             return model

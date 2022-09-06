@@ -65,7 +65,7 @@ class StepProspectiveREINVENT(StepBase):
                 curr_epoch=curr_epoch,
                 save_path=save_path,
                 original_smiles=original_smiles,
-                oracle_config=oracle_config
+                oracle_config=oracle_config,
             )
 
         elif curr_epoch <= (warmup + initial_pooling_epochs):
@@ -134,14 +134,18 @@ class StepProspectiveREINVENT(StepBase):
             df.to_csv(os.path.join(save_path, f"pooled_data/epoch_{curr_epoch}.csv"))
 
             # if using PI or EI, save the current best
-            af = self._get_additional_setting(_SALE.ACQUISITION_FUNCTION, default=_SALE.RANDOM)
+            af = self._get_additional_setting(
+                _SALE.ACQUISITION_FUNCTION, default=_SALE.RANDOM
+            )
             if (af == _SALE.PI) or (af == _SALE.EI):
                 current_best = min(pooled_labels)
                 with open("current_best.txt", "w+") as f:
                     f.write(f"{str(current_best)}\n{str(curr_epoch)}")
 
             pooled_fingerprints.extend(fingerprints)
-            pkl_path = os.path.join(save_path, f"pooled_data/epoch_{curr_epoch}_fingerprints.sav")
+            pkl_path = os.path.join(
+                save_path, f"pooled_data/epoch_{curr_epoch}_fingerprints.sav"
+            )
             pickle.dump(pooled_fingerprints, open(pkl_path, "wb"))
 
         # save the non-acquired SMILES and the predicted labels, if applicable
@@ -181,11 +185,15 @@ class StepProspectiveREINVENT(StepBase):
                     pooled_smiles.extend(df["original_smiles"])
                     pooled_labels.extend(df["docking_score"])
                 self._logger.log("added oracle scores", _LE.DEBUG)
-                pooled_fingerprints = self._get_morgan_fingerprints(smiles=pooled_smiles)
+                pooled_fingerprints = self._get_morgan_fingerprints(
+                    smiles=pooled_smiles
+                )
             # --------------------------------------------------------------------------------------
             else:
-                pkl_path = os.path.join(save_path, f"pooled_data/epoch_{curr_epoch-1}_fingerprints.sav")
-                pooled_fingerprints = pickle.load(open(pkl_path, 'rb'))
+                pkl_path = os.path.join(
+                    save_path, f"pooled_data/epoch_{curr_epoch-1}_fingerprints.sav"
+                )
+                pooled_fingerprints = pickle.load(open(pkl_path, "rb"))
                 # TODO: could replace these magic strings
 
         except Exception:
@@ -248,18 +256,18 @@ class StepProspectiveREINVENT(StepBase):
         ):
             # TODO: assumes lower the score the better. Add a parameter in the JSON to control this for generalizability
             try:
-                    scores_tracker = []
-                    for enumeration in compound.get_enumerations():
-                        for conformer in enumeration.get_conformers():
-                            # docking scores here are with Epik corrections
-                            # TODO: docking score is hard-coded at the moment, need an icolos parameter to specifiy this
-                            score = float(
-                                conformer.get_molecule().GetProp(_SGE.GLIDE_DOCKING_SCORE)
-                            )
-                            scores_tracker.append(score)
-                    # TODO: this may cause an error if list is empty --> enumeration not added in dummy conf?
-                    #  try block handles this for the time being
-                    scores.append(min(scores_tracker))
+                scores_tracker = []
+                for enumeration in compound.get_enumerations():
+                    for conformer in enumeration.get_conformers():
+                        # docking scores here are with Epik corrections
+                        # TODO: docking score is hard-coded at the moment, need an icolos parameter to specifiy this
+                        score = float(
+                            conformer.get_molecule().GetProp(_SGE.GLIDE_DOCKING_SCORE)
+                        )
+                        scores_tracker.append(score)
+                # TODO: this may cause an error if list is empty --> enumeration not added in dummy conf?
+                #  try block handles this for the time being
+                scores.append(min(scores_tracker))
             except Exception:
                 scores.append(float(0.0))
 
@@ -294,7 +302,9 @@ class StepProspectiveREINVENT(StepBase):
                 "names": [idx for idx in range(len(original_smiles))],
             }
 
-            self._logger.log("REINVENT Feedback Missing Values. Manually Added.", _LE.DEBUG)
+            self._logger.log(
+                "REINVENT Feedback Missing Values. Manually Added.", _LE.DEBUG
+            )
 
         with open(path, "w+") as f:
             json.dump(output_dict, f, indent=2)
@@ -371,11 +381,21 @@ class StepProspectiveREINVENT(StepBase):
         # the if block to train with negative data
         # TODO: should have a boolean parameter in the icolos json specify whether or not to train with negative data
         if curr_epoch == (warmup + initial_pooling_epochs + 1):
-            pooled_smiles, pooled_fingerprints, pooled_labels, surrogate = self._read_state(
+            (
+                pooled_smiles,
+                pooled_fingerprints,
+                pooled_labels,
+                surrogate,
+            ) = self._read_state(
                 curr_epoch=curr_epoch, save_path=save_path, train_negative_pool=False
             )
         else:
-            pooled_smiles, pooled_fingerprints, pooled_labels, surrogate = self._read_state(
+            (
+                pooled_smiles,
+                pooled_fingerprints,
+                pooled_labels,
+                surrogate,
+            ) = self._read_state(
                 curr_epoch=curr_epoch, save_path=save_path, train_negative_pool=False
             )
 

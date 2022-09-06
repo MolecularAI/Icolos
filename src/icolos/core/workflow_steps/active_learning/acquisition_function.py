@@ -15,6 +15,7 @@ _SALE = StepActiveLearningEnum()
 
 class AcquisitionFunction:
     """class to execute all acquisition function heuristics for prospective REINVENT"""
+
     # TODO: assumption is that "lower scores are better" Add a variable to control this
 
     def __init__(
@@ -25,13 +26,17 @@ class AcquisitionFunction:
         self.function = function.lower()
         self.acquisition_batch_size = acquisition_batch_size
 
-    def partition_compounds(self, original_smiles, fingerprints_pool, epsilon=0.2, beta=2, pi_epsilon=0.01):
+    def partition_compounds(
+        self, original_smiles, fingerprints_pool, epsilon=0.2, beta=2, pi_epsilon=0.01
+    ):
         """partitions REINVENT's batch of SMILES into acquired and non-acquired based on the acquisition function"""
         if self.function == _SALE.RANDOM:
             df = pd.DataFrame({"smiles": original_smiles})
             shuffled = df.sample(frac=1, axis=0)
             acquired_smiles = list(shuffled["smiles"][: self.acquisition_batch_size])
-            non_acquired_smiles = list(shuffled["smiles"][self.acquisition_batch_size :])
+            non_acquired_smiles = list(
+                shuffled["smiles"][self.acquisition_batch_size :]
+            )
 
             return acquired_smiles, non_acquired_smiles
 
@@ -39,9 +44,11 @@ class AcquisitionFunction:
             """greedy"""
             fps = self._get_morgan_fingerprints(smiles=original_smiles)
             predictions = self.surrogate.predict(fps)
-            df = self._get_sorted_df(smiles=original_smiles, predictions=predictions, ascending=True)
-            acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+            df = self._get_sorted_df(
+                smiles=original_smiles, predictions=predictions, ascending=True
+            )
+            acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
             return acquired_smiles, non_acquired_smiles
 
@@ -51,16 +58,22 @@ class AcquisitionFunction:
             if random.random() <= epsilon:
                 df = pd.DataFrame({"smiles": original_smiles})
                 shuffled = df.sample(frac=1, axis=0)
-                acquired_smiles = list(shuffled["smiles"][: self.acquisition_batch_size])
-                non_acquired_smiles = list(shuffled["smiles"][self.acquisition_batch_size:])
+                acquired_smiles = list(
+                    shuffled["smiles"][: self.acquisition_batch_size]
+                )
+                non_acquired_smiles = list(
+                    shuffled["smiles"][self.acquisition_batch_size :]
+                )
 
                 return acquired_smiles, non_acquired_smiles
             else:
                 fps = self._get_morgan_fingerprints(smiles=original_smiles)
                 predictions = list(self.surrogate.predict(fps))
-                df = self._get_sorted_df(smiles=original_smiles, predictions=predictions, ascending=True)
-                acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-                non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+                df = self._get_sorted_df(
+                    smiles=original_smiles, predictions=predictions, ascending=True
+                )
+                acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+                non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
                 return acquired_smiles, non_acquired_smiles
 
@@ -86,11 +99,15 @@ class AcquisitionFunction:
                     probabilities[idx] = 1 if pred < current_best else 0
 
                 else:
-                    probabilities[idx] = norm.cdf((pred - current_best + pi_epsilon) / std)
+                    probabilities[idx] = norm.cdf(
+                        (pred - current_best + pi_epsilon) / std
+                    )
 
-            df = self._get_sorted_df(smiles=original_smiles, predictions=probabilities, ascending=False)
-            acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+            df = self._get_sorted_df(
+                smiles=original_smiles, predictions=probabilities, ascending=False
+            )
+            acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
             return acquired_smiles, non_acquired_smiles
 
@@ -116,11 +133,17 @@ class AcquisitionFunction:
                 else:
                     numerator = pred - current_best + pi_epsilon
                     Z = numerator / std
-                    expected_improvements[idx] = (numerator * norm.cdf(Z)) + (std * norm.pdf(Z))
+                    expected_improvements[idx] = (numerator * norm.cdf(Z)) + (
+                        std * norm.pdf(Z)
+                    )
 
-            df = self._get_sorted_df(smiles=original_smiles, predictions=expected_improvements, ascending=True)
-            acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+            df = self._get_sorted_df(
+                smiles=original_smiles,
+                predictions=expected_improvements,
+                ascending=True,
+            )
+            acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
             return acquired_smiles, non_acquired_smiles
 
@@ -129,11 +152,15 @@ class AcquisitionFunction:
             fps = self._get_morgan_fingerprints(smiles=original_smiles)
             predictions = self.surrogate.predict(fps)
             standard_deviations = self.surrogate.get_std(fps)
-            gaussian_predictions = np.random.default_rng().normal(predictions, standard_deviations)
+            gaussian_predictions = np.random.default_rng().normal(
+                predictions, standard_deviations
+            )
 
-            df = self._get_sorted_df(smiles=original_smiles, predictions=gaussian_predictions, ascending=True)
-            acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+            df = self._get_sorted_df(
+                smiles=original_smiles, predictions=gaussian_predictions, ascending=True
+            )
+            acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
             return acquired_smiles, non_acquired_smiles
 
@@ -145,9 +172,11 @@ class AcquisitionFunction:
             standard_deviations = self.surrogate.get_std(fps)
             ucb = predictions + beta * standard_deviations
 
-            df = self._get_sorted_df(smiles=original_smiles, predictions=ucb, ascending=True)
-            acquired_smiles = list(df["smiles"][:self.acquisition_batch_size])
-            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size:])
+            df = self._get_sorted_df(
+                smiles=original_smiles, predictions=ucb, ascending=True
+            )
+            acquired_smiles = list(df["smiles"][: self.acquisition_batch_size])
+            non_acquired_smiles = list(df["smiles"][self.acquisition_batch_size :])
 
             return acquired_smiles, non_acquired_smiles
 
@@ -157,12 +186,14 @@ class AcquisitionFunction:
             similarities = np.zeros(len(fps))
 
             for idx, fp in enumerate(fps):
-                similarities[idx] = np.mean(DataStructs.BulkTanimotoSimilarity(fp, fingerprints_pool))
+                similarities[idx] = np.mean(
+                    DataStructs.BulkTanimotoSimilarity(fp, fingerprints_pool)
+                )
 
             # sort by ascending Tanimoto similarities
             sorted_idx = np.argsort(similarities)
-            acquired_idx = sorted_idx[:self.acquisition_batch_size]
-            non_acquired_idx = sorted_idx[self.acquisition_batch_size:]
+            acquired_idx = sorted_idx[: self.acquisition_batch_size]
+            non_acquired_idx = sorted_idx[self.acquisition_batch_size :]
 
             acquired_smiles = [original_smiles[idx] for idx in acquired_idx]
             non_acquired_smiles = [original_smiles[idx] for idx in non_acquired_idx]
@@ -185,7 +216,9 @@ class AcquisitionFunction:
                 fps = self._get_morgan_fingerprints(smiles=smiles_left)
                 similarities = np.zeros(len(fps))
                 for idx, fp in enumerate(fps):
-                    similarities[idx] = np.max(DataStructs.BulkTanimotoSimilarity(fp, augmented_fps_pool))
+                    similarities[idx] = np.max(
+                        DataStructs.BulkTanimotoSimilarity(fp, augmented_fps_pool)
+                    )
 
                 # sort by ascending Tanimoto similarities
                 sorted_idx = np.argsort(similarities)
@@ -197,11 +230,13 @@ class AcquisitionFunction:
 
                 return acquired_smiles, smiles_left, augmented_fps_pool
 
-            acquired_smiles, smiles_left, augmented_fps_pool = single_acquire([], original_smiles, augmented_fps_pool)
-            for iteration in range(self.acquisition_batch_size-1):
-                acquired_smiles, smiles_left, augmented_fps_pool = single_acquire(acquired_smiles,
-                                                                                  smiles_left,
-                                                                                  augmented_fps_pool)
+            acquired_smiles, smiles_left, augmented_fps_pool = single_acquire(
+                [], original_smiles, augmented_fps_pool
+            )
+            for iteration in range(self.acquisition_batch_size - 1):
+                acquired_smiles, smiles_left, augmented_fps_pool = single_acquire(
+                    acquired_smiles, smiles_left, augmented_fps_pool
+                )
 
             non_acquired_smiles = smiles_left
 
