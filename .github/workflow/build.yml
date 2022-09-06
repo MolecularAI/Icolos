@@ -1,19 +1,15 @@
 name: build
 on:
-  release:
-    types: [released]
-  workflow_dispatch:
+  push
 
 defaults:
   run:
     shell: bash -l {0}
 
-env:
-  IS_PRERELEASE: ${{ github.event_name == 'workflow_dispatch' }}
 
 jobs:
-  build-n-publish:
-    name: Build and publish icolos
+  build-icolos:
+    name: Build icolos
     runs-on: ubuntu-latest
 
     steps:
