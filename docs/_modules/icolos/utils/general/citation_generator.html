@@ -1,0 +1,479 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>icolos.utils.general.citation_generator - icolos documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">icolos  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  
+  <span class="sidebar-brand-text">icolos  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../icolos.html">icolos package</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../icolos.config_containers.html">icolos.config_containers package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../icolos.core.html">icolos.core package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.core.composite_agents.html">icolos.core.composite_agents package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.core.containers.html">icolos.core.containers package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.core.flow_control.html">icolos.core.flow_control package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.core.step_dispatch.html">icolos.core.step_dispatch package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.core.step_utils.html">icolos.core.step_utils package</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../icolos.core.workflow_steps.html">icolos.core.workflow_steps package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.autodockvina.html">icolos.core.workflow_steps.autodockvina package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.calculation.html">icolos.core.workflow_steps.calculation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.ccdc.html">icolos.core.workflow_steps.ccdc package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.confgen.html">icolos.core.workflow_steps.confgen package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.fpocket.html">icolos.core.workflow_steps.fpocket package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.gromacs.html">icolos.core.workflow_steps.gromacs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.io.html">icolos.core.workflow_steps.io package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.openff.html">icolos.core.workflow_steps.openff package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.pmx.html">icolos.core.workflow_steps.pmx package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.prediction.html">icolos.core.workflow_steps.prediction package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.schrodinger.html">icolos.core.workflow_steps.schrodinger package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../icolos.core.workflow_steps.structure_prediction.html">icolos.core.workflow_steps.structure_prediction package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../icolos.loggers.html">icolos.loggers package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../icolos.scripts.html">icolos.scripts package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../icolos.utils.html">icolos.utils package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.utils.entry_point_functions.html">icolos.utils.entry_point_functions package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.utils.enums.html">icolos.utils.enums package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.utils.execute_external.html">icolos.utils.execute_external package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../icolos.utils.general.html">icolos.utils.general package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for icolos.utils.general.citation_generator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">StepBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span>
+
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+
+
+<div class="viewcode-block" id="ConsoleColours"><a class="viewcode-back" href="../../../../icolos.utils.general.html#icolos.utils.general.citation_generator.ConsoleColours">[docs]</a><span class="k">class</span> <span class="nc">ConsoleColours</span><span class="p">:</span>
+    <span class="n">HEADER</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[95m&quot;</span>
+    <span class="n">BLUE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[94m&quot;</span>
+    <span class="n">CYAN</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[96m&quot;</span>
+    <span class="n">GREEN</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[92m&quot;</span>
+    <span class="n">RED</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[93m&quot;</span>
+    <span class="n">FAIL</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[91m&quot;</span>
+    <span class="n">ENDC</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0m&quot;</span>
+    <span class="n">ORANGE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[0;33m&quot;</span>
+    <span class="n">BOLD</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[1m&quot;</span>
+    <span class="n">UNDERLINE</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\033</span><span class="s2">[4m&quot;</span>
+    <span class="n">BLINKING</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\33</span><span class="s2">[5m&quot;</span></div>
+
+
+<div class="viewcode-block" id="add_citation"><a class="viewcode-back" href="../../../../icolos.utils.general.html#icolos.utils.general.citation_generator.add_citation">[docs]</a><span class="k">def</span> <span class="nf">add_citation</span><span class="p">(</span>
+    <span class="n">step_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">workflow_step_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">citations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">citation_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">any</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">w_step_type</span> <span class="ow">in</span> <span class="n">workflow_step_types</span>
+                <span class="k">if</span> <span class="n">step_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="n">w_step_type</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="ow">or</span> <span class="n">step_type</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span>
+    <span class="p">):</span>
+        <span class="n">citations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">citation_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_citations"><a class="viewcode-back" href="../../../../icolos.utils.general.html#icolos.utils.general.citation_generator.print_citations">[docs]</a><span class="k">def</span> <span class="nf">print_citations</span><span class="p">(</span><span class="n">steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">StepBase</span><span class="p">],</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">ConsoleColours</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">=====================================================================</span>
+<span class="s2">ooooo   .oooooo.     .oooooo.   ooooo          .oooooo.    .oooooo..o </span>
+<span class="s2">`888&#39;  d8P&#39;  `Y8b   d8P&#39;  `Y8b  `888&#39;         d8P&#39;  `Y8b  d8P&#39;    `Y8 </span>
+<span class="s2"> 888  888          888      888  888         888      888 Y88bo.      </span>
+<span class="s2"> 888  888          888      888  888         888      888  `&quot;Y8888o.  </span>
+<span class="s2"> 888  888          888      888  888         888      888      `&quot;Y88b </span>
+<span class="s2"> 888  `88b    ooo  `88b    d88&#39;  888       o `88b    d88&#39; oo     .d8P </span>
+<span class="s2">o888o  `Y8bood8P&#39;   `Y8bood8P&#39;  o888ooooood8  `Y8bood8P&#39;  8&quot;&quot;88888P&#39;  </span>
+<span class="s2">   =====================================================================</span><span class="si">{</span><span class="n">ConsoleColours</span><span class="o">.</span><span class="n">ENDC</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+    <span class="n">writeout_lines</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">writeout_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="s2">&quot;If you publish work using Icolos, please consider citing the following papers, based on the workflow&#39;s steps...</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">citations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">step_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">step</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span>
+
+    <span class="c1"># add general Icolos citation</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Icolos: J. Harry Moore, Matthias R. Bauer, Jeff Guo, Atanas Patronov, Ola Engkvist and Christian Margreitter. Icolos: A workflow manager for structure based post-processing of de novo generated small molecules. https://doi.org/10.26434/chemrxiv-2022-sjcp3, https://github.com/MolecularAI/Icolos (2022)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># add individual citations based on the step types used in this workflow (can be empty, of course)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="s2">&quot;mdrun&quot;</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">GROMACS: https://doi.org/10.1016/j.softx.2015.06.001</span><span class="se">\n</span><span class="s2">H.J.C. Berendsen, D. van der Spoel, and R. van Drunen, “GROMACS: A message-passing parallel molecular dynamics implementation,” Comp. Phys. Comm., 91 43–56 (1995)</span><span class="se">\n</span><span class="s2">D. van der Spoel, E. Lindahl, B. Hess, G. Groenhof, A.E. Mark, and H.J.C. Berendsen, “GROMACS: Fast, Flexible and Free,” J. Comp. Chem., 26 1701–1718 (2005)</span><span class="se">\n</span><span class="s2">H. Bekker, H.J.C. Berendsen, E.J. Dijkstra, S. Achterop, R. van Drunen, D. van der Spoel, A. Sijbers, and H. Keegstra et al., “Gromacs: A parallel computer for molecular dynamics simulations”; pp. 252–256 in Physics computing 92. Edited by R.A. de Groot and J. Nadrchal. World Scientific, Singapore, 1993&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="s2">&quot;pmx_&quot;</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">PMX: Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger and Bert L. de Groot. Accurate and Rigorous Large Scale Mutation Free Energy Prediction. Angewandte Chemie Int. Ed. 55: 7364-7368(2016)</span><span class="se">\n</span><span class="s2">Vytautas Gapsys, Servaas Michielssens, Daniel Seeliger, and Bert L. de Groot. pmx: Automated protein structure and topology generation for alchemical perturbations. J. Comput. Chem. 36:348-354 (2015</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="s2">&quot;gmx_MMPBSA&quot;</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">gmx_MMPBSA: Valdés-Tresanco, M.S., Valdés-Tresanco, M.E., Valiente, P.A. and Moreno E. gmx_MMPBSA: A New Tool to Perform End-State Free Energy Calculations with GROMACS. Journal of Chemical Theory and Computation, 2021 17 (10), 6281-6291</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="s2">&quot;fep&quot;</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">FEP+: R. Abel, L. Wang, E.D. Harder, B.J. Berne, R.A. Friesner. Advancing Drug Discovery through Enhanced Free Energy Calculations. Acc. Chem. Res., 2017 50 (7), 1625-1632</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_KALLISTO</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Kallisto: Caldeweyher, E., Kallisto: A command-line interface to simplify computational modelling and the generation of atomic features. Journal of Open Source Software, 6(60), 3050, https://doi.org/10.21105/joss.03050. 2021</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_JAZZY</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Jazzy: Caldeweyher, E., Ghiandoni, G.M., https://github.com/AstraZeneca/jazzy &lt;CITATION MISSING&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_TURBOMOLE</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">TURBOMOLE: Modular program suite for ab initio quantum-chemical and condensed-matter simulations; J. Chem. Phys. 152, 184107 (2020); https://doi.org/10.1063/5.0004635</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_ESP_SIM</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ESPSim: https://doi.org/10.26434/chemrxiv-2021-sqvv9-v3</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_AUTODOCKVINA_DOCKING</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">AutoDock Vina: Eberhardt, J., Santos-Martins, D., Tillack, A.F., Forli, S. (2021). AutoDock Vina 1.2.0: New Docking Methods, Expanded Force Field, and Python Bindings. Journal of Chemical Information and Modeling.</span><span class="se">\n</span><span class="s2">Trott, O., &amp; Olson, A. J. (2010). AutoDock Vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading. Journal of computational chemistry, 31(2), 455-461.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_XTB</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">GFN2-xTB: C. Bannwarth, S. Ehlert, S. Grimme. GFN2-xTB—An Accurate and Broadly Parametrized Self-Consistent Tight-Binding Quantum Chemical Method with Multipole Electrostatics and Density-Dependent Dispersion Contributions.</span><span class="se">\n</span><span class="s2">J. Chem. Theory Comput. 2019, 15 (3), 1652–1671 DOI: 10.1021/acs.jctc.8b01176</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_OMEGA</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">OMEGA: P.C.D Hawkins, A.G. Skillman, G.L. Warren, B.A. Ellingson, M.T. Stahl. Conformer Generation with OMEGA: Algorithm and Validation Using High Quality Structures from the Protein Databank and the Cambridge Structural Database. J. Chem. Inf. Model. 2010, 50, 572-584.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_COSMO</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">COSMOtherm, Version C3.0, Release 17.01; COSMOlogic GmbH &amp; Co. KG, http://www.cosmologic.de</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_SHAEP</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ShaEP: M.J. Vainio, J.S. Puranen, M.S. Johnson. ShaEP: Molecular Overlay Based on Shape and Electrostatic Potential. J. Chem. Inf. Model. 49, 492-502 (2009).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PANTHER</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">S.P. Niinivehmas, K. Salokas, S. Lätti, H. Raunio, O.T. Pentikäinen. Ultrafast protein structure-based virtual screening with Panther. J. Comput. Aided. Mol. Des. 29, 989–1006. doi: 10.1007/s10822-015-9870-3 (2015).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MDPOCKET</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">MDpocket: P. Schmidtke, A. Bidon-Chanal, F.J. Luque, X. Barril. MDpocket: open-source cavity detection and characterization on molecular dynamics trajectories. Bioinformatics, Volume 27, Issue 23, Pages 3276–3285. https://doi.org/10.1093/bioinformatics/btr550 (2011)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GOLD_DOCKING</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">G. Jones, P. Willett, R.C. Glen, A.R. Leach, R. Taylor. Development and Validation of a Genetic Algorithm for Flexible Docking. J. Mol. Biol., 267, 727-748. doi: 10.1006/jmbi.1996.0897 (1997).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_CREST</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CREST: P. Pracht, F. Bohle, S. Grimme. Phys. Chem. Chem. Phys., 22, 7169-7192. doi: 10.1039/C9CP06869D (2020).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GLIDE</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">GLIDE: R.A. Friesner, R.B. Murphy, M.P. Repasky, L.L. Frye, J.R. Greenwood, T.A. Halgren, P.C. Sanschagrin, D.T. Mainz. Extra Precision Glide: Docking and Scoring Incorporating a Model of Hydrophobic Enclosure for Protein-Ligand Complexes. J. Med. Chem., 49, 6177–6196 (2006).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_LIGPREP</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Schrödinger Release 2021-4: LigPrep, Schrödinger, LLC, New York, NY (2021).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MACROMODEL</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Schrödinger Release 2021-4: MacroModel, Schrödinger, LLC, New York, NY (2021).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">add_citation</span><span class="p">(</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PRIME</span><span class="p">,</span>
+        <span class="n">step_types</span><span class="p">,</span>
+        <span class="n">citations</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">M.P. Jacobson, D.L. Pincus, C.S. Rapp, T.J.F. Day, B. Honig, D.E. Shaw, R.A. Friesner. A Hierarchical Approach to All-Atom Protein Loop Prediction. Proteins: Structure, Function and Bioinformatics, 55, 351-367 (2004).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">citations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">citations</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">citations</span><span class="p">:</span>
+        <span class="n">writeout_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">writeout_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">writeout_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="s2">&quot;=====================================================================</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">writeout_lines</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">get_terminal_size</span><span class="p">()</span><span class="o">.</span><span class="n">columns</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mi">150</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">width</span><span class="p">))</span></div>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Author
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/scripts/furo.js"></script>
+    </body>
+</html>

@@ -1,0 +1,529 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="icolos.core.composite_agents package" href="icolos.core.composite_agents.html" /><link rel="prev" title="icolos.config_containers package" href="icolos.config_containers.html" />
+
+    <meta name="generator" content="sphinx-5.1.1, furo 2022.06.21"/>
+        <title>icolos.core package - icolos documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">icolos  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">icolos  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="icolos.html">icolos package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="icolos.config_containers.html">icolos.config_containers package</a></li>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">icolos.core package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.composite_agents.html">icolos.core.composite_agents package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.containers.html">icolos.core.containers package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.flow_control.html">icolos.core.flow_control package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.step_dispatch.html">icolos.core.step_dispatch package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.step_utils.html">icolos.core.step_utils package</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="icolos.core.workflow_steps.html">icolos.core.workflow_steps package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html">icolos.core.workflow_steps.autodockvina package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html">icolos.core.workflow_steps.calculation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.ccdc.html">icolos.core.workflow_steps.ccdc package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html">icolos.core.workflow_steps.confgen package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html">icolos.core.workflow_steps.fpocket package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html">icolos.core.workflow_steps.gromacs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html">icolos.core.workflow_steps.io package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.openff.html">icolos.core.workflow_steps.openff package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html">icolos.core.workflow_steps.pmx package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html">icolos.core.workflow_steps.prediction package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html">icolos.core.workflow_steps.schrodinger package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html">icolos.core.workflow_steps.structure_prediction package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.loggers.html">icolos.loggers package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.scripts.html">icolos.scripts package</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="icolos.utils.html">icolos.utils package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="icolos.utils.entry_point_functions.html">icolos.utils.entry_point_functions package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.utils.enums.html">icolos.utils.enums package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.utils.execute_external.html">icolos.utils.execute_external package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.utils.general.html">icolos.utils.general package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="icolos-core-package">
+<h1>icolos.core package<a class="headerlink" href="#icolos-core-package" title="Permalink to this heading">#</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.composite_agents.html">icolos.core.composite_agents package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.composite_agents.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.composite_agents.html#module-icolos.core.composite_agents.base_agent">icolos.core.composite_agents.base_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.composite_agents.html#module-icolos.core.composite_agents.scheduler">icolos.core.composite_agents.scheduler module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.composite_agents.html#module-icolos.core.composite_agents.workflow">icolos.core.composite_agents.workflow module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.composite_agents.html#module-icolos.core.composite_agents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.containers.html">icolos.core.containers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#module-icolos.core.containers.compound">icolos.core.containers.compound module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#module-icolos.core.containers.generic">icolos.core.containers.generic module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#module-icolos.core.containers.gmx_state">icolos.core.containers.gmx_state module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#module-icolos.core.containers.perturbation_map">icolos.core.containers.perturbation_map module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.containers.html#module-icolos.core.containers">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.flow_control.html">icolos.core.flow_control package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.flow_control.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.flow_control.html#module-icolos.core.flow_control.flow_control">icolos.core.flow_control.flow_control module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.flow_control.html#module-icolos.core.flow_control.iterator">icolos.core.flow_control.iterator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.flow_control.html#module-icolos.core.flow_control">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.step_dispatch.html">icolos.core.step_dispatch package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_dispatch.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_dispatch.html#module-icolos.core.step_dispatch.dispatcher">icolos.core.step_dispatch.dispatcher module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_dispatch.html#module-icolos.core.step_dispatch">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.step_utils.html">icolos.core.step_utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.gold_config">icolos.core.step_utils.gold_config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.input_merger">icolos.core.step_utils.input_merger module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.input_preparator">icolos.core.step_utils.input_preparator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.obabel_structconvert">icolos.core.step_utils.obabel_structconvert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.rdkit_utils">icolos.core.step_utils.rdkit_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.retry">icolos.core.step_utils.retry module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.run_variables_resolver">icolos.core.step_utils.run_variables_resolver module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.sdconvert_util">icolos.core.step_utils.sdconvert_util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.step_writeout">icolos.core.step_utils.step_writeout module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.structcat_util">icolos.core.step_utils.structcat_util module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils.structconvert">icolos.core.step_utils.structconvert module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.step_utils.html#module-icolos.core.step_utils">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="icolos.core.workflow_steps.html">icolos.core.workflow_steps package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.workflow_steps.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html">icolos.core.workflow_steps.autodockvina package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html#module-icolos.core.workflow_steps.autodockvina.docking">icolos.core.workflow_steps.autodockvina.docking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html#module-icolos.core.workflow_steps.autodockvina.target_preparation">icolos.core.workflow_steps.autodockvina.target_preparation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.autodockvina.html#module-icolos.core.workflow_steps.autodockvina">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html">icolos.core.workflow_steps.calculation package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.base">icolos.core.workflow_steps.calculation.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.boltzmann_weighting">icolos.core.workflow_steps.calculation.boltzmann_weighting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.clustering">icolos.core.workflow_steps.calculation.clustering module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.cosmo">icolos.core.workflow_steps.calculation.cosmo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.cresset_ec">icolos.core.workflow_steps.calculation.cresset_ec module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.esp_sim">icolos.core.workflow_steps.calculation.esp_sim module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.feature_counter">icolos.core.workflow_steps.calculation.feature_counter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.jazzy">icolos.core.workflow_steps.calculation.jazzy module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.kallisto">icolos.core.workflow_steps.calculation.kallisto module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.lomap">icolos.core.workflow_steps.calculation.lomap module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.panther">icolos.core.workflow_steps.calculation.panther module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.rms_filter">icolos.core.workflow_steps.calculation.rms_filter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.rmsd">icolos.core.workflow_steps.calculation.rmsd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.shaep">icolos.core.workflow_steps.calculation.shaep module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation.turbomole">icolos.core.workflow_steps.calculation.turbomole module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.calculation.html#module-icolos.core.workflow_steps.calculation">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.ccdc.html">icolos.core.workflow_steps.ccdc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.ccdc.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.ccdc.html#module-icolos.core.workflow_steps.ccdc.docking">icolos.core.workflow_steps.ccdc.docking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.ccdc.html#module-icolos.core.workflow_steps.ccdc">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html">icolos.core.workflow_steps.confgen package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#module-icolos.core.workflow_steps.confgen.base">icolos.core.workflow_steps.confgen.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#module-icolos.core.workflow_steps.confgen.crest">icolos.core.workflow_steps.confgen.crest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#module-icolos.core.workflow_steps.confgen.omega">icolos.core.workflow_steps.confgen.omega module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#module-icolos.core.workflow_steps.confgen.xtb">icolos.core.workflow_steps.confgen.xtb module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.confgen.html#module-icolos.core.workflow_steps.confgen">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html">icolos.core.workflow_steps.fpocket package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html#module-icolos.core.workflow_steps.fpocket.base">icolos.core.workflow_steps.fpocket.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html#module-icolos.core.workflow_steps.fpocket.mdpocket">icolos.core.workflow_steps.fpocket.mdpocket module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.fpocket.html#module-icolos.core.workflow_steps.fpocket">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html">icolos.core.workflow_steps.gromacs package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.base">icolos.core.workflow_steps.gromacs.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.cluster">icolos.core.workflow_steps.gromacs.cluster module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.clusters_ts">icolos.core.workflow_steps.gromacs.clusters_ts module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.do_dssp">icolos.core.workflow_steps.gromacs.do_dssp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.editconf">icolos.core.workflow_steps.gromacs.editconf module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.genion">icolos.core.workflow_steps.gromacs.genion module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.grompp">icolos.core.workflow_steps.gromacs.grompp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.mdrun">icolos.core.workflow_steps.gromacs.mdrun module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.mmpbsa">icolos.core.workflow_steps.gromacs.mmpbsa module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.pdb2gmx">icolos.core.workflow_steps.gromacs.pdb2gmx module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.rsmd">icolos.core.workflow_steps.gromacs.rsmd module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.select">icolos.core.workflow_steps.gromacs.select module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.solvate">icolos.core.workflow_steps.gromacs.solvate module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.trajcat">icolos.core.workflow_steps.gromacs.trajcat module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs.trjconv">icolos.core.workflow_steps.gromacs.trjconv module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.gromacs.html#module-icolos.core.workflow_steps.gromacs">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.io.html">icolos.core.workflow_steps.io package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#module-icolos.core.workflow_steps.io.base">icolos.core.workflow_steps.io.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#module-icolos.core.workflow_steps.io.data_manipulation">icolos.core.workflow_steps.io.data_manipulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#module-icolos.core.workflow_steps.io.embedder">icolos.core.workflow_steps.io.embedder module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#module-icolos.core.workflow_steps.io.initialize_compound">icolos.core.workflow_steps.io.initialize_compound module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.io.html#module-icolos.core.workflow_steps.io">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.openff.html">icolos.core.workflow_steps.openff package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.openff.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.openff.html#module-icolos.core.workflow_steps.openff.openff2gmx">icolos.core.workflow_steps.openff.openff2gmx module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.openff.html#module-icolos.core.workflow_steps.openff">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html">icolos.core.workflow_steps.pmx package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.abfe">icolos.core.workflow_steps.pmx.abfe module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.assemble_systems">icolos.core.workflow_steps.pmx.assemble_systems module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.atomMapping">icolos.core.workflow_steps.pmx.atomMapping module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.base">icolos.core.workflow_steps.pmx.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.box_water_ions">icolos.core.workflow_steps.pmx.box_water_ions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.doublebox">icolos.core.workflow_steps.pmx.doublebox module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.genlib">icolos.core.workflow_steps.pmx.genlib module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.gentop">icolos.core.workflow_steps.pmx.gentop module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.ligandHybrid">icolos.core.workflow_steps.pmx.ligandHybrid module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.mutate">icolos.core.workflow_steps.pmx.mutate module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.prepare_simulations">icolos.core.workflow_steps.pmx.prepare_simulations module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.prepare_transitions">icolos.core.workflow_steps.pmx.prepare_transitions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.run_analysis">icolos.core.workflow_steps.pmx.run_analysis module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.run_simulations">icolos.core.workflow_steps.pmx.run_simulations module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx.setup_workpath">icolos.core.workflow_steps.pmx.setup_workpath module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.pmx.html#module-icolos.core.workflow_steps.pmx">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html">icolos.core.workflow_steps.prediction package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html#module-icolos.core.workflow_steps.prediction.model_building">icolos.core.workflow_steps.prediction.model_building module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html#module-icolos.core.workflow_steps.prediction.predictor">icolos.core.workflow_steps.prediction.predictor module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.prediction.html#module-icolos.core.workflow_steps.prediction">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html">icolos.core.workflow_steps.schrodinger package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.base">icolos.core.workflow_steps.schrodinger.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.desmond_exec">icolos.core.workflow_steps.schrodinger.desmond_exec module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.desmond_preprocessor">icolos.core.workflow_steps.schrodinger.desmond_preprocessor module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.fep_absolute">icolos.core.workflow_steps.schrodinger.fep_absolute module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.fep_analysis">icolos.core.workflow_steps.schrodinger.fep_analysis module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.fep_base">icolos.core.workflow_steps.schrodinger.fep_base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.fep_plus_execution">icolos.core.workflow_steps.schrodinger.fep_plus_execution module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.fep_plus_setup">icolos.core.workflow_steps.schrodinger.fep_plus_setup module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.glide">icolos.core.workflow_steps.schrodinger.glide module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.ligprep">icolos.core.workflow_steps.schrodinger.ligprep module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.macromodel">icolos.core.workflow_steps.schrodinger.macromodel module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.prepwizard">icolos.core.workflow_steps.schrodinger.prepwizard module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.prime">icolos.core.workflow_steps.schrodinger.prime module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.protein_interaction">icolos.core.workflow_steps.schrodinger.protein_interaction module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger.residue_scanning">icolos.core.workflow_steps.schrodinger.residue_scanning module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.schrodinger.html#module-icolos.core.workflow_steps.schrodinger">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html">icolos.core.workflow_steps.structure_prediction package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#module-icolos.core.workflow_steps.structure_prediction.disicl">icolos.core.workflow_steps.structure_prediction.disicl module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#module-icolos.core.workflow_steps.structure_prediction.dssp">icolos.core.workflow_steps.structure_prediction.dssp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#module-icolos.core.workflow_steps.structure_prediction.pdb_fixer">icolos.core.workflow_steps.structure_prediction.pdb_fixer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#module-icolos.core.workflow_steps.structure_prediction.peptide_embedder">icolos.core.workflow_steps.structure_prediction.peptide_embedder module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#icolos-core-workflow-steps-structure-prediction-rosetta-abinitio-module">icolos.core.workflow_steps.structure_prediction.rosetta_abinitio module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="icolos.core.workflow_steps.structure_prediction.html#module-icolos.core.workflow_steps.structure_prediction">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.workflow_steps.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.workflow_steps.html#module-icolos.core.workflow_steps.step">icolos.core.workflow_steps.step module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="icolos.core.workflow_steps.html#module-icolos.core.workflow_steps">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
+</section>
+<section id="module-icolos.core.steps_utils">
+<span id="icolos-core-steps-utils-module"></span><h2>icolos.core.steps_utils module<a class="headerlink" href="#module-icolos.core.steps_utils" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.core.steps_utils.initialize_step_from_dict">
+<span class="sig-prename descclassname"><span class="pre">icolos.core.steps_utils.</span></span><span class="sig-name descname"><span class="pre">initialize_step_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase" title="icolos.core.workflow_steps.step.StepBase"><span class="pre">StepBase</span></a></span></span><a class="reference internal" href="_modules/icolos/core/steps_utils.html#initialize_step_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.steps_utils.initialize_step_from_dict" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-icolos.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-icolos.core" title="Permalink to this heading">#</a></h2>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="icolos.core.composite_agents.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">icolos.core.composite_agents package</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="icolos.config_containers.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">icolos.config_containers package</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Author
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">icolos.core package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-icolos.core.steps_utils">icolos.core.steps_utils module</a></li>
+<li><a class="reference internal" href="#module-icolos.core">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    </body>
+</html>
