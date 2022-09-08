@@ -1,4 +1,4 @@
-icolos package
+Icolos package
 ==============
 
 Subpackages
