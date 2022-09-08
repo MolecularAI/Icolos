@@ -1,9 +1,0 @@
-Schrodinger API reference
-===================
-
-.. currentmodule:: icolos.core.workflow_steps.schrodinger
-
-.. autosummary::
-   :toctree: generated
-
-	glide.StepGlide
