@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.pmx.run_analysis &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.pmx.run_analysis</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.compound</span> <span class="kn">import</span> <span class="n">Compound</span><span class="p">,</span> <span class="n">Enumeration</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.perturbation_map</span> <span class="kn">import</span> <span class="n">Edge</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.pmx.base</span> <span class="kn">import</span> <span class="n">StepPMXBase</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.pmx</span> <span class="kn">import</span> <span class="n">PMXExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.parallelization</span> <span class="kn">import</span> <span class="n">SubtaskContainer</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="StepPMXRunAnalysis"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis">[docs]</a><span class="k">class</span> <span class="nc">StepPMXRunAnalysis</span><span class="p">(</span><span class="n">StepPMXBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analyses map, returns both a summary and a full results dataframe, written to top level of work_dir, and attaches properties to the compound</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results_summary</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">results_all</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="StepPMXRunAnalysis.Config"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">PMXExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+<div class="viewcode-block" id="StepPMXRunAnalysis.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_edges</span><span class="p">()]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">parallelization</span><span class="o">.</span><span class="n">max_length_sublists</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span> <span class="o">=</span> <span class="n">SubtaskContainer</span><span class="p">(</span>
+            <span class="n">max_tries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">failure_policy</span><span class="o">.</span><span class="n">n_tries</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_execute_pmx_step_parallel</span><span class="p">(</span>
+            <span class="n">run_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_analysis</span><span class="p">,</span>
+            <span class="n">step_id</span><span class="o">=</span><span class="s2">&quot;pmx_run_analysis&quot;</span><span class="p">,</span>
+            <span class="n">result_checker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_check_result</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analysis_summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_edges</span><span class="p">())</span>
+        <span class="c1"># reattach compounds from perturbation map to step for writeout</span>
+        <span class="c1"># REINVENT expects the same number of compounds back, if they failed to dock, they need to report a 0.00 score</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">compounds</span><span class="p">)</span>
+        <span class="c1"># for edge in self.get_perturbation_map().edges:</span>
+
+        <span class="c1"># discard the hub compound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">compounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">compounds</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span></div>
+
+        <span class="c1">#     output_conf = edge.node_to.conformer</span>
+        <span class="c1">#     enum: Enumeration = output_conf.get_enumeration_object()</span>
+        <span class="c1">#     comp: Compound = enum.get_compound_object()</span>
+        <span class="c1">#     print(enum, comp)</span>
+        <span class="c1">#     self.data.compounds[comp.get_compound_number()].get_enumerations()[</span>
+        <span class="c1">#         enum.get_enumeration_id()</span>
+        <span class="c1">#     ].get_conformers()[0].set_molecule(output_conf.get_molecule())</span>
+        <span class="c1">#     # print(comp, enum, conf)</span>
+        <span class="c1">#     # match the output conformer to the compounds attached to the step from docking</span>
+        <span class="c1">#     # self.data.compounds[int(comp)].get_enumerations[int(enum)].get_conformers[</span>
+        <span class="c1">#     #     int(conf)</span>
+        <span class="c1">#     # ] = output_conf</span>
+        <span class="c1">#     self._logger.log(</span>
+        <span class="c1">#         f&quot;attached conf to step data for {output_conf.get_index_string()}&quot;,</span>
+        <span class="c1">#         _LE.DEBUG,</span>
+        <span class="c1">#     )</span>
+
+        <span class="c1"># Edges that failed will have 0.00 attached, compounds that failed to dock and were never part of the map will get caught by the writeout method and set to 0.00</span>
+
+        <span class="c1"># # the hub compound will not have data attached, this will be pruned here</span>
+        <span class="c1"># all_confs = comp.unroll_conformers()</span>
+        <span class="c1"># attached_prop = False</span>
+        <span class="c1"># # check all conformers attached to compound, if ddG tag was attached, append to step compounds</span>
+        <span class="c1"># if any([&quot;ddG&quot; in conf.get_molecule().GetPropNames() for conf in all_confs]):</span>
+
+        <span class="c1">#     self.data.compounds.append(comp)</span>
+
+        <span class="c1"># # self._logger.log(f&quot;Failed to attach compound {comp.get_index_string()}, error was {e}&quot;, _LE.WARNING)</span>
+        <span class="c1"># continue</span>
+
+    <span class="k">def</span> <span class="nf">_run_analysis_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysispath</span><span class="p">,</span> <span class="n">stateApath</span><span class="p">,</span> <span class="n">stateBpath</span><span class="p">):</span>
+        <span class="n">fA</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/*xvg&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stateApath</span><span class="p">)))</span>
+        <span class="n">fB</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/*xvg&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stateBpath</span><span class="p">)))</span>
+        <span class="n">oA</span> <span class="o">=</span> <span class="s2">&quot;integ0.dat&quot;</span>
+        <span class="n">oB</span> <span class="o">=</span> <span class="s2">&quot;integ1.dat&quot;</span>
+        <span class="n">wplot</span> <span class="o">=</span> <span class="s2">&quot;wplot.png&quot;</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="s2">&quot;results.txt&quot;</span>
+        <span class="c1"># TODO: at the moment we ignore flags from the command line</span>
+        <span class="c1"># args = &quot; &quot;.join(self.settings.arguments.flags)</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;$PMX analyse&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;--quiet&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-fA&quot;</span><span class="p">,</span>
+            <span class="n">fA</span><span class="p">,</span>
+            <span class="s2">&quot;-fB&quot;</span><span class="p">,</span>
+            <span class="n">fB</span><span class="p">,</span>
+            <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+            <span class="n">o</span><span class="p">,</span>
+            <span class="s2">&quot;-oA&quot;</span><span class="p">,</span>
+            <span class="n">oA</span><span class="p">,</span>
+            <span class="s2">&quot;-oB&quot;</span><span class="p">,</span>
+            <span class="n">oB</span><span class="p">,</span>
+            <span class="s2">&quot;-w&quot;</span><span class="p">,</span>
+            <span class="n">wplot</span><span class="p">,</span>
+            <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+            <span class="mi">298</span><span class="p">,</span>
+            <span class="s2">&quot;-b&quot;</span><span class="p">,</span>
+            <span class="mi">100</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">analysispath</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_read_neq_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+            <span class="n">foo</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;BAR: dG&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s2">&quot;BAR: Std Err (bootstrap)&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s2">&quot;BAR: Std Err (analytical)&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s2">&quot;0-&gt;1&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="s2">&quot;1-&gt;0&quot;</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">foo</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_fill_resultsAll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rowName</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_</span><span class="si">{1}</span><span class="s2">_</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;framesA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;framesB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Index Error encountered whilst parsing results to summary file for job </span><span class="si">{</span><span class="n">edge</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">wp</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">r</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_summarize_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Edge</span><span class="p">]):</span>
+        <span class="n">fail_score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_additional_setting</span><span class="p">(</span><span class="s2">&quot;fail_score&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">bootnum</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">wp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">therm_cycle_branches</span><span class="p">:</span>
+                    <span class="n">dg</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">erra</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">errb</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">distra</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">distrb</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">rowName</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_</span><span class="si">{1}</span><span class="s2">_</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">(),</span> <span class="n">wp</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                        <span class="n">dg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">])</span>
+                        <span class="n">erra</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">])</span>
+                        <span class="n">errb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">])</span>
+                        <span class="n">distra</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">],</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">],</span>
+                                <span class="n">size</span><span class="o">=</span><span class="n">bootnum</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="n">distrb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">],</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">],</span>
+                                <span class="n">size</span><span class="o">=</span><span class="n">bootnum</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                    <span class="n">rowName</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">(),</span> <span class="n">wp</span><span class="p">)</span>
+                    <span class="n">distra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">distra</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                    <span class="n">distrb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">distrb</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">erra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errb</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">distra</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">distrb</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># also collect self.results_summary</span>
+                <span class="n">rowNameWater</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">(),</span> <span class="s2">&quot;unbound&quot;</span><span class="p">)</span>
+                <span class="n">rowNameProtein</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">(),</span> <span class="s2">&quot;bound&quot;</span><span class="p">)</span>
+                <span class="n">dg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameProtein</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span>
+                    <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameWater</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">ddG</span> <span class="o">=</span> <span class="n">dg</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">edge</span><span class="o">.</span><span class="n">node_to</span><span class="o">.</span><span class="n">get_conformer</span><span class="p">()</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="s2">&quot;ddG&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dg</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Attached score </span><span class="si">{</span><span class="n">dg</span><span class="si">}</span><span class="s2"> to conformer </span><span class="si">{</span><span class="n">edge</span><span class="o">.</span><span class="n">node_to</span><span class="o">.</span><span class="n">get_conformer</span><span class="p">()</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Could not attach score to mol for edge </span><span class="si">{</span><span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span><span class="si">}</span><span class="s2">, defaulting to </span><span class="si">{</span><span class="n">fail_score</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">edge</span><span class="o">.</span><span class="n">node_to</span><span class="o">.</span><span class="n">get_conformer</span><span class="p">()</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span>
+                        <span class="s2">&quot;ddG&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fail_score</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                <span class="n">erra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameProtein</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameWater</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">ddG_err</span> <span class="o">=</span> <span class="n">erra</span>
+                <span class="n">errb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameProtein</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowNameWater</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">rowName</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;lig1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+                    <span class="s2">&quot;_&quot;</span>
+                <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;lig2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
+                    <span class="s2">&quot;_&quot;</span>
+                <span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dg</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_analyt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">erra</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowName</span><span class="p">,</span> <span class="s2">&quot;err_boot&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">errb</span>
+
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in generating summary, error was </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StepPMXRunAnalysis.analysis_summary"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis.analysis_summary">[docs]</a>    <span class="k">def</span> <span class="nf">analysis_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Edge</span><span class="p">]):</span>
+        <span class="n">edge_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">get_edge_id</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">edge_ids</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">wp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">therm_cycle_branches</span><span class="p">:</span>
+                    <span class="n">analysispath</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/analyse</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span>
+                            <span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="o">=</span><span class="n">wp</span>
+                        <span class="p">),</span>
+                        <span class="n">r</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">resultsfile</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/results.txt&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysispath</span><span class="p">)</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_neq_results</span><span class="p">(</span><span class="n">resultsfile</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_resultsAll</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="c1"># the values have been collected now</span>
+        <span class="c1"># let&#39;s calculate ddGs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_summarize_results</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+        <span class="c1"># compare with experimental results automatically if provided</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;exp_results&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="s2">&quot;exp_results&quot;</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">exp_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="s2">&quot;exp_results&quot;</span><span class="p">],</span>
+                    <span class="n">converters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Ligand&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]},</span>
+                <span class="p">)</span>
+                <span class="c1"># compute the experimental ddG and append to resultsSummary</span>
+                <span class="n">node_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">node_df</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="p">[</span><span class="s2">&quot;exp_ddG&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">compute_exp_ddG</span><span class="p">(</span>
+                            <span class="n">x</span><span class="p">[</span><span class="s2">&quot;lig1&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;lig2&quot;</span><span class="p">],</span> <span class="n">node_data</span><span class="o">=</span><span class="n">node_data</span><span class="p">,</span> <span class="n">exp_data</span><span class="o">=</span><span class="n">exp_data</span>
+                        <span class="p">)</span>
+                    <span class="p">),</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to compute experimental results, error was: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span>
+            <span class="p">)</span>
+        <span class="c1"># final write to disk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_summary</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="s2">&quot;resultsSummary.csv&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results_all</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="s2">&quot;resultsAll.csv&quot;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="StepPMXRunAnalysis.compute_exp_ddG"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis.compute_exp_ddG">[docs]</a>    <span class="k">def</span> <span class="nf">compute_exp_ddG</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">lig1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">lig2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">exp_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the ddG between two ligands from experimental data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lig1_id</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">node_data</span><span class="p">[</span><span class="s2">&quot;hash_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">lig1</span><span class="p">][</span><span class="s2">&quot;node_id&quot;</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">to_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">lig2_id</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">node_data</span><span class="p">[</span><span class="s2">&quot;hash_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">lig2</span><span class="p">][</span><span class="s2">&quot;node_id&quot;</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">to_list</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">lig1_dG</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">exp_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">exp_data</span><span class="p">[</span><span class="s2">&quot;Ligand&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">lig1_id</span><span class="p">][</span><span class="s2">&quot;Exp. ΔG&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">lig2_dG</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">exp_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">exp_data</span><span class="p">[</span><span class="s2">&quot;Ligand&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">lig2_id</span><span class="p">][</span><span class="s2">&quot;Exp. ΔG&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">lig2_dG</span> <span class="o">-</span> <span class="n">lig1_dG</span></div>
+
+<div class="viewcode-block" id="StepPMXRunAnalysis.run_analysis"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.pmx.html#icolos.core.workflow_steps.pmx.run_analysis.StepPMXRunAnalysis.run_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">run_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jobs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">jobs</span><span class="p">):</span>
+
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+
+                <span class="c1"># ligand</span>
+                <span class="n">wp</span> <span class="o">=</span> <span class="s2">&quot;unbound&quot;</span>
+                <span class="n">analysispath</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/analyse</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span><span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">),</span>
+                    <span class="n">r</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">analysispath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">stateApath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span>
+                    <span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>
+                    <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span>
+                    <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">,</span>
+                    <span class="n">state</span><span class="o">=</span><span class="s2">&quot;stateA&quot;</span><span class="p">,</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+                    <span class="n">sim</span><span class="o">=</span><span class="s2">&quot;transitions&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">stateBpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span>
+                    <span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>
+                    <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span>
+                    <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">,</span>
+                    <span class="n">state</span><span class="o">=</span><span class="s2">&quot;stateB&quot;</span><span class="p">,</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+                    <span class="n">sim</span><span class="o">=</span><span class="s2">&quot;transitions&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_analysis_script</span><span class="p">(</span><span class="n">analysispath</span><span class="p">,</span> <span class="n">stateApath</span><span class="p">,</span> <span class="n">stateBpath</span><span class="p">)</span>
+                <span class="c1"># protein</span>
+                <span class="n">wp</span> <span class="o">=</span> <span class="s2">&quot;bound&quot;</span>
+                <span class="n">analysispath</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/analyse</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span><span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span> <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">),</span>
+                    <span class="n">r</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">analysispath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">stateApath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span>
+                    <span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>
+                    <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span>
+                    <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">,</span>
+                    <span class="n">state</span><span class="o">=</span><span class="s2">&quot;stateA&quot;</span><span class="p">,</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+                    <span class="n">sim</span><span class="o">=</span><span class="s2">&quot;transitions&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">stateBpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_specific_path</span><span class="p">(</span>
+                    <span class="n">workPath</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span>
+                    <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">,</span>
+                    <span class="n">wp</span><span class="o">=</span><span class="n">wp</span><span class="p">,</span>
+                    <span class="n">state</span><span class="o">=</span><span class="s2">&quot;stateB&quot;</span><span class="p">,</span>
+                    <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+                    <span class="n">sim</span><span class="o">=</span><span class="s2">&quot;transitions&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_analysis_script</span><span class="p">(</span><span class="n">analysispath</span><span class="p">,</span> <span class="n">stateApath</span><span class="p">,</span> <span class="n">stateBpath</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look in each hybridStrTop dir and check the output pdb files exist for the edges</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;integ0.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;integ1.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;results.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;wplot.png&quot;</span><span class="p">]</span>
+        <span class="n">analyse_folders</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s2">&quot;analyse</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_perturbation_map</span><span class="p">()</span><span class="o">.</span><span class="n">replicas</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">subjob</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+            <span class="n">subjob_results</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">subjob</span><span class="p">:</span>
+                <span class="n">subjob_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">all</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">branch</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                            <span class="p">)</span>
+                            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">output_files</span>
+                            <span class="k">for</span> <span class="n">branch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">therm_cycle_branches</span>
+                            <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="n">analyse_folders</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subjob_results</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.utils.entry_point_functions.parsing_functions &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.utils.entry_point_functions.parsing_functions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">icolos.loggers.base_logger</span> <span class="kn">import</span> <span class="n">BaseLogger</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.composite_agents_enums</span> <span class="kn">import</span> <span class="n">WorkflowEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.entry_points</span> <span class="kn">import</span> <span class="n">ExecutorEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.logging_enums</span> <span class="kn">import</span> <span class="n">LoggingConfigEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.files_paths</span> <span class="kn">import</span> <span class="n">move_up_directory</span>
+
+<span class="n">_WE</span> <span class="o">=</span> <span class="n">WorkflowEnum</span><span class="p">()</span>
+<span class="n">_LE</span> <span class="o">=</span> <span class="n">LoggingConfigEnum</span><span class="p">()</span>
+<span class="n">_EE</span> <span class="o">=</span> <span class="n">ExecutorEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="parse_global"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.parse_global">[docs]</a><span class="k">def</span> <span class="nf">parse_global</span><span class="p">(</span><span class="n">g_input</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">BaseLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">g_input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g_input</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">g_input</span> <span class="o">=</span> <span class="p">[</span><span class="n">g_input</span><span class="p">]</span>
+        <span class="n">g_vars</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">new_var</span> <span class="ow">in</span> <span class="n">g_input</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">new_var</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Ignoring global input </span><span class="si">{</span><span class="n">new_var</span><span class="si">}</span><span class="s2"> set by command-line, as they must have one key and one value, separated by &#39;:&#39;.&quot;</span><span class="p">,</span>
+                    <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">g_vars</span><span class="p">[</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Parsed global input &quot;</span><span class="si">{</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot; (value: &quot;</span><span class="si">{</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;).&#39;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">g_vars</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="add_global"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.add_global">[docs]</a><span class="k">def</span> <span class="nf">add_global</span><span class="p">(</span><span class="n">configuration</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">g_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This function adds (and overwrites) values for global settings and variables. Parameter &quot;field&quot; selects,</span>
+<span class="sd">    which key is to be used in the header region.&quot;&quot;&quot;</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">configuration</span><span class="p">[</span><span class="n">_WE</span><span class="o">.</span><span class="n">WORKFLOW</span><span class="p">][</span><span class="n">_WE</span><span class="o">.</span><span class="n">HEADER</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">g_vars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">configuration</span></div>
+
+
+<div class="viewcode-block" id="get_runtime_global_variables"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.get_runtime_global_variables">[docs]</a><span class="k">def</span> <span class="nf">get_runtime_global_variables</span><span class="p">(</span><span class="n">args_conf</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">entry_point_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">{</span>  <span class="c1"># current workdir</span>
+        <span class="n">_EE</span><span class="o">.</span><span class="n">RUNTIME_GLOBAL_VARIABLE_WORKDIR</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+        <span class="c1"># directory where the entry point lies</span>
+        <span class="n">_EE</span><span class="o">.</span><span class="n">RUNTIME_GLOBAL_VARIABLE_ENTRYPOINTDIR</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">entry_point_path</span><span class="p">),</span>
+        <span class="c1"># directory where the JSON lies</span>
+        <span class="n">_EE</span><span class="o">.</span><span class="n">RUNTIME_GLOBAL_VARIABLE_CONFIGDIR</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">args_conf</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="c1"># top level of Icolos icolos package</span>
+        <span class="n">_EE</span><span class="o">.</span><span class="n">RUNTIME_GLOBAL_VARIABLE_PACKAGEDIR</span><span class="p">:</span> <span class="n">move_up_directory</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">entry_point_path</span><span class="p">),</span> <span class="mi">3</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="parse_header"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.parse_header">[docs]</a><span class="k">def</span> <span class="nf">parse_header</span><span class="p">(</span><span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">entry_point_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">logger</span><span class="p">:</span> <span class="n">BaseLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="c1"># parse global variables from command-line</span>
+    <span class="n">global_vars_CLI</span> <span class="o">=</span> <span class="n">parse_global</span><span class="p">(</span><span class="n">g_input</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">global_variables</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">add_global</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">global_vars_CLI</span><span class="p">,</span> <span class="n">_WE</span><span class="o">.</span><span class="n">GLOBAL_VARIABLES</span><span class="p">)</span>
+
+    <span class="c1"># add run-specified global variables (the current directory, the JSONs directory, ...)</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">add_global</span><span class="p">(</span>
+        <span class="n">conf</span><span class="p">,</span>
+        <span class="n">get_runtime_global_variables</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">conf</span><span class="p">,</span> <span class="n">entry_point_path</span><span class="p">),</span>
+        <span class="n">_WE</span><span class="o">.</span><span class="n">GLOBAL_VARIABLES</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># update global settings; if they are not supported, pydantic will complain later on</span>
+    <span class="c1"># TODO: at the moment this implementation ignores stuff that is not understood (e.g. when a typo occurs); this should fail</span>
+    <span class="n">global_settings_CLI</span> <span class="o">=</span> <span class="n">parse_global</span><span class="p">(</span><span class="n">g_input</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">global_settings</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="n">add_global</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">global_settings_CLI</span><span class="p">,</span> <span class="n">_WE</span><span class="o">.</span><span class="n">GLOBAL_SETTINGS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">conf</span></div>
+
+
+<div class="viewcode-block" id="get_version_number"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.get_version_number">[docs]</a><span class="k">def</span> <span class="nf">get_version_number</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># this requires python &gt;= 3.8</span>
+        <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">metadata</span>
+
+        <span class="k">return</span> <span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s2">&quot;icolos&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="get_config_version_number"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.get_config_version_number">[docs]</a><span class="k">def</span> <span class="nf">get_config_version_number</span><span class="p">(</span><span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="n">_WE</span><span class="o">.</span><span class="n">WORKFLOW</span><span class="p">][</span><span class="n">_WE</span><span class="o">.</span><span class="n">HEADER</span><span class="p">][</span><span class="n">_WE</span><span class="o">.</span><span class="n">VERSION</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="log_version_number"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.log_version_number">[docs]</a><span class="k">def</span> <span class="nf">log_version_number</span><span class="p">(</span><span class="n">logger</span><span class="p">:</span> <span class="n">BaseLogger</span><span class="p">):</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">get_version_number</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not obtain Icolos version.&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Icolos version </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2"> initialized.&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="version_match"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.version_match">[docs]</a><span class="k">def</span> <span class="nf">version_match</span><span class="p">(</span><span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">version_config</span> <span class="o">=</span> <span class="n">get_config_version_number</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+    <span class="n">version_installation</span> <span class="o">=</span> <span class="n">get_version_number</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">version_config</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="n">version_installation</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="n">version_config</span> <span class="o">!=</span> <span class="n">version_installation</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="get_versions_as_strings"><a class="viewcode-back" href="../../../../icolos.utils.entry_point_functions.html#icolos.utils.entry_point_functions.parsing_functions.get_versions_as_strings">[docs]</a><span class="k">def</span> <span class="nf">get_versions_as_strings</span><span class="p">(</span><span class="n">conf</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="n">version_config</span> <span class="o">=</span> <span class="n">get_config_version_number</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+    <span class="n">version_installation</span> <span class="o">=</span> <span class="n">get_version_number</span><span class="p">()</span>
+    <span class="n">version_config</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">version_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">version_config</span>
+    <span class="n">version_installation</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;unknown&quot;</span> <span class="k">if</span> <span class="n">version_installation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">version_installation</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">version_config</span><span class="p">,</span> <span class="n">version_installation</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

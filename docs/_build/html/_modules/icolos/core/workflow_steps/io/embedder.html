@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.io.embedder &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.io.embedder</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span><span class="p">,</span> <span class="n">RDLogger</span>
+<span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">AllChem</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.containers.compound</span> <span class="kn">import</span> <span class="n">Conformer</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.icolos_exceptions</span> <span class="kn">import</span> <span class="n">StepFailed</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepEmbeddingEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.io.base</span> <span class="kn">import</span> <span class="n">StepIOBase</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.convenience_functions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.smiles</span> <span class="kn">import</span> <span class="n">to_mol</span>
+
+<span class="n">_SEE</span> <span class="o">=</span> <span class="n">StepEmbeddingEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="StepEmbedding"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.io.html#icolos.core.workflow_steps.io.embedder.StepEmbedding">[docs]</a><span class="k">class</span> <span class="nc">StepEmbedding</span><span class="p">(</span><span class="n">StepIOBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># extend parameters with defaults</span>
+        <span class="k">if</span> <span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS</span><span class="p">]</span> <span class="o">=</span> <span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS_ENUMERATIONS</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;No embedding level specified, defaulting to &quot;</span><span class="si">{</span><span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS_ENUMERATIONS</span><span class="si">}</span><span class="s1">&quot;.&#39;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_smile_to_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smile</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">:</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">to_mol</span><span class="p">(</span><span class="n">smile</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The smile </span><span class="si">{</span><span class="n">smile</span><span class="si">}</span><span class="s2"> could not be transformed into a molecule and will be skipped.&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">mol</span>
+
+    <span class="k">def</span> <span class="nf">_embed_with_RDKit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">:</span>
+        <span class="n">molecule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_smile_to_molecule</span><span class="p">(</span><span class="n">smile</span><span class="p">)</span>
+
+        <span class="c1"># deactivate logger to suppress &quot;missing Hs messages&quot;</span>
+        <span class="n">RDLogger</span><span class="o">.</span><span class="n">DisableLog</span><span class="p">(</span><span class="s2">&quot;rdApp.*&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">embed_code</span> <span class="o">=</span> <span class="n">AllChem</span><span class="o">.</span><span class="n">EmbedMolecule</span><span class="p">(</span>
+                <span class="n">molecule</span><span class="p">,</span> <span class="n">randomSeed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">useRandomCoords</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+        <span class="c1"># TODO: what&#39;s the exception here?</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Could not embed molecule with SMILES &quot;</span><span class="si">{</span><span class="n">smile</span><span class="si">}</span><span class="s1">&quot;, critical error in &quot;RDkit&quot;.&#39;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">embed_code</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">AllChem</span><span class="o">.</span><span class="n">UFFOptimizeMolecule</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="n">maxIters</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The 3D coordinate generation of molecule </span><span class="si">{</span><span class="n">smile</span><span class="si">}</span><span class="s2"> did not converge in time.&quot;</span><span class="p">,</span>
+                    <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Could not embed molecule </span><span class="si">{</span><span class="n">smile</span><span class="si">}</span><span class="s2"> - no 3D coordinates have been generated.&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">RDLogger</span><span class="o">.</span><span class="n">EnableLog</span><span class="p">(</span><span class="s2">&quot;rdApp.*&quot;</span><span class="p">)</span>
+
+        <span class="c1"># add hydrogens to the molecule (if specified)</span>
+        <span class="k">if</span> <span class="n">nested_get</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="p">[</span><span class="n">_SEE</span><span class="o">.</span><span class="n">RDKIT_PROTONATE</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">molecule</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">AddHs</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="n">addCoords</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">embed_code</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">status</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">molecule</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_get_embedding_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">nested_get</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="p">[</span><span class="n">_SEE</span><span class="o">.</span><span class="n">METHOD</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;Embedding method not set.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">StepFailed</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">method</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_embed_molecule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">smile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_embedding_method</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">_SEE</span><span class="o">.</span><span class="n">METHOD_RDKIT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embed_with_RDKit</span><span class="p">(</span><span class="n">smile</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Specified embedding method </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> not available.&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">ERROR</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="StepEmbedding.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.io.html#icolos.core.workflow_steps.io.embedder.StepEmbedding.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: REFACTOR</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="n">embed_as</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_compounds</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">embed_as</span> <span class="o">==</span> <span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS_ENUMERATIONS</span><span class="p">:</span>
+                <span class="n">enum_buffer</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">())</span>
+                <span class="n">compound</span><span class="o">.</span><span class="n">clear_enumerations</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">enumeration</span> <span class="ow">in</span> <span class="n">enum_buffer</span><span class="p">:</span>
+                    <span class="n">enumeration</span><span class="o">.</span><span class="n">clear_molecule</span><span class="p">()</span>
+                    <span class="n">enumeration</span><span class="o">.</span><span class="n">clear_conformers</span><span class="p">()</span>
+                    <span class="n">molecule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embed_molecule</span><span class="p">(</span>
+                        <span class="n">smile</span><span class="o">=</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_smile</span><span class="p">(),</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">molecule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">enumeration</span><span class="o">.</span><span class="n">set_molecule</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span>
+                        <span class="n">compound</span><span class="o">.</span><span class="n">add_enumeration</span><span class="p">(</span><span class="n">enumeration</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Embedding for compound </span><span class="si">{</span><span class="n">compound</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span><span class="si">}</span><span class="s2"> (name: </span><span class="si">{</span><span class="n">compound</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">) completed (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">compound</span><span class="p">)</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">enum_buffer</span><span class="p">)</span><span class="si">}</span><span class="s2"> enumerations successful).&quot;</span><span class="p">,</span>
+                    <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">embed_as</span> <span class="o">==</span> <span class="n">_SEE</span><span class="o">.</span><span class="n">EMBED_AS_CONFORMERS</span><span class="p">:</span>
+                <span class="c1"># TODO: double-check this bit</span>
+                <span class="k">for</span> <span class="n">enumeration</span> <span class="ow">in</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">():</span>
+                    <span class="n">enumeration</span><span class="o">.</span><span class="n">clear_conformers</span><span class="p">()</span>
+                    <span class="n">molecule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embed_molecule</span><span class="p">(</span>
+                        <span class="n">smile</span><span class="o">=</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_smile</span><span class="p">(),</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">molecule</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">conformer</span> <span class="o">=</span> <span class="n">Conformer</span><span class="p">(</span>
+                            <span class="n">conformer</span><span class="o">=</span><span class="n">molecule</span><span class="p">,</span> <span class="n">enumeration_object</span><span class="o">=</span><span class="n">enumeration</span>
+                        <span class="p">)</span>
+                        <span class="n">enumeration</span><span class="o">.</span><span class="n">add_conformer</span><span class="p">(</span><span class="n">conformer</span><span class="p">,</span> <span class="n">auto_update</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">number_successful</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="kc">True</span>
+                        <span class="k">for</span> <span class="n">enum</span> <span class="ow">in</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">enum</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Embedding for compound </span><span class="si">{</span><span class="n">compound</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span><span class="si">}</span><span class="s2"> (name: </span><span class="si">{</span><span class="n">compound</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">) completed (</span><span class="si">{</span><span class="n">number_successful</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">compound</span><span class="p">)</span><span class="si">}</span><span class="s2"> enumerations successful).&quot;</span><span class="p">,</span>
+                    <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Value &quot;</span><span class="si">{</span><span class="n">embed_as</span><span class="si">}</span><span class="s1">&quot; for parameter &quot;embed_as&quot; not supported.&#39;</span>
+                <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

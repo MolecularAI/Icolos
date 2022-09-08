@@ -20,4 +20,5 @@ tests/junk
 output
 config.json
 build
+docs/_build/doctrees
 {entrypoint_dir}

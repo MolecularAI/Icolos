@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.composite_agents.workflow &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.composite_agents.workflow</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">PrivateAttr</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.perturbation_map</span> <span class="kn">import</span> <span class="n">PerturbationMap</span>
+<span class="kn">from</span> <span class="nn">icolos.core.flow_control.flow_control</span> <span class="kn">import</span> <span class="n">FlowControlBase</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">StepBase</span>
+<span class="kn">from</span> <span class="nn">icolos.core.composite_agents.base_agent</span> <span class="kn">import</span> <span class="n">BaseAgent</span><span class="p">,</span> <span class="n">AgentHeaderParameters</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.general.icolos_exceptions</span> <span class="kn">import</span> <span class="n">get_exception_message</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.logging_enums</span> <span class="kn">import</span> <span class="n">LoggingConfigEnum</span>
+
+<span class="n">_LE</span> <span class="o">=</span> <span class="n">LoggingConfigEnum</span><span class="p">()</span>
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+
+
+<div class="viewcode-block" id="WorkflowHeaderParameters"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkflowHeaderParameters">[docs]</a><span class="k">class</span> <span class="nc">WorkflowHeaderParameters</span><span class="p">(</span><span class="n">AgentHeaderParameters</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="WorkflowData"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkflowData">[docs]</a><span class="k">class</span> <span class="nc">WorkflowData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">perturbation_map</span><span class="p">:</span> <span class="n">PerturbationMap</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="WorkFlow"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow">[docs]</a><span class="k">class</span> <span class="nc">WorkFlow</span><span class="p">(</span><span class="n">BaseAgent</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to hold the whole logic for a workflow.&quot;&quot;&quot;</span>
+
+    <span class="n">steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">header</span><span class="p">:</span> <span class="n">WorkflowHeaderParameters</span> <span class="o">=</span> <span class="n">WorkflowHeaderParameters</span><span class="p">()</span>
+    <span class="n">workflow_data</span><span class="p">:</span> <span class="n">WorkflowData</span> <span class="o">=</span> <span class="n">WorkflowData</span><span class="p">()</span>
+
+<div class="viewcode-block" id="WorkFlow.Config"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.Config">[docs]</a>    <span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+        <span class="n">underscore_attrs_are_private</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="n">_logger</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">()</span>
+    <span class="n">_initialized_steps</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="WorkFlow.initialize"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">icolos.core.steps_utils</span> <span class="kn">import</span> <span class="n">initialize_step_from_dict</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">step_conf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+            <span class="n">step_conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_global_variables</span><span class="p">(</span><span class="n">conf</span><span class="o">=</span><span class="n">step_conf</span><span class="p">)</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">initialize_step_from_dict</span><span class="p">(</span><span class="n">step_conf</span><span class="o">=</span><span class="n">step_conf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">StepBase</span><span class="p">):</span>
+                <span class="c1"># we have a normal step, no flow control wrapping</span>
+                <span class="n">step</span><span class="o">.</span><span class="n">set_workflow_object</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">FlowControlBase</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">dispatcher</span><span class="p">)</span>
+                <span class="n">step</span><span class="o">.</span><span class="n">dispatcher</span><span class="o">.</span><span class="n">set_workflow_object</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">)</span><span class="si">}</span><span class="s2"> steps in workflow </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="WorkFlow.execute"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">:</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">generate_input</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting execution of step: </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">step_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Processing write-out blocks for </span><span class="si">{</span><span class="n">step</span><span class="o">.</span><span class="n">step_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span>
+            <span class="p">)</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">process_write_out</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Execution of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">)</span><span class="si">}</span><span class="s2"> steps completed.&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="WorkFlow.is_valid"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">:</span>
+                <span class="n">step</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;During step validation, &quot;WorkFlow&quot; returned the following exception: </span><span class="si">{</span><span class="n">get_exception_message</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="WorkFlow.add_step"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.add_step">[docs]</a>    <span class="k">def</span> <span class="nf">add_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">StepBase</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WorkFlow.get_steps"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span></div>
+
+<div class="viewcode-block" id="WorkFlow.find_step_by_step_id"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.find_step_by_step_id">[docs]</a>    <span class="k">def</span> <span class="nf">find_step_by_step_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">step_id</span> <span class="o">==</span> <span class="n">step_id</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">step</span>
+            <span class="k">elif</span> <span class="n">step</span><span class="o">.</span><span class="n">step_id</span> <span class="o">==</span> <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DISPATCHER</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find step with step_id </span><span class="si">{</span><span class="n">step_id</span><span class="si">}</span><span class="s2"> in workflow.&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Icolos workflow: id=</span><span class="si">%s</span><span class="s2">, description=</span><span class="si">%s</span><span class="s2">, number steps: </span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_id</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_description</span><span class="p">(),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="WorkFlow.set_perturbation_map"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.set_perturbation_map">[docs]</a>    <span class="k">def</span> <span class="nf">set_perturbation_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_map</span><span class="p">:</span> <span class="n">PerturbationMap</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">perturbation_map</span> <span class="o">=</span> <span class="n">p_map</span></div>
+
+<div class="viewcode-block" id="WorkFlow.get_perturbation_map"><a class="viewcode-back" href="../../../../icolos.core.composite_agents.html#icolos.core.composite_agents.workflow.WorkFlow.get_perturbation_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_perturbation_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PerturbationMap</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">perturbation_map</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initialized_steps</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.utils.enums.step_initialization_enum &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.utils.enums.step_initialization_enum</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">icolos.core.step_dispatch.dispatcher</span> <span class="kn">import</span> <span class="n">StepDispatcher</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.autodockvina.docking</span> <span class="kn">import</span> <span class="n">StepAutoDockVina</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.autodockvina.target_preparation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepAutoDockVinaTargetPreparation</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.jazzy</span> <span class="kn">import</span> <span class="n">StepJazzy</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.kallisto</span> <span class="kn">import</span> <span class="n">StepKallisto</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.lomap</span> <span class="kn">import</span> <span class="n">StepLomap</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.ccdc.docking</span> <span class="kn">import</span> <span class="n">StepGold</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.esp_sim</span> <span class="kn">import</span> <span class="n">StepEspSim</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.feature_counter</span> <span class="kn">import</span> <span class="n">StepFeatureCounter</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs.do_dssp</span> <span class="kn">import</span> <span class="n">StepGMXDoDSSP</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs.mmpbsa</span> <span class="kn">import</span> <span class="n">StepGMXmmpbsa</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.fpocket.mdpocket</span> <span class="kn">import</span> <span class="n">StepMDpocket</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs.trajcat</span> <span class="kn">import</span> <span class="n">StepGMXTrjcat</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.io.data_manipulation</span> <span class="kn">import</span> <span class="n">StepDataManipulation</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.schrodinger.fep_absolute</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepSchrodingerAbsoluteFEP</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.schrodinger.fep_analysis</span> <span class="kn">import</span> <span class="n">StepFepPlusAnalysis</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.schrodinger.protein_interaction</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepProteinInteraction</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.structure_prediction.pdb_fixer</span> <span class="kn">import</span> <span class="n">StepPdbFixer</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.boltzmann_weighting</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepBoltzmannWeighting</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.rmsd</span> <span class="kn">import</span> <span class="n">StepRMSD</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.schrodinger</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.cosmo</span> <span class="kn">import</span> <span class="n">StepCosmo</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.turbomole</span> <span class="kn">import</span> <span class="n">StepTurbomole</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.confgen.crest</span> <span class="kn">import</span> <span class="n">StepCREST</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.pmx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.confgen.omega</span> <span class="kn">import</span> <span class="n">StepOmega</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.confgen.xtb</span> <span class="kn">import</span> <span class="n">StepXTB</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.io.embedder</span> <span class="kn">import</span> <span class="n">StepEmbedding</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.io.initialize_compound</span> <span class="kn">import</span> <span class="n">StepInitializeCompound</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.prediction.predictor</span> <span class="kn">import</span> <span class="n">StepPredictor</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.prediction.model_building</span> <span class="kn">import</span> <span class="n">StepModelBuilder</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.clustering</span> <span class="kn">import</span> <span class="n">StepClustering</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.rms_filter</span> <span class="kn">import</span> <span class="n">StepRMSFilter</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.panther</span> <span class="kn">import</span> <span class="n">StepPanther</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.shaep</span> <span class="kn">import</span> <span class="n">StepShaep</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.structure_prediction.peptide_embedder</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepPeptideEmbedder</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.active_learning.prospective_reinvent</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepProspectiveREINVENT</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.structure_prediction.dssp</span> <span class="kn">import</span> <span class="n">StepDSSP</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span>
+
+
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+
+
+<div class="viewcode-block" id="StepInitializationEnum"><a class="viewcode-back" href="../../../../icolos.utils.enums.html#icolos.utils.enums.step_initialization_enum.StepInitializationEnum">[docs]</a><span class="k">class</span> <span class="nc">StepInitializationEnum</span><span class="p">:</span>
+
+    <span class="n">STEP_INIT_DICT</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_CREST</span><span class="p">:</span> <span class="n">StepCREST</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_OMEGA</span><span class="p">:</span> <span class="n">StepOmega</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_XTB</span><span class="p">:</span> <span class="n">StepXTB</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MACROMODEL</span><span class="p">:</span> <span class="n">StepMacromodel</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_TURBOMOLE</span><span class="p">:</span> <span class="n">StepTurbomole</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_COSMO</span><span class="p">:</span> <span class="n">StepCosmo</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_INITIALIZATION</span><span class="p">:</span> <span class="n">StepInitializeCompound</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_EMBEDDING</span><span class="p">:</span> <span class="n">StepEmbedding</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PREDICTION</span><span class="p">:</span> <span class="n">StepPredictor</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MODEL_BUILDING</span><span class="p">:</span> <span class="n">StepModelBuilder</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_BOLTZMANN_WEIGHTING</span><span class="p">:</span> <span class="n">StepBoltzmannWeighting</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PRIME</span><span class="p">:</span> <span class="n">StepPrime</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DESMOND</span><span class="p">:</span> <span class="n">StepDesmondExec</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DESMOND_SETUP</span><span class="p">:</span> <span class="n">StepDesmondSetup</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_CLUSTERING</span><span class="p">:</span> <span class="n">StepClustering</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_RMSFILTER</span><span class="p">:</span> <span class="n">StepRMSFilter</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PANTHER</span><span class="p">:</span> <span class="n">StepPanther</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_KALLISTO</span><span class="p">:</span> <span class="n">StepKallisto</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_JAZZY</span><span class="p">:</span> <span class="n">StepJazzy</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_SHAEP</span><span class="p">:</span> <span class="n">StepShaep</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PDB2GMX</span><span class="p">:</span> <span class="n">StepGMXPdb2gmx</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_EDITCONF</span><span class="p">:</span> <span class="n">StepGMXEditConf</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_SOLVATE</span><span class="p">:</span> <span class="n">StepGMXSolvate</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GENION</span><span class="p">:</span> <span class="n">StepGMXGenion</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GROMPP</span><span class="p">:</span> <span class="n">StepGMXGrompp</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MDRUN</span><span class="p">:</span> <span class="n">StepGMXMDrun</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_TRJCONV</span><span class="p">:</span> <span class="n">StepGMXTrjconv</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_TRJCAT</span><span class="p">:</span> <span class="n">StepGMXTrjcat</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_CLUSTER</span><span class="p">:</span> <span class="n">StepGMXCluster</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DO_DSSP</span><span class="p">:</span> <span class="n">StepGMXDoDSSP</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GMX_RMSD</span><span class="p">:</span> <span class="n">StepGMXrmsd</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_LIGPREP</span><span class="p">:</span> <span class="n">StepLigprep</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GLIDE</span><span class="p">:</span> <span class="n">StepGlide</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_FEP_PLUS_SETUP</span><span class="p">:</span> <span class="n">StepFepPlusSetup</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_FEP_PLUS_EXEC</span><span class="p">:</span> <span class="n">StepFepPlusExec</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_FEP_ABSOLUTE</span><span class="p">:</span> <span class="n">StepSchrodingerAbsoluteFEP</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_FEP_PLUS_ANALYSIS</span><span class="p">:</span> <span class="n">StepFepPlusAnalysis</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PREPWIZARD</span><span class="p">:</span> <span class="n">StepPrepwizard</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_RESIDUE_SCANNING</span><span class="p">:</span> <span class="n">StepResidueScanning</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_MDPOCKET</span><span class="p">:</span> <span class="n">StepMDpocket</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PEPTIDE_EMBEDDER</span><span class="p">:</span> <span class="n">StepPeptideEmbedder</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PDB_FIXER</span><span class="p">:</span> <span class="n">StepPdbFixer</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GMX_MMPBSA</span><span class="p">:</span> <span class="n">StepGMXmmpbsa</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_TS_CLUSTER</span><span class="p">:</span> <span class="n">StepClusterTS</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DSSP</span><span class="p">:</span> <span class="n">StepDSSP</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_RMSD</span><span class="p">:</span> <span class="n">StepRMSD</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DATA_MANIPULATION</span><span class="p">:</span> <span class="n">StepDataManipulation</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_ASSEMBLE_SYSTEMS</span><span class="p">:</span> <span class="n">StepPMXAssembleSystems</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_ATOMMAPPING</span><span class="p">:</span> <span class="n">StepPMXatomMapping</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_ABFE_SETUP</span><span class="p">:</span> <span class="n">StepPMXabfe</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_DOUBLEBOX</span><span class="p">:</span> <span class="n">StepPMXdoublebox</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_LIGANDHYBRID</span><span class="p">:</span> <span class="n">StepPMXligandHybrid</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_BOX_WATER_IONS</span><span class="p">:</span> <span class="n">StepPMXBoxWaterIons</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_SETUP</span><span class="p">:</span> <span class="n">StepPMXSetup</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_PREPARE_TRANSITIONS</span><span class="p">:</span> <span class="n">StepPMXPrepareTransitions</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_PREPARE_SIMULATIONS</span><span class="p">:</span> <span class="n">StepPMXPrepareSimulations</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_RUN_ANALYSIS</span><span class="p">:</span> <span class="n">StepPMXRunAnalysis</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_MUTATE</span><span class="p">:</span> <span class="n">StepPMXmutate</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_GENTOP</span><span class="p">:</span> <span class="n">StepPMXgentop</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_GENLIB</span><span class="p">:</span> <span class="n">StepPMXgenlib</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_FEATURE_COUNTER</span><span class="p">:</span> <span class="n">StepFeatureCounter</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_AUTODOCKVINA_DOCKING</span><span class="p">:</span> <span class="n">StepAutoDockVina</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_AUTODOCKVINA_TARGET_PREPARATION</span><span class="p">:</span> <span class="n">StepAutoDockVinaTargetPreparation</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_GOLD_DOCKING</span><span class="p">:</span> <span class="n">StepGold</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PMX_RUN_SIMULATIONS</span><span class="p">:</span> <span class="n">StepPMXRunSimulations</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DISPATCHER</span><span class="p">:</span> <span class="n">StepDispatcher</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_ESP_SIM</span><span class="p">:</span> <span class="n">StepEspSim</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_LOMAP</span><span class="p">:</span> <span class="n">StepLomap</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PROSPECTIVE_REINVENT</span><span class="p">:</span> <span class="n">StepProspectiveREINVENT</span><span class="p">,</span>
+        <span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_PROTEIN_INTERACTIONS</span><span class="p">:</span> <span class="n">StepProteinInteraction</span><span class="p">,</span>
+    <span class="p">}</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

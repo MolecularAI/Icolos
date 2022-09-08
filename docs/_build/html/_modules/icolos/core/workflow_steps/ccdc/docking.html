@@ -1,0 +1,516 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.ccdc.docking &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.ccdc.docking</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span><span class="p">,</span> <span class="n">StepGoldEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.gold</span> <span class="kn">import</span> <span class="n">GoldExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.files_paths</span> <span class="kn">import</span> <span class="n">gen_tmp_file</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.compound</span> <span class="kn">import</span> <span class="n">Conformer</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="n">GoldOutputEnum</span><span class="p">,</span> <span class="n">GoldEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span><span class="p">,</span> <span class="n">StepBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.parallelization</span> <span class="kn">import</span> <span class="n">Subtask</span><span class="p">,</span> <span class="n">SubtaskContainer</span><span class="p">,</span> <span class="n">Parallelizer</span>
+<span class="kn">from</span> <span class="nn">icolos.core.step_utils.gold_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConfigAutomaticSettings</span><span class="p">,</span>
+    <span class="n">ConfigPopulation</span><span class="p">,</span>
+    <span class="n">ConfigGeneticOperators</span><span class="p">,</span>
+    <span class="n">ConfigFloodFill</span><span class="p">,</span>
+    <span class="n">ConfigDataFiles</span><span class="p">,</span>
+    <span class="n">ConfigFlags</span><span class="p">,</span>
+    <span class="n">ConfigProteinData</span><span class="p">,</span>
+    <span class="n">ConfigFitnessFunctionSettings</span><span class="p">,</span>
+    <span class="n">ConfigSaveOptions</span><span class="p">,</span>
+    <span class="n">ConfigCovalentBonding</span><span class="p">,</span>
+    <span class="n">ConfigConstraints</span><span class="p">,</span>
+    <span class="n">ConfigTermination</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+<span class="n">_CGE</span> <span class="o">=</span> <span class="n">GoldEnum</span><span class="p">()</span>
+<span class="n">_SGE</span> <span class="o">=</span> <span class="n">StepGoldEnum</span><span class="p">()</span>
+<span class="n">_GOE</span> <span class="o">=</span> <span class="n">GoldOutputEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="GoldConfiguration"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.ccdc.html#icolos.core.workflow_steps.ccdc.docking.GoldConfiguration">[docs]</a><span class="k">class</span> <span class="nc">GoldConfiguration</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">automatic_settings</span><span class="p">:</span> <span class="n">ConfigAutomaticSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;AUTOMATIC SETTINGS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigAutomaticSettings</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">population</span><span class="p">:</span> <span class="n">ConfigPopulation</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;POPULATION&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigPopulation</span><span class="p">())</span>
+    <span class="n">genetic_operators</span><span class="p">:</span> <span class="n">ConfigGeneticOperators</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;GENETIC OPERATORS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigGeneticOperators</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">flood_fill</span><span class="p">:</span> <span class="n">ConfigFloodFill</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;FLOOD FILL&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">data_files</span><span class="p">:</span> <span class="n">ConfigDataFiles</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;DATA FILES&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigDataFiles</span><span class="p">())</span>
+    <span class="n">flags</span><span class="p">:</span> <span class="n">ConfigFlags</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;FLAGS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigFlags</span><span class="p">())</span>
+    <span class="n">termination</span><span class="p">:</span> <span class="n">ConfigTermination</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;TERMINATION&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigTermination</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">constraints</span><span class="p">:</span> <span class="n">ConfigConstraints</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;CONSTRAINTS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigConstraints</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">covalent_bonding</span><span class="p">:</span> <span class="n">ConfigCovalentBonding</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;COVALENT BONDING&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigCovalentBonding</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">save_options</span><span class="p">:</span> <span class="n">ConfigSaveOptions</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;SAVE OPTIONS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigSaveOptions</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">fitness_function_settings</span><span class="p">:</span> <span class="n">ConfigFitnessFunctionSettings</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;FITNESS FUNCTION SETTINGS&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">ConfigFitnessFunctionSettings</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">protein_data</span><span class="p">:</span> <span class="n">ConfigProteinData</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">alias</span><span class="o">=</span><span class="s2">&quot;PROTEIN DATA&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GoldAdditional"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.ccdc.html#icolos.core.workflow_steps.ccdc.docking.GoldAdditional">[docs]</a><span class="k">class</span> <span class="nc">GoldAdditional</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">configuration</span><span class="p">:</span> <span class="n">GoldConfiguration</span> <span class="o">=</span> <span class="n">GoldConfiguration</span><span class="p">()</span>
+    <span class="n">gold_config_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">docking_score_tag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Gold.Goldscore.Fitness&quot;</span>
+    <span class="n">grid_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;grid0&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="StepGold"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.ccdc.html#icolos.core.workflow_steps.ccdc.docking.StepGold">[docs]</a><span class="k">class</span> <span class="nc">StepGold</span><span class="p">(</span><span class="n">StepBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="n">gold_additional</span><span class="p">:</span> <span class="n">GoldAdditional</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_gold_executor</span><span class="p">:</span> <span class="n">GoldExecutor</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># initialize the executor and test availability</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">GoldExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_backend_availability</span><span class="p">()</span>
+
+        <span class="c1"># set Gold specific settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span> <span class="o">=</span> <span class="n">GoldAdditional</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_docking_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conformer</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">docking_score_tag</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">docking_score</span> <span class="o">=</span> <span class="n">conformer</span><span class="o">.</span><span class="n">GetProp</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Could not find tag &quot;</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">&quot; in conformer, use &quot;docking_score_tag&quot; to adjust.&#39;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">conformer</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">_SBE</span><span class="o">.</span><span class="n">ANNOTATION_TAG_DOCKING_SCORE</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">docking_score</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_generate_temporary_input_output_files</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Subtask</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+        <span class="n">tmp_output_dirs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_input_sdf_paths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp_output_sdf_paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">next_subtask_list</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+            <span class="c1"># generate temporary input files and output directory</span>
+            <span class="n">cur_tmp_output_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+
+            <span class="c1"># write-out the temporary input files: one molecule per file each</span>
+            <span class="n">one_written</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">list_input_files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">list_output_files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">subtask</span> <span class="ow">in</span> <span class="n">next_subtask_list</span><span class="p">:</span>
+                <span class="n">enumeration</span> <span class="o">=</span> <span class="n">subtask</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">mol</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">cur_tmp_sdf</span> <span class="o">=</span> <span class="n">gen_tmp_file</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.sdf&quot;</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">cur_tmp_output_dir</span><span class="p">)</span>
+                    <span class="n">writer</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">SDWriter</span><span class="p">(</span><span class="n">cur_tmp_sdf</span><span class="p">)</span>
+                    <span class="n">mol</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="s2">&quot;_Name&quot;</span><span class="p">,</span> <span class="n">enumeration</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">())</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="n">list_input_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_tmp_sdf</span><span class="p">)</span>
+
+                    <span class="c1"># output files for gold look something like: ranked_tmp1cwtavoh_m1_2.sdf</span>
+                    <span class="c1"># where: (1) &quot;ranked_&quot; is a constant, (2) followed by the input file name,</span>
+                    <span class="c1">#        (3) followed by the molecule # (here always &quot;m1&quot; as only 1 compound/file at the moment),</span>
+                    <span class="c1">#        (4) followed by the pose # and finally (5) the &quot;.sdf&quot; ending</span>
+                    <span class="c1"># use &#39;*&#39; for getting all files</span>
+                    <span class="n">basename_filepart</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">cur_tmp_sdf</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.sdf&quot;</span><span class="p">)</span>
+                    <span class="n">list_output_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">cur_tmp_output_dir</span><span class="p">,</span>
+                            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;ranked_&quot;</span><span class="p">,</span> <span class="n">basename_filepart</span><span class="p">,</span> <span class="s2">&quot;_m1_*.sdf&quot;</span><span class="p">]),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">one_written</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">one_written</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="c1"># no compound left from this batch: remove the temporary folder and skip this one</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">cur_tmp_output_dir</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># since all went well, add input and output paths here</span>
+            <span class="n">tmp_input_sdf_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_input_files</span><span class="p">)</span>
+            <span class="n">tmp_output_sdf_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">list_output_files</span><span class="p">)</span>
+            <span class="n">tmp_output_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cur_tmp_output_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">tmp_output_dirs</span><span class="p">,</span> <span class="n">tmp_input_sdf_paths</span><span class="p">,</span> <span class="n">tmp_output_sdf_paths</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_execute_gold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># get number of sublists in batch and initialize Parallelizer</span>
+        <span class="n">gold_parallelizer</span> <span class="o">=</span> <span class="n">Parallelizer</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_subjob</span><span class="p">)</span>
+
+        <span class="c1"># continue until everything is successfully done or number of retries have been exceeded</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span><span class="o">.</span><span class="n">done</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sublists</span><span class="p">(</span><span class="n">get_first_n_lists</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_number_cores</span><span class="p">())</span>
+
+            <span class="c1"># generate paths and initialize molecules (so that if they fail, this can be covered)</span>
+            <span class="p">(</span>
+                <span class="n">tmp_output_dirs</span><span class="p">,</span>
+                <span class="n">tmp_input_sdf_paths</span><span class="p">,</span>
+                <span class="n">tmp_output_sdf_paths</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_temporary_input_output_files</span><span class="p">(</span><span class="n">next_batch</span><span class="p">)</span>
+
+            <span class="c1"># execute the current batch in parallel; hand over lists of parameters (will be handled by Parallelizer)</span>
+            <span class="c1"># also increment the tries and set the status to &quot;failed&quot; (don&#39;t do that inside subprocess, as data is</span>
+            <span class="c1"># copied, not shared!)</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">increment_tries</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">next_batch</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">element</span><span class="p">]</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">set_status_failed</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">next_batch</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">element</span><span class="p">]</span>
+            <span class="n">gold_parallelizer</span><span class="o">.</span><span class="n">execute_parallel</span><span class="p">(</span>
+                <span class="n">output_dir</span><span class="o">=</span><span class="n">tmp_output_dirs</span><span class="p">,</span> <span class="n">input_paths</span><span class="o">=</span><span class="n">tmp_input_sdf_paths</span>
+            <span class="p">)</span>
+
+            <span class="c1"># parse the output of that particular batch and remove temporary files</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_gold_output</span><span class="p">(</span>
+                <span class="n">tmp_output_paths</span><span class="o">=</span><span class="n">tmp_output_sdf_paths</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="n">next_batch</span>
+            <span class="p">)</span>
+
+            <span class="c1"># clean-up</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">tmp_output_dirs</span><span class="p">)</span>
+
+            <span class="c1"># print the progress for this execution</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_execution_progress</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_gold_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tmp_output_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">batch</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Subtask</span><span class="p">]]</span>
+    <span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_update_subtask</span><span class="p">(</span><span class="n">sublist</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Subtask</span><span class="p">],</span> <span class="n">enum_identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span> <span class="o">==</span> <span class="n">enum_identifier</span><span class="p">:</span>
+                    <span class="n">task</span><span class="o">.</span><span class="n">set_status_success</span><span class="p">()</span>
+
+        <span class="n">grid_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">grid_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">grid_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">protein_data</span><span class="o">.</span><span class="n">protein_datafile</span>
+
+        <span class="k">for</span> <span class="n">batch_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)):</span>
+            <span class="n">cur_sublist</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">batch_id</span><span class="p">]</span>
+            <span class="n">list_comp_output</span> <span class="o">=</span> <span class="n">tmp_output_paths</span><span class="p">[</span><span class="n">batch_id</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">compound_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">list_comp_output</span><span class="p">)):</span>
+
+                <span class="c1"># expand the output paths to cover all pose files for this compound</span>
+                <span class="c1"># one input sdf matches to x output sdfs (for x poses)</span>
+                <span class="n">comp_sdf_output_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">list_comp_output</span><span class="p">[</span><span class="n">compound_number</span><span class="p">])</span>
+
+                <span class="c1"># loop over all output files</span>
+                <span class="k">for</span> <span class="n">comp_output</span> <span class="ow">in</span> <span class="n">comp_sdf_output_paths</span><span class="p">:</span>
+                    <span class="c1"># this is a protection against the case where empty (file size == 0 bytes) files</span>
+                    <span class="c1"># are generated due to a failure during docking</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">comp_output</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">comp_output</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="p">):</span>
+                        <span class="k">continue</span>
+
+                    <span class="n">mol_supplier</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">SDMolSupplier</span><span class="p">(</span><span class="n">comp_output</span><span class="p">,</span> <span class="n">removeHs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mol_supplier</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">continue</span>
+
+                        <span class="c1"># The name is something like: 10:0|tmp8x3rtg4d|sdf|1|dock7</span>
+                        <span class="n">cur_enumeration_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">GetProp</span><span class="p">(</span><span class="s2">&quot;_Name&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;|&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="c1"># add the information on the actual grid used</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">_SBE</span><span class="o">.</span><span class="n">ANNOTATION_GRID_ID</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid_id</span><span class="p">))</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">_SBE</span><span class="o">.</span><span class="n">ANNOTATION_GRID_PATH</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid_path</span><span class="p">))</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span>
+                            <span class="n">_SBE</span><span class="o">.</span><span class="n">ANNOTATION_GRID_FILENAME</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">grid_path</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># if no docking score is attached (i.e. the molecule is a receptor or so, skip it)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_docking_score</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="k">continue</span>
+
+                        <span class="c1"># add molecule to the appropriate ligand</span>
+                        <span class="k">for</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_compounds</span><span class="p">():</span>
+                            <span class="k">for</span> <span class="n">enumeration</span> <span class="ow">in</span> <span class="n">compound</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="p">(</span>
+                                    <span class="n">enumeration</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span>
+                                    <span class="o">==</span> <span class="n">cur_enumeration_name</span>
+                                <span class="p">):</span>
+                                    <span class="n">new_conformer</span> <span class="o">=</span> <span class="n">Conformer</span><span class="p">(</span>
+                                        <span class="n">conformer</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span>
+                                        <span class="n">conformer_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">enumeration_object</span><span class="o">=</span><span class="n">enumeration</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                    <span class="n">enumeration</span><span class="o">.</span><span class="n">add_conformer</span><span class="p">(</span>
+                                        <span class="n">new_conformer</span><span class="p">,</span> <span class="n">auto_update</span><span class="o">=</span><span class="kc">True</span>
+                                    <span class="p">)</span>
+                                    <span class="n">_update_subtask</span><span class="p">(</span>
+                                        <span class="n">cur_sublist</span><span class="p">,</span>
+                                        <span class="n">enum_identifier</span><span class="o">=</span><span class="n">cur_enumeration_name</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                    <span class="k">break</span>
+
+    <span class="k">def</span> <span class="nf">_run_subjob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">input_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="c1"># generate the appropriate config; note that input and output paths are referring to one compound each</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;gold.config&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_config_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config_path</span><span class="p">,</span> <span class="n">ligand_files</span><span class="o">=</span><span class="n">input_paths</span><span class="p">)</span>
+
+        <span class="c1"># set up arguments list and execute; change path to temporary sub-folder to avoid cluttering with files</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span><span class="n">config_path</span><span class="p">]</span>
+        <span class="n">old_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_CGE</span><span class="o">.</span><span class="n">GOLD_CALL</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">old_dir</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_config_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ligand_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">gold_config_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">DATA_FILES</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="c1"># skip over all defined ligand files</span>
+                    <span class="k">while</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">LIGAND_DATA_FILE</span> <span class="ow">in</span> <span class="n">buffer</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                            <span class="s1">&#39;Skipping pre-defined ligand in configuration file (remove lines starting with &quot;ligand_data_file&quot; to suppress this information).&#39;</span><span class="p">,</span>
+                            <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span>
+
+                    <span class="c1"># add ligand files as required</span>
+                    <span class="k">for</span> <span class="n">ligand_file</span> <span class="ow">in</span> <span class="n">ligand_files</span><span class="p">:</span>
+                        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_SGE</span><span class="o">.</span><span class="n">LIGAND_DATA_FILE</span><span class="p">,</span> <span class="n">ligand_file</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">])</span>
+                        <span class="p">)</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">def</span> <span class="nf">_config_from_default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ligand_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">def</span> <span class="nf">block_indent</span><span class="p">(</span><span class="n">block_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_SGE</span><span class="o">.</span><span class="n">BLOCK_INDENT</span><span class="p">,</span> <span class="n">block_name</span><span class="p">])</span>
+
+        <span class="k">def</span> <span class="nf">empty_line</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">add_block</span><span class="p">(</span><span class="n">list_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">block</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">LIGAND_DATA_FILE</span><span class="p">:</span>
+                    <span class="c1"># this needs to be overwritten by the actual compound collection</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Do not set ligand data files explicitly, use the compound handover - skipping.&quot;</span><span class="p">,</span>
+                        <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">list_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">key</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)]))</span>
+            <span class="n">list_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_line</span><span class="p">())</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="p">[</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">CONFIGURATION_START</span><span class="p">),</span> <span class="n">empty_line</span><span class="p">()]</span>
+
+        <span class="c1"># automatic settings</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">AUTOMATIC_SETTINGS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">automatic_settings</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># population</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">POPULATION</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">population</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># genetic operators</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">GENETIC_OPERATORS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">genetic_operators</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># flood fill</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">FLOOD_FILL</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">flood_fill</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># data files</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">DATA_FILES</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ligand_file</span> <span class="ow">in</span> <span class="n">ligand_files</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_SGE</span><span class="o">.</span><span class="n">LIGAND_DATA_FILE</span><span class="p">,</span> <span class="n">ligand_file</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">]))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">data_files</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># flags</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">FLAGS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># termination</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">TERMINATION</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">termination</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># constraints</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">CONSTRAINTS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">constraints</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># covalent bonding</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">COVALENT_BONDING</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">covalent_bonding</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># save options</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">SAVE_OPTIONS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">save_options</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="c1"># fitness function settings</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">FITNESS_FUNCTION_SETTINGS</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">fitness_function_settings</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># protein data</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block_indent</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">PROTEIN_DATA</span><span class="p">))</span>
+        <span class="n">add_block</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">protein_data</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">config</span>
+
+<div class="viewcode-block" id="StepGold.generate_config_file"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.ccdc.html#icolos.core.workflow_steps.ccdc.docking.StepGold.generate_config_file">[docs]</a>    <span class="k">def</span> <span class="nf">generate_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ligand_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="c1"># very complicated custom format for GOLD; see file in &quot;external_documentation/gold.conf&quot; for details</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">gold_config_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># generate config file step by step from default and overwrite set elements</span>
+            <span class="c1"># TODO: constraints are not yet supported (and probably a few other fine-grained settings)</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_from_default</span><span class="p">(</span><span class="n">ligand_files</span><span class="o">=</span><span class="n">ligand_files</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># load path to config file and replace &quot;ligand_files&quot; as required; as configuration element is ignored in</span>
+            <span class="c1"># this mode, check that it is not set</span>
+            <span class="k">if</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">CONFIGURATION</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gold_additional</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                    <span class="s1">&#39;The &quot;configuration&quot; elements are ignored when a config file path is specified.&#39;</span><span class="p">,</span>
+                    <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_from_file</span><span class="p">(</span><span class="n">ligand_files</span><span class="o">=</span><span class="n">ligand_files</span><span class="p">)</span>
+
+        <span class="c1"># write out</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StepGold.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.ccdc.html#icolos.core.workflow_steps.ccdc.docking.StepGold.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Note: This step only supports one grid at a time, ensemble docking is taken care of at the workflow level!</span>
+
+        <span class="c1"># in order to be able to efficiently execute Gold on the enumeration level, all of them have to be unrolled</span>
+        <span class="c1"># Note: As they retain their respective Compound object, the attribution later on is simple</span>
+        <span class="n">all_enumerations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_compounds</span><span class="p">():</span>
+            <span class="n">all_enumerations</span> <span class="o">=</span> <span class="n">all_enumerations</span> <span class="o">+</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">enumeration</span> <span class="ow">in</span> <span class="n">compound</span><span class="p">:</span>
+                <span class="n">enumeration</span><span class="o">.</span><span class="n">clear_conformers</span><span class="p">()</span>
+
+        <span class="c1"># split into sublists, according to the settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span> <span class="o">=</span> <span class="n">SubtaskContainer</span><span class="p">(</span>
+            <span class="n">max_tries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">failure_policy</span><span class="o">.</span><span class="n">n_tries</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">all_enumerations</span><span class="p">)</span>
+
+        <span class="c1"># execute Gold docking</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_execute_gold</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

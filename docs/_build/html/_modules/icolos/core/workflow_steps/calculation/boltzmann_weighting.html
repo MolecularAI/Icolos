@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.calculation.boltzmann_weighting &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.calculation.boltzmann_weighting</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.containers.compound</span> <span class="kn">import</span> <span class="n">Enumeration</span><span class="p">,</span> <span class="n">Conformer</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBoltzmannWeightingEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.calculation.base</span> <span class="kn">import</span> <span class="n">StepCalculationBase</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.general.convenience_functions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.constants</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">_SBWE</span> <span class="o">=</span> <span class="n">StepBoltzmannWeightingEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="StepBoltzmannWeighting"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.calculation.html#icolos.core.workflow_steps.calculation.boltzmann_weighting.StepBoltzmannWeighting">[docs]</a><span class="k">class</span> <span class="nc">StepBoltzmannWeighting</span><span class="p">(</span><span class="n">StepCalculationBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_relative_energy_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">conformers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Conformer</span><span class="p">],</span> <span class="n">property_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span><span class="o">.</span><span class="n">GetProp</span><span class="p">(</span><span class="n">property_name</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conformers</span><span class="p">]</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">relative_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="o">-</span> <span class="n">min_val</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">relative_values</span>
+
+    <span class="k">def</span> <span class="nf">_obtain_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relative_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="c1"># calculate individual Boltzmann factors</span>
+        <span class="n">individual_factors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">val</span> <span class="o">/</span> <span class="p">(</span><span class="n">CONSTANT_KB</span> <span class="o">*</span> <span class="n">CONSTANT_T</span><span class="p">)))</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">relative_values</span>
+        <span class="p">]</span>
+
+        <span class="c1"># calculate and return Boltzmann factors</span>
+        <span class="n">sum_factors</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">individual_factors</span><span class="p">)</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span> <span class="o">/</span> <span class="n">sum_factors</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">individual_factors</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">factors</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_Boltzmann_factors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">enumeration</span><span class="p">:</span> <span class="n">Enumeration</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">list_properties</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">PROPERTIES</span><span class="p">]</span>
+        <span class="n">list_output_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">list_properties</span><span class="p">:</span>
+            <span class="c1"># (1) get the relative values for this property (e.g. solvent) for all conformers in respect to the one</span>
+            <span class="c1"># with the minimal energy</span>
+            <span class="n">relative_prop_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_relative_energy_values</span><span class="p">(</span>
+                <span class="n">conformers</span><span class="o">=</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_conformers</span><span class="p">(),</span>
+                <span class="n">property_name</span><span class="o">=</span><span class="n">prop</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">PROPERTIES_INPUT</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="c1"># (2) calculate the Boltzmann factors for this property</span>
+            <span class="n">boltzmann_factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obtain_factors</span><span class="p">(</span>
+                <span class="n">relative_values</span><span class="o">=</span><span class="n">relative_prop_values</span>
+            <span class="p">)</span>
+
+            <span class="c1"># (3) add the Boltzmann factors to the conformers as a tag</span>
+            <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">bm_factor</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_conformers</span><span class="p">(),</span> <span class="n">boltzmann_factors</span><span class="p">):</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">PROPERTIES_OUTPUT</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">bm_factor</span><span class="p">))</span>
+            <span class="n">list_output_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">PROPERTIES_OUTPUT</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">list_output_names</span>
+
+    <span class="k">def</span> <span class="nf">_do_Boltzmann_weighting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conformers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Conformer</span><span class="p">],</span> <span class="n">weightings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">input_tags</span> <span class="o">=</span> <span class="n">weightings</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">WEIGHT_INPUT</span><span class="p">]</span>
+        <span class="n">output_prefix</span> <span class="o">=</span> <span class="n">nested_get</span><span class="p">(</span>
+            <span class="n">weightings</span><span class="p">,</span> <span class="n">_SBWE</span><span class="o">.</span><span class="n">WEIGHT_OUTPUT_PREFIX</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;bf_weighted&quot;</span>
+        <span class="p">)</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="n">weightings</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">WEIGHT_PROPERTIES</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">inp_tag</span> <span class="ow">in</span> <span class="n">input_tags</span><span class="p">:</span>
+                <span class="n">new_tag_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">output_prefix</span><span class="p">,</span> <span class="n">inp_tag</span><span class="p">,</span> <span class="n">prop</span><span class="p">])</span>
+                <span class="n">products</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">conformer</span> <span class="ow">in</span> <span class="n">conformers</span><span class="p">:</span>
+                    <span class="n">conf</span> <span class="o">=</span> <span class="n">conformer</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span>
+                    <span class="n">products</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">GetProp</span><span class="p">(</span><span class="n">prop</span><span class="p">))</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">GetProp</span><span class="p">(</span><span class="n">inp_tag</span><span class="p">))</span>
+                    <span class="p">)</span>
+                <span class="k">for</span> <span class="n">conformer</span> <span class="ow">in</span> <span class="n">conformers</span><span class="p">:</span>
+                    <span class="n">conformer</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">new_tag_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">products</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="StepBoltzmannWeighting.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.calculation.html#icolos.core.workflow_steps.calculation.boltzmann_weighting.StepBoltzmannWeighting.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_compounds</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">enumeration</span> <span class="ow">in</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_object_empty</span><span class="p">(</span><span class="n">enumeration</span><span class="p">):</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># get the name of the Boltzmann properties / solvents and annotate the factors</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_Boltzmann_factors</span><span class="p">(</span><span class="n">enumeration</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+                <span class="c1"># for each property and each weighting, add the respective tags</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_do_Boltzmann_weighting</span><span class="p">(</span>
+                    <span class="n">conformers</span><span class="o">=</span><span class="n">enumeration</span><span class="o">.</span><span class="n">get_conformers</span><span class="p">(),</span>
+                    <span class="n">weightings</span><span class="o">=</span><span class="n">parameters</span><span class="p">[</span><span class="n">_SBWE</span><span class="o">.</span><span class="n">WEIGHT</span><span class="p">],</span>
+                <span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

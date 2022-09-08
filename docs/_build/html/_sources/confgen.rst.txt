@@ -1,0 +1,15 @@
+Confgen
+=======
+
+A series of tools for conformer generation, using either empirical or semi-empirical methods
+
+
+.. currentmodule:: icolos.core.workflow_steps.confgen
+
+.. autosummary::
+   :toctree: generated
+
+   base.StepConfgenBase
+   crest.StepCREST
+   omega.StepOmega
+   xtb.StepXTB

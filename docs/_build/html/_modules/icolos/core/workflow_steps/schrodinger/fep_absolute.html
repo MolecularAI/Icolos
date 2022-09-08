@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.schrodinger.fep_absolute &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.schrodinger.fep_absolute</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.schrodinger.fep_base</span> <span class="kn">import</span> <span class="n">StepFEPBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.logging_enums</span> <span class="kn">import</span> <span class="n">LoggingConfigEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FepPlusEnum</span><span class="p">,</span>
+    <span class="n">SchrodingerExecutablesEnum</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.write_out_enums</span> <span class="kn">import</span> <span class="n">WriteOutEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.fep_plus</span> <span class="kn">import</span> <span class="n">FepPlusExecutor</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.schrodinger</span> <span class="kn">import</span> <span class="n">SchrodingerExecutor</span>
+
+<span class="n">_WE</span> <span class="o">=</span> <span class="n">WriteOutEnum</span><span class="p">()</span>
+<span class="n">_SEE</span> <span class="o">=</span> <span class="n">SchrodingerExecutablesEnum</span><span class="p">()</span>
+<span class="n">_FE</span> <span class="o">=</span> <span class="n">FepPlusEnum</span><span class="p">()</span>
+<span class="n">_LE</span> <span class="o">=</span> <span class="n">LoggingConfigEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="StepSchrodingerAbsoluteFEP"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.schrodinger.html#icolos.core.workflow_steps.schrodinger.fep_absolute.StepSchrodingerAbsoluteFEP">[docs]</a><span class="k">class</span> <span class="nc">StepSchrodingerAbsoluteFEP</span><span class="p">(</span><span class="n">StepFEPBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">_schrodinger_executor</span><span class="p">:</span> <span class="n">SchrodingerExecutor</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">FepPlusExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_backend_availability</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schrodinger_executor</span> <span class="o">=</span> <span class="n">SchrodingerExecutor</span><span class="p">(</span>
+            <span class="n">prefix_execution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">prefix_execution</span><span class="p">,</span>
+            <span class="n">binary_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">binary_location</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_poseviewer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="c1"># we must have a protein structure to construct the pv by combining with existing compounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_argument_by_extension</span><span class="p">(</span><span class="s2">&quot;pdb&quot;</span><span class="p">,</span> <span class="n">rtn_file_object</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s2">&quot;receptor.pdb&quot;</span><span class="p">),</span> <span class="n">join</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="c1"># write conformers in self.data.compound to sdf</span>
+        <span class="k">with</span> <span class="n">Chem</span><span class="o">.</span><span class="n">SDWriter</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s2">&quot;compounds.sdf&quot;</span><span class="p">))</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">compound</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_compounds</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">enum</span> <span class="ow">in</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_enumerations</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">conf</span> <span class="ow">in</span> <span class="n">enum</span><span class="o">.</span><span class="n">get_conformers</span><span class="p">():</span>
+                        <span class="n">mol</span> <span class="o">=</span> <span class="n">conf</span><span class="o">.</span><span class="n">get_molecule</span><span class="p">()</span>
+                        <span class="n">mol_name</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">compound</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span>
+                            <span class="k">else</span> <span class="n">compound</span><span class="o">.</span><span class="n">get_index_string</span><span class="p">()</span>
+                        <span class="p">)</span>
+                        <span class="n">mol</span><span class="o">.</span><span class="n">SetProp</span><span class="p">(</span><span class="n">_WE</span><span class="o">.</span><span class="n">RDKIT_NAME</span><span class="p">,</span> <span class="n">mol_name</span><span class="p">)</span>
+                        <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="c1"># run structcat with the ligand files</span>
+        <span class="n">structcat_args</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;-ipdb&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;receptor.pdb&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-isd&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;compounds.sdf&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;-omae&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;abfe_pv.maegz&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schrodinger_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_SEE</span><span class="o">.</span><span class="n">STRUCTCAT</span><span class="p">,</span>
+            <span class="n">arguments</span><span class="o">=</span><span class="n">structcat_args</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># schrodinger return codes not always reliable</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s2">&quot;abfe_pv.maegz&quot;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="StepSchrodingerAbsoluteFEP.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.schrodinger.html#icolos.core.workflow_steps.schrodinger.fep_absolute.StepSchrodingerAbsoluteFEP.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute Schrodinger&#39;s ABFE workflow&quot;&quot;&quot;</span>
+
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_tmpdir</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+        <span class="c1"># require poseviewer file, either direct from generic data or construct from receptor and ligands from previous dock</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_files_by_extension</span><span class="p">(</span><span class="s2">&quot;maegz&quot;</span><span class="p">):</span>
+            <span class="c1"># poseviewer has been provided</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_argument_by_extension</span><span class="p">(</span><span class="s2">&quot;maegz&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="s2">&quot;abfe_pv.maegz&quot;</span><span class="p">),</span> <span class="n">join</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Using provided poseviewer file&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s2">&quot;Preparing poseviewer from receptor and compounds&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_poseviewer</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+        <span class="n">abfe_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;abfe_pv.maegz&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_arguments</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_FE</span><span class="o">.</span><span class="n">FEP_ABSOLUTE_EXECUTOR</span><span class="p">,</span>
+            <span class="n">arguments</span><span class="o">=</span><span class="n">abfe_args</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

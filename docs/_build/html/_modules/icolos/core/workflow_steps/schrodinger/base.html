@@ -1,0 +1,462 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.schrodinger.base &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.schrodinger.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">StepBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="n">SchrodingerExecutablesEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.license_token_guard</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TokenGuardParameters</span><span class="p">,</span>
+    <span class="n">SchrodingerLicenseTokenGuard</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.files_paths</span> <span class="kn">import</span> <span class="n">attach_root_path</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.schrodinger</span> <span class="kn">import</span> <span class="n">SchrodingerExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepDesmondEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+
+<span class="n">_EE</span> <span class="o">=</span> <span class="n">SchrodingerExecutablesEnum</span><span class="p">()</span>
+<span class="n">_SDE</span> <span class="o">=</span> <span class="n">StepDesmondEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="StepSchrodingerBase"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.schrodinger.html#icolos.core.workflow_steps.schrodinger.base.StepSchrodingerBase">[docs]</a><span class="k">class</span> <span class="nc">StepSchrodingerBase</span><span class="p">(</span><span class="n">StepBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="n">token_guard</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TokenGuardParameters</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_token_guard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_guard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">token_guard</span> <span class="o">=</span> <span class="n">SchrodingerLicenseTokenGuard</span><span class="p">(</span><span class="n">token_guard</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">token_guard</span><span class="p">)</span>
+            <span class="n">token_guard</span><span class="o">.</span><span class="n">guard</span><span class="p">()</span>
+
+    <span class="c1"># TODO: Deprecated - use self.converter</span>
+    <span class="k">def</span> <span class="nf">_translate_SDF_to_MAE</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">sdf_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mae_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">SchrodingerExecutor</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;As &quot;Glide&quot; is only able to read MAE (Maestro) files, write the ligands out in that format.&quot;&quot;&quot;</span>
+
+        <span class="c1"># call &quot;sdconvert&quot; from Schrodinger&#39;s software</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_I</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_FORMAT_SD</span><span class="p">]),</span>
+            <span class="n">sdf_path</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_O</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_FORMAT_MAE</span><span class="p">]),</span>
+            <span class="n">mae_path</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_MAE_to_SDF</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mae_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sdf_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">SchrodingerExecutor</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;In cases where the write-out mode for Glide is not producing SDF files.&quot;&quot;&quot;</span>
+
+        <span class="c1"># call &quot;sdconvert&quot; from Schrodinger&#39;s software</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_I</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_FORMAT_MAE</span><span class="p">]),</span>
+            <span class="n">mae_path</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_O</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_FORMAT_SD</span><span class="p">]),</span>
+            <span class="n">sdf_path</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_PDB_to_MAE</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pdb_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mae_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">SchrodingerExecutor</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;In cases where the write-out mode for Glide is not producing SDF files.&quot;&quot;&quot;</span>
+
+        <span class="c1"># call &quot;sdconvert&quot; from Schrodinger&#39;s software</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_I</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">STRUCTCAT_FORMAT_PDB</span><span class="p">]),</span>
+            <span class="n">pdb_path</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_O</span><span class="p">,</span> <span class="n">_EE</span><span class="o">.</span><span class="n">SDCONVERT_FORMAT_MAE</span><span class="p">]),</span>
+            <span class="n">mae_path</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="n">_EE</span><span class="o">.</span><span class="n">STRUCTCONVERT</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_replace_config_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> =).*&quot;</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">rf</span><span class="s2">&quot;\1 </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+    <span class="k">def</span> <span class="nf">_get_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">file</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">attach_root_path</span><span class="p">(</span><span class="s2">&quot;icolos/config/desmond&quot;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file</span>
+        <span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">file</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_write_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">,</span> <span class="n">dict_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+        <span class="c1"># see if a config file was specified, assume no further changes:</span>
+        <span class="k">if</span> <span class="n">_SDE</span><span class="o">.</span><span class="n">CONFIG</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dict_</span><span class="p">[</span><span class="n">_SDE</span><span class="o">.</span><span class="n">CONFIG</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">copy</span><span class="p">(</span><span class="n">dict_</span><span class="p">[</span><span class="n">_SDE</span><span class="o">.</span><span class="n">CONFIG</span><span class="p">],</span> <span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_template</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">attach_root_path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;icolos/config/desmond/</span><span class="si">{</span><span class="n">template</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">config</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dict_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_config_value</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compiled  file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">file_name</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;-WAIT&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-WAIT&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">defaults</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_maestro_in_file</span><span class="p">(</span>
+        <span class="n">lines</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]:</span>
+        <span class="sd">&quot;&quot;&quot;Parses Maestro input, and returns keywords dict for it.&quot;&quot;&quot;</span>
+
+        <span class="n">separator3</span> <span class="o">=</span> <span class="s2">&quot;   &quot;</span>
+        <span class="n">indent4</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
+        <span class="n">block_starters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;[CONSTRAINT_GROUP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;[FEATURE&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># All Glide keywords. Get all keywords with:</span>
+        <span class="c1">#   $ module load schrodinger</span>
+        <span class="c1">#   $ glide -docking-keywords | cut -d&#39; &#39; -f1 | sed &#39;s/.*/&quot;&amp;&quot;/&#39; | paste -sd , -</span>
+        <span class="c1"># List keywords, get first word, wrap in quotes, join lines.</span>
+        <span class="c1"># See:</span>
+        <span class="c1">#   - https://stackoverflow.com/a/19145499</span>
+        <span class="c1">#   - https://unix.stackexchange.com/a/251362</span>
+        <span class="n">allowed_keywords</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;AMIDE_MODE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;AMIDE_TRANS_ALL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;AMIDE_TRANSTOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ASL_RES_INTERACTION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CALC_INPUT_RMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CANONICALIZE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;COMPRESS_POSES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_ATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_DEFINITION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_FILTER&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_POS_MAX_RMSD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_RESTRAIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_RESTRAIN_V&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_SMARTS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORE_SNAP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CORECONS_FALLBACK&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CSV_PROPS_FILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CV_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DIELMOD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DOCKING_METHOD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DOINTRA&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DOINTRA_SCALE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DSCORE_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;EPIK_PENALTIES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;EXPANDED_SAMPLING&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FITDEN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FORCEFIELD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;FORCEPLANAR&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONFGEN_BADDIST2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONFGEN_EFCUT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_FEAT_FILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_FINALONLY&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_RMETCOORD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_RNOEMAX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_RNOEMIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_RPOS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_XMETCOORD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_XNOE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_XPOS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_YMETCOORD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_YNOE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_YPOS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_ZMETCOORD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_ZNOE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_CONS_ZPOS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_DIELCO&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_ELEMENTS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_EXVOL_PENAL_NUM&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_EXVOL_PENAL_STRENGTH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NTOTALCONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMMETCOORDCONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMMETCOORDSITES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMNOECONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMPOSITCONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_NUMUSEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_OUTPUT_USEHTOR&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_REFLIG_FORMAT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_REXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_REXVOLIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_ALLBONDS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_IATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_JATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_KATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_LATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_PATTERN_INDEX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_PATTERNS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_SETVAL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONS_VALUES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_TORCONSFILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_XEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_XP_NMAXCORE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_XP_RMSCUT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_YEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDE_ZEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSFEATATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSFEATHASINCLUDE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSFEATINCLUDE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSFEATINDEX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSFEATPATTERNS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSGROUPNREQUIRED&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSNAMES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDECONSUSEMET&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDESCORUSEMET&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSEALLEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSECONSFEAT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSECONSFEATINDEX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSECONSGROUPINDEX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSECONSLABELS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSEXVOL&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEUSEXVOLNAMES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GLIDEXVOLNAMES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GRIDFILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GSCORE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;GSCORE_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HAVEGLIDECONSFEAT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HBOND_ACCEP_HALO&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HBOND_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HBOND_DONOR_AROMH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HBOND_DONOR_AROMH_CHARGE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;HBOND_DONOR_HALO&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;INCLUDE_INPUT_CONF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;INCLUDE_INPUT_RINGS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;JOBNAME&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;KEEP_SUBJOB_POSES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;KEEPRAW&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;KEEPSKIPPED&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIG_CCUT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIG_MAECHARGES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIG_VSCALE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGAND_END&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGAND_START&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGANDFILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGANDFILES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGFORMAT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGPREP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;LIGPREP_ARGS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MACROCYCLE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MACROCYCLE_OPTIONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MAX_ITERATIONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MAXATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MAXKEEP&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MAXREF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;MAXROTBONDS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;METAL_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;NENHANCED_SAMPLING&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;NMAXRMSSYM&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;NOSORT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;NREPORT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;NREQUIRED_CONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;OUTPUTDIR&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PAIRDISTANCES&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PEPTIDE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PHASE_DB&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PHASE_NCONFS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PHASE_SUBSET&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSE_DISPLACEMENT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSE_HTORSION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSE_OUTTYPE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSE_RMSD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSES_PER_LIG&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCK&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCK_ITMAX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCK_NPOSE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCK_SCITMAX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCK_XP_DELE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCKCG&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCKLIGMIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;POSTDOCKSTRAIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PRECISION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PREMIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PREMINCG&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PREMINELEC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PREMINITMAX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;RADIUS_RES_INTERACTION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;REF_LIGAND_FILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;REFINDEX&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;REPORT_CPU_TIME&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;REWARD_INTRA_HBONDS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;RINGCONFCUT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;RINGONFLY&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SAMPLE_N_INVERSIONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SAMPLE_RINGS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SCORE_INPUT_POSE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SCORE_MINIMIZED_INPUT_POSE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SCORING_CUTOFF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SHAPE_ATOMS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SHAPE_RESTRAIN&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SHAPE_TYPING&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SKIP_EPIK_METAL_ONLY&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;STRAIN_GSFACTOR&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;STRAIN_GSTHRESH&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;STRAINELEC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SUBSTRATE_PENAL_FILE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;USE_CONS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;USE_REF_LIGAND&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;USECOMPMAE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;WRITE_CSV&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;WRITE_RES_INTERACTION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;WRITE_TIMINGS_CSV&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;WRITE_XP_DESC&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;WRITEREPT&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">current_block</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">linenum</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">starter</span><span class="p">)</span> <span class="k">for</span> <span class="n">starter</span> <span class="ow">in</span> <span class="n">block_starters</span><span class="p">):</span>
+                <span class="c1"># Block start.</span>
+                <span class="n">current_block</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">current_block</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="c1"># Empty line: close current block if any is open, and skip the line.</span>
+                <span class="n">current_block</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">indent4</span><span class="p">):</span>
+                <span class="c1"># Indented line inside the block.</span>
+                <span class="k">if</span> <span class="n">current_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Unexpected indent outside of block for line </span><span class="si">{</span><span class="n">linenum</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">kw</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="o">=</span><span class="n">separator3</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">current_block</span><span class="p">][</span><span class="n">kw</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span> <span class="k">for</span> <span class="n">kw</span> <span class="ow">in</span> <span class="n">allowed_keywords</span><span class="p">):</span>
+                <span class="c1"># Ordinary keywords.</span>
+                <span class="n">kw</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sep</span><span class="o">=</span><span class="n">separator3</span><span class="p">,</span> <span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">kw</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Unexpected line </span><span class="si">{</span><span class="n">linenum</span><span class="si">}</span><span class="s2"> in maestro input file: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

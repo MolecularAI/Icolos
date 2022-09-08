@@ -1,0 +1,65 @@
+﻿icolos.core.workflow\_steps.step.StepBase
+=========================================
+
+.. currentmodule:: icolos.core.workflow_steps.step
+
+.. autoclass:: StepBase
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StepBase.__init__
+      ~StepBase.clone_compounds
+      ~StepBase.construct
+      ~StepBase.copy
+      ~StepBase.dict
+      ~StepBase.execute
+      ~StepBase.from_orm
+      ~StepBase.generate_input
+      ~StepBase.get_arguments
+      ~StepBase.get_compound_by_name
+      ~StepBase.get_compound_stats
+      ~StepBase.get_compounds
+      ~StepBase.get_generic
+      ~StepBase.get_perturbation_map
+      ~StepBase.get_step_id
+      ~StepBase.get_topol
+      ~StepBase.get_workflow_object
+      ~StepBase.json
+      ~StepBase.parse_file
+      ~StepBase.parse_obj
+      ~StepBase.parse_raw
+      ~StepBase.process_write_out
+      ~StepBase.schema
+      ~StepBase.schema_json
+      ~StepBase.set_step_id
+      ~StepBase.set_workflow_object
+      ~StepBase.update_forward_refs
+      ~StepBase.validate
+      ~StepBase.write_conformers
+      ~StepBase.write_generic_by_extension
+      ~StepBase.write_generic_by_name
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~StepBase.step_id
+      ~StepBase.work_dir
+      ~StepBase.type
+      ~StepBase.data
+      ~StepBase.input
+      ~StepBase.writeout
+      ~StepBase.execution
+      ~StepBase.settings
+   
+   

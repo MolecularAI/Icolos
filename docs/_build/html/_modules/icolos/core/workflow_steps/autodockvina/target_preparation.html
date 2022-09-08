@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.autodockvina.target_preparation &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.autodockvina.target_preparation</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="n">OpenBabelEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepAutoDockVinaTargetPreparationEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.autodockvina</span> <span class="kn">import</span> <span class="n">AutoDockVinaExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.openbabel</span> <span class="kn">import</span> <span class="n">OpenBabelExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.icolos_exceptions</span> <span class="kn">import</span> <span class="n">StepFailed</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span><span class="p">,</span> <span class="n">StepBase</span>
+
+<span class="n">_STE</span> <span class="o">=</span> <span class="n">StepAutoDockVinaTargetPreparationEnum</span><span class="p">()</span>
+<span class="n">_OBE</span> <span class="o">=</span> <span class="n">OpenBabelEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ADVExtractBoxTP"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.autodockvina.html#icolos.core.workflow_steps.autodockvina.target_preparation.ADVExtractBoxTP">[docs]</a><span class="k">class</span> <span class="nc">ADVExtractBoxTP</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">reference_ligand_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reference_ligand_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_STE</span><span class="o">.</span><span class="n">EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_PDB</span></div>
+
+
+<div class="viewcode-block" id="ADVAdditionalTP"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.autodockvina.html#icolos.core.workflow_steps.autodockvina.target_preparation.ADVAdditionalTP">[docs]</a><span class="k">class</span> <span class="nc">ADVAdditionalTP</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">pH</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">7.4</span>  <span class="c1"># set target pH value that determines the protein&#39;s side-chain states</span>
+    <span class="p">)</span>
+    <span class="n">input_receptor_pdb</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output_receptor_pdbqt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">extract_box</span><span class="p">:</span> <span class="n">ADVExtractBoxTP</span> <span class="o">=</span> <span class="n">ADVExtractBoxTP</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="StepAutoDockVinaTargetPreparation"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.autodockvina.html#icolos.core.workflow_steps.autodockvina.target_preparation.StepAutoDockVinaTargetPreparation">[docs]</a><span class="k">class</span> <span class="nc">StepAutoDockVinaTargetPreparation</span><span class="p">(</span><span class="n">StepBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">_openbabel_executor</span><span class="p">:</span> <span class="n">OpenBabelExecutor</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">adv_additional</span><span class="p">:</span> <span class="n">ADVAdditionalTP</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># initialize the executor and test availability</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">AutoDockVinaExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_backend_availability</span><span class="p">()</span>
+
+        <span class="c1"># initialize the executor for all &quot;OpenBabel&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_openbabel_executor</span> <span class="o">=</span> <span class="n">OpenBabelExecutor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_openbabel_executor</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">StepFailed</span><span class="p">(</span>
+                <span class="s2">&quot;AutoDock Vina requires OpenBabel execution, initialization failed.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># set ADV specific settings and ensure that each molecule gets its own sublist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span> <span class="o">=</span> <span class="n">ADVAdditionalTP</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_export_as_pdb2pdbqt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Note: In contrast to the ligand preparation, we will not use a tree-based flexibility treatment here - thus,</span>
+        <span class="c1">#       the option &quot;-xr&quot; is used. Partial charges of the receptor are not used in AutoDock Vina.</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_INPUTFORMAT_PDB</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">input_receptor_pdb</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_OUTPUT_FORMAT_PDBQT</span><span class="p">,</span>
+            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_O</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">output_receptor_pdbqt</span><span class="p">]),</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_X</span><span class="p">,</span> <span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_X_R</span><span class="p">]),</span>
+            <span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_P</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">pH</span><span class="p">),</span>
+            <span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_PARTIALCHARGE</span><span class="p">,</span>
+            <span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL_PARTIALCHARGE_GASTEIGER</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_openbabel_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_OBE</span><span class="o">.</span><span class="n">OBABEL</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Exported target as PDBQT file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">output_receptor_pdbqt</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_log_extract_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">z_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_box</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">x_coords</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">dig</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ndigits</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Calculating lingad dimensions for AutoDock Vina docking protocol.&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Ligand (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">extract_box</span><span class="o">.</span><span class="n">reference_ligand_path</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;X coordinates: min=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">x_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">x_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, mean=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">x_coords</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Y coordinates: min=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">y_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, mean=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">y_coords</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Z coordinates: min=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">z_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">z_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">, mean=</span><span class="si">{</span><span class="n">dig</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">z_coords</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_coords</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_extract_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># extracts box suggestions from a reference ligand, which can be added to a AutoDock Vina run</span>
+        <span class="c1"># load the reference file (PDB or SDF)</span>
+        <span class="n">ref_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">extract_box</span><span class="o">.</span><span class="n">reference_ligand_format</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ref_format</span> <span class="o">==</span> <span class="n">_STE</span><span class="o">.</span><span class="n">EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_PDB</span><span class="p">:</span>
+            <span class="n">ref_mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromPDBFile</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">extract_box</span><span class="o">.</span><span class="n">reference_ligand_path</span><span class="p">,</span> <span class="n">sanitize</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ref_format</span> <span class="o">==</span> <span class="n">_STE</span><span class="o">.</span><span class="n">EXTRACT_BOX_REFERENCE_LIGAND_FORMAT_SDF</span><span class="p">:</span>
+            <span class="n">mol_supplier</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">SDMolSupplier</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">extract_box</span><span class="o">.</span><span class="n">reference_ligand_path</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mol_supplier</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">StepFailed</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Could not load molecule from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adv_additional</span><span class="o">.</span><span class="n">extract_box</span><span class="o">.</span><span class="n">reference_ligand_path</span><span class="si">}</span><span class="s2"> - abort.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">ref_mol</span> <span class="o">=</span> <span class="n">mol</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">StepFailed</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Reference ligand format </span><span class="si">{</span><span class="n">ref_format</span><span class="si">}</span><span class="s2"> not supported, use PDB or SDF instead - abort.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># extract coordinates</span>
+        <span class="n">x_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">ref_mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">GetPositions</span><span class="p">()]</span>
+        <span class="n">y_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">ref_mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">GetPositions</span><span class="p">()]</span>
+        <span class="n">z_coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">ref_mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">GetPositions</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">z_coords</span>
+
+<div class="viewcode-block" id="StepAutoDockVinaTargetPreparation.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.autodockvina.html#icolos.core.workflow_steps.autodockvina.target_preparation.StepAutoDockVinaTargetPreparation.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># translate input PDB file into output PDBQT file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_export_as_pdb2pdbqt</span><span class="p">()</span>
+
+        <span class="c1"># extract and log the &quot;box&quot; dimensions based on the reference ligand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_extract_box</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

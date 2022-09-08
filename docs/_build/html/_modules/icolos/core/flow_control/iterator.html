@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.flow_control.iterator &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.flow_control.iterator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.composite_agents.workflow</span> <span class="kn">import</span> <span class="n">WorkFlow</span>
+
+<span class="kn">from</span> <span class="nn">icolos.core.flow_control.flow_control</span> <span class="kn">import</span> <span class="n">BaseStepConfig</span><span class="p">,</span> <span class="n">FlowControlBase</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">from</span> <span class="nn">icolos.core.step_dispatch.dispatcher</span> <span class="kn">import</span> <span class="n">StepDispatcher</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.composite_agents_enums</span> <span class="kn">import</span> <span class="n">WorkflowEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">StepBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">IteratorEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.composite_agents.workflow</span> <span class="kn">import</span> <span class="n">WorkflowHeaderParameters</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">_IE</span> <span class="o">=</span> <span class="n">IteratorEnum</span>
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+<span class="n">_WE</span> <span class="o">=</span> <span class="n">WorkflowEnum</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="IterSettingsParameters"><a class="viewcode-back" href="../../../../icolos.core.flow_control.html#icolos.core.flow_control.iterator.IterSettingsParameters">[docs]</a><span class="k">class</span> <span class="nc">IterSettingsParameters</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># unpacked version of StepSettingsParameters</span>
+    <span class="n">flags</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">additional</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="IterParallelizer"><a class="viewcode-back" href="../../../../icolos.core.flow_control.html#icolos.core.flow_control.iterator.IterParallelizer">[docs]</a><span class="k">class</span> <span class="nc">IterParallelizer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="c1"># if true, steps must be totally independent, the iterator step</span>
+    <span class="n">parallelize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dependent_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="IterSettings"><a class="viewcode-back" href="../../../../icolos.core.flow_control.html#icolos.core.flow_control.iterator.IterSettings">[docs]</a><span class="k">class</span> <span class="nc">IterSettings</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="c1"># dictionary of settings to change</span>
+
+    <span class="c1"># settings: {step_id: {IterSettingsParameters}}</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">IterSettingsParameters</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">iter_mode</span><span class="p">:</span> <span class="n">_IE</span> <span class="o">=</span> <span class="n">_IE</span><span class="o">.</span><span class="n">N_ITERS</span>
+    <span class="n">n_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">remove_temporary_files</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">single_directory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">parallelizer_settings</span><span class="p">:</span> <span class="n">IterParallelizer</span> <span class="o">=</span> <span class="n">IterParallelizer</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="StepIterator"><a class="viewcode-back" href="../../../../icolos.core.flow_control.html#icolos.core.flow_control.iterator.StepIterator">[docs]</a><span class="k">class</span> <span class="nc">StepIterator</span><span class="p">(</span><span class="n">FlowControlBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements iterator mechanism:</span>
+<span class="sd">    wraps one or multiple steps and generates n copies of that set of steps according to iter_config</span>
+<span class="sd">    Becomes master job when parallize=True, using  Icolos JobControl to interface with external resources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># holds the dict of iterables for the bits to chang</span>
+    <span class="n">iter_settings</span><span class="p">:</span> <span class="n">IterSettings</span> <span class="o">=</span> <span class="n">IterSettings</span><span class="p">()</span>
+    <span class="n">dispatcher</span><span class="p">:</span> <span class="n">StepDispatcher</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_workflows</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_modify_settings</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">BaseStepConfig</span><span class="p">,</span> <span class="n">step_config</span><span class="p">:</span> <span class="n">BaseStepConfig</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">):</span>
+        <span class="n">base_conf</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">step_config</span><span class="p">)</span>
+        <span class="n">iter_settings</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;flags&quot;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">flags</span><span class="p">}</span>
+
+            <span class="c1"># iterate over the flags</span>
+            <span class="c1"># if it&#39;s been converted, hence there are flags to be applied</span>
+            <span class="n">base_conf</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span>
+            <span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="n">iter_settings</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">base_conf</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span>
+            <span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="n">iter_settings</span><span class="o">.</span><span class="n">additional</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># however many lists of n items</span>
+            <span class="n">base_conf</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">base_conf</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_n_iters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">WorkFlow</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise n identical copies of the same step config</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workflows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">n_iters</span><span class="p">):</span>
+            <span class="n">workflow_steps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">list_step_conf</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_config</span><span class="p">)</span>
+
+            <span class="c1"># hand all steps over to the config updater</span>
+            <span class="n">step_confs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_config</span><span class="p">(</span><span class="n">list_step_conf</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;run_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">step_confs</span><span class="p">:</span>
+                <span class="n">workflow_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span>
+            <span class="n">wf_config</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">_WE</span><span class="o">.</span><span class="n">HEADER</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">_WE</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;workflow_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">_WE</span><span class="o">.</span><span class="n">ENVIRONMENT</span><span class="p">:</span> <span class="p">{</span><span class="n">_WE</span><span class="o">.</span><span class="n">ENVIRONMENT_EXPORT</span><span class="p">:</span> <span class="p">[]},</span>
+                    <span class="n">_WE</span><span class="o">.</span><span class="n">GLOBAL_VARIABLES</span><span class="p">:</span> <span class="p">{},</span>
+                    <span class="n">_WE</span><span class="o">.</span><span class="n">GLOBAL_SETTINGS</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">&quot;remove_temporary_files&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">remove_temporary_files</span><span class="p">,</span>
+                        <span class="s2">&quot;single_directory&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">single_directory</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="n">_WE</span><span class="o">.</span><span class="n">STEPS</span><span class="p">:</span> <span class="n">workflow_steps</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="c1"># manually set some things for these workflows</span>
+
+            <span class="n">workflows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkFlow</span><span class="p">(</span><span class="o">**</span><span class="n">wf_config</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">workflows</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterate through all settings step-wise, changing all setting blocks simultaneously, returning n initialised steps for n</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">init_steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">n_iters</span><span class="p">):</span>
+
+            <span class="c1"># iterate over the steps in the base config, and the corresponding settings, if these are to be modified</span>
+            <span class="n">step_sublist</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">step_config</span> <span class="ow">in</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_config</span><span class="p">):</span>
+
+                <span class="c1"># check if we need to iterate through settings in this step, else just use the base config</span>
+                <span class="k">if</span> <span class="n">step_config</span><span class="o">.</span><span class="n">step_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="n">step_config</span><span class="o">.</span><span class="n">step_id</span><span class="p">]</span>
+                    <span class="n">step_sublist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modify_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">step_config</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">step_sublist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step_config</span><span class="p">)</span>
+
+            <span class="c1"># update all configs with references to updated step_ids etc</span>
+            <span class="n">formatted_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_config</span><span class="p">(</span><span class="n">step_sublist</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;run_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">step_conf</span> <span class="ow">in</span> <span class="n">formatted_configs</span><span class="p">:</span>
+                <span class="n">initialized_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_step_from_dict</span><span class="p">(</span><span class="n">step_conf</span><span class="o">.</span><span class="n">_as_dict</span><span class="p">())</span>
+                <span class="n">init_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">initialized_step</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">init_steps</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_workflows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StepDispatcher</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handle step init according to config</span>
+<span class="sd">        Returns a Step-like JobControl that holds a list of separate workflows, which will be executed according to the parallelization scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">workflows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">iter_mode</span> <span class="o">==</span> <span class="n">_IE</span><span class="o">.</span><span class="n">N_ITERS</span><span class="p">:</span>
+            <span class="c1"># simplest mode, generate n independent workflows with the same set of steps</span>
+            <span class="n">workflows</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_n_iters</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">iter_mode</span> <span class="o">==</span> <span class="n">_IE</span><span class="o">.</span><span class="n">SINGLE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initialized </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">workflows</span><span class="p">)</span><span class="si">}</span><span class="s2"> jobs for step  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">step_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">StepDispatcher</span><span class="p">(</span>
+            <span class="n">step_id</span><span class="o">=</span><span class="s2">&quot;step_dispatcher&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="n">_SBE</span><span class="o">.</span><span class="n">STEP_DISPATCHER</span><span class="p">,</span>
+            <span class="n">workflows</span><span class="o">=</span><span class="n">workflows</span><span class="p">,</span>
+            <span class="n">parallel_execution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_settings</span><span class="o">.</span><span class="n">parallelizer_settings</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dispatcher</span>
+
+    <span class="k">def</span> <span class="nf">_update_config</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">step_conf</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseStepConfig</span><span class="p">],</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseStepConfig</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Manages modifications to each step in the config:</span>
+<span class="sd">        * writeout paths are updated to separate output from each of the runs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">formatted_confs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">conf</span> <span class="ow">in</span> <span class="n">step_conf</span><span class="p">:</span>
+
+            <span class="c1"># modify the writeout paths: add a key_value dir the writeout path</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">conf</span><span class="o">.</span><span class="n">writeout</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">destination</span><span class="o">.</span><span class="n">resource</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">resource</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">destination</span><span class="o">.</span><span class="n">resource</span>
+                    <span class="n">parts</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+                    <span class="n">new_resource</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">run_id</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">destination</span><span class="o">.</span><span class="n">resource</span> <span class="o">=</span> <span class="n">new_resource</span>
+
+            <span class="n">formatted_confs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">formatted_confs</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

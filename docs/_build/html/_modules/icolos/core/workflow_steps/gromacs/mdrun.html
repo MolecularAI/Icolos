@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.gromacs.mdrun &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.gromacs.mdrun</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.generic</span> <span class="kn">import</span> <span class="n">GenericData</span>
+<span class="kn">from</span> <span class="nn">icolos.core.containers.gmx_state</span> <span class="kn">import</span> <span class="n">GromacsState</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.execution_enums</span> <span class="kn">import</span> <span class="n">ExecutionPlatformEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepGromacsEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="n">GromacsEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs.base</span> <span class="kn">import</span> <span class="n">StepGromacsBase</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.gromacs</span> <span class="kn">import</span> <span class="n">GromacsExecutor</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.general.parallelization</span> <span class="kn">import</span> <span class="n">Parallelizer</span><span class="p">,</span> <span class="n">SubtaskContainer</span>
+
+<span class="n">_GE</span> <span class="o">=</span> <span class="n">GromacsEnum</span><span class="p">()</span>
+<span class="n">_SGE</span> <span class="o">=</span> <span class="n">StepGromacsEnum</span><span class="p">()</span>
+<span class="n">_ERE</span> <span class="o">=</span> <span class="n">ExecutionPlatformEnum</span>
+
+
+<div class="viewcode-block" id="StepGMXMDrun"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun">[docs]</a><span class="k">class</span> <span class="nc">StepGMXMDrun</span><span class="p">(</span><span class="n">StepGromacsBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Launch gmx mdrun</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">topol</span><span class="p">:</span> <span class="n">GromacsState</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">GromacsExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_backend_availability</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_log_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find and parse the log file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.log&quot;</span><span class="p">)]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">log_file</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_tail_log_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log the last 50 lines of the log file to capture performance metrics from the run</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_log_file</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log_file</span><span class="p">[</span><span class="o">-</span><span class="mi">50</span><span class="p">:]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StepGMXMDrun.execute_mdrun"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.execute_mdrun">[docs]</a>    <span class="k">def</span> <span class="nf">execute_mdrun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a single call to mdrun</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flag_dict</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;-s&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_TPR</span><span class="p">,</span>
+                <span class="s2">&quot;-c&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_STRUCTURE</span><span class="p">,</span>
+                <span class="s2">&quot;-x&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_XTC</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_files_by_extension</span><span class="p">(</span><span class="s2">&quot;cpt&quot;</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;-cpi&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;state.cpt&quot;</span><span class="p">)}</span>
+        <span class="p">)</span>
+
+        <span class="n">arguments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_arguments</span><span class="p">(</span><span class="n">flag_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_GE</span><span class="o">.</span><span class="n">MDRUN</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="StepGMXMDrun.execute_parallel_simulations"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.execute_parallel_simulations">[docs]</a>    <span class="k">def</span> <span class="nf">execute_parallel_simulations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">work_dirs</span><span class="p">,</span> <span class="n">run_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="c1"># attach the index of the workdir</span>
+        <span class="n">work_dirs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">idx</span><span class="p">,</span> <span class="n">wkdir</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">wkdir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span> <span class="o">=</span> <span class="n">SubtaskContainer</span><span class="p">(</span>
+            <span class="n">max_tries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">failure_policy</span><span class="o">.</span><span class="n">n_tries</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span>
+        <span class="n">parallelizer</span> <span class="o">=</span> <span class="n">Parallelizer</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">run_func</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subtask_container</span><span class="o">.</span><span class="n">done</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sublists</span><span class="p">(</span><span class="n">get_first_n_lists</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_number_cores</span><span class="p">())</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">increment_tries</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">next_batch</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">element</span><span class="p">]</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub</span><span class="o">.</span><span class="n">set_status_failed</span><span class="p">()</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">next_batch</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">element</span><span class="p">]</span>
+            <span class="n">paths</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_jobs</span><span class="p">(</span><span class="n">next_batch</span><span class="p">)</span>
+            <span class="n">parallelizer</span><span class="o">.</span><span class="n">execute_parallel</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">paths</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">indices</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="StepGMXMDrun.prepare_jobs"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.prepare_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+        <span class="n">paths</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">task</span><span class="p">:</span>
+                <span class="c1"># tuple of (idx, dirpath)</span>
+                <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">paths</span><span class="p">,</span> <span class="n">indices</span></div>
+
+<div class="viewcode-block" id="StepGMXMDrun.run_single_tpr"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.run_single_tpr">[docs]</a>    <span class="k">def</span> <span class="nf">run_single_tpr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normal gmx mdrun call, if multiple structures are loaded into the topology, run them in parallel according to the parallelizer settings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if we have multiple structures, run the simulations externally, in parallel</span>
+        <span class="n">work_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">tprs</span><span class="p">))]</span>
+
+        <span class="c1"># prepare tmpdirs with tpr files</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">tpr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">tprs</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">tpr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># if &gt; 1, instantiate a parallelizer, load the paths in and execute in parallel, user should be using the slurm/SGE interface to request extern resources</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute_parallel_simulations</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">work_dirs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute_mdrun</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># now parse the outputs</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">):</span>
+            <span class="c1"># set a structure other than confout.gro e.g. if a pdb output has been set</span>
+            <span class="n">struct</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;-c&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s2">&quot;-c&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">else</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_STRUCTURE</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">struct</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_trajectory</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_edr</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_cpt</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StepGMXMDrun.run_multidir_sim"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.run_multidir_sim">[docs]</a>    <span class="k">def</span> <span class="nf">run_multidir_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs a multidir simulation, allowing for replex simulations.  Several conditions are required for this running mode</span>
+<span class="sd">        1) the previous step in the workflow should have been an iterator to produce n tpr files.  This must have been run with single_dir mode ON and remove_temprorary_files OFF, so we can extract files from those workflows&#39; tmpdirs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="n">_ERE</span><span class="o">.</span><span class="n">SLURM</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="s2">&quot;WARNING: Running HREX simulation without external resources! Normally this should be run as a separate batch job&quot;</span><span class="p">,</span>
+                <span class="n">_LE</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># extract the tprs from the topol object, write to separate tmpdirs</span>
+        <span class="n">work_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">tprs</span><span class="p">))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Initiating gmx multidir run in directories </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">tpr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">tprs</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">tpr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># note, this must be a multiple of the number of simulations</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">tasks</span>
+        <span class="c1"># map the PP and PME tasks to the GPUs</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;mpirun -np </span><span class="si">{</span><span class="n">tasks</span><span class="si">}</span><span class="s2"> gmx_mpi mdrun -multidir </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_arguments</span><span class="p">(</span><span class="n">flag_dict</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;-x&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_XTC</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="c1"># udpate the structures to the new coordinates</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">work_dir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_trajectory</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_tpr</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_run_checkpoint_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cpt_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GenericData</span><span class="p">]):</span>
+        <span class="n">work_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cpt_files</span><span class="p">))]</span>
+
+        <span class="c1"># prepare tmpdirs with tpr files</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">cpt</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">,</span> <span class="n">cpt_files</span><span class="p">):</span>
+            <span class="n">cpt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># if &gt; 1, instantiate a parallelizer, load the paths in and execute in parallel, user should be using the slurm/SGE interface to request extern resources</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute_parallel_simulations</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">work_dirs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute_mdrun</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># now parse the outputs</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">work_dirs</span><span class="p">):</span>
+            <span class="c1"># set a structure other than confout.gro e.g. if a pdb output has been set</span>
+            <span class="n">struct</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;-c&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s2">&quot;-c&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">arguments</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">else</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_STRUCTURE</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">struct</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_trajectory</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="o">.</span><span class="n">set_log</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StepGMXMDrun.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.mdrun.StepGMXMDrun.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_tmpdir</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topol</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_files_by_extension</span><span class="p">(</span><span class="s2">&quot;cpt&quot;</span><span class="p">):</span>
+            <span class="c1"># a cpt file has been passed, simply restart</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_file_names_by_extension</span><span class="p">(</span><span class="s2">&quot;gpt&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_checkpoint_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_files_by_extension</span><span class="p">(</span><span class="s2">&quot;cpt&quot;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">parallelization</span><span class="o">.</span><span class="n">max_length_sublists</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="c1"># pickle the topol to the mdrun dir, if something goes wrong/the job dies, the workflow can be picked up where we left off by unpickling the topology object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pickle_topol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topol</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">multidir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_additional_setting</span><span class="p">(</span><span class="n">_SGE</span><span class="o">.</span><span class="n">MULTIDIR</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multidir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_multidir_sim</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_single_tpr</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

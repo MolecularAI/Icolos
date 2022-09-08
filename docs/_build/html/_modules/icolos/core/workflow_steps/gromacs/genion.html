@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>icolos.core.workflow_steps.gromacs.genion &#8212; icolos  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../_static/jquery.js"></script>
+    <script src="../../../../../_static/underscore.js"></script>
+    <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for icolos.core.workflow_steps.gromacs.genion</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">icolos.utils.enums.step_enums</span> <span class="kn">import</span> <span class="n">StepBaseEnum</span><span class="p">,</span> <span class="n">StepGromacsEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.enums.program_parameters</span> <span class="kn">import</span> <span class="n">GromacsEnum</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.gromacs.base</span> <span class="kn">import</span> <span class="n">StepGromacsBase</span>
+<span class="kn">from</span> <span class="nn">icolos.utils.execute_external.gromacs</span> <span class="kn">import</span> <span class="n">GromacsExecutor</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">icolos.core.workflow_steps.step</span> <span class="kn">import</span> <span class="n">_LE</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">_GE</span> <span class="o">=</span> <span class="n">GromacsEnum</span><span class="p">()</span>
+<span class="n">_SGE</span> <span class="o">=</span> <span class="n">StepGromacsEnum</span><span class="p">()</span>
+<span class="n">_SBE</span> <span class="o">=</span> <span class="n">StepBaseEnum</span>
+
+
+<div class="viewcode-block" id="StepGMXGenion"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.genion.StepGMXGenion">[docs]</a><span class="k">class</span> <span class="nc">StepGMXGenion</span><span class="p">(</span><span class="n">StepGromacsBase</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for gmx genion</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_backend</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">GromacsExecutor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_backend_availability</span><span class="p">()</span>
+
+<div class="viewcode-block" id="StepGMXGenion.execute"><a class="viewcode-back" href="../../../../../icolos.core.workflow_steps.gromacs.html#icolos.core.workflow_steps.gromacs.genion.StepGMXGenion.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_tmpdir</span><span class="p">()</span>
+        <span class="n">topol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topol</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_input_files</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">topol</span><span class="o">=</span><span class="n">topol</span><span class="p">)</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_arguments</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;-o&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_STRUCTURE</span><span class="p">,</span>
+                <span class="s2">&quot;-p&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_TOPOL</span><span class="p">,</span>
+                <span class="s2">&quot;-s&quot;</span><span class="p">:</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_TPR</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_GE</span><span class="o">.</span><span class="n">GENION</span><span class="p">,</span>
+            <span class="n">arguments</span><span class="o">=</span><span class="n">arguments</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span>
+            <span class="n">pipe_input</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">construct_pipe_arguments</span><span class="p">(</span>
+                <span class="n">tmp_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">additional</span><span class="p">[</span><span class="n">_SBE</span><span class="o">.</span><span class="n">PIPE_INPUT</span><span class="p">]</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Completed execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step_id</span><span class="si">}</span><span class="s2"> successfully&quot;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">INFO</span>
+        <span class="p">)</span>
+        <span class="c1"># this is the last structural change to the topology in a regular gromacs setup,</span>
+        <span class="c1"># update the index groups here</span>
+        <span class="n">make_ndx_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_STRUCTURE</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">_SGE</span><span class="o">.</span><span class="n">STD_INDEX</span><span class="p">]</span>
+        <span class="n">index_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.ndx&quot;</span><span class="p">)]</span>
+        <span class="c1"># remove any existing index files</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">index_files</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+        <span class="c1"># generate new index file</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend_executor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="n">_GE</span><span class="o">.</span><span class="n">MAKE_NDX</span><span class="p">,</span>
+            <span class="n">arguments</span><span class="o">=</span><span class="n">make_ndx_args</span><span class="p">,</span>
+            <span class="n">location</span><span class="o">=</span><span class="n">tmp_dir</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">pipe_input</span><span class="o">=</span><span class="s1">&#39;echo -e &quot;1 | 12 </span><span class="se">\n</span><span class="s1">q&quot;&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger_blank</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Added index group to &quot;index.ndx&quot;&#39;</span><span class="p">,</span> <span class="n">_LE</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">topol</span><span class="o">.</span><span class="n">set_structure</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="n">topol</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_temporary</span><span class="p">(</span><span class="n">tmp_dir</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">icolos</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../icolos.html">icolos package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
