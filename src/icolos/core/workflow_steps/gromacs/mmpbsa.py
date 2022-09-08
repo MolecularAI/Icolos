@@ -144,7 +144,7 @@ class StepGMXmmpbsa(StepGromacsBase, BaseModel):
                 f.write(str(idx) + "," + str(val))
 
     def execute(self) -> None:
-        tmp_dir = self._prepare_tmpdir()
+        tmp_dir = self._make_tmpdir()
         topol = self.get_topol()
         self._generate_amber_input_file()
         self.write_input_files(tmp_dir, topol=topol)
