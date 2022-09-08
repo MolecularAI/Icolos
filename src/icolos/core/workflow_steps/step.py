@@ -48,10 +48,9 @@ from icolos.utils.general.progress_bar import get_progress_bar_string
 
 _LE = LoggingConfigEnum()
 _WE = WriteOutEnum()
-_CTE = CompoundTagsEnum()
-_SGE = StepGromacsEnum()
 _EPE = ExecutionPlatformEnum
-
+_SGE = StepGromacsEnum()
+_CTE = CompoundTagsEnum()
 
 class StepFailurePolicyParameters(BaseModel):
     n_tries: int = 1
@@ -189,9 +188,15 @@ class StepBase(BaseModel):
         return self.data.generic
 
     def clone_compounds(self) -> List[Compound]:
+        """Deepcopy each compound in self.data.compounds
+
+        :return List[Compound]: cloned list of Compounds
+        """
         return [deepcopy(comp) for comp in self.data.compounds]
 
     def process_write_out(self):
+        """write out data specified in self.writeout. Run after step execution
+        """
         for writeout in self.writeout:
             writeout_handler = WriteOutHandler(config=writeout)
             writeout_handler.set_data(self.data)
@@ -206,6 +211,8 @@ class StepBase(BaseModel):
         return n_comp, n_enum, n_conf
 
     def generate_input(self):
+        """Parse the input block, fetch objects and read them into self.data
+        """
         preparator = InputPreparator(
             workflow=self.get_workflow_object(), logger=self._logger
         )
@@ -226,12 +233,24 @@ class StepBase(BaseModel):
         return self._workflow_object
 
     def get_perturbation_map(self) -> PerturbationMap:
+        """return the perturbation map attached to the workflow
+
+        :return PerturbationMap: the perturbation map in its current state
+        """
         return self._workflow_object.workflow_data.perturbation_map
 
     def get_step_id(self) -> str:
+        """Get the step's unique string identifier
+
+        :return str: self.step_id, as specified in the step's config
+        """
         return self.step_id
 
     def set_step_id(self, step_id: str):
+        """Set the step's unique ID
+
+        :param str step_id: unique identifier for the step
+        """
         self.step_id = step_id
 
     def _initialize_backend(self, executor: Callable):
@@ -260,7 +279,6 @@ class StepBase(BaseModel):
         compounds: List[Compound],
         level: str = _SBE.WRITEOUT_COMP_CATEGORY_CONFORMERS,
     ) -> List[Conformer]:
-        # TODO: move this to step_base or merge with methods from compound itself
 
         all_conformers = []
         for comp in compounds:
@@ -399,10 +417,12 @@ class StepBase(BaseModel):
             )
         return cores
 
-    def get_arguments(self, defaults: dict = None) -> list:
-        """
-        Construct pmx-specific arguments from the step defaults,
+    def get_arguments(self, defaults: dict = None) -> List[str]:
+        """Construct pmx-specific arguments from the step defaults,
         overridden by arguments specified in the config file
+
+        :param dict defaults: optional set of key-value pairs for default arguments, defaults to None
+        :return List[str]: formatted list of strings
         """
         arguments = []
 
@@ -564,6 +584,10 @@ class StepBase(BaseModel):
         )
 
     def get_topol(self) -> GromacsState:
+        """Get the gromacs state attached to the step
+
+        :return GromacsState: Current state of the GromacsState object
+        """
         if not self.data.generic.get_file_names_by_extension("pkl"):
             return self.data.gmx_state
         else:

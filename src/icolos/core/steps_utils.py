@@ -9,6 +9,12 @@ _FCE = FlowControlInitializationEnum()
 
 
 def initialize_step_from_dict(step_conf: dict) -> StepBase:
+    """Map the configuration from JSON to an initialized step object
+
+    :param dict step_conf: dictionary containing configuration for the step
+    :raises ValueError: raised if provided step_type does not correspond to known step
+    :return StepBase: Initialized step object with the provided config
+    """
     _STE = StepBaseEnum
     step_type = nested_get(step_conf, _STE.STEP_TYPE, default=None)
     step_type = None if step_type is None else step_type.upper()

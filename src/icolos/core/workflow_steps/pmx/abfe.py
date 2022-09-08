@@ -10,7 +10,6 @@ from icolos.utils.execute_external.pmx import PMXExecutor
 from icolos.utils.enums.program_parameters import (
     GromacsEnum,
     PMXEnum,
-    PMXAtomMappingEnum,
     StepPMXEnum,
 )
 from icolos.utils.general.parallelization import SubtaskContainer
@@ -19,7 +18,6 @@ _PE = PMXEnum()
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _PSE = StepPMXEnum()
-
 
 class StepPMXabfe(StepPMXBase, BaseModel):
     """Setup files for an ABFE calculation."""
