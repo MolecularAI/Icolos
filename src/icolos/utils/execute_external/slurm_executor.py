@@ -120,7 +120,6 @@ class SlurmExecutor(ExecutorBase):
         location: str = None,
     ) -> str:
         """Generate the batch script for a specific job and write to disk
-
         :param str command: command to be executed
         :param List arguments: List of arguments to be appended to the command
         :param str pipe_input: string to be piped to the program being executed, defaults to None
