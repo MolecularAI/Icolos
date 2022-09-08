@@ -1,0 +1,45 @@
+name: build
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+
+jobs:
+  build-icolos:
+    name: Build icolos
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install conda
+      uses: conda-incubator/setup-miniconda@v2.1.1
+      with:
+        python-version: 3.10
+        architecture: x64
+
+    - name: Build conda env
+      run: |
+        conda env create -f environment_min.yml
+   
+    - name: Install dependencies for packaging
+      run: |
+        pip install setuptools wheel build virtualenv twine
+    
+    - name: Check python installation
+      run: |
+        which python
+        python --version
+        pip --version
+        pip list
+        
+    - name: Check icolos installation
+    - run: |
+        icolos -h
+    

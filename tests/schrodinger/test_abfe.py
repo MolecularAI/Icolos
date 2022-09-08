@@ -59,7 +59,7 @@ class Test_SchrodingerABFE(unittest.TestCase):
         abfe_step = StepSchrodingerAbsoluteFEP(**step_conf)
         abfe_step.data.generic.add_file(self.apo_1uyd)
         abfe_step.data.compounds = self.compounds
-
+        # FIXME: this is a very  long execution, do not run as part of normal test suite!
         # abfe_step.execute()
 
         # out_file = abfe_step.data.generic.get_files_by_extension("pdb")[0].get_data()

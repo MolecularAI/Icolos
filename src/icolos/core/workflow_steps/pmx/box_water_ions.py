@@ -43,7 +43,6 @@ class StepPMXBoxWaterIons(StepPMXBase, BaseModel):
 
     def boxWaterIons(self, jobs: List[str]):
         mdp_path = os.path.join(self.work_dir, "input/mdp")
-        print("work_dir", self.work_dir)
 
         for edge in jobs:
             outLigPath = self._get_specific_path(

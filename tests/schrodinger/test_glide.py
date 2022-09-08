@@ -8,6 +8,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, TokenGuardEnum, StepGlid
 from icolos.utils.enums.program_parameters import GlideEnum
 
 from tests.tests_paths import (
+    MAIN_CONFIG,
     PATHS_1UYD,
     PATHS_EXAMPLEDATA,
     get_1UYD_ligands_as_Compounds,
@@ -43,7 +44,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-4-js-aws",
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 4,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 2,
@@ -127,7 +128,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {
                     _SBE.EXEC_PARALLELIZATION_CORES: 1,
                     _SBE.EXEC_PARALLELIZATION_MAXLENSUBLIST: 1,
@@ -192,7 +193,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 1},
                 _SBE.EXEC_FAILUREPOLICY: {_SBE.EXEC_FAILUREPOLICY_NTRIES: 1},
             },
@@ -253,7 +254,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 4},
                 _SBE.EXEC_FAILUREPOLICY: {_SBE.EXEC_FAILUREPOLICY_NTRIES: 1},
             },
@@ -314,7 +315,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 4},
                 _SBE.EXEC_FAILUREPOLICY: {_SBE.EXEC_FAILUREPOLICY_NTRIES: 1},
             },
@@ -377,7 +378,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 4},
                 _SBE.EXEC_FAILUREPOLICY: {_SBE.EXEC_FAILUREPOLICY_NTRIES: 1},
             },
@@ -455,7 +456,7 @@ class Test_Glide(unittest.TestCase):
             _SBE.STEPID: "01_glide",
             _SBE.STEP_TYPE: _SBE.STEP_GLIDE,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-2-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
                 _SBE.EXEC_PARALLELIZATION: {_SBE.EXEC_PARALLELIZATION_CORES: 4},
                 _SBE.EXEC_FAILUREPOLICY: {_SBE.EXEC_FAILUREPOLICY_NTRIES: 1},
             },

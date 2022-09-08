@@ -142,6 +142,7 @@ class Test_Ligprep(unittest.TestCase):
                 _SBE.SETTINGS_ARGUMENTS: {
                     _SBE.SETTINGS_ARGUMENTS_FLAGS: [_LIE.LIGPREP_EPIK],
                     _SBE.SETTINGS_ARGUMENTS_PARAMETERS: {
+                        "-HOST": "cpu-only",
                         _LIE.LIGPREP_PH: 7.0,
                         _LIE.LIGPREP_PHT: 2.0,
                         _LIE.LIGPREP_S: 10,

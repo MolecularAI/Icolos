@@ -271,6 +271,10 @@ class WriteOutHandler(BaseModel):
                 self.data.gmx_state.write_log(resource)
             elif key == _SGE.FIELD_KEY_TPR:
                 self.data.gmx_state.write_tpr(resource)
+            elif key == _SGE.FIELD_KEY_CPT:
+                self.data.gmx_state.write_cpt(resource)
+            elif key == _SGE.FIELD_KEY_EDR:
+                self.data.gmx_state.write_edr(resource)
             elif key == _SGE.FIELD_KEY_XTC:
                 # if we have multiple trajectories, write them out sequentially, with index attached
                 if len(self.data.gmx_state.trajectories.keys()) > 1:

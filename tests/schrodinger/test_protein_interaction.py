@@ -33,7 +33,7 @@ class TestProteinInteraction(unittest.TestCase):
             _SBE.STEPID: "01_protien_interaction",
             _SBE.STEP_TYPE: _SBE.STEP_PROTEIN_INTERACTIONS,
             _SBE.EXEC: {
-                _SBE.EXEC_PREFIXEXECUTION: "module load schrodinger/2021-4-js-aws",
+                _SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"],
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS: {

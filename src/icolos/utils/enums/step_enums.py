@@ -761,6 +761,7 @@ class StepGromacsEnum:
     FIELD_KEY_ITP = "itp"
     FIELD_KEY_LOG = "log"
     FIELD_KEY_EDR = "edr"
+    FIELD_KEY_CPT = "cpt"
     FIELD_KEY_NDX = "ndx"
     PROPS = "props"
     FILE_SIZE_THRESHOLD = 2000000000
@@ -781,6 +782,8 @@ class StepGromacsEnum:
     LIGAND_MOL2 = "Ligand.mol2"
     STD_INDEX = "index.ndx"
     STD_TOPOL = "topol.top"
+    STD_EDR = "ener.edr"
+    STD_CPT = "state.cpt"
     STD_TPR = "topol.tpr"
     STD_LOG = "md.log"
     STD_XTC = "traj.xtc"

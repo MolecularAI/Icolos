@@ -1,5 +1,3 @@
-from icolos.core.composite_agents.workflow import WorkFlow
-from icolos.core.containers.generic import GenericData
 import unittest
 import os
 from icolos.core.containers.gmx_state import GromacsState
@@ -7,6 +5,7 @@ from icolos.utils.enums.step_enums import StepBaseEnum, StepGromacsEnum
 from tests.tests_paths import PATHS_EXAMPLEDATA, export_unit_test_env_vars
 from icolos.utils.general.files_paths import attach_root_path
 from icolos.core.workflow_steps.gromacs.trjconv import StepGMXTrjconv
+from icolos.core.containers.generic import GenericData
 
 _SGE = StepGromacsEnum()
 _SBE = StepBaseEnum
@@ -36,6 +35,7 @@ class Test_Trjconv(unittest.TestCase):
         self.topol.tprs = {0: GenericData(_SGE.STD_TPR, file_data=tpr)}
         self.topol.trajectories = {0: GenericData(_SGE.STD_XTC, file_data=xtc)}
         self.topol.structures = {0: GenericData(_SGE.STD_STRUCTURE, struct)}
+        self.topol.set_ndx(path=PATHS_EXAMPLEDATA.GROMACS_PROTEIN_FILE_BASE)
 
     def test_trjconv(self):
         step_conf = {
@@ -46,7 +46,7 @@ class Test_Trjconv(unittest.TestCase):
             },
             _SBE.SETTINGS: {
                 _SBE.SETTINGS_ARGUMENTS_FLAGS: ["-center"],
-                _SBE.SETTINGS_ADDITIONAL: {_SBE.PIPE_INPUT: "echo -ne 1 0"},
+                _SBE.SETTINGS_ADDITIONAL: {_SBE.PIPE_INPUT: "protein system"},
             },
         }
 

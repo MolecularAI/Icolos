@@ -81,7 +81,7 @@ class Test_MMPBSA(unittest.TestCase):
         out_path = os.path.join(self._test_dir, "ICOLOS_PROPS.dat")
         step_mmpbsa.data.gmx_state.write_props(self._test_dir)
         stat_inf = os.stat(out_path)
-        self.assertGreater(stat_inf.st_size, 200)
+        self.assertGreater(stat_inf.st_size, 150)
 
     def test_protein_lig_single_traj_custom_file(self):
 

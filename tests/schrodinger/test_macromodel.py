@@ -37,7 +37,7 @@ class Test_Macromodel_confgen(unittest.TestCase):
         step_conf = {
             _SBE.STEPID: "01_macromodel",
             _SBE.STEP_TYPE: _SBE.STEP_MACROMODEL,
-            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: "ml schrodinger/2020-4"},
+            _SBE.EXEC: {_SBE.EXEC_PREFIXEXECUTION: MAIN_CONFIG["SCHRODINGER_MODULE"]},
             _TE.TG: {
                 _TE.TG_PREFIX_EXECUTION: "ml schrodinger/2020-4",
                 _TE.TG_TOKEN_POOLS: {"MMOD_MACROMODEL": 2},

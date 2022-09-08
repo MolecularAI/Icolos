@@ -24,11 +24,11 @@
 					},
 					{
 						"key": "PMX",
-						"value": "/home/kmzp800/miniconda3/envs/pmx/bin/pmx"
+						"value": "<fill_path>/pmx/bin/pmx"
 					},
 					{
 						"key": "GMXLIB",
-						"value": "/projects/cc/mai/pmx/src/pmx/data/mutff/"
+						"value": "<fill_path>/pmx/src/pmx/data/mutff/"
 					}
 				]
 			},
