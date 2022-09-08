@@ -95,6 +95,9 @@ For GROMACS workflows requiring the GPU partition, you will need to adapt the he
 #SBATCH --time=12:00:00
 
 ```
+## Documentation
+The API reference is available [here](https://molecularai.github.io/Icolos/index.html).
+
 
 ## Developers
 - Christian Margreitter [@cmargreitter](https://github.com/CMargreitter)
