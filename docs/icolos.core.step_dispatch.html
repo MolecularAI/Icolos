@@ -230,11 +230,62 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 </section>
-<section id="icolos-core-step-dispatch-dispatcher-module">
-<h2>icolos.core.step_dispatch.dispatcher module<a class="headerlink" href="#icolos-core-step-dispatch-dispatcher-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.core.step_dispatch.dispatcher">
+<span id="icolos-core-step-dispatch-dispatcher-module"></span><h2>icolos.core.step_dispatch.dispatcher module<a class="headerlink" href="#module-icolos.core.step_dispatch.dispatcher" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.IterParallelizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.step_dispatch.dispatcher.</span></span><span class="sig-name descname"><span class="pre">IterParallelizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/step_dispatch/dispatcher.html#IterParallelizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.IterParallelizer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.IterParallelizer.dependent_steps">
+<span class="sig-name descname"><span class="pre">dependent_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.IterParallelizer.dependent_steps" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.IterParallelizer.jobs">
+<span class="sig-name descname"><span class="pre">jobs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.IterParallelizer.jobs" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.IterParallelizer.parallelize">
+<span class="sig-name descname"><span class="pre">parallelize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.IterParallelizer.parallelize" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.StepDispatcher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.step_dispatch.dispatcher.</span></span><span class="sig-name descname"><span class="pre">StepDispatcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_id:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data:</span> <span class="pre">~icolos.core.step_utils.input_preparator.StepData</span> <span class="pre">=</span> <span class="pre">StepData(compounds=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generic=&lt;icolos.core.containers.generic.GenericContainer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmx_state=Gromacs</span> <span class="pre">Topology</span> <span class="pre">object:</span> <span class="pre">System:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">Molecules:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">FF:</span> <span class="pre">amber03</span> <span class="pre">|</span> <span class="pre">itp</span> <span class="pre">files:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">posre</span> <span class="pre">files</span> <span class="pre">[])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input:</span> <span class="pre">~icolos.core.step_utils.input_preparator.StepInputParameters</span> <span class="pre">=</span> <span class="pre">StepInputParameters(compounds=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generic=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmx_state={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbation_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge=StepMerge(compounds=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enumerations=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_compounds_by=&lt;StepBaseEnum.INPUT_MERGE_BY_NAME:</span> <span class="pre">'name'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_enumerations_by=&lt;StepBaseEnum.INPUT_MERGE_BY_ID:</span> <span class="pre">'id'&gt;)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writeout:</span> <span class="pre">~typing.List[~icolos.core.step_utils.step_writeout.StepWriteoutParameters]</span> <span class="pre">=</span> <span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution:</span> <span class="pre">~icolos.core.workflow_steps.step.StepExecutionParameters</span> <span class="pre">=</span> <span class="pre">StepExecutionParameters(prefix_execution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_location=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipe_input=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelization=StepExecutionParallelizationParameters(jobs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length_sublists=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure_policy=StepFailurePolicyParameters(n_tries=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_wait_seconds=10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_backend_availability=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources=StepExecutionResourceParameters(partition=&lt;ExecutionPlatformEnum.CORE:</span> <span class="pre">'core'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time='12:00:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gres=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_args={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_lines=[])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform=&lt;ExecutionPlatformEnum.LOCAL:</span> <span class="pre">'local'&gt;)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings:</span> <span class="pre">~icolos.core.workflow_steps.step.StepSettingsParameters</span> <span class="pre">=</span> <span class="pre">StepSettingsParameters(arguments=StepSettingsArgsParameters(flags=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters={})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional={})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflows:</span> <span class="pre">~typing.List</span> <span class="pre">=</span> <span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_execution:</span> <span class="pre">~icolos.core.step_dispatch.dispatcher.IterParallelizer</span> <span class="pre">=</span> <span class="pre">IterParallelizer(parallelize=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_steps=None)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/step_dispatch/dispatcher.html#StepDispatcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.StepDispatcher" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase" title="icolos.core.workflow_steps.step.StepBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">StepBase</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Step class containing job control functionality required for StepIterator, supports Slurm for job scheduling
+Supports running Icolos process as master job for parallel step execution on cluster.  Generates a pool of initialized steps to be executed, based on the</p>
+<p>Step-type class for disaptching multiple steps in parallel, useful for executing multiple batch jobs simultaneously</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.StepDispatcher.execute">
+<span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/step_dispatch/dispatcher.html#StepDispatcher.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.StepDispatcher.execute" title="Permalink to this definition">#</a></dt>
+<dd><p>Execute multiple steps in parallel</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.StepDispatcher.execute_workflow">
+<span class="sig-name descname"><span class="pre">execute_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jobs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/step_dispatch/dispatcher.html#StepDispatcher.execute_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.StepDispatcher.execute_workflow" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.StepDispatcher.parallel_execution">
+<span class="sig-name descname"><span class="pre">parallel_execution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#icolos.core.step_dispatch.dispatcher.IterParallelizer" title="icolos.core.step_dispatch.dispatcher.IterParallelizer"><span class="pre">IterParallelizer</span></a></em><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.StepDispatcher.parallel_execution" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.step_dispatch.dispatcher.StepDispatcher.workflows">
+<span class="sig-name descname"><span class="pre">workflows</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span></em><a class="headerlink" href="#icolos.core.step_dispatch.dispatcher.StepDispatcher.workflows" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.core.step_dispatch">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-icolos.core.step_dispatch" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -297,8 +348,8 @@
             <ul>
 <li><a class="reference internal" href="#">icolos.core.step_dispatch package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#icolos-core-step-dispatch-dispatcher-module">icolos.core.step_dispatch.dispatcher module</a></li>
-<li><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li><a class="reference internal" href="#module-icolos.core.step_dispatch.dispatcher">icolos.core.step_dispatch.dispatcher module</a></li>
+<li><a class="reference internal" href="#module-icolos.core.step_dispatch">Module contents</a></li>
 </ul>
 </li>
 </ul>

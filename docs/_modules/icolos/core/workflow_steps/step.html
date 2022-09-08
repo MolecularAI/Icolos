@@ -275,10 +275,9 @@
 
 <span class="n">_LE</span> <span class="o">=</span> <span class="n">LoggingConfigEnum</span><span class="p">()</span>
 <span class="n">_WE</span> <span class="o">=</span> <span class="n">WriteOutEnum</span><span class="p">()</span>
-<span class="n">_CTE</span> <span class="o">=</span> <span class="n">CompoundTagsEnum</span><span class="p">()</span>
-<span class="n">_SGE</span> <span class="o">=</span> <span class="n">StepGromacsEnum</span><span class="p">()</span>
 <span class="n">_EPE</span> <span class="o">=</span> <span class="n">ExecutionPlatformEnum</span>
-
+<span class="n">_SGE</span> <span class="o">=</span> <span class="n">StepGromacsEnum</span><span class="p">()</span>
+<span class="n">_CTE</span> <span class="o">=</span> <span class="n">CompoundTagsEnum</span><span class="p">()</span>
 
 <div class="viewcode-block" id="StepFailurePolicyParameters"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepFailurePolicyParameters">[docs]</a><span class="k">class</span> <span class="nc">StepFailurePolicyParameters</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
     <span class="n">n_tries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
@@ -416,9 +415,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span></div>
 
 <div class="viewcode-block" id="StepBase.clone_compounds"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.clone_compounds">[docs]</a>    <span class="k">def</span> <span class="nf">clone_compounds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Compound</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Deepcopy each compound in self.data.compounds</span>
+
+<span class="sd">        :return List[Compound]: cloned list of Compounds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">compounds</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="StepBase.process_write_out"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.process_write_out">[docs]</a>    <span class="k">def</span> <span class="nf">process_write_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;write out data specified in self.writeout. Run after step execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">writeout</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">writeout</span><span class="p">:</span>
             <span class="n">writeout_handler</span> <span class="o">=</span> <span class="n">WriteOutHandler</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">writeout</span><span class="p">)</span>
             <span class="n">writeout_handler</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
@@ -433,6 +438,8 @@
         <span class="k">return</span> <span class="n">n_comp</span><span class="p">,</span> <span class="n">n_enum</span><span class="p">,</span> <span class="n">n_conf</span></div>
 
 <div class="viewcode-block" id="StepBase.generate_input"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.generate_input">[docs]</a>    <span class="k">def</span> <span class="nf">generate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse the input block, fetch objects and read them into self.data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">preparator</span> <span class="o">=</span> <span class="n">InputPreparator</span><span class="p">(</span>
             <span class="n">workflow</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_workflow_object</span><span class="p">(),</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span>
         <span class="p">)</span>
@@ -453,12 +460,24 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workflow_object</span></div>
 
 <div class="viewcode-block" id="StepBase.get_perturbation_map"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.get_perturbation_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_perturbation_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PerturbationMap</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;return the perturbation map attached to the workflow</span>
+
+<span class="sd">        :return PerturbationMap: the perturbation map in its current state</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workflow_object</span><span class="o">.</span><span class="n">workflow_data</span><span class="o">.</span><span class="n">perturbation_map</span></div>
 
 <div class="viewcode-block" id="StepBase.get_step_id"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.get_step_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the step&#39;s unique string identifier</span>
+
+<span class="sd">        :return str: self.step_id, as specified in the step&#39;s config</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_id</span></div>
 
 <div class="viewcode-block" id="StepBase.set_step_id"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.set_step_id">[docs]</a>    <span class="k">def</span> <span class="nf">set_step_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the step&#39;s unique ID</span>
+
+<span class="sd">        :param str step_id: unique identifier for the step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_id</span> <span class="o">=</span> <span class="n">step_id</span></div>
 
     <span class="k">def</span> <span class="nf">_initialize_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
@@ -487,7 +506,6 @@
         <span class="n">compounds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Compound</span><span class="p">],</span>
         <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_SBE</span><span class="o">.</span><span class="n">WRITEOUT_COMP_CATEGORY_CONFORMERS</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Conformer</span><span class="p">]:</span>
-        <span class="c1"># TODO: move this to step_base or merge with methods from compound itself</span>
 
         <span class="n">all_conformers</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">compounds</span><span class="p">:</span>
@@ -626,10 +644,12 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">cores</span>
 
-<div class="viewcode-block" id="StepBase.get_arguments"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.get_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">get_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct pmx-specific arguments from the step defaults,</span>
+<div class="viewcode-block" id="StepBase.get_arguments"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.get_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">get_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">defaults</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Construct pmx-specific arguments from the step defaults,</span>
 <span class="sd">        overridden by arguments specified in the config file</span>
+
+<span class="sd">        :param dict defaults: optional set of key-value pairs for default arguments, defaults to None</span>
+<span class="sd">        :return List[str]: formatted list of strings</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">arguments</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -791,6 +811,10 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="StepBase.get_topol"><a class="viewcode-back" href="../../../../icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase.get_topol">[docs]</a>    <span class="k">def</span> <span class="nf">get_topol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GromacsState</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the gromacs state attached to the step</span>
+
+<span class="sd">        :return GromacsState: Current state of the GromacsState object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">generic</span><span class="o">.</span><span class="n">get_file_names_by_extension</span><span class="p">(</span><span class="s2">&quot;pkl&quot;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">gmx_state</span>
         <span class="k">else</span><span class="p">:</span>

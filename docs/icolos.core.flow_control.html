@@ -230,14 +230,184 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 </section>
-<section id="icolos-core-flow-control-flow-control-module">
-<h2>icolos.core.flow_control.flow_control module<a class="headerlink" href="#icolos-core-flow-control-flow-control-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.core.flow_control.flow_control">
+<span id="icolos-core-flow-control-flow-control-module"></span><h2>icolos.core.flow_control.flow_control module<a class="headerlink" href="#module-icolos.core.flow_control.flow_control" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.flow_control.</span></span><span class="sig-name descname"><span class="pre">BaseStepConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_id:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data:</span> <span class="pre">~icolos.core.step_utils.input_preparator.StepData</span> <span class="pre">=</span> <span class="pre">StepData(compounds=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generic=&lt;icolos.core.containers.generic.GenericContainer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmx_state=Gromacs</span> <span class="pre">Topology</span> <span class="pre">object:</span> <span class="pre">System:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">Molecules:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">FF:</span> <span class="pre">amber03</span> <span class="pre">|</span> <span class="pre">itp</span> <span class="pre">files:</span> <span class="pre">[]</span> <span class="pre">|</span> <span class="pre">posre</span> <span class="pre">files</span> <span class="pre">[])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input:</span> <span class="pre">~icolos.core.step_utils.input_preparator.StepInputParameters</span> <span class="pre">=</span> <span class="pre">StepInputParameters(compounds=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generic=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmx_state={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbation_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge=StepMerge(compounds=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enumerations=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_compounds_by=&lt;StepBaseEnum.INPUT_MERGE_BY_NAME:</span> <span class="pre">'name'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_enumerations_by=&lt;StepBaseEnum.INPUT_MERGE_BY_ID:</span> <span class="pre">'id'&gt;)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writeout:</span> <span class="pre">~typing.List[~icolos.core.step_utils.step_writeout.StepWriteoutParameters]</span> <span class="pre">=</span> <span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution:</span> <span class="pre">~icolos.core.workflow_steps.step.StepExecutionParameters</span> <span class="pre">=</span> <span class="pre">StepExecutionParameters(prefix_execution=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_location=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipe_input=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelization=StepExecutionParallelizationParameters(jobs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length_sublists=None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failure_policy=StepFailurePolicyParameters(n_tries=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_wait_seconds=10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_backend_availability=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources=StepExecutionResourceParameters(partition=&lt;ExecutionPlatformEnum.CORE:</span> <span class="pre">'core'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time='12:00:00'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gres=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tasks=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_args={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_lines=[])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">platform=&lt;ExecutionPlatformEnum.LOCAL:</span> <span class="pre">'local'&gt;)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings:</span> <span class="pre">~icolos.core.workflow_steps.step.StepSettingsParameters</span> <span class="pre">=</span> <span class="pre">StepSettingsParameters(arguments=StepSettingsArgsParameters(flags=[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters={})</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional={})</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/flow_control.html#BaseStepConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Minimal template class for the base config, without the unnecessary stuff that StepBase requires</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/flow_control.html#BaseStepConfig.as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.as_dict" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.core.step_utils.html#icolos.core.step_utils.input_preparator.StepData" title="icolos.core.step_utils.input_preparator.StepData"><span class="pre">StepData</span></a></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.execution">
+<span class="sig-name descname"><span class="pre">execution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepExecutionParameters" title="icolos.core.workflow_steps.step.StepExecutionParameters"><span class="pre">StepExecutionParameters</span></a></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.execution" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.input">
+<span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.core.step_utils.html#icolos.core.step_utils.input_preparator.StepInputParameters" title="icolos.core.step_utils.input_preparator.StepInputParameters"><span class="pre">StepInputParameters</span></a></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.input" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepSettingsParameters" title="icolos.core.workflow_steps.step.StepSettingsParameters"><span class="pre">StepSettingsParameters</span></a></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.settings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.step_id">
+<span class="sig-name descname"><span class="pre">step_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.step_id" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.work_dir">
+<span class="sig-name descname"><span class="pre">work_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.work_dir" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.BaseStepConfig.writeout">
+<span class="sig-name descname"><span class="pre">writeout</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="icolos.core.step_utils.html#icolos.core.step_utils.step_writeout.StepWriteoutParameters" title="icolos.core.step_utils.step_writeout.StepWriteoutParameters"><span class="pre">StepWriteoutParameters</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.BaseStepConfig.writeout" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.FlowControlBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.flow_control.</span></span><span class="sig-name descname"><span class="pre">FlowControlBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.core.flow_control.flow_control.BaseStepConfig" title="icolos.core.flow_control.flow_control.BaseStepConfig"><span class="pre">BaseStepConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialized_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase" title="icolos.core.workflow_steps.step.StepBase"><span class="pre">StepBase</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/flow_control.html#FlowControlBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.flow_control.FlowControlBase" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.FlowControlBase.base_config">
+<span class="sig-name descname"><span class="pre">base_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.core.flow_control.flow_control.BaseStepConfig" title="icolos.core.flow_control.flow_control.BaseStepConfig"><span class="pre">BaseStepConfig</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.FlowControlBase.base_config" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.flow_control.FlowControlBase.initialized_steps">
+<span class="sig-name descname"><span class="pre">initialized_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase" title="icolos.core.workflow_steps.step.StepBase"><span class="pre">StepBase</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.core.flow_control.flow_control.FlowControlBase.initialized_steps" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="icolos-core-flow-control-iterator-module">
-<h2>icolos.core.flow_control.iterator module<a class="headerlink" href="#icolos-core-flow-control-iterator-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.core.flow_control.iterator">
+<span id="icolos-core-flow-control-iterator-module"></span><h2>icolos.core.flow_control.iterator module<a class="headerlink" href="#module-icolos.core.flow_control.iterator" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterParallelizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.iterator.</span></span><span class="sig-name descname"><span class="pre">IterParallelizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/iterator.html#IterParallelizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.iterator.IterParallelizer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterParallelizer.dependent_steps">
+<span class="sig-name descname"><span class="pre">dependent_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterParallelizer.dependent_steps" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterParallelizer.jobs">
+<span class="sig-name descname"><span class="pre">jobs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterParallelizer.jobs" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterParallelizer.parallelize">
+<span class="sig-name descname"><span class="pre">parallelize</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterParallelizer.parallelize" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.iterator.</span></span><span class="sig-name descname"><span class="pre">IterSettings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#icolos.core.flow_control.iterator.IterSettingsParameters" title="icolos.core.flow_control.iterator.IterSettingsParameters"><span class="pre">IterSettingsParameters</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="icolos.utils.enums.html#icolos.utils.enums.step_enums.IteratorEnum" title="icolos.utils.enums.step_enums.IteratorEnum"><span class="pre">IteratorEnum</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">IteratorEnum.N_ITERS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_temporary_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelizer_settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#icolos.core.flow_control.iterator.IterParallelizer" title="icolos.core.flow_control.iterator.IterParallelizer"><span class="pre">IterParallelizer</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">IterParallelizer(parallelize=False,</span> <span class="pre">jobs=1,</span> <span class="pre">dependent_steps=None)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/iterator.html#IterSettings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.iter_mode">
+<span class="sig-name descname"><span class="pre">iter_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.utils.enums.html#icolos.utils.enums.step_enums.IteratorEnum" title="icolos.utils.enums.step_enums.IteratorEnum"><span class="pre">IteratorEnum</span></a></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.iter_mode" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.n_iters">
+<span class="sig-name descname"><span class="pre">n_iters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.n_iters" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.parallelizer_settings">
+<span class="sig-name descname"><span class="pre">parallelizer_settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#icolos.core.flow_control.iterator.IterParallelizer" title="icolos.core.flow_control.iterator.IterParallelizer"><span class="pre">IterParallelizer</span></a></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.parallelizer_settings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.remove_temporary_files">
+<span class="sig-name descname"><span class="pre">remove_temporary_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.remove_temporary_files" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.settings">
+<span class="sig-name descname"><span class="pre">settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#icolos.core.flow_control.iterator.IterSettingsParameters" title="icolos.core.flow_control.iterator.IterSettingsParameters"><span class="pre">IterSettingsParameters</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.settings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettings.single_directory">
+<span class="sig-name descname"><span class="pre">single_directory</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettings.single_directory" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettingsParameters">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.iterator.</span></span><span class="sig-name descname"><span class="pre">IterSettingsParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/iterator.html#IterSettingsParameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettingsParameters" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettingsParameters.additional">
+<span class="sig-name descname"><span class="pre">additional</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettingsParameters.additional" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettingsParameters.flags">
+<span class="sig-name descname"><span class="pre">flags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettingsParameters.flags" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettingsParameters.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettingsParameters.parameters" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.IterSettingsParameters.work_dir">
+<span class="sig-name descname"><span class="pre">work_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.core.flow_control.iterator.IterSettingsParameters.work_dir" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.StepIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.core.flow_control.iterator.</span></span><span class="sig-name descname"><span class="pre">StepIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_config:</span> <span class="pre">~typing.List[~icolos.core.flow_control.flow_control.BaseStepConfig]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialized_steps:</span> <span class="pre">~typing.List[~icolos.core.workflow_steps.step.StepBase]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_settings:</span> <span class="pre">~icolos.core.flow_control.iterator.IterSettings</span> <span class="pre">=</span> <span class="pre">IterSettings(settings={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_mode=&lt;IteratorEnum.N_ITERS:</span> <span class="pre">'n_iters'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_temporary_files=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_directory=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelizer_settings=IterParallelizer(parallelize=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobs=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dependent_steps=None))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispatcher:</span> <span class="pre">~icolos.core.step_dispatch.dispatcher.StepDispatcher</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/flow_control/iterator.html#StepIterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.flow_control.iterator.StepIterator" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#icolos.core.flow_control.flow_control.FlowControlBase" title="icolos.core.flow_control.flow_control.FlowControlBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlowControlBase</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Implements iterator mechanism:
+wraps one or multiple steps and generates n copies of that set of steps according to iter_config
+Becomes master job when parallize=True, using  Icolos JobControl to interface with external resources</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.StepIterator.dispatcher">
+<span class="sig-name descname"><span class="pre">dispatcher</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.core.step_dispatch.html#icolos.core.step_dispatch.dispatcher.StepDispatcher" title="icolos.core.step_dispatch.dispatcher.StepDispatcher"><span class="pre">StepDispatcher</span></a></em><a class="headerlink" href="#icolos.core.flow_control.iterator.StepIterator.dispatcher" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.core.flow_control.iterator.StepIterator.iter_settings">
+<span class="sig-name descname"><span class="pre">iter_settings</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#icolos.core.flow_control.iterator.IterSettings" title="icolos.core.flow_control.iterator.IterSettings"><span class="pre">IterSettings</span></a></em><a class="headerlink" href="#icolos.core.flow_control.iterator.StepIterator.iter_settings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.core.flow_control">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-icolos.core.flow_control" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -300,9 +470,9 @@
             <ul>
 <li><a class="reference internal" href="#">icolos.core.flow_control package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#icolos-core-flow-control-flow-control-module">icolos.core.flow_control.flow_control module</a></li>
-<li><a class="reference internal" href="#icolos-core-flow-control-iterator-module">icolos.core.flow_control.iterator module</a></li>
-<li><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li><a class="reference internal" href="#module-icolos.core.flow_control.flow_control">icolos.core.flow_control.flow_control module</a></li>
+<li><a class="reference internal" href="#module-icolos.core.flow_control.iterator">icolos.core.flow_control.iterator module</a></li>
+<li><a class="reference internal" href="#module-icolos.core.flow_control">Module contents</a></li>
 </ul>
 </li>
 </ul>

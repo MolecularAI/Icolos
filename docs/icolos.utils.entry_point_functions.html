@@ -230,14 +230,66 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 </section>
-<section id="icolos-utils-entry-point-functions-logging-helper-functions-module">
-<h2>icolos.utils.entry_point_functions.logging_helper_functions module<a class="headerlink" href="#icolos-utils-entry-point-functions-logging-helper-functions-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.entry_point_functions.logging_helper_functions">
+<span id="icolos-utils-entry-point-functions-logging-helper-functions-module"></span><h2>icolos.utils.entry_point_functions.logging_helper_functions module<a class="headerlink" href="#module-icolos.utils.entry_point_functions.logging_helper_functions" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.logging_helper_functions.initialize_logging">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.logging_helper_functions.</span></span><span class="sig-name descname"><span class="pre">initialize_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_conf_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="icolos.loggers.html#icolos.loggers.entrypoint_logger.EntryPointLogger" title="icolos.loggers.entrypoint_logger.EntryPointLogger"><span class="pre">EntryPointLogger</span></a></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/logging_helper_functions.html#initialize_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.logging_helper_functions.initialize_logging" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-entry-point-functions-parsing-functions-module">
-<h2>icolos.utils.entry_point_functions.parsing_functions module<a class="headerlink" href="#icolos-utils-entry-point-functions-parsing-functions-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.entry_point_functions.parsing_functions">
+<span id="icolos-utils-entry-point-functions-parsing-functions-module"></span><h2>icolos.utils.entry_point_functions.parsing_functions module<a class="headerlink" href="#module-icolos.utils.entry_point_functions.parsing_functions" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.add_global">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">add_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#add_global"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.add_global" title="Permalink to this definition">#</a></dt>
+<dd><p>This function adds (and overwrites) values for global settings and variables. Parameter “field” selects,
+which key is to be used in the header region.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.get_config_version_number">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">get_config_version_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#get_config_version_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.get_config_version_number" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.get_runtime_global_variables">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">get_runtime_global_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args_conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#get_runtime_global_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.get_runtime_global_variables" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.get_version_number">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">get_version_number</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#get_version_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.get_version_number" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.get_versions_as_strings">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">get_versions_as_strings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#get_versions_as_strings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.get_versions_as_strings" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.log_version_number">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">log_version_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="icolos.loggers.html#icolos.loggers.base_logger.BaseLogger" title="icolos.loggers.base_logger.BaseLogger"><span class="pre">BaseLogger</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#log_version_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.log_version_number" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.parse_global">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">parse_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="icolos.loggers.html#icolos.loggers.base_logger.BaseLogger" title="icolos.loggers.base_logger.BaseLogger"><span class="pre">BaseLogger</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#parse_global"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.parse_global" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.parse_header">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">parse_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_point_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="icolos.loggers.html#icolos.loggers.base_logger.BaseLogger" title="icolos.loggers.base_logger.BaseLogger"><span class="pre">BaseLogger</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#parse_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.parse_header" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.entry_point_functions.parsing_functions.version_match">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.entry_point_functions.parsing_functions.</span></span><span class="sig-name descname"><span class="pre">version_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/icolos/utils/entry_point_functions/parsing_functions.html#version_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.entry_point_functions.parsing_functions.version_match" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.entry_point_functions">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-icolos.utils.entry_point_functions" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -300,9 +352,9 @@
             <ul>
 <li><a class="reference internal" href="#">icolos.utils.entry_point_functions package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#icolos-utils-entry-point-functions-logging-helper-functions-module">icolos.utils.entry_point_functions.logging_helper_functions module</a></li>
-<li><a class="reference internal" href="#icolos-utils-entry-point-functions-parsing-functions-module">icolos.utils.entry_point_functions.parsing_functions module</a></li>
-<li><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.entry_point_functions.logging_helper_functions">icolos.utils.entry_point_functions.logging_helper_functions module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.entry_point_functions.parsing_functions">icolos.utils.entry_point_functions.parsing_functions module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.entry_point_functions">Module contents</a></li>
 </ul>
 </li>
 </ul>

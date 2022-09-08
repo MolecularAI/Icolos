@@ -230,38 +230,379 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">#</a></h2>
 </section>
-<section id="icolos-utils-general-arparse-bool-extension-module">
-<h2>icolos.utils.general.arparse_bool_extension module<a class="headerlink" href="#icolos-utils-general-arparse-bool-extension-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.arparse_bool_extension">
+<span id="icolos-utils-general-arparse-bool-extension-module"></span><h2>icolos.utils.general.arparse_bool_extension module<a class="headerlink" href="#module-icolos.utils.general.arparse_bool_extension" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.arparse_bool_extension.str2bool">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.arparse_bool_extension.</span></span><span class="sig-name descname"><span class="pre">str2bool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/arparse_bool_extension.html#str2bool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.arparse_bool_extension.str2bool" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-citation-generator-module">
-<h2>icolos.utils.general.citation_generator module<a class="headerlink" href="#icolos-utils-general-citation-generator-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.citation_generator">
+<span id="icolos-utils-general-citation-generator-module"></span><h2>icolos.utils.general.citation_generator module<a class="headerlink" href="#module-icolos.utils.general.citation_generator" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.citation_generator.</span></span><span class="sig-name descname"><span class="pre">ConsoleColours</span></span><a class="reference internal" href="_modules/icolos/utils/general/citation_generator.html#ConsoleColours"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.BLINKING">
+<span class="sig-name descname"><span class="pre">BLINKING</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[5m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.BLINKING" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.BLUE">
+<span class="sig-name descname"><span class="pre">BLUE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[94m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.BLUE" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.BOLD">
+<span class="sig-name descname"><span class="pre">BOLD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[1m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.BOLD" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.CYAN">
+<span class="sig-name descname"><span class="pre">CYAN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[96m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.CYAN" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.ENDC">
+<span class="sig-name descname"><span class="pre">ENDC</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[0m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.ENDC" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.FAIL">
+<span class="sig-name descname"><span class="pre">FAIL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[91m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.FAIL" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.GREEN">
+<span class="sig-name descname"><span class="pre">GREEN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[92m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.GREEN" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.HEADER">
+<span class="sig-name descname"><span class="pre">HEADER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[95m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.HEADER" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.ORANGE">
+<span class="sig-name descname"><span class="pre">ORANGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[0;33m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.ORANGE" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.RED">
+<span class="sig-name descname"><span class="pre">RED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[93m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.RED" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.ConsoleColours.UNDERLINE">
+<span class="sig-name descname"><span class="pre">UNDERLINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'\x1b[4m'</span></em><a class="headerlink" href="#icolos.utils.general.citation_generator.ConsoleColours.UNDERLINE" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.add_citation">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.citation_generator.</span></span><span class="sig-name descname"><span class="pre">add_citation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflow_step_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">citations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">citation_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/citation_generator.html#add_citation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.citation_generator.add_citation" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.citation_generator.print_citations">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.citation_generator.</span></span><span class="sig-name descname"><span class="pre">print_citations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="icolos.core.workflow_steps.html#icolos.core.workflow_steps.step.StepBase" title="icolos.core.workflow_steps.step.StepBase"><span class="pre">StepBase</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/citation_generator.html#print_citations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.citation_generator.print_citations" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-convenience-functions-module">
-<h2>icolos.utils.general.convenience_functions module<a class="headerlink" href="#icolos-utils-general-convenience-functions-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.convenience_functions">
+<span id="icolos-utils-general-convenience-functions-module"></span><h2>icolos.utils.general.convenience_functions module<a class="headerlink" href="#module-icolos.utils.general.convenience_functions" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.convenience_functions.ensure_list">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.convenience_functions.</span></span><span class="sig-name descname"><span class="pre">ensure_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/convenience_functions.html#ensure_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.convenience_functions.ensure_list" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.convenience_functions.in_keys">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.convenience_functions.</span></span><span class="sig-name descname"><span class="pre">in_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/convenience_functions.html#in_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.convenience_functions.in_keys" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.convenience_functions.nested_get">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.convenience_functions.</span></span><span class="sig-name descname"><span class="pre">nested_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/convenience_functions.html#nested_get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.convenience_functions.nested_get" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.convenience_functions.parse_setuppy">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.convenience_functions.</span></span><span class="sig-name descname"><span class="pre">parse_setuppy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/convenience_functions.html#parse_setuppy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.convenience_functions.parse_setuppy" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-files-paths-module">
-<h2>icolos.utils.general.files_paths module<a class="headerlink" href="#icolos-utils-general-files-paths-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.files_paths">
+<span id="icolos-utils-general-files-paths-module"></span><h2>icolos.utils.general.files_paths module<a class="headerlink" href="#module-icolos.utils.general.files_paths" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.any_in_file">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">any_in_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#any_in_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.any_in_file" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.attach_root_path">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">attach_root_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#attach_root_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.attach_root_path" title="Permalink to this definition">#</a></dt>
+<dd><p>Function to attach the root path of the module for a given “path”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.check_file_availability">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">check_file_availability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_sec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum_sec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#check_file_availability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.check_file_availability" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.dict_from_json_file">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">dict_from_json_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#dict_from_json_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.dict_from_json_file" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.empty_output_dir">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">empty_output_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#empty_output_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.empty_output_dir" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.gen_tmp_file">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">gen_tmp_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#gen_tmp_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.gen_tmp_file" title="Permalink to this definition">#</a></dt>
+<dd><p>Function wraps tempfile.mkstemp(), but closes the connection and returns the file name instead of the handler.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.infer_input_type">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">infer_input_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#infer_input_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.infer_input_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.lines_in_file">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">lines_in_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#lines_in_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.lines_in_file" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.move_up_directory">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">move_up_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#move_up_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.move_up_directory" title="Permalink to this definition">#</a></dt>
+<dd><p>Function, to move up ‘n’ directories for a given “path”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.files_paths.remove_folder">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.files_paths.</span></span><span class="sig-name descname"><span class="pre">remove_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/files_paths.html#remove_folder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.files_paths.remove_folder" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-icolos-exceptions-module">
-<h2>icolos.utils.general.icolos_exceptions module<a class="headerlink" href="#icolos-utils-general-icolos-exceptions-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.icolos_exceptions">
+<span id="icolos-utils-general-icolos-exceptions-module"></span><h2>icolos.utils.general.icolos_exceptions module<a class="headerlink" href="#module-icolos.utils.general.icolos_exceptions" title="Permalink to this heading">#</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="icolos.utils.general.icolos_exceptions.ContainerCorrupted">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.icolos_exceptions.</span></span><span class="sig-name descname"><span class="pre">ContainerCorrupted</span></span><a class="reference internal" href="_modules/icolos/utils/general/icolos_exceptions.html#ContainerCorrupted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.icolos_exceptions.ContainerCorrupted" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="icolos.utils.general.icolos_exceptions.ExecutionFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.icolos_exceptions.</span></span><span class="sig-name descname"><span class="pre">ExecutionFailed</span></span><a class="reference internal" href="_modules/icolos/utils/general/icolos_exceptions.html#ExecutionFailed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.icolos_exceptions.ExecutionFailed" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="icolos.utils.general.icolos_exceptions.StepFailed">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.icolos_exceptions.</span></span><span class="sig-name descname"><span class="pre">StepFailed</span></span><a class="reference internal" href="_modules/icolos/utils/general/icolos_exceptions.html#StepFailed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.icolos_exceptions.StepFailed" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.icolos_exceptions.get_exception_message">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.icolos_exceptions.</span></span><span class="sig-name descname"><span class="pre">get_exception_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/icolos_exceptions.html#get_exception_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.icolos_exceptions.get_exception_message" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.icolos_exceptions.get_exception_type">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.icolos_exceptions.</span></span><span class="sig-name descname"><span class="pre">get_exception_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">e</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Exception</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/icolos_exceptions.html#get_exception_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.icolos_exceptions.get_exception_type" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-molecules-module">
-<h2>icolos.utils.general.molecules module<a class="headerlink" href="#icolos-utils-general-molecules-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.molecules">
+<span id="icolos-utils-general-molecules-module"></span><h2>icolos.utils.general.molecules module<a class="headerlink" href="#module-icolos.utils.general.molecules" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.molecules.get_charge_for_molecule">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.molecules.</span></span><span class="sig-name descname"><span class="pre">get_charge_for_molecule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">molecule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_as_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/molecules.html#get_charge_for_molecule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.molecules.get_charge_for_molecule" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.molecules.write_molecule_to_sdf">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.molecules.</span></span><span class="sig-name descname"><span class="pre">write_molecule_to_sdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">molecule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/molecules.html#write_molecule_to_sdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.molecules.write_molecule_to_sdf" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-parallelization-module">
-<h2>icolos.utils.general.parallelization module<a class="headerlink" href="#icolos-utils-general-parallelization-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.parallelization">
+<span id="icolos-utils-general-parallelization-module"></span><h2>icolos.utils.general.parallelization module<a class="headerlink" href="#module-icolos.utils.general.parallelization" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Parallelizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.parallelization.</span></span><span class="sig-name descname"><span class="pre">Parallelizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Parallelizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Parallelizer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Parallelizer.execute_parallel">
+<span class="sig-name descname"><span class="pre">execute_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Parallelizer.execute_parallel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Parallelizer.execute_parallel" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Parallelizer.func">
+<span class="sig-name descname"><span class="pre">func</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#icolos.utils.general.parallelization.Parallelizer.func" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Parallelizer.rearrange_input">
+<span class="sig-name descname"><span class="pre">rearrange_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Parallelizer.rearrange_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Parallelizer.rearrange_input" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.parallelization.</span></span><span class="sig-name descname"><span class="pre">Subtask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="icolos.utils.enums.html#icolos.utils.enums.parallelization.ParallelizationEnum" title="icolos.utils.enums.parallelization.ParallelizationEnum"><span class="pre">ParallelizationEnum</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ParallelizationEnum.STATUS_READY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times_tried</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span></em><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.increment_tries">
+<span class="sig-name descname"><span class="pre">increment_tries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask.increment_tries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.increment_tries" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.job_id">
+<span class="sig-name descname"><span class="pre">job_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.job_id" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.set_job_id">
+<span class="sig-name descname"><span class="pre">set_job_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask.set_job_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.set_job_id" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.set_status">
+<span class="sig-name descname"><span class="pre">set_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask.set_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.set_status" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.set_status_failed">
+<span class="sig-name descname"><span class="pre">set_status_failed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask.set_status_failed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.set_status_failed" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.set_status_success">
+<span class="sig-name descname"><span class="pre">set_status_success</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#Subtask.set_status_success"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.set_status_success" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="icolos.utils.enums.html#icolos.utils.enums.parallelization.ParallelizationEnum" title="icolos.utils.enums.parallelization.ParallelizationEnum"><span class="pre">ParallelizationEnum</span></a></em><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.status" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.Subtask.times_tried">
+<span class="sig-name descname"><span class="pre">times_tried</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.utils.general.parallelization.Subtask.times_tried" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">icolos.utils.general.parallelization.</span></span><span class="sig-name descname"><span class="pre">SubtaskContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.add_data">
+<span class="sig-name descname"><span class="pre">add_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.add_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.add_data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.any_failed">
+<span class="sig-name descname"><span class="pre">any_failed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.any_failed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.any_failed" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.clear" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.done">
+<span class="sig-name descname"><span class="pre">done</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.done" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.get_done_tasks">
+<span class="sig-name descname"><span class="pre">get_done_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.get_done_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.get_done_tasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.get_running_tasks">
+<span class="sig-name descname"><span class="pre">get_running_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.get_running_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.get_running_tasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.get_sublists">
+<span class="sig-name descname"><span class="pre">get_sublists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partitions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slice_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_first_n_lists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.get_sublists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.get_sublists" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.get_todo_tasks">
+<span class="sig-name descname"><span class="pre">get_todo_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.get_todo_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.get_todo_tasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.load_data" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.max_tries">
+<span class="sig-name descname"><span class="pre">max_tries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.max_tries" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.set_max_tries">
+<span class="sig-name descname"><span class="pre">set_max_tries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/parallelization.html#SubtaskContainer.set_max_tries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.set_max_tries" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="icolos.utils.general.parallelization.SubtaskContainer.subtasks">
+<span class="sig-name descname"><span class="pre">subtasks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#icolos.utils.general.parallelization.Subtask" title="icolos.utils.general.parallelization.Subtask"><span class="pre">Subtask</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#icolos.utils.general.parallelization.SubtaskContainer.subtasks" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="icolos-utils-general-print-log-module">
-<h2>icolos.utils.general.print_log module<a class="headerlink" href="#icolos-utils-general-print-log-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.print_log">
+<span id="icolos-utils-general-print-log-module"></span><h2>icolos.utils.general.print_log module<a class="headerlink" href="#module-icolos.utils.general.print_log" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.print_log.print_log_file">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.print_log.</span></span><span class="sig-name descname"><span class="pre">print_log_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/print_log.html#print_log_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.print_log.print_log_file" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-progress-bar-module">
-<h2>icolos.utils.general.progress_bar module<a class="headerlink" href="#icolos-utils-general-progress-bar-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.progress_bar">
+<span id="icolos-utils-general-progress-bar-module"></span><h2>icolos.utils.general.progress_bar module<a class="headerlink" href="#module-icolos.utils.general.progress_bar" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.progress_bar.get_progress_bar_string">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.progress_bar.</span></span><span class="sig-name descname"><span class="pre">get_progress_bar_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">done</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'█'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/progress_bar.html#get_progress_bar_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.progress_bar.get_progress_bar_string" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="icolos-utils-general-strings-module">
-<h2>icolos.utils.general.strings module<a class="headerlink" href="#icolos-utils-general-strings-module" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general.strings">
+<span id="icolos-utils-general-strings-module"></span><h2>icolos.utils.general.strings module<a class="headerlink" href="#module-icolos.utils.general.strings" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="icolos.utils.general.strings.stringify">
+<span class="sig-prename descclassname"><span class="pre">icolos.utils.general.strings.</span></span><span class="sig-name descname"><span class="pre">stringify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/utils/general/strings.html#stringify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.utils.general.strings.stringify" title="Permalink to this definition">#</a></dt>
+<dd><p>Converts all objects in a dict to str, recursively.</p>
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<section id="module-icolos.utils.general">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-icolos.utils.general" title="Permalink to this heading">#</a></h2>
 </section>
 </section>
 
@@ -316,17 +657,17 @@
             <ul>
 <li><a class="reference internal" href="#">icolos.utils.general package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-arparse-bool-extension-module">icolos.utils.general.arparse_bool_extension module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-citation-generator-module">icolos.utils.general.citation_generator module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-convenience-functions-module">icolos.utils.general.convenience_functions module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-files-paths-module">icolos.utils.general.files_paths module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-icolos-exceptions-module">icolos.utils.general.icolos_exceptions module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-molecules-module">icolos.utils.general.molecules module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-parallelization-module">icolos.utils.general.parallelization module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-print-log-module">icolos.utils.general.print_log module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-progress-bar-module">icolos.utils.general.progress_bar module</a></li>
-<li><a class="reference internal" href="#icolos-utils-general-strings-module">icolos.utils.general.strings module</a></li>
-<li><a class="reference internal" href="#module-contents">Module contents</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.arparse_bool_extension">icolos.utils.general.arparse_bool_extension module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.citation_generator">icolos.utils.general.citation_generator module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.convenience_functions">icolos.utils.general.convenience_functions module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.files_paths">icolos.utils.general.files_paths module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.icolos_exceptions">icolos.utils.general.icolos_exceptions module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.molecules">icolos.utils.general.molecules module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.parallelization">icolos.utils.general.parallelization module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.print_log">icolos.utils.general.print_log module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.progress_bar">icolos.utils.general.progress_bar module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general.strings">icolos.utils.general.strings module</a></li>
+<li><a class="reference internal" href="#module-icolos.utils.general">Module contents</a></li>
 </ul>
 </li>
 </ul>
