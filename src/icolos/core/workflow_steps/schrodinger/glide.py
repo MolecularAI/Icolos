@@ -54,6 +54,14 @@ _GSE = GlideSupportEnum()
 
 
 class StepGlide(StepSchrodingerBase, BaseModel):
+    """Interface to Schrodinger's Glide docking engine
+
+    Additional settings:
+        :dict configuration: key-value pairs to define contents of maestro configuration file
+        :int time_limit_per_task: set timeout (seconds) for each job before reporting failure (default=120)
+        :str maestro_in_file: alternative to configuration, directly specify a path to a maestro-formatted config file
+        :bool fill_dummy_confs: control whether to add dummy conformer to enumeration if no poses produced.  Useful when REINVENT expects an output
+    """
 
     _schrodinger_executor: SchrodingerExecutor = None
 
@@ -223,7 +231,11 @@ class StepGlide(StepSchrodingerBase, BaseModel):
         return element_lines, block_lines
 
     def _write_configuration_to_file(self, configuration: dict, path: str):
-        """Function to generate a keyword input file in Maestro format."""
+        """Function to generate a keyword input file in Maestro format
+
+        :param dict configuration: configuration as key-value pairs
+        :param str path: writeout path for the config file in maestro format
+        """
 
         # call a function that returns the input keywords in Maestro format
         element_lines, block_lines = self._configuration_Maestro_reformat(
@@ -617,6 +629,7 @@ class StepGlide(StepSchrodingerBase, BaseModel):
                 )
 
     def execute(self):
+        """Executes Glide docking using the provided config on all conformers"""
         # in order to be able to efficiently execute Glide on the enumeration level, all of them have to be unrolled
         # Note: As they retain their respective Compound object, the attribution later on is simple
         all_enumerations = []

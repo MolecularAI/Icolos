@@ -561,6 +561,7 @@ class StepGlideEnum:
     TIME_LIMIT_PER_TASK = "time_limit_per_task"
     MAESTRO_IN_FILE = "maestro_in_file"
     MAESTRO_IN_FILE_PATH = "path"
+    FILL_DUMMY_CONFS = "fill_dummy_confs"
 
     # glide: fixed strings
     # the docking score (including "Epik" corrections")
@@ -575,8 +576,6 @@ class StepGlideEnum:
     GLIDE_SDF_DEFAULT_EXTENSION = "_lib.sdfgz"
     GLIDE_LOG = ".log"
     GLIDE_SDF = ".sdf"
-
-    FILL_DUMMY_CONFS = "fill_dummy_confs"
 
     # try to find the internal value and return
     def __getattr__(self, name):
@@ -1091,3 +1090,8 @@ class StepActiveLearningEnum:
     UCB = "ucb"  # upper confidence bound
     TANIMOTO = "tanimoto"
     TANIMOTO_TRUE_BELIEVER = "tanimoto_true_believer"
+
+
+class StepPMXSetupEnum:
+    REPLICAS = "replicas"
+    CHARGE_METHOD = "charge_method"

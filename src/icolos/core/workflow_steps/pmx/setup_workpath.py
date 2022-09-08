@@ -3,16 +3,13 @@ from typing import List
 from pydantic import BaseModel
 from icolos.core.containers.perturbation_map import Node
 from icolos.core.workflow_steps.pmx.base import StepPMXBase
-from icolos.utils.enums.program_parameters import GromacsEnum
-from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.utils.enums.step_enums import StepPMXSetupEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 from icolos.utils.general.parallelization import SubtaskContainer
 from icolos.core.workflow_steps.step import _LE
 
-_GE = GromacsEnum()
-_SGE = StepGromacsEnum()
-
+_SPSE = StepPMXSetupEnum()
 # These classes are based on the work of Vytautas Gapsys et al: https://github.com/deGrootLab/pmx/
 class StepPMXSetup(StepPMXBase, BaseModel):
     """
@@ -20,6 +17,15 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     Requires the pmx workflow to be executing using the single_dir running mode
     Operates on the perturbation map object, runs acpype
     on the written structures to produce the amber-compatible itp files
+    Additional settings:
+        :param int replicas: number of replicas to run for each edge, default=3
+        :param str charge_method: partial charge type, must be recognised by antechamber
+        :param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron
+        :param float boxd: spefify solvent box buffer dimention, default = 1.5
+        :param str water: specify water model, default = tip3p
+        :param float conc: specify salt concentration, default=0.15
+        :param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB
+        :param str topology: specify perturbation map topology, default = "normal"
     """
 
     _gromacs_executor: GromacsExecutor = None
@@ -33,11 +39,7 @@ class StepPMXSetup(StepPMXBase, BaseModel):
 
     def execute(self):
         # sets the number of replicas to be used throughput the pmx run
-        replicas = (
-            self.settings.additional["replicas"]
-            if "replicas" in self.settings.additional.keys()
-            else 3
-        )
+        replicas = self._get_additional_setting(_SPSE.REPLICAS, default=3)
         if self.work_dir is None:
             self.work_dir = self._make_tmpdir()
             self._logger.log(f"Set workflow directory to {self.work_dir}", _LE.DEBUG)

@@ -3,6 +3,7 @@ import subprocess
 from subprocess import CompletedProcess
 import time
 from typing import Callable, Deque, Dict, List
+import warnings
 from pydantic import BaseModel
 from icolos.core.containers.compound import Compound, Conformer
 from icolos.core.containers.perturbation_map import Node, PerturbationMap
@@ -13,26 +14,35 @@ from icolos.core.containers.perturbation_map import Node, PerturbationMap
 from icolos.core.workflow_steps.step import StepBase
 from icolos.utils.enums.parallelization import ParallelizationEnum
 from icolos.utils.enums.program_parameters import GromacsEnum, SlurmEnum, StepPMXEnum
-from icolos.utils.enums.step_enums import StepGromacsEnum
+from icolos.utils.enums.step_enums import StepGromacsEnum, StepPMXSetupEnum
 from icolos.utils.execute_external.execute import Executor
 from icolos.utils.execute_external.gromacs import GromacsExecutor
 import os
-from icolos.utils.general.parallelization import Parallelizer, Subtask
+from icolos.utils.general.parallelization import Parallelizer
 from icolos.core.workflow_steps.step import _LE
 import shutil
 import glob
-from collections import deque
 
 from icolos.utils.general.progress_bar import get_progress_bar_string
 
 _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
+_SPSE = StepPMXSetupEnum()
 _SPE = StepPMXEnum()
 _PE = ParallelizationEnum
 _SE = SlurmEnum
 
 
 class StepPMXBase(StepBase, BaseModel):
+    """Base class containing shared methods for Non-equilibrium free energy calculations
+    Additional settings (these apply to any step that inherits StepPMXBase)
+    :str run_type: specify absolute or relative mode, default = rbfe
+    :str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron
+    :float boxd: spefify solvent box buffer dimention, default = 1.5
+    :str water: specify water model, default = tip3p
+    :float conc: specify salt concentration, default=0.15
+
+    """
 
     _antechamber_executor: Executor = None
     _gromacs_executor: Executor = None
@@ -261,7 +271,7 @@ class StepPMXBase(StepBase, BaseModel):
     ):
         # main pipeline for producing GAFF parameters for a ligand
         charge_method = self._get_additional_setting(
-            key=_SGE.CHARGE_METHOD, default="bcc"
+            key=_SPSE.CHARGE_METHOD, default="bcc"
         )
         formal_charge = (
             rdmolops.GetFormalCharge(conf.get_molecule()) if conf is not None else 0
@@ -561,6 +571,7 @@ class StepPMXBase(StepBase, BaseModel):
         return Conformer(conformer=hub_mol)
 
     def _construct_perturbation_map(self, work_dir: str, replicas: int):
+
         if self.get_perturbation_map() is not None:
             self._logger.log("Perturbation map already constructed", _LE.DEBUG)
             self.get_perturbation_map().protein = (

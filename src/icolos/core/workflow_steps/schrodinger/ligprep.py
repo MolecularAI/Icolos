@@ -28,6 +28,9 @@ _SLE = StepLigprepEnum()
 class StepLigprep(StepSchrodingerBase, BaseModel):
     """
     Interface to the LigPrep binary for ligand embedding
+
+    Additional settings:
+        :dict filter_file: key-value pairs for specifying filtering criteria, follows maestro conventions
     """
 
     class Config:
@@ -302,6 +305,7 @@ class StepLigprep(StepSchrodingerBase, BaseModel):
                 )
 
     def execute(self):
+
         # in order to be able to efficiently execute Ligprep on the enumeration level, all of them have to be unrolled
         # Note: As they retain their respective Compound object, the attribution later on is simple
         all_enumerations = []
