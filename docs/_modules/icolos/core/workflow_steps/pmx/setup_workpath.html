@@ -242,17 +242,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create the directory tree structure.</span>
 <span class="sd">    Requires the pmx workflow to be executing using the single_dir running mode</span>
-<span class="sd">    Operates on the perturbation map object, runs acpype</span>
-<span class="sd">    on the written structures to produce the amber-compatible itp files</span>
+<span class="sd">    Operates on the perturbation map object, runs acpype on the written structures to produce the amber-compatible itp files</span>
 <span class="sd">    Additional settings:</span>
-<span class="sd">        :param int replicas: number of replicas to run for each edge, default=3</span>
-<span class="sd">        :param str charge_method: partial charge type, must be recognised by antechamber</span>
-<span class="sd">        :param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron</span>
-<span class="sd">        :param float boxd: spefify solvent box buffer dimention, default = 1.5</span>
-<span class="sd">        :param str water: specify water model, default = tip3p</span>
-<span class="sd">        :param float conc: specify salt concentration, default=0.15</span>
-<span class="sd">        :param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB</span>
-<span class="sd">        :param str topology: specify perturbation map topology, default = &quot;normal&quot;</span>
+<span class="sd">    :param int replicas: number of replicas to run for each edge, default=3</span>
+<span class="sd">    :param str charge_method: partial charge type, must be recognised by antechamber</span>
+<span class="sd">    :param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron</span>
+<span class="sd">    :param float boxd: spefify solvent box buffer dimention, default = 1.5</span>
+<span class="sd">    :param str water: specify water model, default = tip3p</span>
+<span class="sd">    :param float conc: specify salt concentration, default=0.15</span>
+<span class="sd">    :param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB</span>
+<span class="sd">    :param str topology: specify perturbation map topology, default = &quot;normal&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_gromacs_executor</span><span class="p">:</span> <span class="n">GromacsExecutor</span> <span class="o">=</span> <span class="kc">None</span>

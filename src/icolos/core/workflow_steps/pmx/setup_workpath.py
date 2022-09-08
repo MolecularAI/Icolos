@@ -15,17 +15,16 @@ class StepPMXSetup(StepPMXBase, BaseModel):
     """
     Create the directory tree structure.
     Requires the pmx workflow to be executing using the single_dir running mode
-    Operates on the perturbation map object, runs acpype
-    on the written structures to produce the amber-compatible itp files
+    Operates on the perturbation map object, runs acpype on the written structures to produce the amber-compatible itp files
     Additional settings:
-        :param int replicas: number of replicas to run for each edge, default=3
-        :param str charge_method: partial charge type, must be recognised by antechamber
-        :param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron
-        :param float boxd: spefify solvent box buffer dimention, default = 1.5
-        :param str water: specify water model, default = tip3p
-        :param float conc: specify salt concentration, default=0.15
-        :param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB
-        :param str topology: specify perturbation map topology, default = "normal"
+    :param int replicas: number of replicas to run for each edge, default=3
+    :param str charge_method: partial charge type, must be recognised by antechamber
+    :param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron
+    :param float boxd: spefify solvent box buffer dimention, default = 1.5
+    :param str water: specify water model, default = tip3p
+    :param float conc: specify salt concentration, default=0.15
+    :param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB
+    :param str topology: specify perturbation map topology, default = "normal"
     """
 
     _gromacs_executor: GromacsExecutor = None

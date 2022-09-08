@@ -241,14 +241,10 @@
 <dt class="sig sig-object py" id="icolos.core.workflow_steps.pmx.abfe.StepPMXabfe.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/workflow_steps/pmx/abfe.html#StepPMXabfe.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.workflow_steps.pmx.abfe.StepPMXabfe.execute" title="Permalink to this definition">#</a></dt>
 <dd><p>This step manages the setup of a pmx ABFE run for a set of compounds and a protein target.
-Expects:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>docked compounds provided as an sdf file</p></li>
-<li><p>protein apo structure</p></li>
-<li><p>directory containing mdp files</p></li>
-</ul>
-</div></blockquote>
+Expects:
+- docked compounds provided as an sdf file
+- protein apo structure
+- directory containing mdp files</p>
 </dd></dl>
 
 </dd></dl>
@@ -1525,37 +1521,16 @@ to be simulated</p>
 <dd><p>Bases: <a class="reference internal" href="#icolos.core.workflow_steps.pmx.base.StepPMXBase" title="icolos.core.workflow_steps.pmx.base.StepPMXBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">StepPMXBase</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Create the directory tree structure.
 Requires the pmx workflow to be executing using the single_dir running mode
-Operates on the perturbation map object, runs acpype
-on the written structures to produce the amber-compatible itp files
-Additional settings:</p>
-<blockquote>
-<div><dl class="field-list simple">
-<dt class="field-odd">param int replicas<span class="colon">:</span></dt>
-<dd class="field-odd"><p>number of replicas to run for each edge, default=3</p>
-</dd>
-<dt class="field-even">param str charge_method<span class="colon">:</span></dt>
-<dd class="field-even"><p>partial charge type, must be recognised by antechamber</p>
-</dd>
-<dt class="field-odd">param str boxshape<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specify the boxshape to use in calculation setup, deafult = dodecahedron</p>
-</dd>
-<dt class="field-even">param float boxd<span class="colon">:</span></dt>
-<dd class="field-even"><p>spefify solvent box buffer dimention, default = 1.5</p>
-</dd>
-<dt class="field-odd">param str water<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specify water model, default = tip3p</p>
-</dd>
-<dt class="field-even">param float conc<span class="colon">:</span></dt>
-<dd class="field-even"><p>specify salt concentration, default=0.15</p>
-</dd>
-<dt class="field-odd">param str forcefield<span class="colon">:</span></dt>
-<dd class="field-odd"><p>specify the forcefield for protein parametrisation. Must be findable in $GMXLIB</p>
-</dd>
-<dt class="field-even">param str topology<span class="colon">:</span></dt>
-<dd class="field-even"><p>specify perturbation map topology, default = “normal”</p>
-</dd>
-</dl>
-</div></blockquote>
+Operates on the perturbation map object, runs acpype on the written structures to produce the amber-compatible itp files
+Additional settings:
+:param int replicas: number of replicas to run for each edge, default=3
+:param str charge_method: partial charge type, must be recognised by antechamber
+:param str boxshape: specify the boxshape to use in calculation setup, deafult = dodecahedron
+:param float boxd: spefify solvent box buffer dimention, default = 1.5
+:param str water: specify water model, default = tip3p
+:param float conc: specify salt concentration, default=0.15
+:param str forcefield: specify the forcefield for protein parametrisation. Must be findable in $GMXLIB
+:param str topology: specify perturbation map topology, default = “normal”</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="icolos.core.workflow_steps.pmx.setup_workpath.StepPMXSetup.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/icolos/core/workflow_steps/pmx/setup_workpath.html#StepPMXSetup.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#icolos.core.workflow_steps.pmx.setup_workpath.StepPMXSetup.execute" title="Permalink to this definition">#</a></dt>

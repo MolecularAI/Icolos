@@ -19,8 +19,11 @@ _GE = GromacsEnum()
 _SGE = StepGromacsEnum()
 _PSE = StepPMXEnum()
 
+
 class StepPMXabfe(StepPMXBase, BaseModel):
-    """Setup files for an ABFE calculation."""
+    """
+    Setup files for an ABFE calculation.
+    """
 
     _gromacs_executor: GromacsExecutor = GromacsExecutor()
 
@@ -34,9 +37,9 @@ class StepPMXabfe(StepPMXBase, BaseModel):
         """
         This step manages the setup of a pmx ABFE run for a set of compounds and a protein target.
         Expects:
-            - docked compounds provided as an sdf file
-            - protein apo structure
-            - directory containing mdp files
+        - docked compounds provided as an sdf file
+        - protein apo structure
+        - directory containing mdp files
         """
 
         assert self.work_dir is not None and os.path.isdir(self.work_dir)
