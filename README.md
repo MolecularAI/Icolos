@@ -4,9 +4,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black) 
 [![GitHub contributors](https://badgen.net/github/contributors/MolecularAI/Icolos)](https://GitHub.com/MolecularAI/Icolos/graphs/contributors/)
 [![Latest tag](https://badgen.net/github/tag/MolecularAI/Icolos)](https://github.com/MolecularAI/Icolos/tag)
-[![GitHub forks](https://img.shields.io/github/forks/MolecularAI/Icolos.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/MolecularAI/Icolos/network/)
-[![GitHub stars](https://img.shields.io/github/stars/MolecularAI/Icolos.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/MolerularAI/Icolos/stargazers/)
-
 
 # `Icolos`: Workflow manager
 
